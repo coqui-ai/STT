@@ -1,7 +1,7 @@
 {
     "name" : "$(PROJECT_NAME)",
     "version" : "$(PROJECT_VERSION)",
-    "description" : "Coqui STT NodeJS bindings",
+    "description" : "A library for doing speech recognition using a Coqui STT model",
     "main" : "./index.js",
     "types": "./index.d.ts",
     "bin": {

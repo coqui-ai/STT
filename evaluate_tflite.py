@@ -19,14 +19,14 @@ from six.moves import zip, range
 
 r'''
 This module should be self-contained:
-  - build libdeepspeech.so with TFLite:
-    - bazel build [...] --define=runtime=tflite [...] //native_client:libdeepspeech.so
+  - build libstt.so with TFLite:
+    - bazel build [...] --define=runtime=tflite [...] //native_client:libstt.so
   - make -C native_client/python/ TFDIR=... bindings
   - setup a virtualenv
-  - pip install native_client/python/dist/deepspeech*.whl
+  - pip install native_client/python/dist/*.whl
   - pip install -r requirements_eval_tflite.txt
 
-Then run with a TF Lite model, a scorer and a CSV test file
+Then run with a TFLite model, a scorer and a CSV test file
 '''
 
 def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):

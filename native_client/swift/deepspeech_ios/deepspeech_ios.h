@@ -3,8 +3,8 @@
 //  deepspeech_ios
 //
 //  Created by Reuben Morais on 14.06.20.
-//  Copyright © 2020 Mozilla. All rights reserved.
-//
+//  Copyright © 2020 Mozilla
+//  Copyright © 2021 Coqui GmbH
 
 #import <Foundation/Foundation.h>
 

@@ -17,9 +17,9 @@ do_deepspeech_python_build()
 
   SETUP_FLAGS=""
   if [ "${package_option}" = "--cuda" ]; then
-    SETUP_FLAGS="--project_name deepspeech-gpu"
+    SETUP_FLAGS="--project_name stt-gpu"
   elif [ "${package_option}" = "--tflite" ]; then
-    SETUP_FLAGS="--project_name deepspeech-tflite"
+    SETUP_FLAGS="--project_name stt-tflite"
   fi
 
   for pyver_conf in ${SUPPORTED_PYTHON_VERSIONS}; do
@@ -139,7 +139,7 @@ do_deepspeech_nodejs_build()
   done;
 
   if [ "${rename_to_gpu}" = "--cuda" ]; then
-    make -C native_client/javascript clean npm-pack PROJECT_NAME=deepspeech-gpu
+    make -C native_client/javascript clean npm-pack PROJECT_NAME=stt-gpu
   else
     make -C native_client/javascript clean npm-pack
   fi
@@ -312,7 +312,7 @@ do_nuget_build()
 
   cd ${DS_DSDIR}/native_client/dotnet
 
-  cp ${DS_TFDIR}/bazel-bin/native_client/libdeepspeech.so nupkg/build
+  cp ${DS_TFDIR}/bazel-bin/native_client/libstt.so nupkg/build
 
   # We copy the generated clients for .NET into the Nuget framework dirs
 
@@ -332,9 +332,9 @@ do_nuget_build()
   sed \
     -e "s/\$NUPKG_ID/${PROJECT_NAME}/" \
     -e "s/\$NUPKG_VERSION/${PROJECT_VERSION}/" \
-    nupkg/deepspeech.nuspec.in > nupkg/deepspeech.nuspec && cat nupkg/deepspeech.nuspec
+    nupkg/stt.nuspec.in > nupkg/stt.nuspec && cat nupkg/stt.nuspec
 
-  nuget pack nupkg/deepspeech.nuspec
+  nuget pack nupkg/stt.nuspec
 }
 
 do_deepspeech_ios_framework_build()

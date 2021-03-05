@@ -3,7 +3,8 @@
 //  deepspeech_ios_test
 //
 //  Created by Reuben Morais on 15.06.20.
-//  Copyright © 2020 Mozilla. All rights reserved.
+//  Copyright © 2020 Mozilla
+//  Copyright © 2021 Coqui GmbH
 //
 
 import UIKit

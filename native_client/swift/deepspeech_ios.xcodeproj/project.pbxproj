@@ -166,7 +166,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1150;
 				LastUpgradeCheck = 1150;
-				ORGANIZATIONNAME = Mozilla;
+				ORGANIZATIONNAME = "Coqui GmbH";
 				TargetAttributes = {
 					505B136024960D550007DADA = {
 						CreatedOnToolsVersion = 11.5;
