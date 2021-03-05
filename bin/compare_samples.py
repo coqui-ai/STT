@@ -6,8 +6,8 @@ import sys
 import argparse
 import numpy as np
 
-from deepspeech_training.util.audio import AUDIO_TYPE_NP, mean_dbfs
-from deepspeech_training.util.sample_collections import load_sample
+from coqui_stt_training.util.audio import AUDIO_TYPE_NP, mean_dbfs
+from coqui_stt_training.util.sample_collections import load_sample
 
 
 def fail(message):

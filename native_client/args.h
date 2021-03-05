@@ -8,7 +8,7 @@
 #endif
 #include <iostream>
 
-#include "deepspeech.h"
+#include "coqui-stt.h"
 
 char* model = NULL;
 
@@ -47,7 +47,7 @@ void PrintHelp(const char* bin)
     std::cout <<
     "Usage: " << bin << " --model MODEL [--scorer SCORER] --audio AUDIO [-t] [-e]\n"
     "\n"
-    "Running DeepSpeech inference.\n"
+    "Running Coqui STT inference.\n"
     "\n"
     "\t--model MODEL\t\t\tPath to the model (protocol buffer binary file)\n"
     "\t--scorer SCORER\t\t\tPath to the external scorer file\n"
@@ -65,7 +65,7 @@ void PrintHelp(const char* bin)
     "\t--help\t\t\t\tShow help\n"
     "\t--version\t\t\tPrint version and exits\n";
     char* version = DS_Version();
-    std::cerr << "DeepSpeech " << version << "\n";
+    std::cerr << "Coqui STT " << version << "\n";
     DS_FreeString(version);
     exit(1);
 }
@@ -170,7 +170,7 @@ bool ProcessArgs(int argc, char** argv)
 
     if (has_versions) {
         char* version = DS_Version();
-        std::cout << "DeepSpeech " << version << "\n";
+        std::cout << "Coqui " << version << "\n";
         DS_FreeString(version);
         return false;
     }

@@ -1,54 +1,54 @@
-.. DeepSpeech documentation master file, created by
+.. Coqui STT documentation master file, created by
    sphinx-quickstart on Thu Feb  2 21:20:39 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to DeepSpeech's documentation!
-======================================
+Coqui STT
+=========
 
-DeepSpeech is an open source Speech-To-Text engine, using a model trained by machine learning techniques based on `Baidu's Deep Speech research paper <https://arxiv.org/abs/1412.5567>`_. Project DeepSpeech uses Google's `TensorFlow <https://www.tensorflow.org/>`_ to make the implementation easier.
+Coqui STT (🐸STT) is an open source Speech-To-Text engine, using a model trained by machine learning techniques based on `Baidu's Deep Speech research paper <https://arxiv.org/abs/1412.5567>`_. 🐸STT uses Google's `TensorFlow <https://www.tensorflow.org/>`_ to make the implementation easier.
 
-To install and use DeepSpeech all you have to do is:
+To install and use 🐸STT all you have to do is:
 
 .. code-block:: bash
 
    # Create and activate a virtualenv
-   virtualenv -p python3 $HOME/tmp/deepspeech-venv/
-   source $HOME/tmp/deepspeech-venv/bin/activate
+   virtualenv -p python3 $HOME/tmp/stt/
+   source $HOME/tmp/stt/bin/activate
 
-   # Install DeepSpeech
-   pip3 install deepspeech
+   # Install 🐸STT
+   pip3 install stt
 
    # Download pre-trained English model files
-   curl -LO https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/deepspeech-0.9.3-models.pbmm
-   curl -LO https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/deepspeech-0.9.3-models.scorer
+   curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.pbmm
+   curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.scorer
 
    # Download example audio files
-   curl -LO https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/audio-0.9.3.tar.gz
+   curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/audio-0.9.3.tar.gz
    tar xvf audio-0.9.3.tar.gz
 
    # Transcribe an audio file
-   deepspeech --model deepspeech-0.9.3-models.pbmm --scorer deepspeech-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
+   stt --model coqui-stt-0.9.3-models.pbmm --scorer coqui-stt-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
 
-A pre-trained English model is available for use and can be downloaded following the instructions in :ref:`the usage docs <usage-docs>`. For the latest release, including pre-trained models and checkpoints, `see the GitHub releases page <https://github.com/mozilla/DeepSpeech/releases/latest>`_.
+A pre-trained English model is available for use and can be downloaded following the instructions in :ref:`the usage docs <usage-docs>`. For the latest release, including pre-trained models and checkpoints, `see the GitHub releases page <https://github.com/coqui-ai/STT/releases/latest>`_.
 
-Quicker inference can be performed using a supported NVIDIA GPU on Linux. See the `release notes <https://github.com/mozilla/DeepSpeech/releases/latest>`_ to find which GPUs are supported. To run ``deepspeech`` on a GPU, install the GPU specific package:
+Quicker inference can be performed using a supported NVIDIA GPU on Linux. See the `release notes <https://github.com/coqui-ai/STT/releases/latest>`_ to find which GPUs are supported. To run ``stt`` on a GPU, install the GPU specific package:
 
 .. code-block:: bash
 
    # Create and activate a virtualenv
-   virtualenv -p python3 $HOME/tmp/deepspeech-gpu-venv/
-   source $HOME/tmp/deepspeech-gpu-venv/bin/activate
+   virtualenv -p python3 $HOME/tmp/coqui-stt-gpu-venv/
+   source $HOME/tmp/coqui-stt-gpu-venv/bin/activate
 
-   # Install DeepSpeech CUDA enabled package
-   pip3 install deepspeech-gpu
+   # Install 🐸STT CUDA enabled package
+   pip3 install stt-gpu
 
    # Transcribe an audio file.
-   deepspeech --model deepspeech-0.9.3-models.pbmm --scorer deepspeech-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
+   stt --model coqui-stt-0.9.3-models.pbmm --scorer coqui-stt-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
 
 Please ensure you have the required :ref:`CUDA dependencies <cuda-inference-deps>`.
 
-See the output of ``deepspeech -h`` for more information on the use of ``deepspeech``. (If you experience problems running ``deepspeech``, please check :ref:`required runtime dependencies <runtime-deps>`).
+See the output of ``stt -h`` for more information on the use of ``stt``. (If you experience problems running ``stt``, please check :ref:`required runtime dependencies <runtime-deps>`).
 
 .. toctree::
    :maxdepth: 2
@@ -78,7 +78,7 @@ See the output of ``deepspeech -h`` for more information on the use of ``deepspe
    :maxdepth: 2
    :caption: Architecture and training
 
-   DeepSpeech
+   Architecture
 
    Geometry
 

@@ -514,7 +514,7 @@ class SampleList:
 
 
 class CSV(SampleList):
-    """Sample collection reader for reading a DeepSpeech CSV file
+    """Sample collection reader for reading a Coqui STT CSV file
     Automatically orders samples by CSV column wav_filesize (if available)."""
     def __init__(self, csv_filename, labeled=None, reverse=False):
         """

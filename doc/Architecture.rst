@@ -1,5 +1,5 @@
-DeepSpeech Model
-================
+STT Model
+=========
 
 The aim of this project is to create a simple, open, and ubiquitous speech
 recognition engine. Simple, in that the engine should not require server-class

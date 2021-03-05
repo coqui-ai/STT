@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=.build
-set SPHINXPROJ=DeepSpeech
+set SPHINXPROJ="Coqui STT"
 
 if "%1" == "" goto help
 

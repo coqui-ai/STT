@@ -18,8 +18,8 @@ ifeq ($(findstring _NT,$(OS)),_NT)
 PLATFORM_EXE_SUFFIX := .exe
 endif
 
-DEEPSPEECH_BIN       := deepspeech$(PLATFORM_EXE_SUFFIX)
-CFLAGS_DEEPSPEECH    := -std=c++11 -o $(DEEPSPEECH_BIN)
+STT_BIN       := stt$(PLATFORM_EXE_SUFFIX)
+CFLAGS_DEEPSPEECH    := -std=c++11 -o $(STT_BIN)
 LINK_DEEPSPEECH      := -ldeepspeech
 LINK_PATH_DEEPSPEECH := -L${TFDIR}/bazel-bin/native_client
 
@@ -63,7 +63,7 @@ TOOL_LD     := link.exe
 TOOL_LIBEXE := lib.exe
 LINK_DEEPSPEECH      := $(TFDIR)\bazel-bin\native_client\libdeepspeech.so.if.lib
 LINK_PATH_DEEPSPEECH :=
-CFLAGS_DEEPSPEECH    := -nologo -Fe$(DEEPSPEECH_BIN)
+CFLAGS_DEEPSPEECH    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
 SOX_LDFLAGS     :=
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}

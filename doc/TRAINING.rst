@@ -15,11 +15,11 @@ Prerequisites for training a model
 Getting the training code
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Clone the latest released stable branch from Github (e.g. 0.9.3, check `here <https://github.com/mozilla/DeepSpeech/releases>`_):
+Clone the latest released stable branch from Github (e.g. 0.9.3, check `here <https://github.com/coqui-ai/STT/releases>`_):
 
 .. code-block:: bash
 
-   git clone --branch v0.9.3 https://github.com/mozilla/DeepSpeech
+   git clone --branch v0.9.3 https://github.com/coqui-ai/STT
 
 If you plan on committing code or you want to report bugs, please use the master branch.
 
@@ -28,31 +28,31 @@ Creating a virtual environment
 
 Throughout the documentation we assume you are using **virtualenv** to manage your Python environments. This setup is the one used and recommended by the project authors and is the easiest way to make sure you won't run into environment issues. If you're using **Anaconda, Miniconda or Mamba**, first read the instructions at :ref:`training-with-conda` and then continue from the installation step below.
 
-In creating a virtual environment you will create a directory containing a ``python3`` binary and everything needed to run deepspeech. You can use whatever directory you want. For the purpose of the documentation, we will rely on ``$HOME/tmp/deepspeech-train-venv``. You can create it using this command:
+In creating a virtual environment you will create a directory containing a ``python3`` binary and everything needed to run 🐸STT. You can use whatever directory you want. For the purpose of the documentation, we will rely on ``$HOME/tmp/coqui-stt-train-venv``. You can create it using this command:
 
 .. code-block::
 
-   $ python3 -m venv $HOME/tmp/deepspeech-train-venv/
+   $ python3 -m venv $HOME/tmp/coqui-stt-train-venv/
 
 Once this command completes successfully, the environment will be ready to be activated.
 
 Activating the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Each time you need to work with DeepSpeech, you have to *activate* this virtual environment. This is done with this simple command:
+Each time you need to work with 🐸STT, you have to *activate* this virtual environment. This is done with this simple command:
 
 .. code-block::
 
-   $ source $HOME/tmp/deepspeech-train-venv/bin/activate
+   $ source $HOME/tmp/coqui-stt-train-venv/bin/activate
 
-Installing DeepSpeech Training Code and its dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installing Coqui STT Training Code and its dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install the required dependencies using ``pip3``\ :
 
 .. code-block:: bash
 
-   cd DeepSpeech
+   cd STT
    pip3 install --upgrade pip==20.2.2 wheel==0.34.2 setuptools==49.6.0
    pip3 install --upgrade -e .
 
@@ -95,11 +95,11 @@ This should ensure that you'll re-use the upstream Python 3 TensorFlow GPU-enabl
 
    make Dockerfile.train
 
-If you want to specify a different DeepSpeech repository / branch, you can pass ``DEEPSPEECH_REPO`` or ``DEEPSPEECH_SHA`` parameters:
+If you want to specify a different 🐸STT repository / branch, you can pass ``STT_REPO`` or ``STT_SHA`` parameters:
 
 .. code-block:: bash
 
-   make Dockerfile.train DEEPSPEECH_REPO=git://your/fork DEEPSPEECH_SHA=origin/your-branch
+   make Dockerfile.train STT_REPO=git://your/fork STT_SHA=origin/your-branch
 
 Common Voice training data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,7 +112,7 @@ After extraction of such a data set, you'll find the following contents:
 * the ``*.tsv`` files output by CorporaCreator for the downloaded language
 * the mp3 audio files they reference in a ``clips`` sub-directory.
 
-For bringing this data into a form that DeepSpeech understands, you have to run the CommonVoice v2.0 importer (\ ``bin/import_cv2.py``\ ):
+For bringing this data into a form that 🐸STT understands, you have to run the CommonVoice v2.0 importer (\ ``bin/import_cv2.py``\ ):
 
 .. code-block:: bash
 
@@ -134,22 +134,22 @@ The CSV files comprise of the following fields:
 * ``wav_filesize`` - samples size given in bytes, used for sorting the data before training. Expects integer.
 * ``transcript`` - transcription target for the sample.
 
-To use Common Voice data during training, validation and testing, you pass (comma separated combinations of) their filenames into ``--train_files``\ , ``--dev_files``\ , ``--test_files`` parameters of ``DeepSpeech.py``.
+To use Common Voice data during training, validation and testing, you pass (comma separated combinations of) their filenames into ``--train_files``\ , ``--dev_files``\ , ``--test_files`` parameters of ``train.py``.
 
-If, for example, Common Voice language ``en`` was extracted to ``../data/CV/en/``\ , ``DeepSpeech.py`` could be called like this:
+If, for example, Common Voice language ``en`` was extracted to ``../data/CV/en/``\ , ``train.py`` could be called like this:
 
 .. code-block:: bash
 
-   python3 DeepSpeech.py --train_files ../data/CV/en/clips/train.csv --dev_files ../data/CV/en/clips/dev.csv --test_files ../data/CV/en/clips/test.csv
+   python3 train.py --train_files ../data/CV/en/clips/train.csv --dev_files ../data/CV/en/clips/dev.csv --test_files ../data/CV/en/clips/test.csv
 
 Training a model
 ^^^^^^^^^^^^^^^^
 
-The central (Python) script is ``DeepSpeech.py`` in the project's root directory. For its list of command line options, you can call:
+The central (Python) script is ``train.py`` in the project's root directory. For its list of command line options, you can call:
 
 .. code-block:: bash
 
-   python3 DeepSpeech.py --helpfull
+   python3 train.py --helpfull
 
 To get the output of this in a slightly better-formatted way, you can also look at the flag definitions in :ref:`training-flags`.
 
@@ -157,7 +157,7 @@ For executing pre-configured training scenarios, there is a collection of conven
 
 **If you experience GPU OOM errors while training, try reducing the batch size with the ``--train_batch_size``\ , ``--dev_batch_size`` and ``--test_batch_size`` parameters.**
 
-As a simple first example you can open a terminal, change to the directory of the DeepSpeech checkout, activate the virtualenv created above, and run:
+As a simple first example you can open a terminal, change to the directory of the 🐸STT checkout, activate the virtualenv created above, and run:
 
 .. code-block:: bash
 
@@ -165,9 +165,9 @@ As a simple first example you can open a terminal, change to the directory of th
 
 This script will train on a small sample dataset composed of just a single audio file, the sample file for the `TIMIT Acoustic-Phonetic Continuous Speech Corpus <https://catalog.ldc.upenn.edu/LDC93S1>`_, which can be overfitted on a GPU in a few minutes for demonstration purposes. From here, you can alter any variables with regards to what dataset is used, how many training iterations are run and the default values of the network parameters.
 
-Feel also free to pass additional (or overriding) ``DeepSpeech.py`` parameters to these scripts. Then, just run the script to train the modified network.
+Feel also free to pass additional (or overriding) ``train.py`` parameters to these scripts. Then, just run the script to train the modified network.
 
-Each dataset has a corresponding importer script in ``bin/`` that can be used to download (if it's freely available) and preprocess the dataset. See ``bin/import_librivox.py`` for an example of how to import and preprocess a large dataset for training with DeepSpeech.
+Each dataset has a corresponding importer script in ``bin/`` that can be used to download (if it's freely available) and preprocess the dataset. See ``bin/import_librivox.py`` for an example of how to import and preprocess a large dataset for training with 🐸STT.
 
 Some importers might require additional code to properly handled your locale-specific requirements. Such handling is dealt with ``--validate_label_locale`` flag that allows you to source out-of-tree Python script that defines a ``validate_label`` function. Please refer to ``util/importers.py`` for implementation example of that function.
 If you don't provide this argument, the default ``validate_label`` function will be used. This one is only intended for English language, so you might have consistency issues in your data for other languages.
@@ -191,10 +191,10 @@ Automatic Mixed Precision (AMP) training on GPU for TensorFlow has been recently
 Mixed precision training makes use of both FP32 and FP16 precisions where appropriate. FP16 operations can leverage the Tensor cores on NVIDIA GPUs (Volta, Turing or newer architectures) for improved throughput. Mixed precision training also often allows larger batch sizes. Automatic mixed precision training can be enabled by including the flag `--automatic_mixed_precision` at training time:
 
 ```
-python3 DeepSpeech.py --train_files ./train.csv --dev_files ./dev.csv --test_files ./test.csv --automatic_mixed_precision
+python3 train.py --train_files ./train.csv --dev_files ./dev.csv --test_files ./test.csv --automatic_mixed_precision
 ```
 
-On a Volta generation V100 GPU, automatic mixed precision speeds up DeepSpeech training and evaluation by ~30%-40%.
+On a Volta generation V100 GPU, automatic mixed precision speeds up 🐸STT training and evaluation by ~30%-40%.
 
 Checkpointing
 ^^^^^^^^^^^^^
@@ -212,7 +212,7 @@ Refer to the :ref:`usage instructions <usage-docs>` for information on running a
 Exporting a model for TFLite
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you want to experiment with the TF Lite engine, you need to export a model that is compatible with it, then use the ``--export_tflite`` flags. If you already have a trained model, you can re-export it for TFLite by running ``DeepSpeech.py`` again and specifying the same ``checkpoint_dir`` that you used for training, as well as passing ``--export_tflite --export_dir /model/export/destination``. If you changed the alphabet you also need to add the ``--alphabet_config_path my-new-language-alphabet.txt`` flag.
+If you want to experiment with the TF Lite engine, you need to export a model that is compatible with it, then use the ``--export_tflite`` flags. If you already have a trained model, you can re-export it for TFLite by running ``train.py`` again and specifying the same ``checkpoint_dir`` that you used for training, as well as passing ``--export_tflite --export_dir /model/export/destination``. If you changed the alphabet you also need to add the ``--alphabet_config_path my-new-language-alphabet.txt`` flag.
 
 Making a mmap-able model for inference
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -236,9 +236,9 @@ Upon sucessfull run, it should report about conversion of a non-zero number of n
 
 Continuing training from a release model
 ----------------------------------------
-There are currently two supported approaches to make use of a pre-trained DeepSpeech model: fine-tuning or transfer-learning. Choosing which one to use is a simple decision, and it depends on your target dataset. Does your data use the same alphabet as the release model? If "Yes": fine-tune. If "No" use transfer-learning.
+There are currently two supported approaches to make use of a pre-trained 🐸STT model: fine-tuning or transfer-learning. Choosing which one to use is a simple decision, and it depends on your target dataset. Does your data use the same alphabet as the release model? If "Yes": fine-tune. If "No" use transfer-learning.
 
-If your own data uses the *extact* same alphabet as the English release model (i.e. `a-z` plus `'`) then the release model's output layer will match your data, and you can just fine-tune the existing parameters. However, if you want to use a new alphabet (e.g. Cyrillic `а`, `б`, `д`), the output layer of a release DeepSpeech model will *not* match your data. In this case, you should use transfer-learning (i.e. remove the trained model's output layer, and reinitialize a new output layer that matches your target character set.
+If your own data uses the *extact* same alphabet as the English release model (i.e. `a-z` plus `'`) then the release model's output layer will match your data, and you can just fine-tune the existing parameters. However, if you want to use a new alphabet (e.g. Cyrillic `а`, `б`, `д`), the output layer of a release 🐸STT model will *not* match your data. In this case, you should use transfer-learning (i.e. remove the trained model's output layer, and reinitialize a new output layer that matches your target character set.
 
 N.B. - If you have access to a pre-trained model which uses UTF-8 bytes at the output layer you can always fine-tune, because any alphabet should be encodable as UTF-8.
 
@@ -247,14 +247,14 @@ N.B. - If you have access to a pre-trained model which uses UTF-8 bytes at the o
 Fine-Tuning (same alphabet)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you'd like to use one of the pre-trained models to bootstrap your training process (fine tuning), you can do so by using the ``--checkpoint_dir`` flag in ``DeepSpeech.py``. Specify the path where you downloaded the checkpoint from the release, and training will resume from the pre-trained model.
+If you'd like to use one of the pre-trained models to bootstrap your training process (fine tuning), you can do so by using the ``--checkpoint_dir`` flag in ``train.py``. Specify the path where you downloaded the checkpoint from the release, and training will resume from the pre-trained model.
 
 For example, if you want to fine tune the entire graph using your own data in ``my-train.csv``\ , ``my-dev.csv`` and ``my-test.csv``\ , for three epochs, you can something like the following, tuning the hyperparameters as needed:
 
 .. code-block:: bash
 
    mkdir fine_tuning_checkpoints
-   python3 DeepSpeech.py --n_hidden 2048 --checkpoint_dir path/to/checkpoint/folder --epochs 3 --train_files my-train.csv --dev_files my-dev.csv --test_files my_dev.csv --learning_rate 0.0001
+   python3 train.py --n_hidden 2048 --checkpoint_dir path/to/checkpoint/folder --epochs 3 --train_files my-train.csv --dev_files my-dev.csv --test_files my_dev.csv --learning_rate 0.0001
 
 Notes about the release checkpoints: the released models were trained with ``--n_hidden 2048``\ , so you need to use that same value when initializing from the release models. Since v0.6.0, the release models are also trained with ``--train_cudnn``\ , so you'll need to specify that as well. If you don't have a CUDA compatible GPU, then you can workaround it by using the ``--load_cudnn`` flag. Use ``--helpfull`` to get more information on how the flags work.
 
@@ -270,17 +270,17 @@ If you try to load a release model without following these steps, you'll get an 
 Transfer-Learning (new alphabet)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you want to continue training an alphabet-based DeepSpeech model (i.e. not a UTF-8 model) on a new language, or if you just want to add new characters to your custom alphabet, you will probably want to use transfer-learning instead of fine-tuning. If you're starting with a pre-trained UTF-8 model -- even if your data comes from a different language or uses a different alphabet -- the model will be able to predict your new transcripts, and you should use fine-tuning instead.
+If you want to continue training an alphabet-based 🐸STT model (i.e. not a UTF-8 model) on a new language, or if you just want to add new characters to your custom alphabet, you will probably want to use transfer-learning instead of fine-tuning. If you're starting with a pre-trained UTF-8 model -- even if your data comes from a different language or uses a different alphabet -- the model will be able to predict your new transcripts, and you should use fine-tuning instead.
 
-In a nutshell, DeepSpeech's transfer-learning allows you to remove certain layers from a pre-trained model, initialize new layers for your target data, stitch together the old and new layers, and update all layers via gradient descent. You will remove the pre-trained output layer (and optionally more layers) and reinitialize parameters to fit your target alphabet. The simplest case of transfer-learning is when you remove just the output layer.
+In a nutshell, 🐸STT's transfer-learning allows you to remove certain layers from a pre-trained model, initialize new layers for your target data, stitch together the old and new layers, and update all layers via gradient descent. You will remove the pre-trained output layer (and optionally more layers) and reinitialize parameters to fit your target alphabet. The simplest case of transfer-learning is when you remove just the output layer.
 
-In DeepSpeech's implementation of transfer-learning, all removed layers will be contiguous, starting from the output layer. The key flag you will want to experiment with is ``--drop_source_layers``. This flag accepts an integer from ``1`` to ``5`` and allows you to specify how many layers you want to remove from the pre-trained model. For example, if you supplied ``--drop_source_layers 3``, you will drop the last three layers of the pre-trained model: the output layer, penultimate layer, and LSTM layer. All dropped layers will be reinintialized, and (crucially) the output layer will be defined to match your supplied target alphabet.
+In 🐸STT's implementation of transfer-learning, all removed layers will be contiguous, starting from the output layer. The key flag you will want to experiment with is ``--drop_source_layers``. This flag accepts an integer from ``1`` to ``5`` and allows you to specify how many layers you want to remove from the pre-trained model. For example, if you supplied ``--drop_source_layers 3``, you will drop the last three layers of the pre-trained model: the output layer, penultimate layer, and LSTM layer. All dropped layers will be reinintialized, and (crucially) the output layer will be defined to match your supplied target alphabet.
 
 You need to specify the location of the pre-trained model with ``--load_checkpoint_dir`` and define where your new model checkpoints will be saved with ``--save_checkpoint_dir``. You need to specify how many layers to remove (aka "drop") from the pre-trained model: ``--drop_source_layers``. You also need to supply your new alphabet file using the standard ``--alphabet_config_path`` (remember, using a new alphabet is the whole reason you want to use transfer-learning).
 
 .. code-block:: bash
 
-       python3 DeepSpeech.py \
+       python3 train.py \
            --drop_source_layers 1 \
            --alphabet_config_path my-new-language-alphabet.txt \
            --save_checkpoint_dir path/to/output-checkpoint/folder \
@@ -292,7 +292,7 @@ You need to specify the location of the pre-trained model with ``--load_checkpoi
 UTF-8 mode
 ^^^^^^^^^^
 
-DeepSpeech includes a UTF-8 operating mode which can be useful to model languages with very large alphabets, such as Chinese Mandarin. For details on how it works and how to use it, see :ref:`decoder-docs`.
+🐸STT includes a UTF-8 operating mode which can be useful to model languages with very large alphabets, such as Chinese Mandarin. For details on how it works and how to use it, see :ref:`decoder-docs`.
 
 
 .. _training-data-augmentation:
@@ -314,7 +314,7 @@ For example, for the ``overlay`` augmentation:
 
 .. code-block::
 
-  python3 DeepSpeech.py --augment overlay[p=0.1,source=/path/to/audio.sdb,snr=20.0] ...
+  python3 train.py --augment overlay[p=0.1,source=/path/to/audio.sdb,snr=20.0] ...
 
 
 In the documentation below, whenever a value is specified as ``<float-range>`` or ``<int-range>``, it supports one of the follow formats:
@@ -485,7 +485,7 @@ Example training with all augmentations:
 
 .. code-block:: bash
 
-        python -u DeepSpeech.py \
+        python -u train.py \
           --train_files "train.sdb" \
           --feature_cache ./feature.cache \
           --cache_for_epochs 10 \
@@ -541,5 +541,5 @@ To prevent common problems, make sure you **always use a separate environment wh
 
 .. code-block:: bash
 
-   (base) $ conda create -n deepspeech python=3.7
-   (base) $ conda activate deepspeech
+   (base) $ conda create -n coqui-stt python=3.7
+   (base) $ conda activate coqui-stt

@@ -2,7 +2,7 @@
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "../../deepspeech.h"
+#include "../../coqui-stt.h"
 %}
 
 %include "typemaps.i"
@@ -71,4 +71,4 @@
 %ignore "Metadata::transcripts";
 %ignore "CandidateTranscript::tokens";
 
-%include "../deepspeech.h"
+%include "../coqui-stt.h"

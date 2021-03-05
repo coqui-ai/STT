@@ -125,7 +125,7 @@ int Scorer::load_trie(std::ifstream& fin, const std::string& file_path)
     if (version < FILE_VERSION) {
       std::cerr << "Update your scorer file.";
     } else {
-      std::cerr << "Downgrade your scorer file or update your version of DeepSpeech.";
+      std::cerr << "Downgrade your scorer file or update your version of Coqui STT.";
     }
     std::cerr << std::endl;
     return DS_ERR_SCORER_VERSION_MISMATCH;

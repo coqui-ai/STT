@@ -1,9 +1,9 @@
 .. _build-native-client-dotnet:
 
-Building DeepSpeech native client for Windows
-=============================================
+Building Coqui STT native client for Windows
+============================================
 
-Now we can build the native client of DeepSpeech and run inference on Windows using the C# client, to do that we need to compile the ``native_client``.
+Now we can build the native client of 🐸STT and run inference on Windows using the C# client, to do that we need to compile the ``native_client``.
 
 **Table of Contents**
 
@@ -44,11 +44,11 @@ We highly recommend sticking to the recommended versions of CUDA/cuDNN in order 
 Getting the code
 ----------------
 
-We need to clone ``mozilla/DeepSpeech``.
+We need to clone ``coqui-ai/STT``.
 
 .. code-block:: bash
 
-   git clone https://github.com/mozilla/DeepSpeech
+   git clone https://github.com/coqui-ai/STT
    git submodule sync tensorflow/
    git submodule update --init tensorflow/
 
@@ -61,8 +61,8 @@ There should already be a symbolic link, for this example let's suppose that we 
 
    .
    ├── D:\
-   │   ├── cloned                 # Contains DeepSpeech and tensorflow side by side
-   │   │   └── DeepSpeech         # Root of the cloned DeepSpeech
+   │   ├── cloned                 # Contains 🐸STT and tensorflow side by side
+   │   │   └── STT                # Root of the cloned 🐸STT
    │   │       ├── tensorflow     # Root of the cloned mozilla/tensorflow 
    └── ...
 
@@ -71,7 +71,7 @@ Change your path accordingly to your path structure, for the structure above we 
 
 .. code-block:: bash
 
-   mklink /d "D:\cloned\DeepSpeech\tensorflow\native_client" "D:\cloned\DeepSpeech\native_client"
+   mklink /d "D:\cloned\STT\tensorflow\native_client" "D:\cloned\STT\native_client"
 
 Adding environment variables
 ----------------------------
@@ -119,7 +119,7 @@ Building the native_client
 
 There's one last command to run before building, you need to run the `configure.py <https://github.com/mozilla/tensorflow/blob/master/configure.py>`_ inside ``tensorflow`` cloned directory.
 
-At this point we are ready to start building the ``native_client``, go to ``tensorflow`` sub-directory, following our examples should be ``D:\cloned\DeepSpeech\tensorflow``.  
+At this point we are ready to start building the ``native_client``, go to ``tensorflow`` sub-directory, following our examples should be ``D:\cloned\STT\tensorflow``.  
 
 CPU
 ~~~
@@ -128,7 +128,7 @@ We will add AVX/AVX2 support in the command, please make sure that your CPU supp
 
 .. code-block:: bash
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --copt=/arch:AVX --copt=/arch:AVX2 //native_client:libdeepspeech.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --copt=/arch:AVX --copt=/arch:AVX2 //native_client:libstt.so
 
 GPU with CUDA
 ~~~~~~~~~~~~~
@@ -137,11 +137,11 @@ If you enabled CUDA in `configure.py <https://github.com/mozilla/tensorflow/blob
 
 .. code-block:: bash
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=cuda --copt=/arch:AVX --copt=/arch:AVX2 //native_client:libdeepspeech.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=cuda --copt=/arch:AVX --copt=/arch:AVX2 //native_client:libstt.so
 
-Be patient, if you enabled AVX/AVX2 and CUDA it will take a long time. Finally you should see it stops and shows the path to the generated ``libdeepspeech.so``.
+Be patient, if you enabled AVX/AVX2 and CUDA it will take a long time. Finally you should see it stops and shows the path to the generated ``libstt.so``.
 
 Using the generated library
 ---------------------------
 
-As for now we can only use the generated ``libdeepspeech.so`` with the C# clients, go to `native_client/dotnet/ <https://github.com/mozilla/DeepSpeech/tree/master/native_client/dotnet>`_ in your DeepSpeech directory and open the Visual Studio solution, then we need to build in debug or release mode, finally we just need to copy ``libdeepspeech.so`` to the generated ``x64/Debug`` or ``x64/Release`` directory.
+As for now we can only use the generated ``libstt.so`` with the C# clients, go to `native_client/dotnet/ <https://github.com/coqui-ai/STT/tree/master/native_client/dotnet>`_ in your STT directory and open the Visual Studio solution, then we need to build in debug or release mode, finally we just need to copy ``libstt.so`` to the generated ``x64/Debug`` or ``x64/Release`` directory.

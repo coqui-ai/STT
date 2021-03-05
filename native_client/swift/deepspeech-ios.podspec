@@ -1,16 +1,16 @@
 # Pull in version from outside
-version = File.read(File.join(__dir__, "../../training/deepspeech_training/VERSION")).split("\n")[0]
+version = File.read(File.join(__dir__, "../../training/coqui_stt_training/VERSION")).split("\n")[0]
 
 Pod::Spec.new do |s|
-  s.name         = "deepspeech-ios"
+  s.name         = "stt-ios"
   s.version      = version
-  s.summary      = "DeepSpeech"
-  s.homepage     = "https://github.com/mozilla/DeepSpeech"
+  s.summary      = "Coqui STT"
+  s.homepage     = "https://github.com/coqui-ai/STT"
   s.license      = "Mozilla Public License 2.0"
-  s.authors      = "DeepSpeech authors"
+  s.authors      = "Coqui GmbH"
 
   s.platforms    = { :ios => "9.0" }
-  s.source       = { :git => "https://github.com/mozilla/DeepSpeech.git", :tag => "v#{s.version}" }
+  s.source       = { :git => "https://github.com/coqui-ai/STT.git", :tag => "v#{s.version}" }
 
   # Assuming taskcluster build location. Depending on your Xcode setup, this might be in
   # build/Release-iphoneos/deepspeech_ios.framework instead.

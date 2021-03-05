@@ -3,8 +3,8 @@
 //  deepspeech_ios_test
 //
 //  Created by Reuben Morais on 15.06.20.
-//  Copyright © 2020 Mozilla. All rights reserved.
-//
+//  Copyright © 2020 Mozilla
+//  Copyright © 2021 Coqui GmbH
 
 import SwiftUI
 
@@ -14,7 +14,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Text("DeepSpeech iOS Demo")
+            Text("Coqui STT iOS Demo")
                 .font(.system(size: 30))
             Button("Recognize files", action: recognizeFiles)
                 .padding(30)

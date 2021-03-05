@@ -1,6 +1,6 @@
 Examples
 ========
 
-DeepSpeech examples were moved to a separate repository.
+🐸STT examples were moved to a separate repository.
 
-New location: https://github.com/mozilla/DeepSpeech-examples
+New location: https://github.com/coqui-ai/STT-examples

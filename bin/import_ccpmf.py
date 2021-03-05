@@ -30,9 +30,9 @@ except ImportError as ex:
 import requests
 import json
 
-from deepspeech_training.util.downloader import SIMPLE_BAR, maybe_download
-from deepspeech_training.util.helpers import secs_to_hours
-from deepspeech_training.util.importers import (
+from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
+from coqui_stt_training.util.helpers import secs_to_hours
+from coqui_stt_training.util.importers import (
     get_counter,
     get_importers_parser,
     get_imported_samples,

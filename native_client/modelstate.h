@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "deepspeech.h"
+#include "coqui-stt.h"
 #include "alphabet.h"
 
 #include "ctcdecode/scorer.h"

@@ -1,15 +1,15 @@
 {
     "name" : "$(PROJECT_NAME)",
     "version" : "$(PROJECT_VERSION)",
-    "description" : "DeepSpeech NodeJS bindings",
+    "description" : "Coqui STT NodeJS bindings",
     "main" : "./index.js",
     "types": "./index.d.ts",
     "bin": {
-       "deepspeech": "./client.js"
+       "stt": "./client.js"
     },
-    "author" : "DeepSpeech authors",
+    "author" : "Coqui GmbH",
     "license": "MPL-2.0",
-    "homepage": "https://github.com/mozilla/DeepSpeech/tree/v$(PROJECT_VERSION)#project-deepspeech",
+    "homepage": "https://github.com/coqui-ai/STT",
     "files": [
        "README.md",
        "client.js",
@@ -18,18 +18,18 @@
        "lib/*"
     ],
     "bugs": {
-       "url": "https://github.com/mozilla/DeepSpeech/issues"
+       "url": "https://github.com/coqui-ai/STT/issues"
     },
     "repository"   :  {
        "type" : "git",
-       "url"  : "git://github.com/mozilla/DeepSpeech.git"
+       "url"  : "git://github.com/coqui-ai/STT.git"
     },
     "binary": {
-        "module_name" : "deepspeech",
+        "module_name" : "stt",
         "module_path" : "./lib/binding/v{version}/{platform}-{arch}/{node_abi}/",
         "remote_path" : "./v{version}/{configuration}/",
         "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
-        "host"        : "https://community-tc.services.mozilla.com/api/index/v1/task/project.deepspeech.tensorflow.pip.v1.0.0-warpctc.arm/artifacts/public/"
+        "host"        : "https://host.invalid"
     },
     "dependencies"  : {
       "node-pre-gyp": "0.15.x",

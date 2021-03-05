@@ -16,7 +16,7 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u DeepSpeech.py --noshow_progressbar \
+python -u train.py --noshow_progressbar \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt_bytes' \
   --export_dir '/tmp/train_bytes_tflite' \

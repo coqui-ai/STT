@@ -3,7 +3,7 @@
 Broadly speaking, this script takes the audio downloaded from Common Voice
 for a certain language, in addition to the *.tsv files output by CorporaCreator,
 and the script formats the data and transcripts to be in a state usable by
-DeepSpeech.py
+train.py
 Use "python3 import_cv2.py -h" for help
 """
 import csv
@@ -15,8 +15,8 @@ from multiprocessing import Pool
 import progressbar
 import sox
 
-from deepspeech_training.util.downloader import SIMPLE_BAR
-from deepspeech_training.util.importers import (
+from coqui_stt_training.util.downloader import SIMPLE_BAR
+from coqui_stt_training.util.importers import (
     get_counter,
     get_imported_samples,
     get_importers_parser,
@@ -138,9 +138,9 @@ def _maybe_convert_set(dataset, tsv_dir, audio_dir, filter_obj, space_after_ever
         print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
     output_csv = os.path.join(os.path.abspath(audio_dir), dataset + ".csv")
-    print("Saving new DeepSpeech-formatted CSV file to: ", output_csv)
+    print("Saving new Coqui STT-formatted CSV file to: ", output_csv)
     with open(output_csv, "w", encoding="utf-8", newline="") as output_csv_file:
-        print("Writing CSV file for DeepSpeech.py as: ", output_csv)
+        print("Writing CSV file for train.py as: ", output_csv)
         writer = csv.DictWriter(output_csv_file, fieldnames=FIELDNAMES)
         writer.writeheader()
         bar = progressbar.ProgressBar(max_value=len(rows), widgets=SIMPLE_BAR)

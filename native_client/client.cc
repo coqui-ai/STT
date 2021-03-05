@@ -34,7 +34,7 @@
 #endif // NO_DIR
 #include <vector>
 
-#include "deepspeech.h"
+#include "coqui-stt.h"
 #include "args.h"
 
 typedef struct {
@@ -406,7 +406,7 @@ ProcessFile(ModelState* context, const char* path, bool show_times)
 {
   ds_audio_buffer audio = GetAudioBuffer(path, DS_GetModelSampleRate(context));
 
-  // Pass audio to DeepSpeech
+  // Pass audio to STT
   // We take half of buffer_size because buffer is a char* while
   // LocalDsSTT() expected a short*
   ds_result result = LocalDsSTT(context,
@@ -450,7 +450,7 @@ main(int argc, char **argv)
     return 1;
   }
 
-  // Initialise DeepSpeech
+  // Initialise STT
   ModelState* ctx;
   // sphinx-doc: c_ref_model_start
   int status = DS_CreateModel(model, &ctx);

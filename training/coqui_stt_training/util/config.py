@@ -58,7 +58,7 @@ def initialize_globals():
 
     # Set default checkpoint dir
     if not FLAGS.checkpoint_dir:
-        FLAGS.checkpoint_dir = xdg.save_data_path(os.path.join('deepspeech', 'checkpoints'))
+        FLAGS.checkpoint_dir = xdg.save_data_path(os.path.join('stt', 'checkpoints'))
 
     if FLAGS.load_train not in ['last', 'best', 'init', 'auto']:
         FLAGS.load_train = 'auto'
@@ -68,7 +68,7 @@ def initialize_globals():
 
     # Set default summary dir
     if not FLAGS.summary_dir:
-        FLAGS.summary_dir = xdg.save_data_path(os.path.join('deepspeech', 'summaries'))
+        FLAGS.summary_dir = xdg.save_data_path(os.path.join('stt', 'summaries'))
 
     # Standard session configuration that'll be used for all new sessions.
     c.session_config = tfv1.ConfigProto(allow_soft_placement=True, log_device_placement=FLAGS.log_placement,

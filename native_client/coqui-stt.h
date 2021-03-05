@@ -1,5 +1,5 @@
-#ifndef DEEPSPEECH_H
-#define DEEPSPEECH_H
+#ifndef COQUI_STT_H
+#define COQUI_STT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,12 +7,12 @@ extern "C" {
 
 #ifndef SWIG
     #if defined _MSC_VER
-        #define DEEPSPEECH_EXPORT __declspec(dllexport)
+        #define STT_EXPORT __declspec(dllexport)
     #else
-        #define DEEPSPEECH_EXPORT __attribute__ ((visibility("default")))
+        #define STT_EXPORT __attribute__ ((visibility("default")))
     #endif /*End of _MSC_VER*/
 #else
-    #define DEEPSPEECH_EXPORT
+    #define STT_EXPORT
 #endif
 
 typedef struct ModelState ModelState;
@@ -96,14 +96,14 @@ DS_FOR_EACH_ERROR(DEFINE)
 };
 
 /**
- * @brief An object providing an interface to a trained DeepSpeech model.
+ * @brief An object providing an interface to a trained Coqui STT model.
  *
  * @param aModelPath The path to the frozen model graph.
  * @param[out] retval a ModelState pointer
  *
  * @return Zero on success, non-zero on failure.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_CreateModel(const char* aModelPath,
                    ModelState** retval);
 
@@ -116,7 +116,7 @@ int DS_CreateModel(const char* aModelPath,
  *
  * @return Beam width value used by the model.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 unsigned int DS_GetModelBeamWidth(const ModelState* aCtx);
 
 /**
@@ -128,7 +128,7 @@ unsigned int DS_GetModelBeamWidth(const ModelState* aCtx);
  *
  * @return Zero on success, non-zero on failure.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_SetModelBeamWidth(ModelState* aCtx,
                          unsigned int aBeamWidth);
 
@@ -139,13 +139,13 @@ int DS_SetModelBeamWidth(ModelState* aCtx,
  *
  * @return Sample rate expected by the model for its input.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_GetModelSampleRate(const ModelState* aCtx);
 
 /**
  * @brief Frees associated resources and destroys model object.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 void DS_FreeModel(ModelState* ctx);
 
 /**
@@ -156,7 +156,7 @@ void DS_FreeModel(ModelState* ctx);
  *
  * @return Zero on success, non-zero on failure (invalid arguments).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_EnableExternalScorer(ModelState* aCtx,
                             const char* aScorerPath);
 
@@ -171,7 +171,7 @@ int DS_EnableExternalScorer(ModelState* aCtx,
  *
  * @return Zero on success, non-zero on failure (invalid arguments).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_AddHotWord(ModelState* aCtx,
                   const char* word,
                   float boost);
@@ -184,7 +184,7 @@ int DS_AddHotWord(ModelState* aCtx,
  *
  * @return Zero on success, non-zero on failure (invalid arguments).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_EraseHotWord(ModelState* aCtx,
                     const char* word);
 
@@ -195,7 +195,7 @@ int DS_EraseHotWord(ModelState* aCtx,
  *
  * @return Zero on success, non-zero on failure (invalid arguments).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_ClearHotWords(ModelState* aCtx);
 
 /**
@@ -205,7 +205,7 @@ int DS_ClearHotWords(ModelState* aCtx);
  *
  * @return Zero on success, non-zero on failure.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_DisableExternalScorer(ModelState* aCtx);
 
 /**
@@ -217,13 +217,13 @@ int DS_DisableExternalScorer(ModelState* aCtx);
  *
  * @return Zero on success, non-zero on failure.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_SetScorerAlphaBeta(ModelState* aCtx,
                           float aAlpha,
                           float aBeta);
 
 /**
- * @brief Use the DeepSpeech model to convert speech to text.
+ * @brief Use the Coqui STT model to convert speech to text.
  *
  * @param aCtx The ModelState pointer for the model to use.
  * @param aBuffer A 16-bit, mono raw audio signal at the appropriate
@@ -233,13 +233,13 @@ int DS_SetScorerAlphaBeta(ModelState* aCtx,
  * @return The STT result. The user is responsible for freeing the string using
  *         {@link DS_FreeString()}. Returns NULL on error.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 char* DS_SpeechToText(ModelState* aCtx,
                       const short* aBuffer,
                       unsigned int aBufferSize);
 
 /**
- * @brief Use the DeepSpeech model to convert speech to text and output results
+ * @brief Use the Coqui STT model to convert speech to text and output results
  * including metadata.
  *
  * @param aCtx The ModelState pointer for the model to use.
@@ -253,7 +253,7 @@ char* DS_SpeechToText(ModelState* aCtx,
  *         user is responsible for freeing Metadata by calling {@link DS_FreeMetadata()}.
  *         Returns NULL on error.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 Metadata* DS_SpeechToTextWithMetadata(ModelState* aCtx,
                                       const short* aBuffer,
                                       unsigned int aBufferSize,
@@ -270,7 +270,7 @@ Metadata* DS_SpeechToTextWithMetadata(ModelState* aCtx,
  *
  * @return Zero for success, non-zero on failure.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 int DS_CreateStream(ModelState* aCtx,
                     StreamingState** retval);
 
@@ -282,7 +282,7 @@ int DS_CreateStream(ModelState* aCtx,
  *                appropriate sample rate (matching what the model was trained on).
  * @param aBufferSize The number of samples in @p aBuffer.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 void DS_FeedAudioContent(StreamingState* aSctx,
                          const short* aBuffer,
                          unsigned int aBufferSize);
@@ -295,7 +295,7 @@ void DS_FeedAudioContent(StreamingState* aSctx,
  * @return The STT intermediate result. The user is responsible for freeing the
  *         string using {@link DS_FreeString()}.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 char* DS_IntermediateDecode(const StreamingState* aSctx);
 
 /**
@@ -310,7 +310,7 @@ char* DS_IntermediateDecode(const StreamingState* aSctx);
  *         responsible for freeing Metadata by calling {@link DS_FreeMetadata()}.
  *         Returns NULL on error.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 Metadata* DS_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
                                             unsigned int aNumResults);
 
@@ -325,7 +325,7 @@ Metadata* DS_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
  *
  * @note This method will free the state pointer (@p aSctx).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 char* DS_FinishStream(StreamingState* aSctx);
 
 /**
@@ -343,7 +343,7 @@ char* DS_FinishStream(StreamingState* aSctx);
  *
  * @note This method will free the state pointer (@p aSctx).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 Metadata* DS_FinishStreamWithMetadata(StreamingState* aSctx,
                                       unsigned int aNumResults);
 
@@ -356,19 +356,19 @@ Metadata* DS_FinishStreamWithMetadata(StreamingState* aSctx,
  *
  * @note This method will free the state pointer (@p aSctx).
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 void DS_FreeStream(StreamingState* aSctx);
 
 /**
  * @brief Free memory allocated for metadata information.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 void DS_FreeMetadata(Metadata* m);
 
 /**
- * @brief Free a char* string returned by the DeepSpeech API.
+ * @brief Free a char* string returned by the Coqui STT API.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 void DS_FreeString(char* str);
 
 /**
@@ -377,7 +377,7 @@ void DS_FreeString(char* str);
  *
  * @return The version string.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 char* DS_Version();
 
 /**
@@ -386,13 +386,13 @@ char* DS_Version();
  *
  * @return The error description.
  */
-DEEPSPEECH_EXPORT
+STT_EXPORT
 char* DS_ErrorCodeToErrorMessage(int aErrorCode);
 
-#undef DEEPSPEECH_EXPORT
+#undef STT_EXPORT
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DEEPSPEECH_H */
+#endif /* COQUI_STT_H */

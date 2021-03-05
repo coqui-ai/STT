@@ -5,7 +5,7 @@ framework module deepspeech_ios {
   module * { export * }
   
   explicit module libdeepspeech_Private {
-      header "deepspeech.h"
+      header "coqui-stt.h"
       export *
       link "deepspeech"
   }

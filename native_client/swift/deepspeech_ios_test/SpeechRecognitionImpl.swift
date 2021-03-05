@@ -1,11 +1,11 @@
 //
-//  DeepSpeech.swift
+//  SpeechRecognitionImpl.swift
 //  deepspeech_ios_test
 //
 //  Created by Erik Ziegler on 27.07.20.
-//  Copyright © 2020 Mozilla. All rights reserved.
-//
-
+//  Copyright © 2020 Mozilla
+//  Copyright © 2020 Erik Ziegler
+//  Copyright © 2021 Coqui GmbH
 import Foundation
 import AVFoundation
 import AudioToolbox

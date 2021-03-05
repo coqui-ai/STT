@@ -91,8 +91,7 @@ TFModelState::init(const char* model_path)
     std::cerr << "Specified model file version (" << graph_version << ") is "
               << "incompatible with minimum version supported by this client ("
               << ds_graph_version() << "). See "
-              << "https://github.com/mozilla/DeepSpeech/blob/"
-              << ds_git_version() << "/doc/USING.rst#model-compatibility "
+              << "https://stt.readthedocs.io/en/latest/USING.html#model-compatibility "
               << "for more information" << std::endl;
     return DS_ERR_MODEL_INCOMPATIBLE;
   }

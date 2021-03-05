@@ -1,4 +1,4 @@
-#include "deepspeech.h"
+#include "coqui-stt.h"
 #include <string.h>
 
 char*

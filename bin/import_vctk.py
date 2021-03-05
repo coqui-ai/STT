@@ -11,8 +11,8 @@ from zipfile import ZipFile
 import librosa
 import progressbar
 
-from deepspeech_training.util.downloader import SIMPLE_BAR, maybe_download
-from deepspeech_training.util.importers import (
+from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
+from coqui_stt_training.util.importers import (
     get_counter,
     get_imported_samples,
     print_import_report,
@@ -35,7 +35,7 @@ def _download_and_preprocess_data(target_dir):
     archive_path = maybe_download(ARCHIVE_NAME, target_dir, ARCHIVE_URL)
     # Conditionally extract common voice data
     _maybe_extract(target_dir, ARCHIVE_DIR_NAME, archive_path)
-    # Conditionally convert common voice CSV files and mp3 data to DeepSpeech CSVs and wav
+    # Conditionally convert common voice CSV files and mp3 data to Coqui STT CSVs and wav
     _maybe_convert_sets(target_dir, ARCHIVE_DIR_NAME)
 
 
