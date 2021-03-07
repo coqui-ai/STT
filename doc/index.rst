@@ -8,6 +8,8 @@ Coqui STT
 
 **Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
+For now we only have working packages for Python on Linux, without GPU support. We're working to get the rest of our supported languages and architectures up and running.
+
 To install and use 🐸STT all you have to do is:
 
 .. code-block:: bash
@@ -32,7 +34,7 @@ To install and use 🐸STT all you have to do is:
 
 A pre-trained English model is available for use and can be downloaded following the instructions in :ref:`the usage docs <usage-docs>`. For the latest release, including pre-trained models and checkpoints, `see the GitHub releases page <https://github.com/coqui-ai/STT/releases/latest>`_.
 
-Quicker inference can be performed using a supported NVIDIA GPU on Linux. See the `release notes <https://github.com/coqui-ai/STT/releases/latest>`_ to find which GPUs are supported. To run ``stt`` on a GPU, install the GPU specific package:
+Quicker inference can be performed using a supported NVIDIA GPU on Linux. See the `release notes <https://github.com/coqui-ai/STT/releases/latest>`_ to find which GPUs are supported. To run ``stt`` on a GPU, install the GPU specific package. Note that for now the GPU package is not available. We're working to get all of our supported languages and architectures up and running.
 
 .. code-block:: bash
 
