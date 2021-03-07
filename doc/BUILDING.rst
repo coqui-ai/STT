@@ -155,7 +155,7 @@ Building CTC Decoder for training on unsupported platforms
 
 We only support building CTC Decoder on x86-64 architecture.
 However, we offer some hints on building the CTC decoder on other
-architectures, and you might find some help in our `discourse <https://discourse.mozilla.org/>`.
+architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
 
 Feedback on improving this section or usage on other architectures is welcome.
 
@@ -186,7 +186,7 @@ Cross-building
 RPi3 ARMv7 and LePotato ARM64
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We do support cross-compilation. Please refer to our ``mozilla/tensorflow`` fork, where we define the following ``--config`` flags:
+We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
 
 
 * ``--config=rpi3`` and ``--config=rpi3_opt`` for Raspbian / ARMv7
