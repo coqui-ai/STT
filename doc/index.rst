@@ -6,7 +6,7 @@
 .. image:: https://raw.githubusercontent.com/coqui-ai/STT/main/images/coqui-STT-logo-green.png
   :alt: Coqui STT logo and wordmark
 
-**Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models.
+**Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
 🐸STT is battle tested in both production and research 🚀
 

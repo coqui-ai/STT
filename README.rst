@@ -10,7 +10,7 @@
    :target: CODE_OF_CONDUCT.md
    :alt: Contributor Covenant
 
-**Coqui STT** is an open-source deep-learning toolkit for training and deploying Speech-To-Text models. :frog:STT is battle tested in both production and research :rocket:
+**Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
 .. |doi| image:: https://zenodo.org/badge/344354127.svg
    :target: https://zenodo.org/badge/latestdoi/344354127
