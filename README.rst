@@ -10,9 +10,7 @@
    :target: CODE_OF_CONDUCT.md
    :alt: Contributor Covenant
 
-.. |gitter-img| image:: https://badges.gitter.im/coqui-ai/STT.svg
-   :target: https://gitter.im/coqui-ai/STT?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
-   :alt: Gitter Room
+**Coqui STT** is an open-source deep-learning toolkit for training and deploying Speech-To-Text models. :frog:STT is battle tested in both production and research :rocket:
 
 .. |doi| image:: https://zenodo.org/badge/344354127.svg
    :target: https://zenodo.org/badge/latestdoi/344354127
