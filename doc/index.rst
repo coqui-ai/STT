@@ -6,7 +6,7 @@
 Coqui STT
 =========
 
-Coqui STT (🐸STT) is an open source Speech-To-Text engine, using a model trained by machine learning techniques based on `Baidu's Deep Speech research paper <https://arxiv.org/abs/1412.5567>`_. 🐸STT uses Google's `TensorFlow <https://www.tensorflow.org/>`_ to make the implementation easier.
+**Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
 To install and use 🐸STT all you have to do is:
 
