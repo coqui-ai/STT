@@ -158,7 +158,9 @@ To build the ``coqui_stt_ctcdecoder`` package, you'll need the general requireme
 Building CTC Decoder for training on unsupported platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
+We only support building CTC Decoder on x86-64 architecture.
+However, we offer some hints on building the CTC decoder on other
+architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
 
 Feedback on improving this section or usage on other architectures is welcome.
 
@@ -186,7 +188,7 @@ Cross-building
 RPi3 ARMv7 and LePotato ARM64
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We support cross-compilation from Linux hosts. The following ``--config`` flags can be specified when building with bazel:
+We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
 
 * ``--config=rpi3_opt`` for Raspbian / ARMv7
 * ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
