@@ -3,7 +3,11 @@
 Supported platforms
 ===================
 
+<<<<<<< HEAD
 Here we maintain the list of supported platforms for deployment.
+=======
+Here we maintain the list of supported platforms for running inference. Note that for now we only have working packages for Python on Linux, without GPU support. We're working to get the rest of our supported languages and architectures up and running.
+>>>>>>> 3b0faaca (Note on supported platforms)
 
 Linux / AMD64
 ^^^^^^^^^^^^^^^^^^^^^^^^^
