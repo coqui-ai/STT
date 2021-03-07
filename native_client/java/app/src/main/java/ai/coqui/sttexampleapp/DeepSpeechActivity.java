@@ -132,10 +132,10 @@ public class DeepSpeechActivity extends AppCompatActivity {
         this._tfliteModel   = (EditText) findViewById(R.id.tfliteModel);
         this._audioFile     = (EditText) findViewById(R.id.audioFile);
 
-        this._tfliteModel.setText("/sdcard/deepspeech/output_graph.tflite");
+        this._tfliteModel.setText("/sdcard/stt/output_graph.tflite");
         this._tfliteStatus.setText("Ready, waiting ...");
 
-        this._audioFile.setText("/sdcard/deepspeech/audio.wav");
+        this._audioFile.setText("/sdcard/stt/audio.wav");
 
         this._startInference = (Button) findViewById(R.id.btnStartInference);
     }

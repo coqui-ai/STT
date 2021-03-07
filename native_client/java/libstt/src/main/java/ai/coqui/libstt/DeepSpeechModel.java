@@ -6,8 +6,8 @@ package ai.coqui.libstt;
 public class DeepSpeechModel {
 
     static {
-        System.loadLibrary("deepspeech-jni");
-        System.loadLibrary("deepspeech");
+        System.loadLibrary("stt-jni");
+        System.loadLibrary("stt");
     }
 
     // FIXME: We should have something better than those SWIGTYPE_*

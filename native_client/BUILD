@@ -114,9 +114,9 @@ cc_library(
 cc_library(
     name = "coqui_stt_bundle",
     srcs = [
-        "deepspeech.cc",
+        "stt.cc",
         "coqui-stt.h",
-        "deepspeech_errors.cc",
+        "stt_errors.cc",
         "modelstate.cc",
         "modelstate.h",
         "workspace_status.cc",
@@ -229,7 +229,7 @@ cc_binary(
     name = "generate_scorer_package",
     srcs = [
         "generate_scorer_package.cpp",
-        "deepspeech_errors.cc",
+        "stt_errors.cc",
     ],
     copts = ["-std=c++11"],
     deps = [

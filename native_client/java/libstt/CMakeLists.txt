@@ -11,24 +11,24 @@ cmake_minimum_required(VERSION 3.4.1)
 # Gradle automatically packages shared libraries with your APK.
 
 add_library( # Sets the name of the library.
-             deepspeech-jni
+             stt-jni
 
              # Sets the library as a shared library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             ../jni/deepspeech_wrap.cpp )
+             ../jni/stt_wrap.cpp )
 
-add_library( deepspeech-lib
+add_library( stt-lib
              SHARED
              IMPORTED )
 
-set_target_properties( deepspeech-lib
+set_target_properties( stt-lib
              PROPERTIES
              IMPORTED_LOCATION
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libstt.so )
 
-add_custom_command( TARGET deepspeech-jni POST_BUILD
+add_custom_command( TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libstt.so
              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libstt.so )
@@ -52,9 +52,9 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-                       deepspeech-jni
+                       stt-jni
 
-                       deepspeech-lib
+                       stt-lib
 
                        # Links the target library to the log library
                        # included in the NDK.

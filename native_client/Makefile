@@ -16,7 +16,7 @@ include definitions.mk
 default: $(STT_BIN)
 
 clean:
-	rm -f deepspeech
+	rm -f stt
 
 $(STT_BIN): client.cc Makefile
 	$(CXX) $(CFLAGS) $(CFLAGS_DEEPSPEECH) $(SOX_CFLAGS) client.cc $(LDFLAGS) $(SOX_LDFLAGS)

@@ -8,7 +8,7 @@ GRADLE ?= ./gradlew
 all: apk
 
 clean: apk-clean
-	rm -rf *.java jni/deepspeech_wrap.cpp
+	rm -rf *.java jni/stt_wrap.cpp
 
 apk-clean:
 	$(GRADLE) clean
@@ -28,4 +28,4 @@ maven-bundle: apk
 	$(GRADLE) zipMavenArtifacts
 
 bindings: clean ds-swig
-	$(DS_SWIG_ENV) swig -c++ -java -package ai.coqui.libstt -outdir libstt/src/main/java/ai/coqui/libstt/ -o jni/deepspeech_wrap.cpp jni/deepspeech.i
+	$(DS_SWIG_ENV) swig -c++ -java -package ai.coqui.libstt -outdir libstt/src/main/java/ai/coqui/libstt/ -o jni/stt_wrap.cpp jni/stt.i
