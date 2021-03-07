@@ -3,7 +3,7 @@
 Using a Pre-trained Model
 =========================
 
-Inference using a 🐸STT pre-trained model can be done with a client/language binding package. We have four clients/language bindings in this repository, listed below, and also a few community-maintained clients/language bindings in other repositories, listed `further down in this README <#third-party-bindings>`_.
+Inference using a 🐸STT pre-trained model can be done with a client/language binding package. We have four clients/language bindings in this repository, listed below, and also a few community-maintained clients/language bindings in other repositories, listed `further down in this README <#third-party-bindings>`_. Note that for now we only have working packages for Python on Linux, without GPU support. We're working to get the rest of our supported languages and architectures up and running.
 
 * :ref:`The C API <c-usage>`.
 * :ref:`The Python package/language binding <py-usage>`
