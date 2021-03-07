@@ -63,7 +63,7 @@ There should already be a symbolic link, for this example let's suppose that we 
    ├── D:\
    │   ├── cloned                 # Contains 🐸STT and tensorflow side by side
    │   │   └── STT                # Root of the cloned 🐸STT
-   │   │       ├── tensorflow     # Root of the cloned mozilla/tensorflow 
+   │   │       ├── tensorflow     # Root of the cloned coqui-ai/tensorflow
    └── ...
 
 
@@ -117,7 +117,7 @@ If you run CUDA enabled ``native_client`` we need to add the following to the ``
 Building the native_client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There's one last command to run before building, you need to run the `configure.py <https://github.com/mozilla/tensorflow/blob/master/configure.py>`_ inside ``tensorflow`` cloned directory.
+There's one last command to run before building, you need to run the `configure.py <https://github.com/coqui-ai/tensorflow/blob/master/configure.py>`_ inside ``tensorflow`` cloned directory.
 
 At this point we are ready to start building the ``native_client``, go to ``tensorflow`` sub-directory, following our examples should be ``D:\cloned\STT\tensorflow``.  
 
@@ -133,7 +133,7 @@ We will add AVX/AVX2 support in the command, please make sure that your CPU supp
 GPU with CUDA
 ~~~~~~~~~~~~~
 
-If you enabled CUDA in `configure.py <https://github.com/mozilla/tensorflow/blob/master/configure.py>`_ configuration command now you can add ``--config=cuda`` to compile with CUDA support.
+If you enabled CUDA in `configure.py <https://github.com/coqui-ai/tensorflow/blob/master/configure.py>`_ configuration command now you can add ``--config=cuda`` to compile with CUDA support.
 
 .. code-block:: bash
 
