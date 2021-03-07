@@ -1,12 +1,12 @@
 Java API Usage example
 ======================
 
-Examples are from `native_client/java/app/src/main/java/org/deepspeech/DeepSpeechActivity.java`.
+Examples are from `native_client/java/app/src/main/java/ai/coqui/STTActivity.java`.
 
 Creating a model instance and loading model
 -------------------------------------------
 
-.. literalinclude:: ../native_client/java/app/src/main/java/org/deepspeech/DeepSpeechActivity.java
+.. literalinclude:: ../native_client/java/app/src/main/java/ai/coqui/STTActivity.java
    :language: java
    :linenos:
    :lineno-match:
@@ -16,7 +16,7 @@ Creating a model instance and loading model
 Performing inference
 --------------------
 
-.. literalinclude:: ../native_client/java/app/src/main/java/org/deepspeech/DeepSpeechActivity.java
+.. literalinclude:: ../native_client/java/app/src/main/java/ai/coqui/STTActivity.java
    :language: java
    :linenos:
    :lineno-match:
@@ -26,4 +26,4 @@ Performing inference
 Full source code
 ----------------
 
-See :download:`Full source code<../native_client/java/app/src/main/java/org/deepspeech/DeepSpeechActivity.java>`.
+See :download:`Full source code<../native_client/java/app/src/main/java/ai/coqui/STTActivity.java>`.

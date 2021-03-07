@@ -815,7 +815,7 @@
    fun:_ZN6Scorer9load_trieERSt14basic_ifstreamIcSt11char_traitsIcEERKNSt7__cxx1112basic_stringIcS2_SaIcEEE
    fun:_ZN6Scorer7load_lmERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
    fun:_ZN6Scorer4initERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERK8Alphabet
-   fun:DS_EnableExternalScorer
+   fun:STT_EnableExternalScorer
    fun:main
 }
 {
@@ -831,7 +831,7 @@
    fun:_ZN6Scorer9load_trieERSt14basic_ifstreamIcSt11char_traitsIcEERKNSt7__cxx1112basic_stringIcS2_SaIcEEE
    fun:_ZN6Scorer7load_lmERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
    fun:_ZN6Scorer4initERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERK8Alphabet
-   fun:DS_EnableExternalScorer
+   fun:STT_EnableExternalScorer
    fun:main
 }
 {

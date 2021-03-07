@@ -142,7 +142,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -1302,7 +1302,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -1317,7 +1317,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -1384,7 +1384,7 @@
    fun:_ZN10tensorflow13DirectSession3RunERKNS_10RunOptionsERKSt6vectorISt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEENS_6TensorEESaISD_EERKS4_ISB_SaISB_EESL_PS4_ISC_SaISC_EEPNS_11RunMetadataE
    fun:_ZN10tensorflow13DirectSession3RunERKSt6vectorISt4pairINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEENS_6TensorEESaISA_EERKS1_IS8_SaIS8_EESI_PS1_IS9_SaIS9_EE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -1571,7 +1571,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -1589,7 +1589,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
 }
 {
    <tensorflow_full>
@@ -2532,7 +2532,7 @@
    fun:_ZN10tensorflow10monitoring5GaugeIbLi0EE7GetCellIJEEEPNS0_9GaugeCellIbEEDpRKT_
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -3685,7 +3685,7 @@
    fun:_ZN10tensorflow13DirectSession6CreateEONS_8GraphDefE
    fun:_ZN10tensorflow13DirectSession6CreateERKNS_8GraphDefE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -6162,7 +6162,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -6179,7 +6179,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -7533,7 +7533,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }
 {
@@ -7551,7 +7551,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
 }
 {
    <tensorflow_full>
@@ -8838,7 +8838,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
 }
 {
    <tensorflow_full>
@@ -9453,7 +9453,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
 }
 {
    <tensorflow_full>
@@ -9941,7 +9941,7 @@
    fun:_ZN10tensorflow20DirectSessionFactory10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN10tensorflow10NewSessionERKNS_14SessionOptionsEPPNS_7SessionE
    fun:_ZN12TFModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
 }
 {
    <tensorflow_full>

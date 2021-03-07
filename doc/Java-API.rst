@@ -1,29 +1,29 @@
 Java
 ====
 
-DeepSpeechModel
+STTModel
 ---------------
 
-.. doxygenclass:: org::deepspeech::libdeepspeech::DeepSpeechModel
-   :project: deepspeech-java
+.. doxygenclass:: ai::coqui::libstt::STTModel
+   :project: stt-java
    :members:
 
 Metadata
 --------
 
-.. doxygenclass:: org::deepspeech::libdeepspeech::Metadata
-   :project: deepspeech-java
+.. doxygenclass:: ai::coqui::libstt::Metadata
+   :project: stt-java
    :members: getNumTranscripts, getTranscript
 
 CandidateTranscript
 -------------------
 
-.. doxygenclass:: org::deepspeech::libdeepspeech::CandidateTranscript
-   :project: deepspeech-java
+.. doxygenclass:: ai::coqui::libstt::CandidateTranscript
+   :project: stt-java
    :members: getNumTokens, getConfidence, getToken
 
 TokenMetadata
 -------------
-.. doxygenclass:: org::deepspeech::libdeepspeech::TokenMetadata
-   :project: deepspeech-java
+.. doxygenclass:: ai::coqui::libstt::TokenMetadata
+   :project: stt-java
    :members: getText, getTimestep, getStartTime

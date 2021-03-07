@@ -81,9 +81,9 @@ extensions = [
 
 
 breathe_projects = {
-  "deepspeech-c": "xml-c/",
-  "deepspeech-java": "xml-java/",
-  "deepspeech-dotnet": "xml-dotnet/",
+  "stt-c": "xml-c/",
+  "stt-java": "xml-java/",
+  "stt-dotnet": "xml-dotnet/",
 }
 
 js_source_path = "../native_client/javascript/index.ts"

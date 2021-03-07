@@ -64,9 +64,9 @@ void PrintHelp(const char* bin)
     "\t--hot_words\t\t\tHot-words and their boosts. Word:Boost pairs are comma-separated\n"
     "\t--help\t\t\t\tShow help\n"
     "\t--version\t\t\tPrint version and exits\n";
-    char* version = DS_Version();
+    char* version = STT_Version();
     std::cerr << "Coqui STT " << version << "\n";
-    DS_FreeString(version);
+    STT_FreeString(version);
     exit(1);
 }
 
@@ -169,9 +169,9 @@ bool ProcessArgs(int argc, char** argv)
     }
 
     if (has_versions) {
-        char* version = DS_Version();
+        char* version = STT_Version();
         std::cout << "Coqui " << version << "\n";
-        DS_FreeString(version);
+        STT_FreeString(version);
         return false;
     }
 

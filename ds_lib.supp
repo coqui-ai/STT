@@ -5,6 +5,6 @@
    fun:_Znwm
    fun:_ZN6tflite20DefaultErrorReporterEv
    fun:_ZN16TFLiteModelState4initEPKc
-   fun:DS_CreateModel
+   fun:STT_CreateModel
    fun:main
 }

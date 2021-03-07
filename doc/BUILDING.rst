@@ -60,7 +60,7 @@ Compile Coqui STT
 -----------------
 
 Compile ``libstt.so``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 Within your TensorFlow directory, there should be a symbolic link to the 🐸STT ``native_client`` directory. If it is not present, create it with the follow command:
 
@@ -238,8 +238,8 @@ Due to the discontinuation of Bintray JCenter we do not have pre-built Android p
   
      implementation 'stt.coqui.ai:libstt:VERSION@aar'
 
-Building ``libstt.so``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building ``libstt.so`` for Android
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can build the ``libstt.so`` using (ARMv7):
 
@@ -254,7 +254,7 @@ Or (ARM64):
    bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic --config=android --config=android_arm64 --define=runtime=tflite --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 //native_client:libstt.so
 
 Building ``libstt.aar``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 In the unlikely event you have to rebuild the JNI bindings, source code is
 available under the ``libstt`` subdirectory.  Building depends on shared
@@ -270,7 +270,7 @@ and adapt file naming (when missing, the error message should states what
 filename it expects and where).
 
 Building C++ ``stt`` binary
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Building the ``stt`` binary will happen through ``ndk-build`` (ARMv7):
 
@@ -306,7 +306,7 @@ mono 16kHz 16-bits file and it might fail on some WAVE file that are not
 following exactly the specification.
 
 Running ``stt`` via adb
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 You should use ``adb push`` to send data to device, please refer to Android
 documentation on how to use that.
@@ -349,7 +349,7 @@ to leverage GPU / DSP / NPU * Hexagon, the Qualcomm-specific DSP
 
 This is highly experimental:
 
-* Requires passing environment variable ``DS_TFLITE_DELEGATE`` with values of
+* Requires passing environment variable ``STT_TFLITE_DELEGATE`` with values of
   ``gpu``, ``nnapi`` or ``hexagon`` (only one at a time)
 * Might require exported model changes (some Op might not be supported)
 * We can't guarantee it will work, nor it will be faster than default

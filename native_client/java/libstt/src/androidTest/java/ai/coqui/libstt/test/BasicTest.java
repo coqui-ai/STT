@@ -11,7 +11,7 @@ import org.junit.runners.MethodSorters;
 
 import static org.junit.Assert.*;
 
-import ai.coqui.libstt.DeepSpeechModel;
+import ai.coqui.libstt.STTModel;
 import ai.coqui.libstt.CandidateTranscript;
 
 import java.io.RandomAccessFile;
@@ -58,8 +58,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_basic() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_basic() {
+        STTModel m = new STTModel(modelFile);
         m.freeModel();
     }
 
@@ -71,7 +71,7 @@ public class BasicTest {
         return retval;
     }
 
-    private String doSTT(DeepSpeechModel m, boolean extendedMetadata) {
+    private String doSTT(STTModel m, boolean extendedMetadata) {
         try {
             RandomAccessFile wave = new RandomAccessFile(wavFile, "r");
 
@@ -115,8 +115,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_stt_noLM() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_stt_noLM() {
+        STTModel m = new STTModel(modelFile);
 
         String decoded = doSTT(m, false);
         assertEquals("she had your dark suit in greasy wash water all year", decoded);
@@ -124,8 +124,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_stt_withLM() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_stt_withLM() {
+        STTModel m = new STTModel(modelFile);
         m.enableExternalScorer(scorerFile);
 
         String decoded = doSTT(m, false);
@@ -134,8 +134,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_sttWithMetadata_noLM() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_sttWithMetadata_noLM() {
+        STTModel m = new STTModel(modelFile);
 
         String decoded = doSTT(m, true);
         assertEquals("she had your dark suit in greasy wash water all year", decoded);
@@ -143,8 +143,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_sttWithMetadata_withLM() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_sttWithMetadata_withLM() {
+        STTModel m = new STTModel(modelFile);
         m.enableExternalScorer(scorerFile);
 
         String decoded = doSTT(m, true);
@@ -153,8 +153,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_HotWord_withLM() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_HotWord_withLM() {
+        STTModel m = new STTModel(modelFile);
         m.enableExternalScorer(scorerFile);
 
         for(int i = 0; i < word.length; i++) {
@@ -168,8 +168,8 @@ public class BasicTest {
     }
 
     @Test
-    public void loadDeepSpeech_HotWord_noLM() {
-        DeepSpeechModel m = new DeepSpeechModel(modelFile);
+    public void loadSTT_HotWord_noLM() {
+        STTModel m = new STTModel(modelFile);
         try {
             m.addHotWord(word[0], boost[0]);
             assert(false);
