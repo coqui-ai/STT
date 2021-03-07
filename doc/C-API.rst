@@ -10,65 +10,65 @@ C API
 
 See also the list of error codes including descriptions for each error in :ref:`error-codes`.
 
-.. doxygenfunction:: DS_CreateModel
-   :project: deepspeech-c
+.. doxygenfunction:: STT_CreateModel
+   :project: stt-c
 
-.. doxygenfunction:: DS_FreeModel
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FreeModel
+   :project: stt-c
 
-.. doxygenfunction:: DS_EnableExternalScorer
-   :project: deepspeech-c
+.. doxygenfunction:: STT_EnableExternalScorer
+   :project: stt-c
 
-.. doxygenfunction:: DS_DisableExternalScorer
-   :project: deepspeech-c
+.. doxygenfunction:: STT_DisableExternalScorer
+   :project: stt-c
 
-.. doxygenfunction:: DS_AddHotWord
-   :project: deepspeech-c
+.. doxygenfunction:: STT_AddHotWord
+   :project: stt-c
 
-.. doxygenfunction:: DS_EraseHotWord
-   :project: deepspeech-c
+.. doxygenfunction:: STT_EraseHotWord
+   :project: stt-c
 
-.. doxygenfunction:: DS_ClearHotWords
-   :project: deepspeech-c
+.. doxygenfunction:: STT_ClearHotWords
+   :project: stt-c
 
-.. doxygenfunction:: DS_SetScorerAlphaBeta
-   :project: deepspeech-c
+.. doxygenfunction:: STT_SetScorerAlphaBeta
+   :project: stt-c
 
-.. doxygenfunction:: DS_GetModelSampleRate
-   :project: deepspeech-c
+.. doxygenfunction:: STT_GetModelSampleRate
+   :project: stt-c
 
-.. doxygenfunction:: DS_SpeechToText
-   :project: deepspeech-c
+.. doxygenfunction:: STT_SpeechToText
+   :project: stt-c
 
-.. doxygenfunction:: DS_SpeechToTextWithMetadata
-   :project: deepspeech-c
+.. doxygenfunction:: STT_SpeechToTextWithMetadata
+   :project: stt-c
 
-.. doxygenfunction:: DS_CreateStream
-   :project: deepspeech-c
+.. doxygenfunction:: STT_CreateStream
+   :project: stt-c
 
-.. doxygenfunction:: DS_FeedAudioContent
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FeedAudioContent
+   :project: stt-c
 
-.. doxygenfunction:: DS_IntermediateDecode
-   :project: deepspeech-c
+.. doxygenfunction:: STT_IntermediateDecode
+   :project: stt-c
 
-.. doxygenfunction:: DS_IntermediateDecodeWithMetadata
-   :project: deepspeech-c
+.. doxygenfunction:: STT_IntermediateDecodeWithMetadata
+   :project: stt-c
 
-.. doxygenfunction:: DS_FinishStream
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FinishStream
+   :project: stt-c
 
-.. doxygenfunction:: DS_FinishStreamWithMetadata
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FinishStreamWithMetadata
+   :project: stt-c
 
-.. doxygenfunction:: DS_FreeStream
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FreeStream
+   :project: stt-c
 
-.. doxygenfunction:: DS_FreeMetadata
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FreeMetadata
+   :project: stt-c
 
-.. doxygenfunction:: DS_FreeString
-   :project: deepspeech-c
+.. doxygenfunction:: STT_FreeString
+   :project: stt-c
 
-.. doxygenfunction:: DS_Version
-   :project: deepspeech-c
+.. doxygenfunction:: STT_Version
+   :project: stt-c

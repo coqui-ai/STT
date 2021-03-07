@@ -6,11 +6,11 @@ import argparse
 import numpy as np
 import wave
 
-from deepspeech import Model
+from stt import Model
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Running DeepSpeech inference.')
+    parser = argparse.ArgumentParser(description='Running STT inference.')
     parser.add_argument('--model', required=True,
                         help='Path to the model (protocol buffer binary file)')
     parser.add_argument('--scorer', nargs='?',

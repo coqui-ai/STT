@@ -11,7 +11,7 @@ import librosa
 import pandas
 import soundfile  # <= Has an external dependency on libsndfile
 
-from deepspeech_training.util.importers import validate_label_eng as validate_label
+from coqui_stt_training.util.importers import validate_label_eng as validate_label
 
 # Prerequisite: Having the sph2pipe tool in your PATH:
 # https://www.ldc.upenn.edu/language-resources/tools/sphere-conversion-tools

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Tool for playing (and augmenting) single samples or samples from Sample Databases (SDB files) and DeepSpeech CSV files
+Tool for playing (and augmenting) single samples or samples from Sample Databases (SDB files) and 🐸STT CSV files
 Use "python3 play.py -h" for help
 """
 
@@ -9,9 +9,9 @@ import sys
 import random
 import argparse
 
-from deepspeech_training.util.audio import get_loadable_audio_type_from_extension, AUDIO_TYPE_PCM, AUDIO_TYPE_WAV
-from deepspeech_training.util.sample_collections import SampleList, LabeledSample, samples_from_source
-from deepspeech_training.util.augmentations import parse_augmentations, apply_sample_augmentations, SampleAugmentation
+from coqui_stt_training.util.audio import get_loadable_audio_type_from_extension, AUDIO_TYPE_PCM, AUDIO_TYPE_WAV
+from coqui_stt_training.util.sample_collections import SampleList, LabeledSample, samples_from_source
+from coqui_stt_training.util.augmentations import parse_augmentations, apply_sample_augmentations, SampleAugmentation
 
 
 def get_samples_in_play_order():
@@ -68,7 +68,7 @@ def play_collection():
 def handle_args():
     parser = argparse.ArgumentParser(
         description="Tool for playing (and augmenting) single samples or samples from Sample Databases (SDB files) "
-        "and DeepSpeech CSV files"
+        "and Coqui STT CSV files"
     )
     parser.add_argument("source", help="Sample DB, CSV or WAV file to play samples from")
     parser.add_argument(

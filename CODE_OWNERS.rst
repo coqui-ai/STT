@@ -1,7 +1,7 @@
-DeepSpeech code owners / governance system
-==========================================
+Coqui STT code owners / governance system
+=========================================
 
-DeepSpeech is run under a governance system inspired (and partially copied from) by the `Mozilla module ownership system <https://www.mozilla.org/about/governance/policies/module-ownership/>`_. The project is roughly divided into modules, and each module has its own owners, which are responsible for reviewing pull requests and deciding on technical direction for their modules. Module ownership authority is given to people who have worked extensively on areas of the project.
+🐸STT is run under a governance system inspired (and partially copied from) by the `Mozilla module ownership system <https://www.mozilla.org/about/governance/policies/module-ownership/>`_. The project is roughly divided into modules, and each module has its own owners, which are responsible for reviewing pull requests and deciding on technical direction for their modules. Module ownership authority is given to people who have worked extensively on areas of the project.
 
 Module owners also have the authority of naming other module owners or appointing module peers, which are people with authority to review pull requests in that module. They can also sub-divide their module into sub-modules with their own owners.
 
@@ -46,7 +46,7 @@ Testing & CI
 Native inference client
 -----------------------
 
-Everything that goes into libdeepspeech.so and is not specifically covered in another area fits here.
+Everything that goes into libstt.so and is not specifically covered in another area fits here.
 
 - Alexandre Lissy (@lissyx)
 - Reuben Morais (@reuben)
@@ -110,7 +110,7 @@ Documentation
 - Alexandre Lissy (@lissyx)
 - Reuben Morais (@reuben)
 
-Third party bindings
---------------------
-
-Hosted externally and owned by the individual authors. See the `list of third-party bindings <https://deepspeech.readthedocs.io/en/master/USING.html#third-party-bindings>`_ for more info.
+.. Third party bindings
+   --------------------
+   
+   Hosted externally and owned by the individual authors. See the `list of third-party bindings <https://stt.readthedocs.io/en/latest/   USING.html#third-party-bindings>`_ for more info.

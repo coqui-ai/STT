@@ -29,7 +29,7 @@ for LOAD in 'init' 'last' 'auto'; do
     echo "########################################################"
     echo "#### Train ENGLISH model with just --checkpoint_dir ####"
     echo "########################################################"
-    python -u DeepSpeech.py --noshow_progressbar --noearly_stop \
+    python -u train.py --noshow_progressbar --noearly_stop \
        --alphabet_config_path "./data/alphabet.txt" \
        --load_train "$LOAD" \
        --train_files  "${ldc93s1_csv}" --train_batch_size 1  \
@@ -43,7 +43,7 @@ for LOAD in 'init' 'last' 'auto'; do
     echo "##############################################################################"
     echo "#### Train ENGLISH model with --save_checkpoint_dir --load_checkpoint_dir ####"
     echo "##############################################################################"
-    python -u DeepSpeech.py --noshow_progressbar --noearly_stop \
+    python -u train.py --noshow_progressbar --noearly_stop \
            --alphabet_config_path "./data/alphabet.txt" \
            --load_train "$LOAD" \
            --train_files  "${ldc93s1_csv}" --train_batch_size 1  \
@@ -58,7 +58,7 @@ for LOAD in 'init' 'last' 'auto'; do
     echo "####################################################################################"
     echo "#### Transfer to RUSSIAN model with --save_checkpoint_dir --load_checkpoint_dir ####"
     echo "####################################################################################"
-    python -u DeepSpeech.py --noshow_progressbar --noearly_stop \
+    python -u train.py --noshow_progressbar --noearly_stop \
            --drop_source_layers 1 \
            --alphabet_config_path "${ru_dir}/alphabet.ru" \
            --load_train 'last' \

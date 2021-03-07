@@ -3,8 +3,8 @@
 FROM tensorflow/tensorflow:1.15.4-gpu-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV DEEPSPEECH_REPO=#DEEPSPEECH_REPO#
-ENV DEEPSPEECH_SHA=#DEEPSPEECH_SHA#
+ENV STT_REPO=#STT_REPO#
+ENV STT_SHA=#STT_SHA#
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apt-utils \
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         wget
 
-# We need to remove it because it's breaking deepspeech install later with
+# We need to remove it because it's breaking STT install later with
 # weird errors about setuptools
 RUN apt-get purge -y python3-xdg
 
@@ -31,10 +31,10 @@ RUN apt-get install -y --no-install-recommends libopus0 libsndfile1
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
-RUN git clone $DEEPSPEECH_REPO DeepSpeech
+RUN git clone $STT_REPO STT
 
-WORKDIR /DeepSpeech
-RUN git checkout $DEEPSPEECH_SHA
+WORKDIR /STT
+RUN git checkout $STT_SHA
 
 # Build CTC decoder first, to avoid clashes on incompatible versions upgrades
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
@@ -43,7 +43,7 @@ RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 # Prepare deps
 RUN pip3 install --upgrade pip==20.2.2 wheel==0.34.2 setuptools==49.6.0
 
-# Install DeepSpeech
+# Install STT
 #  - No need for the decoder since we did it earlier
 #  - There is already correct TensorFlow GPU installed on the base image,
 #    we don't want to break that
@@ -54,7 +54,7 @@ RUN python3 util/taskcluster.py --source tensorflow --branch r1.15 \
         --artifact convert_graphdef_memmapped_format  --target .
 
 # Build KenLM to generate new scorers
-WORKDIR /DeepSpeech/native_client
+WORKDIR /STT/native_client
 RUN rm -rf kenlm && \
 	git clone https://github.com/kpu/kenlm && \
 	cd kenlm && \
@@ -63,6 +63,6 @@ RUN rm -rf kenlm && \
 	cd build && \
 	cmake .. && \
 	make -j $(nproc)
-WORKDIR /DeepSpeech
+WORKDIR /STT
 
 RUN ./bin/run-ldc93s1.sh

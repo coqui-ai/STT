@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Downloads and prepares (parts of) the "Spoken Wikipedia Corpora" for DeepSpeech.py
+Downloads and prepares (parts of) the "Spoken Wikipedia Corpora" for train.py
 Use "python3 import_swc.py -h" for help
 """
 
@@ -22,8 +22,8 @@ from multiprocessing.pool import ThreadPool
 import progressbar
 import sox
 
-from deepspeech_training.util.downloader import SIMPLE_BAR, maybe_download
-from deepspeech_training.util.importers import validate_label_eng as validate_label
+from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
+from coqui_stt_training.util.importers import validate_label_eng as validate_label
 from ds_ctcdecoder import Alphabet
 
 SWC_URL = "https://www2.informatik.uni-hamburg.de/nats/pub/SWC/SWC_{language}.tar"

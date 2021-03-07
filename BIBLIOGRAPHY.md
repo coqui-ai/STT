@@ -1,5 +1,4 @@
-This file contains a list of papers in chronological order that have been published 
-using DeepSpeech.
+This file contains a list of papers in chronological order that have been published using 🐸STT.
 
 To appear
 ==========

@@ -1,7 +1,7 @@
 Hot-word boosting API Usage example
 ===================================
 
-With DeepSpeech 0.9 release a new API feature was introduced that allows boosting probability from the scorer of given words. It is exposed in all bindings (C, Python, JS, Java and .Net). 
+With the 🐸STT 0.9 release a new API feature was introduced that allows boosting probability from the scorer of given words. It is exposed in all bindings (C, Python, JS, Java and .Net). 
 
 Currently, it provides three methods for the Model class:
 
@@ -19,11 +19,11 @@ It is worth noting that boosting non-existent words in scorer (mostly proper nou
 Adjusting the boosting value
 ----------------------------
 
-For hot-word boosting it is hard to determine what the optimal value that one might be searching for is. Additionally, this is dependant on the input audio file. In practice, as it was reported by DeepSpeech users, the value should be not bigger than 20.0 for positive value boosting. Nevertheless, each usecase is different and you might need to adjust values on your own.
+For hot-word boosting it is hard to determine what the optimal value that one might be searching for is. Additionally, this is dependant on the input audio file. In practice, as it was reported by 🐸STT users, the value should be not bigger than 20.0 for positive value boosting. Nevertheless, each usecase is different and you might need to adjust values on your own.
 
-There is a user contributed script available on ``DeepSpeech-examples`` repository for adjusting boost values:
+There is a user contributed script available on ``STT-examples`` repository for adjusting boost values:
 
-`https://github.com/mozilla/DeepSpeech-examples/tree/master/hotword_adjusting <https://github.com/mozilla/DeepSpeech-examples/tree/master/hotword_adjusting>`_.
+`https://github.com/coqui-ai/STT-examples/tree/master/hotword_adjusting <https://github.com/coqui-ai/STT-examples/tree/master/hotword_adjusting>`_.
 
 
 Positive value boosting

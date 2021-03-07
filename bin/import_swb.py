@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # ensure that you have downloaded the LDC dataset LDC97S62 and tar exists in a folder e.g.
 # ./data/swb/swb1_LDC97S62.tgz
-# from the deepspeech directory run with: ./bin/import_swb.py ./data/swb/
+# from the Coqui STT directory run with: ./bin/import_swb.py ./data/swb/
 import codecs
 import fnmatch
 import os
@@ -17,7 +17,7 @@ import pandas
 import requests
 import soundfile  # <= Has an external dependency on libsndfile
 
-from deepspeech_training.util.importers import validate_label_eng as validate_label
+from coqui_stt_training.util.importers import validate_label_eng as validate_label
 
 # ARCHIVE_NAME refers to ISIP alignments from 01/29/03
 ARCHIVE_NAME = "switchboard_word_alignments.tar.gz"

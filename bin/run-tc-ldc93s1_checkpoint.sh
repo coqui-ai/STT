@@ -14,7 +14,7 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u DeepSpeech.py --noshow_progressbar --noearly_stop \
+python -u train.py --noshow_progressbar --noearly_stop \
   --train_files ${ldc93s1_csv} --train_batch_size 1 \
   --dev_files ${ldc93s1_csv} --dev_batch_size 1 \
   --test_files ${ldc93s1_csv} --test_batch_size 1 \

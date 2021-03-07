@@ -13,35 +13,35 @@
 
 include definitions.mk
 
-default: $(DEEPSPEECH_BIN)
+default: $(STT_BIN)
 
 clean:
-	rm -f deepspeech
+	rm -f stt
 
-$(DEEPSPEECH_BIN): client.cc Makefile
-	$(CXX) $(CFLAGS) $(CFLAGS_DEEPSPEECH) $(SOX_CFLAGS) client.cc $(LDFLAGS) $(SOX_LDFLAGS)
+$(STT_BIN): client.cc Makefile
+	$(CXX) $(CFLAGS) $(CFLAGS_STT) $(SOX_CFLAGS) client.cc $(LDFLAGS) $(SOX_LDFLAGS)
 ifeq ($(OS),Darwin)
-	install_name_tool -change bazel-out/local-opt/bin/native_client/libdeepspeech.so @rpath/libdeepspeech.so deepspeech
+	install_name_tool -change bazel-out/local-opt/bin/native_client/libstt.so @rpath/libstt.so stt
 endif
 
-run: $(DEEPSPEECH_BIN)
-	${META_LD_LIBRARY_PATH}=${TFDIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} ./deepspeech ${ARGS}
+run: $(STT_BIN)
+	${META_LD_LIBRARY_PATH}=${TFDIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} ./stt ${ARGS}
 
-debug: $(DEEPSPEECH_BIN)
-	${META_LD_LIBRARY_PATH}=${TFDIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} gdb --args ./deepspeech ${ARGS}
+debug: $(STT_BIN)
+	${META_LD_LIBRARY_PATH}=${TFDIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} gdb --args ./stt ${ARGS}
 
-install: $(DEEPSPEECH_BIN)
+install: $(STT_BIN)
 	install -d ${PREFIX}/lib
-	install -m 0644 ${TFDIR}/bazel-bin/native_client/libdeepspeech.so ${PREFIX}/lib/
+	install -m 0644 ${TFDIR}/bazel-bin/native_client/libstt.so ${PREFIX}/lib/
 	install -d ${PREFIX}/include
-	install -m 0644 deepspeech.h ${PREFIX}/include
+	install -m 0644 coqui-stt.h ${PREFIX}/include
 	install -d ${PREFIX}/bin
-	install -m 0755 deepspeech ${PREFIX}/bin/
+	install -m 0755 stt ${PREFIX}/bin/
 
 uninstall:
-	rm -f ${PREFIX}/bin/deepspeech
+	rm -f ${PREFIX}/bin/stt
 	rmdir --ignore-fail-on-non-empty ${PREFIX}/bin
-	rm -f ${PREFIX}/lib/libdeepspeech.so
+	rm -f ${PREFIX}/lib/libstt.so
 	rmdir --ignore-fail-on-non-empty ${PREFIX}/lib
 
 print-toolchain:

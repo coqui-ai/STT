@@ -3,8 +3,8 @@
 # Need devel version cause we need /usr/include/cudnn.h 
 FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
-ENV DEEPSPEECH_REPO=#DEEPSPEECH_REPO#
-ENV DEEPSPEECH_SHA=#DEEPSPEECH_SHA#
+ENV STT_REPO=#STT_REPO#
+ENV STT_SHA=#STT_SHA#
 
 # >> START Install base software
 
@@ -113,15 +113,15 @@ RUN echo "build --spawn_strategy=standalone --genrule_strategy=standalone" \
 
 WORKDIR /
 
-RUN git clone --recursive $DEEPSPEECH_REPO DeepSpeech
-WORKDIR /DeepSpeech
-RUN git checkout $DEEPSPEECH_SHA
+RUN git clone --recursive $STT_REPO STT
+WORKDIR /STT
+RUN git checkout $STT_SHA
 RUN git submodule sync tensorflow/
 RUN git submodule update --init tensorflow/
 
 # >> START Build and bind
 
-WORKDIR /DeepSpeech/tensorflow
+WORKDIR /STT/tensorflow
 
 # Fix for not found script https://github.com/tensorflow/tensorflow/issues/471
 RUN ./configure
@@ -132,7 +132,7 @@ RUN ./configure
 
 # passing LD_LIBRARY_PATH is required cause Bazel doesn't pickup it from environment
 
-# Build DeepSpeech
+# Build STT
 RUN bazel build \
 	--workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
 	--config=monolithic \
@@ -149,22 +149,22 @@ RUN bazel build \
 	--copt=-msse4.2 \
 	--copt=-mavx \
 	--copt=-fvisibility=hidden \
-	//native_client:libdeepspeech.so \
+	//native_client:libstt.so \
 	--verbose_failures \
 	--action_env=LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 
-# Copy built libs to /DeepSpeech/native_client
-RUN cp bazel-bin/native_client/libdeepspeech.so /DeepSpeech/native_client/
+# Copy built libs to /STT/native_client
+RUN cp bazel-bin/native_client/libstt.so /STT/native_client/
 
 # Build client.cc and install Python client and decoder bindings
-ENV TFDIR /DeepSpeech/tensorflow
+ENV TFDIR /STT/tensorflow
 
 RUN nproc
 
-WORKDIR /DeepSpeech/native_client
-RUN make NUM_PROCESSES=$(nproc) deepspeech
+WORKDIR /STT/native_client
+RUN make NUM_PROCESSES=$(nproc) stt
 
-WORKDIR /DeepSpeech
+WORKDIR /STT
 RUN cd native_client/python && make NUM_PROCESSES=$(nproc) bindings
 RUN pip3 install --upgrade native_client/python/dist/*.whl
 
@@ -176,8 +176,8 @@ RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 # Allow Python printing utf-8
 ENV PYTHONIOENCODING UTF-8
 
-# Build KenLM in /DeepSpeech/native_client/kenlm folder
-WORKDIR /DeepSpeech/native_client
+# Build KenLM in /STT/native_client/kenlm folder
+WORKDIR /STT/native_client
 RUN rm -rf kenlm && \
 	git clone https://github.com/kpu/kenlm && \
 	cd kenlm && \
@@ -188,4 +188,4 @@ RUN rm -rf kenlm && \
 	make -j $(nproc)
 
 # Done
-WORKDIR /DeepSpeech
+WORKDIR /STT

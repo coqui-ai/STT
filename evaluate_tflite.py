@@ -10,23 +10,23 @@ import csv
 import os
 import sys
 
-from deepspeech import Model
-from deepspeech_training.util.evaluate_tools import calculate_and_print_report
-from deepspeech_training.util.flags import create_flags
+from stt import Model
+from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
+from coqui_stt_training.util.flags import create_flags
 from functools import partial
 from multiprocessing import JoinableQueue, Process, cpu_count, Manager
 from six.moves import zip, range
 
 r'''
 This module should be self-contained:
-  - build libdeepspeech.so with TFLite:
-    - bazel build [...] --define=runtime=tflite [...] //native_client:libdeepspeech.so
+  - build libstt.so with TFLite:
+    - bazel build [...] --define=runtime=tflite [...] //native_client:libstt.so
   - make -C native_client/python/ TFDIR=... bindings
   - setup a virtualenv
-  - pip install native_client/python/dist/deepspeech*.whl
+  - pip install native_client/python/dist/*.whl
   - pip install -r requirements_eval_tflite.txt
 
-Then run with a TF Lite model, a scorer and a CSV test file
+Then run with a TFLite model, a scorer and a CSV test file
 '''
 
 def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):

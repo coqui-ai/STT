@@ -95,11 +95,11 @@ def main():
         install_requires = install_requires + tensorflow_pypi_dep
 
     setup(
-        name='deepspeech_training',
+        name='coqui_stt_training',
         version=version,
-        description='Training code for DeepSpeech',
-        url='https://github.com/mozilla/DeepSpeech',
-        author='DeepSpeech authors',
+        description='Training code for Coqui STT',
+        url='https://github.com/coqui-ai/STT',
+        author='Coqui STT authors',
         license='MPL-2.0',
         # Classifiers help users find your project by categorizing it.
         #
@@ -118,7 +118,7 @@ def main():
         # If there are data files included in your packages that need to be
         # installed, specify them here.
         package_data={
-            'deepspeech_training': [
+            'coqui_stt_training': [
                 'VERSION',
                 'GRAPH_VERSION',
             ],

@@ -1,5 +1,5 @@
 This file contains some notes on coding style within the C++ portion of the
-DeepSpeech project. It is very much a work in progress and incomplete.
+🐸STT project. It is very much a work in progress and incomplete.
 
 General
 =======
@@ -25,4 +25,4 @@ File naming
 Doubts
 ======
 
-If in doubt, please ask on our Matrix chat channel: https://chat.mozilla.org/#/room/#machinelearning:mozilla.org
+If in doubt, please ask on our Matrix chat channel: https://matrix.to/#/#stt:matrix.org?via=matrix.org

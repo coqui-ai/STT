@@ -1,1 +1,1 @@
-Full project description and documentation on `https://deepspeech.readthedocs.io/ <https://deepspeech.readthedocs.io/>`_
+Full project description and documentation on `https://stt.readthedocs.io/ <https://stt.readthedocs.io/>`_

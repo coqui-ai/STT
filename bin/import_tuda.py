@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Downloads and prepares (parts of) the "German Distant Speech" corpus (TUDA) for DeepSpeech.py
+Downloads and prepares (parts of) the "German Distant Speech" corpus (TUDA) for train.py
 Use "python3 import_tuda.py -h" for help
 """
 import argparse
@@ -14,8 +14,8 @@ from collections import Counter
 
 import progressbar
 
-from deepspeech_training.util.downloader import SIMPLE_BAR, maybe_download
-from deepspeech_training.util.importers import validate_label_eng as validate_label
+from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
+from coqui_stt_training.util.importers import validate_label_eng as validate_label
 from ds_ctcdecoder import Alphabet
 
 TUDA_VERSION = "v2"

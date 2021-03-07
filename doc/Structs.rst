@@ -5,19 +5,19 @@ Metadata
 --------
 
 .. doxygenstruct:: Metadata
-   :project: deepspeech-c
+   :project: stt-c
    :members:
 
 CandidateTranscript
 -------------------
 
 .. doxygenstruct:: CandidateTranscript
-   :project: deepspeech-c
+   :project: stt-c
    :members:
 
 TokenMetadata
 -------------
 
 .. doxygenstruct:: TokenMetadata
-   :project: deepspeech-c
+   :project: stt-c
    :members:

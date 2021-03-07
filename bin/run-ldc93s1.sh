@@ -1,7 +1,7 @@
 #!/bin/sh
 set -xe
-if [ ! -f DeepSpeech.py ]; then
-    echo "Please make sure you run this from DeepSpeech's top level directory."
+if [ ! -f train.py ]; then
+    echo "Please make sure you run this from STT's top level directory."
     exit 1
 fi;
 
@@ -13,14 +13,14 @@ fi;
 if [ -d "${COMPUTE_KEEP_DIR}" ]; then
     checkpoint_dir=$COMPUTE_KEEP_DIR
 else
-    checkpoint_dir=$(python -c 'from xdg import BaseDirectory as xdg; print(xdg.save_data_path("deepspeech/ldc93s1"))')
+    checkpoint_dir=$(python -c 'from xdg import BaseDirectory as xdg; print(xdg.save_data_path("stt/ldc93s1"))')
 fi
 
 # Force only one visible device because we have a single-sample dataset
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u DeepSpeech.py --noshow_progressbar \
+python -u train.py --noshow_progressbar \
   --train_files data/ldc93s1/ldc93s1.csv \
   --test_files data/ldc93s1/ldc93s1.csv \
   --train_batch_size 1 \

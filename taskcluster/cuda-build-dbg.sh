@@ -7,7 +7,7 @@ source $(dirname "$0")/tc-tests-utils.sh
 source $(dirname "$0")/tf_tc-vars.sh
 
 BAZEL_TARGETS="
-//native_client:libdeepspeech.so
+//native_client:libstt.so
 "
 
 BAZEL_ENV_FLAGS="TF_NEED_CUDA=1 ${TF_CUDA_FLAGS}"

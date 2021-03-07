@@ -2,25 +2,25 @@
 
 include ../definitions.mk
 
-ARCHS := $(shell grep 'ABI_FILTERS' libdeepspeech/gradle.properties | cut -d'=' -f2 | sed -e 's/;/ /g')
+ARCHS := $(shell grep 'ABI_FILTERS' libstt/gradle.properties | cut -d'=' -f2 | sed -e 's/;/ /g')
 GRADLE ?= ./gradlew
 
 all: apk
 
 clean: apk-clean
-	rm -rf *.java jni/deepspeech_wrap.cpp
+	rm -rf *.java jni/stt_wrap.cpp
 
 apk-clean:
 	$(GRADLE) clean
 
 libs-clean:
-	rm -fr libdeepspeech/libs/*/libdeepspeech.so
+	rm -fr libstt/libs/*/libstt.so
 
-libdeepspeech/libs/%/libdeepspeech.so:
-	-mkdir libdeepspeech/libs/$*/
-	cp ${TFDIR}/bazel-out/$*-*/bin/native_client/libdeepspeech.so libdeepspeech/libs/$*/
+libstt/libs/%/libstt.so:
+	-mkdir libstt/libs/$*/
+	cp ${TFDIR}/bazel-out/$*-*/bin/native_client/libstt.so libstt/libs/$*/
 
-apk: apk-clean bindings $(patsubst %,libdeepspeech/libs/%/libdeepspeech.so,$(ARCHS))
+apk: apk-clean bindings $(patsubst %,libstt/libs/%/libstt.so,$(ARCHS))
 	$(GRADLE) build
 
 maven-bundle: apk
@@ -28,4 +28,4 @@ maven-bundle: apk
 	$(GRADLE) zipMavenArtifacts
 
 bindings: clean ds-swig
-	$(DS_SWIG_ENV) swig -c++ -java -package org.deepspeech.libdeepspeech -outdir libdeepspeech/src/main/java/org/deepspeech/libdeepspeech/ -o jni/deepspeech_wrap.cpp jni/deepspeech.i
+	$(DS_SWIG_ENV) swig -c++ -java -package ai.coqui.libstt -outdir libstt/src/main/java/ai/coqui/libstt/ -o jni/stt_wrap.cpp jni/stt.i

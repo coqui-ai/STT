@@ -1,4 +1,4 @@
-# Description: Deepspeech native client library.
+# Description: Coqui STT native client library.
 
 load("@org_tensorflow//tensorflow:tensorflow.bzl", "tf_cc_shared_object", "tf_copts", "lrt_if_needed")
 load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
@@ -112,11 +112,11 @@ cc_library(
 )
 
 cc_library(
-    name = "deepspeech_bundle",
+    name = "coqui_stt_bundle",
     srcs = [
-        "deepspeech.cc",
-        "deepspeech.h",
-        "deepspeech_errors.cc",
+        "stt.cc",
+        "coqui-stt.h",
+        "stt_errors.cc",
         "modelstate.cc",
         "modelstate.h",
         "workspace_status.cc",
@@ -165,7 +165,7 @@ cc_library(
             #"//tensorflow/core:all_kernels",
             ### => Trying to be more fine-grained
             ### Use bin/ops_in_graph.py to list all the ops used by a frozen graph.
-            ### CPU only build, libdeepspeech.so file size reduced by ~50%
+            ### CPU only build, libstt.so file size reduced by ~50%
             "//tensorflow/core/kernels:spectrogram_op",  # AudioSpectrogram
             "//tensorflow/core/kernels:bias_op",  # BiasAdd
             "//tensorflow/core/kernels:cast_op",  # Cast
@@ -205,31 +205,31 @@ cc_library(
 )
 
 tf_cc_shared_object(
-    name = "libdeepspeech.so",
-    deps = [":deepspeech_bundle"],
+    name = "libstt.so",
+    deps = [":coqui_stt_bundle"],
 )
 
 ios_static_framework(
-    name = "deepspeech_ios",
-    deps = [":deepspeech_bundle"],
+    name = "coqui_stt_ios",
+    deps = [":coqui_stt_bundle"],
     families = ["iphone", "ipad"],
     minimum_os_version = "9.0",
     linkopts = ["-lstdc++"],
 )
 
 genrule(
-    name = "libdeepspeech_so_dsym",
-    srcs = [":libdeepspeech.so"],
-    outs = ["libdeepspeech.so.dSYM"],
+    name = "libstt_so_dsym",
+    srcs = [":libstt.so"],
+    outs = ["libstt.so.dSYM"],
     output_to_bindir = True,
-    cmd = "dsymutil $(location :libdeepspeech.so) -o $@"
+    cmd = "dsymutil $(location :libstt.so) -o $@"
 )
 
 cc_binary(
     name = "generate_scorer_package",
     srcs = [
         "generate_scorer_package.cpp",
-        "deepspeech_errors.cc",
+        "stt_errors.cc",
     ],
     copts = ["-std=c++11"],
     deps = [

@@ -130,7 +130,7 @@ def build_lm(args, data_lower, vocab_str):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate lm.binary and top-k vocab for DeepSpeech."
+        description="Generate lm.binary and top-k vocab for Coqui STT."
     )
     parser.add_argument(
         "--input_txt",

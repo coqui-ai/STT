@@ -1,7 +1,7 @@
 import binary from 'node-pre-gyp';
 import path from 'path';
 
-// 'lib', 'binding', 'v0.1.1', ['node', 'v' + process.versions.modules, process.platform, process.arch].join('-'), 'deepspeech-bindings.node')
+// 'lib', 'binding', 'v0.1.1', ['node', 'v' + process.versions.modules, process.platform, process.arch].join('-'), 'stt-bindings.node')
 const binding_path = binary.find(path.resolve(path.join(__dirname, 'package.json')));
 
 // On Windows, we can't rely on RPATH being set to $ORIGIN/../ or on
@@ -62,7 +62,7 @@ export interface Metadata {
 }
 
 /**
- * Provides an interface to a DeepSpeech stream. The constructor cannot be called
+ * Provides an interface to a Coqui STT stream. The constructor cannot be called
  * directly, use :js:func:`Model.createStream`.
  */
 class StreamImpl {
@@ -142,7 +142,7 @@ class StreamImpl {
 export type Stream = StreamImpl;
 
 /**
- * An object providing an interface to a trained DeepSpeech model.
+ * An object providing an interface to a trained Coqui STT model.
  */
 export class Model {
     /** @internal */
@@ -282,7 +282,7 @@ export class Model {
     }
 
     /**
-     * Use the DeepSpeech model to perform Speech-To-Text.
+     * Use the Coqui STT model to perform Speech-To-Text.
      *
      * @param aBuffer A 16-bit, mono raw audio signal at the appropriate sample rate (matching what the model was trained on).
      *
@@ -293,7 +293,7 @@ export class Model {
     }
 
     /**
-     * Use the DeepSpeech model to perform Speech-To-Text and output metadata
+     * Use the Coqui STT model to perform Speech-To-Text and output metadata
      * about the results.
      *
      * @param aBuffer A 16-bit, mono raw audio signal at the appropriate sample rate (matching what the model was trained on).

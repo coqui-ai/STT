@@ -2,18 +2,18 @@
 ==============
 
 
-DeepSpeech Class
+STT Class
 ----------------
 
-.. doxygenclass:: DeepSpeechClient::DeepSpeech
-   :project: deepspeech-dotnet
+.. doxygenclass:: STTClient::STT
+   :project: stt-dotnet
    :members:
 
-DeepSpeechStream Class
+Stream Class
 ----------------------
 
-.. doxygenclass:: DeepSpeechClient::Models::DeepSpeechStream
-   :project: deepspeech-dotnet
+.. doxygenclass:: STTClient::Models::Stream
+   :project: stt-dotnet
    :members:
 
 ErrorCodes
@@ -21,33 +21,33 @@ ErrorCodes
 
 See also the main definition including descriptions for each error in :ref:`error-codes`.
 
-.. doxygenenum:: DeepSpeechClient::Enums::ErrorCodes
-   :project: deepspeech-dotnet
+.. doxygenenum:: STTClient::Enums::ErrorCodes
+   :project: stt-dotnet
 
 Metadata
 --------
 
-.. doxygenclass:: DeepSpeechClient::Models::Metadata
-   :project: deepspeech-dotnet
+.. doxygenclass:: STTClient::Models::Metadata
+   :project: stt-dotnet
    :members: Transcripts
 
 CandidateTranscript
 -------------------
 
-.. doxygenclass:: DeepSpeechClient::Models::CandidateTranscript
-   :project: deepspeech-dotnet
+.. doxygenclass:: STTClient::Models::CandidateTranscript
+   :project: stt-dotnet
    :members: Tokens, Confidence
 
 TokenMetadata
 -------------
 
-.. doxygenclass:: DeepSpeechClient::Models::TokenMetadata
-   :project: deepspeech-dotnet
+.. doxygenclass:: STTClient::Models::TokenMetadata
+   :project: stt-dotnet
    :members: Text, Timestep, StartTime
 
-DeepSpeech Interface
+STT Interface
 --------------------
 
-.. doxygeninterface:: DeepSpeechClient::Interfaces::IDeepSpeech
-   :project: deepspeech-dotnet
+.. doxygeninterface:: STTClient::Interfaces::ISTT
+   :project: stt-dotnet
    :members:

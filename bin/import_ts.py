@@ -10,8 +10,8 @@ import progressbar
 import sox
 
 import unidecode
-from deepspeech_training.util.downloader import SIMPLE_BAR, maybe_download
-from deepspeech_training.util.importers import (
+from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
+from coqui_stt_training.util.importers import (
     get_counter,
     get_imported_samples,
     get_importers_parser,
@@ -25,7 +25,7 @@ MAX_SECS = 15
 ARCHIVE_NAME = "2019-04-11_fr_FR"
 ARCHIVE_DIR_NAME = "ts_" + ARCHIVE_NAME
 ARCHIVE_URL = (
-    "https://deepspeech-storage-mirror.s3.fr-par.scw.cloud/" + ARCHIVE_NAME + ".zip"
+    "https://Coqui STT-storage-mirror.s3.fr-par.scw.cloud/" + ARCHIVE_NAME + ".zip"
 )
 
 
@@ -38,7 +38,7 @@ def _download_and_preprocess_data(target_dir, english_compatible=False):
     )
     # Conditionally extract archive data
     _maybe_extract(target_dir, ARCHIVE_DIR_NAME, archive_path)
-    # Conditionally convert TrainingSpeech data to DeepSpeech CSVs and wav
+    # Conditionally convert TrainingSpeech data to Coqui STT CSVs and wav
     _maybe_convert_sets(
         target_dir, ARCHIVE_DIR_NAME, english_compatible=english_compatible
     )

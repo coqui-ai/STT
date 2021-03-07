@@ -5,7 +5,7 @@ import tarfile
 
 import pandas
 
-from deepspeech_training.util.importers import get_importers_parser
+from coqui_stt_training.util.importers import get_importers_parser
 
 COLUMN_NAMES = ["wav_filename", "wav_filesize", "transcript"]
 
