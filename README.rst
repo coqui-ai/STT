@@ -6,7 +6,9 @@
    :target: https://stt.readthedocs.io/?badge=latest
    :alt: Documentation
 
-|Contributor Covenant|
+.. image:: https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg
+   :target: CODE_OF_CONDUCT.md
+   :alt: Contributor Covenant
 
 **Coqui STT** is an open-source Speech-To-Text engine, using a model trained by machine learning techniques based on `Baidu's Deep Speech research paper <https://arxiv.org/abs/1412.5567>`_. 🐸STT uses Google's `TensorFlow <https://www.tensorflow.org/>`_ to make the implementation easier.
 
@@ -17,5 +19,3 @@ For the **latest release**, including pre-trained models and checkpoints, `see t
 For contribution guidelines, see `CONTRIBUTING.rst <CONTRIBUTING.rst>`_.
 
 For contact and support information, see `SUPPORT.rst <SUPPORT.rst>`_.
-
-.. |Contributor Covenant| image:: https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg :target: CODE_OF_CONDUCT.md
