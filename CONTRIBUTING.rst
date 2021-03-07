@@ -15,11 +15,6 @@ Bug-fix PR
 
 You've found a bug and you were able to squash it! Great job! Please write a short but clear commit message describing the bug, and how you fixed it. This makes review much easier. Also, please name your branch something related to the bug-fix.
 
-Documentation PR
-^^^^^^^^^^^^^^^^
-
-If you're just making updates or changes to the documentation, there's no need to run all of 🐸STT's tests for Continuous Integration (i.e. Taskcluster tests). In this case, at the end of your short but clear commit message, you should add **X-DeepSpeech: NOBUILD**. This will trigger the CI tests to skip your PR, saving both time and compute.
-
 New Feature PR
 ^^^^^^^^^^^^^^
 

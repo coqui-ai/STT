@@ -1,5 +1,5 @@
 {
-   deepspeech_tflite_error_reporter
+   stt_tflite_error_reporter
    Memcheck:Leak
    match-leak-kinds: reachable
    fun:_Znwm

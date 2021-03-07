@@ -19,9 +19,9 @@ PLATFORM_EXE_SUFFIX := .exe
 endif
 
 STT_BIN       := stt$(PLATFORM_EXE_SUFFIX)
-CFLAGS_DEEPSPEECH    := -std=c++11 -o $(STT_BIN)
-LINK_DEEPSPEECH      := -lstt
-LINK_PATH_DEEPSPEECH := -L${TFDIR}/bazel-bin/native_client
+CFLAGS_STT    := -std=c++11 -o $(STT_BIN)
+LINK_STT      := -lstt
+LINK_PATH_STT := -L${TFDIR}/bazel-bin/native_client
 
 ifeq ($(TARGET),host)
 TOOLCHAIN       :=
@@ -61,9 +61,9 @@ TOOL_CC     := cl.exe
 TOOL_CXX    := cl.exe
 TOOL_LD     := link.exe
 TOOL_LIBEXE := lib.exe
-LINK_DEEPSPEECH      := $(TFDIR)\bazel-bin\native_client\libstt.so.if.lib
-LINK_PATH_DEEPSPEECH :=
-CFLAGS_DEEPSPEECH    := -nologo -Fe$(STT_BIN)
+LINK_STT      := $(TFDIR)\bazel-bin\native_client\libstt.so.if.lib
+LINK_PATH_STT :=
+CFLAGS_STT    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
 SOX_LDFLAGS     :=
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
@@ -141,8 +141,8 @@ endif
 
 CFLAGS   += $(EXTRA_CFLAGS)
 CXXFLAGS += $(EXTRA_CXXFLAGS)
-LIBS     := $(LINK_DEEPSPEECH) $(EXTRA_LIBS)
-LDFLAGS_DIRS := $(LINK_PATH_DEEPSPEECH) $(EXTRA_LDFLAGS)
+LIBS     := $(LINK_STT) $(EXTRA_LIBS)
+LDFLAGS_DIRS := $(LINK_PATH_STT) $(EXTRA_LDFLAGS)
 LDFLAGS  += $(LDFLAGS_NEEDED) $(LDFLAGS_RPATH) $(LDFLAGS_DIRS) $(LIBS)
 
 AS      := $(TOOLCHAIN)$(TOOL_AS)
