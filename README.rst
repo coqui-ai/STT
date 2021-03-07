@@ -10,7 +10,7 @@
    :target: CODE_OF_CONDUCT.md
    :alt: Contributor Covenant
 
-**Coqui STT** is an open-source Speech-To-Text engine, using a model trained by machine learning techniques based on `Baidu's Deep Speech research paper <https://arxiv.org/abs/1412.5567>`_. 🐸STT uses Google's `TensorFlow <https://www.tensorflow.org/>`_ to make the implementation easier.
+**Coqui STT** is an open-source deep-learning toolkit for training and deploying Speech-To-Text models. :frog:STT is battle tested in both production and research :rocket:
 
 **Documentation** for installation, usage, and training models are available on `stt.readthedocs.io <https://stt.readthedocs.io/>`_.
 
