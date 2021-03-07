@@ -1,4 +1,4 @@
-.. Coqui STT documentation master file, created by
+.. Coqui STT documentation main file, created by
    sphinx-quickstart on Thu Feb  2 21:20:39 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.

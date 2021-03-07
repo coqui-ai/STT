@@ -144,4 +144,4 @@ Be patient, if you enabled AVX/AVX2 and CUDA it will take a long time. Finally y
 Using the generated library
 ---------------------------
 
-As for now we can only use the generated ``libstt.so`` with the C# clients, go to `native_client/dotnet/ <https://github.com/coqui-ai/STT/tree/master/native_client/dotnet>`_ in your STT directory and open the Visual Studio solution, then we need to build in debug or release mode, finally we just need to copy ``libstt.so`` to the generated ``x64/Debug`` or ``x64/Release`` directory.
+As for now we can only use the generated ``libstt.so`` with the C# clients, go to `native_client/dotnet/ <https://github.com/coqui-ai/STT/tree/main/native_client/dotnet>`_ in your STT directory and open the Visual Studio solution, then we need to build in debug or release mode, finally we just need to copy ``libstt.so`` to the generated ``x64/Debug`` or ``x64/Release`` directory.

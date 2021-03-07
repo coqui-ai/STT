@@ -27,11 +27,11 @@ endif
 default: build
 
 clean:
-	rm -f deepspeech_wrap.cxx package.json package-lock.json
+	rm -f stt_wrap.cxx package.json package-lock.json
 	rm -rf ./build/
 
 clean-npm-pack:
-	rm -fr ./deepspeech-*.tgz
+	rm -fr ./stt-*.tgz
 
 really-clean: clean clean-npm-pack
 	rm -fr ./node_modules/
@@ -46,14 +46,14 @@ package.json: package.json.in
 npm-dev: package.json
 	$(NPM_TOOL) install --prefix=$(NPM_ROOT)/../ --ignore-scripts --force --verbose --production=false .
 
-configure: deepspeech_wrap.cxx package.json npm-dev
+configure: stt_wrap.cxx package.json npm-dev
 	PATH="$(NODE_MODULES_BIN):${PATH}" $(NODE_BUILD_TOOL) configure $(NODE_BUILD_VERBOSE)
 
-build: configure deepspeech_wrap.cxx
+build: configure stt_wrap.cxx
 	PATH="$(NODE_MODULES_BIN):${PATH}" NODE_PRE_GYP_ABI_CROSSWALK=$(NODE_PRE_GYP_ABI_CROSSWALK_FILE) AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(RPATH_NODEJS) $(LDFLAGS)" LIBS=$(LIBS) $(NODE_BUILD_TOOL) $(NODE_PLATFORM_TARGET) $(NODE_RUNTIME) $(NODE_ABI_TARGET) $(NODE_DEVDIR) $(NODE_DIST_URL) --no-color rebuild $(NODE_BUILD_VERBOSE)
 
 copy-deps: build
-	$(call copy_missing_libs,lib/binding/*/*/*/deepspeech.node,lib/binding/*/*/)
+	$(call copy_missing_libs,lib/binding/*/*/*/stt.node,lib/binding/*/*/)
 
 node-wrapper: copy-deps build
 	PATH="$(NODE_MODULES_BIN):${PATH}" NODE_PRE_GYP_ABI_CROSSWALK=$(NODE_PRE_GYP_ABI_CROSSWALK_FILE) $(NODE_BUILD_TOOL) $(NODE_PLATFORM_TARGET) $(NODE_RUNTIME) $(NODE_ABI_TARGET) $(NODE_DEVDIR) $(NODE_DIST_URL) --no-color package $(NODE_BUILD_VERBOSE)
@@ -61,5 +61,5 @@ node-wrapper: copy-deps build
 npm-pack: clean package.json index.ts npm-dev
 	PATH="$(NODE_MODULES_BIN):${PATH}" tsc && $(NPM_TOOL) pack $(NODE_BUILD_VERBOSE)
 
-deepspeech_wrap.cxx: deepspeech.i ds-swig
-	$(DS_SWIG_ENV) swig -c++ -javascript -node deepspeech.i
+stt_wrap.cxx: stt.i ds-swig
+	$(DS_SWIG_ENV) swig -c++ -javascript -node stt.i

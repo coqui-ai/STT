@@ -3,7 +3,7 @@ Contribution guidelines
 
 Welcome to the 🐸STT project! We are excited to see your interest, and appreciate your support!
 
-This repository is governed by Mozilla's code of conduct and etiquette guidelines. For more details, please read the `Mozilla Community Participation Guidelines <https://www.mozilla.org/about/governance/policies/participation/>`_.
+This repository is governed by the Contributor Covenant Code of Conduct. For more details, see the `CODE_OF_CONDUCT.md <CODE_OF_CONDUCT.md>`_.
 
 How to Make a Good Pull Request
 -------------------------------
@@ -47,9 +47,9 @@ Before making a Pull Request for Python code changes, check your changes for bas
 .. code-block:: bash
 
    pip install pylint cardboardlint
-   cardboardlinter --refspec master
+   cardboardlinter --refspec main
 
-This will compare the code against master and run the linter on all the changes. We plan to introduce more linter checks (e.g. for C++) in the future. To run it automatically as a git pre-commit hook, do the following:
+This will compare the code against the main branch and run the linter on all the changes. We plan to introduce more linter checks (e.g. for C++) in the future. To run it automatically as a git pre-commit hook, do the following:
 
 .. code-block:: bash
 

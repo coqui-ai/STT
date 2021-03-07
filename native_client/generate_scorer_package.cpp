@@ -103,7 +103,7 @@ main(int argc, char** argv)
         ("package", po::value<string>(), "Path to save scorer package.")
         ("default_alpha", po::value<float>(), "Default value of alpha hyperparameter (float).")
         ("default_beta", po::value<float>(), "Default value of beta hyperparameter (float).")
-        ("force_bytes_output_mode", po::value<bool>(), "Boolean flag, force set or unset bytes output mode in the scorer package. If not set, infers from the vocabulary. See <https://deepspeech.readthedocs.io/en/master/Decoder.html#bytes-output-mode> for further explanation.")
+        ("force_bytes_output_mode", po::value<bool>(), "Boolean flag, force set or unset bytes output mode in the scorer package. If not set, infers from the vocabulary. See <https://stt.readthedocs.io/en/latest/Decoder.html#bytes-output-mode> for further explanation.")
     ;
 
     po::variables_map vm;

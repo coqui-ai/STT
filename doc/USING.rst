@@ -188,7 +188,7 @@ or if you're on macOS:
 
    python3 util/taskcluster.py --arch osx --target .
 
-also, if you need some binaries different than current master, like ``v0.2.0-alpha.6``\ , you can use ``--branch``\ :
+also, if you need some binaries different than current main branch, like ``v0.2.0-alpha.6``\ , you can use ``--branch``\ :
 
 .. code-block:: bash
 

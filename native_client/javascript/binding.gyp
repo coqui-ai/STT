@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "deepspeech",
-      "sources": [ "deepspeech_wrap.cxx" ],
+      "target_name": "stt",
+      "sources": [ "stt_wrap.cxx" ],
       "libraries": [
         "$(LIBS)"
       ],

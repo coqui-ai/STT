@@ -44,7 +44,7 @@ android {
         installOptions "-d","-t"
     }
 
-    // Avoid scanning libdeepspeech_doc
+    // Avoid scanning libstt_doc
     sourceSets {
         main.java.srcDirs = [ 'src/main/java/ai/coqui/libstt/' ]
     }

@@ -10,7 +10,7 @@ import csv
 import os
 import sys
 
-from deepspeech import Model
+from stt import Model
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
 from coqui_stt_training.util.flags import create_flags
 from functools import partial
