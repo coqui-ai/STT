@@ -19,49 +19,13 @@
 
 `👉 Subscribe to 🐸Coqui's Newsletter <https://coqui.ai/?subscription=true>`_
 
-**Coqui STT** (🐸STT) is a fast, open-source, multi-platform, deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
+For contact and support information, see `SUPPORT.rst <SUPPORT.rst>`_.
 
-🐸STT features
----------------
+Help + Community
+----------------
 
-* High-quality pre-trained STT model.
-* Efficient training pipeline with Multi-GPU support.
-* Streaming inference.
-* Multiple possible transcripts, each with an associated confidence score.
-* Real-time inference.
-* Small-footprint acoustic model.
-* Bindings for various programming languages.
+1. `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ - find and join open-ended community discussions related to :frog:STT
 
-Where to Ask Questions
-----------------------
+2. `Matrix Chat <https://matrix.to/#/+coqui:matrix.org>`_ - the :frog: Matrix channel where you can chat with folks about :frog:STT, get help, share ideas :)
 
-.. list-table::
-   :widths: 25 25
-   :header-rows: 1
-
-   * - Type
-     - Link
-   * - 🚨 **Bug Reports**
-     - `Github Issue Tracker <https://github.com/coqui-ai/STT/issues/>`_
-   * - 🎁 **Feature Requests & Ideas**
-     - `Github Issue Tracker <https://github.com/coqui-ai/STT/issues/>`_
-   * - ❔ **Questions**
-     - `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_
-   * - 💬 **General Discussion**
-     - `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ or `Gitter Room <https://gitter.im/coqui-ai/STT?utm_source=share-link&utm_medium=link&utm_campaign=share-link>`_
-
-
-Links & Resources
------------------
-.. list-table::
-   :widths: 25 25
-   :header-rows: 1
-
-   * - Type
-     - Link
-   * - 📰 **Documentation**
-     - `stt.readthedocs.io <https://stt.readthedocs.io/>`_
-   * - 🚀 **Latest release with pre-trained models**
-     - `see the latest release on GitHub <https://github.com/coqui-ai/STT/releases/latest>`_
-   * - 🤝 **Contribution Guidelines**
-     - `CONTRIBUTING.rst <CONTRIBUTING.rst>`_
+3. `Github Issues <https://github.com/coqui-ai/stt/issues>`_ - If you ran into a specific error/problem, feel free to open an issue in the repo.
