@@ -51,7 +51,7 @@ SOX_LDFLAGS     := `pkg-config --libs sox`
 endif # OS others
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 ifeq ($(OS),Linux)
-PYTHON_PLATFORM_NAME ?= --plat-name manylinux1_x86_64
+PYTHON_PLATFORM_NAME ?= --plat-name manylinux_2_24_x86_64
 endif
 endif
 

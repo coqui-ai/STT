@@ -37,7 +37,8 @@ Clone 🐸STT source code (TensorFlow will come as a submdule):
 
 .. code-block::
 
-   git clone https://github.com/coqui-ai/STT.git
+   git clone https://github.com/coqui-ai/STT.git STT
+   cd STT
    git submodule sync tensorflow/
    git submodule update --init tensorflow/
 
