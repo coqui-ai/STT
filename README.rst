@@ -24,8 +24,8 @@ For contact and support information, see `SUPPORT.rst <SUPPORT.rst>`_.
 Help + Community
 ----------------
 
-1. `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ - find and join open-ended community discussions related to :frog:STT
+1. `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ - find and join open-ended community discussions related to 🐸STT
 
-2. `Matrix Chat <https://matrix.to/#/+coqui:matrix.org>`_ - the :frog: Matrix channel where you can chat with folks about :frog:STT, get help, share ideas :)
+2. `Matrix Chat <https://matrix.to/#/+coqui:matrix.org>`_ - the 🐸 Matrix channel where you can chat with folks about 🐸STT, get help, share ideas :)
 
 3. `Github Issues <https://github.com/coqui-ai/stt/issues>`_ - If you ran into a specific error/problem, feel free to open an issue in the repo.
