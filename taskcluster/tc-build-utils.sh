@@ -17,9 +17,9 @@ do_deepspeech_python_build()
 
   SETUP_FLAGS=""
   if [ "${package_option}" = "--cuda" ]; then
-    SETUP_FLAGS="--project_name stt-gpu"
+    SETUP_FLAGS="--project_name STT-gpu"
   elif [ "${package_option}" = "--tflite" ]; then
-    SETUP_FLAGS="--project_name stt-tflite"
+    SETUP_FLAGS="--project_name STT-tflite"
   fi
 
   for pyver_conf in ${SUPPORTED_PYTHON_VERSIONS}; do
