@@ -1,7 +1,7 @@
 .. _training-docs:
 
-Training Your Own Model
-=======================
+Training
+========
 
 .. _cuda-training-deps:
 

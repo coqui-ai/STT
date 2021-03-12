@@ -1,9 +1,11 @@
 .. _supported-platforms-inference:
 
-Supported platforms for inference
-=================================
+Supported platforms
+===================
 
-Here we maintain the list of supported platforms for running inference. Note that for now we only have working packages for Python on Linux, without GPU support. We're working to get the rest of our supported languages and architectures up and running.
+Here we maintain the list of supported platforms for running inference.
+
+Note that for now we only have working packages for Python on Linux for CPU. We are working to quickly get the rest of our usually supported languages and architectures up and running.
 
 Linux / AMD64 without GPU
 ^^^^^^^^^^^^^^^^^^^^^^^^^
