@@ -13,8 +13,11 @@
 .. |gitter-img| image:: https://badges.gitter.im/coqui-ai/STT.svg
    :target: https://gitter.im/coqui-ai/STT?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
    :alt: Gitter Room
+  
+.. |doi| image:: https://zenodo.org/badge/344354127.svg
+   :target: https://zenodo.org/badge/latestdoi/344354127
    
-|doc-img| |covenant-img| |gitter-img|
+|doc-img| |covenant-img| |gitter-img| |doi|
 
 **Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
