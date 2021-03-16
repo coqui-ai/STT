@@ -23,17 +23,17 @@ Coqui STT
 Quickstart: Deployment
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The fastest way to deploy a pre-trained 🐸STT model is with `pip`: 
+The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 3.5 or higher (*Note - only Linux supported at this time. We are working to get our normally supported packages back up and running.*): 
 
 .. code-block:: bash
 
    # Create a virtual environment
-   $ python -m venv venv-stt
+   $ python3 -m venv venv-stt
    $ source venv-stt/bin/activate
 
    # Install 🐸STT
-   $ python -m pip install -U pip
-   $ python -m pip install stt
+   $ python3 -m pip install -U pip
+   $ python3 -m pip install stt
 
    # Download 🐸's pre-trained English models
    $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.pbmm

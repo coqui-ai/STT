@@ -43,7 +43,7 @@ Previously mentioned problem where extensive boost value caused letter splitting
 Example 
 -------
 
-To use hot-word boosting just add hot-words of your choice before performing an inference to a ``Model``. You can also erase boosting of a chosen word or clear it for all hot-words.
+To use hot-word boosting just add hot-words of your choice before deploying a ``Model``. You can also erase boosting of a chosen word or clear it for all hot-words.
 
 .. code-block:: python
 

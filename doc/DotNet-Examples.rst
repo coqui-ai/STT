@@ -13,7 +13,7 @@ Creating a model instance and loading model
    :start-after: sphinx-doc: csharp_ref_model_start
    :end-before: sphinx-doc: csharp_ref_model_stop
 
-Performing inference
+Deploying trained model
 --------------------
 
 .. literalinclude:: ../native_client/dotnet/STTConsole/Program.cs
