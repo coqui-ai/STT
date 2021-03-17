@@ -1,10 +1,10 @@
 Parallel Optimization
 =====================
 
-This is how we implement optimization of the 🐸STT model across GPUs on a
-single host. Parallel optimization can take on various forms. For example
-one can use asynchronous updates of the model, synchronous updates of the model,
-or some combination of the two.
+This is how we implement train the 🐸STT model across GPUs on a single host.
+Parallel optimization can take on various forms. For example one can use
+asynchronous updates of the model, synchronous updates of the model, or some
+combination of the two.
 
 Asynchronous Parallel Optimization
 ----------------------------------

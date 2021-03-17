@@ -1,7 +1,7 @@
 .. _training-docs:
 
-Training Your Own Model
-=======================
+Training
+========
 
 .. _cuda-training-deps:
 
@@ -203,8 +203,8 @@ During training of a model so-called checkpoints will get stored on disk. This t
 
 Be aware however that checkpoints are only valid for the same model geometry they had been generated from. In other words: If there are error messages of certain ``Tensors`` having incompatible dimensions, this is most likely due to an incompatible model change. One usual way out would be to wipe all checkpoint files in the checkpoint directory or changing it before starting the training.
 
-Exporting a model for inference
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Exporting a model for deployment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the ``--export_dir`` parameter is provided, a model will have been exported to this directory during training.
 Refer to the :ref:`usage instructions <usage-docs>` for information on running a client that can use the exported model.
@@ -214,10 +214,10 @@ Exporting a model for TFLite
 
 If you want to experiment with the TF Lite engine, you need to export a model that is compatible with it, then use the ``--export_tflite`` flags. If you already have a trained model, you can re-export it for TFLite by running ``train.py`` again and specifying the same ``checkpoint_dir`` that you used for training, as well as passing ``--export_tflite --export_dir /model/export/destination``. If you changed the alphabet you also need to add the ``--alphabet_config_path my-new-language-alphabet.txt`` flag.
 
-Making a mmap-able model for inference
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Making a mmap-able model for deployment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``output_graph.pb`` model file generated in the above step will be loaded in memory to be dealt with when running inference.
+The ``output_graph.pb`` model file generated in the above step will be loaded in memory when deployed.
 This will result in extra loading time and memory consumption. One way to avoid this is to directly read data from the disk.
 
 TensorFlow has tooling to achieve this: it requires building the target ``//tensorflow/contrib/util:convert_graphdef_memmapped_format`` (binaries are produced by our TaskCluster for some systems including Linux/amd64 and macOS/amd64), use ``util/taskcluster.py`` tool to download:

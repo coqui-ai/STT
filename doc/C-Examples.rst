@@ -13,8 +13,8 @@ Creating a model instance and loading model
    :start-after: sphinx-doc: c_ref_model_start
    :end-before: sphinx-doc: c_ref_model_stop
 
-Performing inference
---------------------
+Deploying trained model
+-----------------------
 
 .. literalinclude:: ../native_client/client.cc
    :language: c

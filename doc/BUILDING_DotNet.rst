@@ -3,7 +3,7 @@
 Building Coqui STT native client for Windows
 ============================================
 
-Now we can build the native client of 🐸STT and run inference on Windows using the C# client, to do that we need to compile the ``native_client``.
+Now we can build the native client of 🐸STT and deploy on Windows using the C# client, to do that we need to compile the ``native_client``.
 
 **Table of Contents**
 
