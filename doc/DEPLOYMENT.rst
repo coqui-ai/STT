@@ -12,13 +12,13 @@ Deployment is the process of feeding audio (speech) into a trained 🐸STT model
 
 You can deploy 🐸STT models either via a command-line client or a language binding. 🐸 provides three language bindings and one command line client. There also exist several community-maintained clients and language bindings, which are listed `further down in this README <#third-party-bindings>`_.
 
-*Note that 🐸 currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
+*Note that 🐸STT currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
 
 * :ref:`The Python package + language binding <py-usage>`
 * :ref:`The command-line client <cli-usage>`
 * :ref:`The native C API <c-usage>`
 * :ref:`The Node.JS package + language binding <nodejs-usage>`
-* :github:`The .NET client + language binding <native_client/dotnet/README.rst>`
+* :ref:`The .NET client + language binding <build-native-client-dotnet>`
 
 .. _download-models:
 
@@ -32,7 +32,7 @@ You can find pre-trained models ready for deployment on the 🐸STT `releases pa
    wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.pbmm
    wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.scorer
 
-In every 🐸STT official release, there are several kinds of model files provided. For the acoustic model there are two file extensions: ``.pbmm`` and ``.tflite``. Files ending in ``.pbmm`` are compatible with clients and language bindings built against the standard TensorFlow runtime. ``.pbmm`` files are also compatible with CUDA enabled clients and language bindings. Files ending in ``.tflite``, on the other hand, are only compatible with clients and language bindings built against the `TensorFlow Lite runtime <https://www.tensorflow.org/lite/>`_. 🐸STT-tflite models are optimized for size and performance on low-power devices. You can find a full list of supported platforms and TensorFlow runtimes at :ref:`supported-platforms-deployment`.
+In every 🐸STT official release, there are several kinds of model files provided. For the acoustic model there are two file extensions: ``.pbmm`` and ``.tflite``. Files ending in ``.pbmm`` are compatible with clients and language bindings built against the standard TensorFlow runtime. ``.pbmm`` files are also compatible with CUDA enabled clients and language bindings. Files ending in ``.tflite``, on the other hand, are only compatible with clients and language bindings built against the `TensorFlow Lite runtime <https://www.tensorflow.org/lite/>`_. TFLite models are optimized for size and performance on low-power devices. You can find a full list of supported platforms and TensorFlow runtimes at :ref:`supported-platforms-deployment`.
 
 For language models, there is only only file extension: ``.scorer``. Language models can run on any supported device, regardless of Tensorflow runtime. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <scorer-scripts>`.
 
@@ -145,7 +145,7 @@ See the help output with ``./stt -h`` for more details.
 Using the Node.JS / Electron.JS package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Note that 🐸 currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
+*Note that 🐸STT currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
 
 You can download the JS bindings using ``npm``\ :
 
@@ -175,7 +175,7 @@ See the :ref:`TypeScript client <js-api-example>` for an example of how to use t
 Installing bindings from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If pre-built binaries aren't available for your system, you'll need to install them from scratch. Follow the :github: :github:`native client build and installation instructions <native-build-client>`.
+If pre-built binaries aren't available for your system, you'll need to install them from scratch. Follow the :ref:`native client build and installation instructions <native-build-client>`.
 
 Dockerfile for building from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

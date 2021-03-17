@@ -139,6 +139,8 @@ After following the above build and installation instructions, the Node.JS bindi
 
 This will create the package ``stt-VERSION.tgz`` in ``native_client/javascript``.
 
+.. _build-ctcdecoder-package:
+
 Install the CTC decoder package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
