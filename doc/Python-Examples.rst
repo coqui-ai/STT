@@ -15,7 +15,7 @@ Creating a model instance and loading model
    :start-after: sphinx-doc: python_ref_model_start
    :end-before: sphinx-doc: python_ref_model_stop
 
-Performing inference
+Deploying trained model
 --------------------
 
 .. literalinclude:: ../native_client/python/client.py
