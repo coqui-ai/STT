@@ -4,16 +4,36 @@ Supported platforms
 ===================
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Here we maintain the list of supported platforms for deployment.
 =======
 Here we maintain the list of supported platforms for running inference. Note that for now we only have working packages for Python on Linux, without GPU support. We're working to get the rest of our supported languages and architectures up and running.
 >>>>>>> 3b0faaca (Note on supported platforms)
+=======
+Here we maintain the list of supported platforms for deployment.
+
+*Note that 🐸STT currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
+>>>>>>> 2d0a907e (Docs welcome page and Development / Inference page overhaul (#1793))
 
 Linux / AMD64
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
+<<<<<<< HEAD
 * glibc >= 2.24, libstdc++6 >= 6.3
 * TensorFlow Lite runtime
+=======
+* Ubuntu 14.04+ (glibc >= 2.19, libstdc++6 >= 4.8)
+* Full TensorFlow runtime (``stt`` packages)
+* TensorFlow Lite runtime (``stt-tflite`` packages)
+
+Linux / AMD64 with GPU
+^^^^^^^^^^^^^^^^^^^^^^
+* x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
+* Ubuntu 14.04+ (glibc >= 2.19, libstdc++6 >= 4.8)
+* CUDA 10.0 (and capable GPU)
+* Full TensorFlow runtime (``stt`` packages)
+* TensorFlow Lite runtime (``stt-tflite`` packages)
+>>>>>>> 2d0a907e (Docs welcome page and Development / Inference page overhaul (#1793))
 
 Linux / ARMv7
 ^^^^^^^^^^^^^
@@ -51,4 +71,17 @@ Windows / AMD64
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
 * Windows Server >= 2012 R2 ; Windows >= 8.1
+<<<<<<< HEAD
 * TensorFlow Lite runtime
+=======
+* Full TensorFlow runtime (``stt`` packages)
+* TensorFlow Lite runtime (``stt-tflite`` packages)
+
+Windows / AMD64 with GPU
+^^^^^^^^^^^^^^^^^^^^^^^^
+* x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
+* Windows Server >= 2012 R2 ; Windows >= 8.1
+* CUDA 10.0 (and capable GPU)
+* Full TensorFlow runtime (``stt`` packages)
+* TensorFlow Lite runtime (``stt-tflite`` packages)
+>>>>>>> 2d0a907e (Docs welcome page and Development / Inference page overhaul (#1793))

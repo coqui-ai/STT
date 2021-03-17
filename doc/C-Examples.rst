@@ -13,8 +13,8 @@ Creating a model instance and loading model
    :start-after: sphinx-doc: c_ref_model_start
    :end-before: sphinx-doc: c_ref_model_stop
 
-Transcribing audio with the loaded model
-----------------------------------------
+Deploying trained model
+-----------------------
 
 .. literalinclude:: ../native_client/client.cc
    :language: c
