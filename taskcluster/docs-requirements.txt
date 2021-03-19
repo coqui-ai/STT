@@ -1,7 +1,8 @@
-breathe==4.14.2
+breathe==4.27.0
 semver==2.8.1
-sphinx==2.4.4
-#FIXME: switch back to upstream sphinx-js when https://github.com/mozilla/sphinx-js/pull/135 is merged or the issue is fixed otherwise
-git+git://github.com/reuben/sphinx-js.git@a24775935443d21028ee4a7025a407c78030c4e7#egg=sphinx-js
-sphinx-rtd-theme==0.4.3
+sphinx==3.5.2
+sphinx-js==3.1
+furo==2021.2.28b28
 pygments==2.6.1
+#FIXME: switch to stable after C# changes have been merged: https://github.com/djungelorm/sphinx-csharp/pull/8
+git+https://github.com/rogerbarton/sphinx-csharp.git
