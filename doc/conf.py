@@ -75,15 +75,14 @@ release = v
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.extlinks",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.viewcode",
-    "sphinx_js",
-    "sphinx_csharp",
-    "breathe",
-    "recommonmark",
+  'sphinx.ext.autodoc',
+  'sphinx.ext.extlinks',
+  'sphinx.ext.intersphinx',
+  'sphinx.ext.mathjax',
+  'sphinx.ext.viewcode',
+  'sphinx_js',
+  'sphinx_csharp',
+  'breathe'
 ]
 
 
@@ -134,13 +133,7 @@ add_module_names = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "furo"
-
-html_theme_options = {
-    "light_logo": "coqui-STT-circle.png",
-    "dark_logo": "coqui-STT-circle.png",
-    "sidebar_hide_name": True,
-}
+html_theme = 'furo'
 
 html_css_files = [
     "custom.css",

@@ -1,0 +1,8 @@
+breathe==4.27.0
+semver==2.8.1
+sphinx==3.5.2
+sphinx-js==3.1
+furo==2021.2.28b28
+pygments==2.6.1
+#FIXME: switch to stable after C# changes have been merged: https://github.com/djungelorm/sphinx-csharp/pull/8
+git+https://github.com/rogerbarton/sphinx-csharp.git
