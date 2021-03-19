@@ -19,7 +19,7 @@
    
 |doc-img| |covenant-img| |gitter-img| |doi|
 
-`👉 Subscribe to 🐸Coqui.ai Newsletter <https://coqui.ai/?subscription=true>`_
+`👉 Subscribe to Coqui.ai Newsletter <https://coqui.ai/?subscription=true>`_
 
 **Coqui STT** (🐸STT) is a fast, open-source, multi-platform, deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
