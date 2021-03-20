@@ -19,7 +19,7 @@
    
 |doc-img| |covenant-img| |gitter-img| |doi|
 
-`👉 Subscribe to Coqui.ai Newsletter <https://coqui.ai/?subscription=true>`_
+`👉 Subscribe to 🐸Coqui's Newsletter <https://coqui.ai/?subscription=true>`_
 
 **Coqui STT** (🐸STT) is a fast, open-source, multi-platform, deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
@@ -27,13 +27,13 @@
 ---------------
 
 * High-quality pre-trained STT model.
-* Eficient training pipeline with Multi-GPU support.
-* Sreaming inference.
+* Efficient training pipeline with Multi-GPU support.
+* Streaming inference.
 * Confidence score for each word.
-* Multiple possible result phrases each with an associated confidence.
+* Multiple possible transcripts, each with an associated confidence score.
 * Real-time inference.
 * Small-footprint acoustic model. 
-* Bindings for different programming languages. 
+* Bindings for various programming languages. 
 
 Where to Ask Questions
 ----------------------
