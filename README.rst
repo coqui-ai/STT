@@ -19,22 +19,53 @@
    
 |doc-img| |covenant-img| |gitter-img| |doi|
 
-**Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
-
-.. |doi| image:: https://zenodo.org/badge/344354127.svg
-   :target: https://zenodo.org/badge/latestdoi/344354127
-
-|doc-img| |covenant-img| |gitter-img| |doi|
-
 `👉 Subscribe to 🐸Coqui's Newsletter <https://coqui.ai/?subscription=true>`_
 
-For contact and support information, see `SUPPORT.rst <SUPPORT.rst>`_.
+**Coqui STT** (🐸STT) is a fast, open-source, multi-platform, deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
 
-Help + Community
-----------------
+🐸STT features
+---------------
 
-1. `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ - find and join open-ended community discussions related to 🐸STT
+* High-quality pre-trained STT model.
+* Efficient training pipeline with Multi-GPU support.
+* Streaming inference.
+* Confidence score for each word.
+* Multiple possible transcripts, each with an associated confidence score.
+* Real-time inference.
+* Small-footprint acoustic model. 
+* Bindings for various programming languages. 
 
-2. `Gitter Room <https://gitter.im/coqui-ai/STT?utm_source=share-link&utm_medium=link&utm_campaign=share-link>`_ - the 🐸 Matrix channel where you can chat with folks about 🐸STT, get help, share ideas :)
+Where to Ask Questions
+----------------------
 
-3. `Github Issues <https://github.com/coqui-ai/stt/issues>`_ - If you ran into a specific error/problem, feel free to open an issue in the repo.
+.. list-table::
+   :widths: 25 25 
+   :header-rows: 1
+   
+   * - Type
+     - Link
+   * - 🚨 **Bug Reports**
+     - `Github Issue Tracker <https://github.com/coqui-ai/STT/issues/>`_
+   * - 🎁 **Feature Requests & Ideas**
+     - `Github Issue Tracker <https://github.com/coqui-ai/STT/issues/>`_
+   * - ❔ **Questions**
+     - `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_
+   * - 💬 **General Discussion**
+     - `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ or `Gitter Room <https://gitter.im/coqui-ai/STT?utm_source=share-link&utm_medium=link&utm_campaign=share-link>`_
+ 
+ 
+Links & Resources
+-----------------
+.. list-table::  
+   :widths: 25 25 
+   :header-rows: 1
+   
+   * - Type
+     - Link
+   * - 📰 **Documentation**
+     - `stt.readthedocs.io <https://stt.readthedocs.io/>`_
+   * - 🚀 **Latest release with pre-trained models**
+     - `see the latest release on GitHub <https://github.com/coqui-ai/STT/releases/latest>`_
+   * - 🤝 **Contribution Guidelines**
+     - `CONTRIBUTING.rst <CONTRIBUTING.rst>`_
+     
