@@ -29,7 +29,6 @@
 * High-quality pre-trained STT model.
 * Efficient training pipeline with Multi-GPU support.
 * Streaming inference.
-* Confidence score for each word.
 * Multiple possible transcripts, each with an associated confidence score.
 * Real-time inference.
 * Small-footprint acoustic model. 
