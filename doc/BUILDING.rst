@@ -1,12 +1,13 @@
 .. _build-native-client:
 
-Building Coqui STT Binaries
-===========================
+Building Binaries
+=================
 
-This section describes how to rebuild binaries. We have already several prebuilt binaries for all the supported platform,
-it is highly advised to use them except if you know what you are doing.
+This section describes how to build 🐸STT binaries.
 
-If you'd like to build the 🐸STT binaries yourself, you'll need the following pre-requisites downloaded and installed:
+It is strongly recommended that you always use our pre-built 🐸STT binaries (available with every `release <https://github.com/coqui-ai/STT/releases>`_) unless you have a reason to do build them yourself.
+
+If you would still like to build the 🐸STT binaries yourself, you'll need the following pre-requisites downloaded and installed:
 
 * `Bazel 3.1.0 <https://github.com/bazelbuild/bazel/releases/tag/3.1.0>`_
 * `General TensorFlow r2.3 requirements <https://www.tensorflow.org/install/source#tested_build_configurations>`_
@@ -16,12 +17,13 @@ It is required to use our fork of TensorFlow since it includes fixes for common 
 
 If you'd like to build the language bindings or the decoder package, you'll also need:
 
-
 * `SWIG >= 3.0.12 <http://www.swig.org/>`_.
   Unfortunately, NodeJS / ElectronJS after 10.x support on SWIG is a bit behind, and while there are pending patches proposed to upstream, it is not yet merged.
   The proper prebuilt patched version (covering linux, windows and macOS) of SWIG should get installed under `native_client/ <native_client/>`_ as soon as you build any bindings that requires it.
 
 * `node-pre-gyp <https://github.com/mapbox/node-pre-gyp>`_ (for Node.JS bindings only)
+
+For information on building on Windows, please refer to: :ref:`Windows Building <build-native-client-dotnet>`.
 
 Dependencies
 ------------
@@ -156,15 +158,11 @@ To build the ``ds_ctcdecoder`` package, you'll need the general requirements lis
 Building CTC Decoder for training on unsupported platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We only support building CTC Decoder on x86-64 architecture.
-However, we offer some hints on building the CTC decoder on other
-architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
+We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
 
 Feedback on improving this section or usage on other architectures is welcome.
 
-First, you need to build SWIG from scratch.
-Since `SWIG >= 3.0.12 <http://www.swig.org/>`_ does not include our patches please use
-https://github.com/lissyx/swig/tree/taskcluster for building SWIG from source.
+First, you need to build SWIG from scratch. Given that `SWIG >= 3.0.12 <http://www.swig.org/>`_ does not include our patches please use https://github.com/lissyx/swig/tree/taskcluster for building SWIG from source.
 
 You can supply your prebuild SWIG using ``SWIG_DIST_URL``
 
@@ -174,7 +172,6 @@ Moreover you may have to change ``PYTHON_PLATFORM_NAME`` corresponding to your p
 
     # PowerPC (ppc64le)
     PYTHON_PLATFORM_NAME="--plat-name linux_ppc64le"
-
 
 Complete build command:
 
@@ -190,7 +187,6 @@ RPi3 ARMv7 and LePotato ARM64
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
-
 
 * ``--config=rpi3`` and ``--config=rpi3_opt`` for Raspbian / ARMv7
 * ``--config=rpi3-armv8`` and ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
