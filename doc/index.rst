@@ -19,6 +19,7 @@
 
    TRAINING_INTRO
 
+   BUILDING
 
 Quickstart: Deployment
 ^^^^^^^^^^^^^^^^^^^^^^

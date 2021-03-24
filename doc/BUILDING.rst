@@ -17,9 +17,9 @@ It is required to use our fork of TensorFlow since it includes fixes for common 
 
 If you'd like to build the language bindings or the decoder package, you'll also need:
 
-* `SWIG master <https://github.com/swig/swig>`_.
-  Unfortunately, NodeJS / ElectronJS after 10.x support on SWIG is a bit behind, and while there are fixes merged on master, they have not been released.
-  Prebuilt patched versions (covering Linux, Windows and macOS) of SWIG should get installed under `native_client/ <native_client/>`_ automatically as soon as you build any bindings that requires it.
+* `SWIG >= 3.0.12 <http://www.swig.org/>`_.
+  Unfortunately, NodeJS / ElectronJS after 10.x support on SWIG is a bit behind, and while there are pending patches proposed to upstream, it is not yet merged.
+  The proper prebuilt patched version (covering linux, windows and macOS) of SWIG should get installed under `native_client/ <native_client/>`_ as soon as you build any bindings that requires it.
 
 * `node-pre-gyp <https://github.com/mapbox/node-pre-gyp>`_ (for Node.JS bindings only)
 
@@ -158,13 +158,11 @@ To build the ``coqui_stt_ctcdecoder`` package, you'll need the general requireme
 Building CTC Decoder for training on unsupported platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We only support building CTC Decoder on x86-64 architecture.
-However, we offer some hints on building the CTC decoder on other
-architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
+We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
 
 Feedback on improving this section or usage on other architectures is welcome.
 
-First, you need to build SWIG from scratch, from the master branch. Our pre-built binaries are built from the tree `90cdbee6a69d13b39d734083b9f91069533b0d7b <https://github.com/swig/swig/tree/90cdbee6a69d13b39d734083b9f91069533b0d7b>`_.
+First, you need to build SWIG from scratch. Given that `SWIG >= 3.0.12 <http://www.swig.org/>`_ does not include our patches please use https://github.com/lissyx/swig/tree/taskcluster for building SWIG from source.
 
 You can supply your prebuild SWIG using ``SWIG_DIST_URL``
 
@@ -190,8 +188,8 @@ RPi3 ARMv7 and LePotato ARM64
 
 We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
 
-* ``--config=rpi3_opt`` for Raspbian / ARMv7
-* ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
+* ``--config=rpi3`` and ``--config=rpi3_opt`` for Raspbian / ARMv7
+* ``--config=rpi3-armv8`` and ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
