@@ -19,6 +19,7 @@ Coqui STT
 
    TRAINING
 
+   BUILDING
 
 Quickstart: Deployment
 ^^^^^^^^^^^^^^^^^^^^^^
