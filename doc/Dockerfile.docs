@@ -1,0 +1,8 @@
+FROM ubuntu:18.04
+
+RUN apt-get update -y && apt-get upgrade -y
+RUN apt-get install -y make git python3-pip npm doxygen
+RUN git clone -b docs --single-branch https://github.com/JRMeyer/STT.git /STT
+WORKDIR /STT/doc
+RUN echo '''cd /STT/doc; make html; mkdir /mnt/dotbuild; cp -r .build/ -t /mnt/dotbuild/;''' > /STT/doc/run.sh
+ENTRYPOINT ["/bin/bash", "/STT/doc/run.sh"]

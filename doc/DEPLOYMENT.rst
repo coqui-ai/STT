@@ -34,7 +34,9 @@ You can find pre-trained models ready for deployment on the 🐸STT `releases pa
 
 In every 🐸STT official release, there are several kinds of model files provided. For the acoustic model there are two file extensions: ``.pbmm`` and ``.tflite``. Files ending in ``.pbmm`` are compatible with clients and language bindings built against the standard TensorFlow runtime. ``.pbmm`` files are also compatible with CUDA enabled clients and language bindings. Files ending in ``.tflite``, on the other hand, are only compatible with clients and language bindings built against the `TensorFlow Lite runtime <https://www.tensorflow.org/lite/>`_. TFLite models are optimized for size and performance on low-power devices. You can find a full list of supported platforms and TensorFlow runtimes at :ref:`supported-platforms-deployment`.
 
-For language models, there is only only file extension: ``.scorer``. Language models can run on any supported device, regardless of Tensorflow runtime. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <scorer-scripts>`.
+For language models, there is only only file extension: ``.scorer``. Language models can run on any supported device, regardless of Tensorflow runtime. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <language-model>`.
+
+.. _model-data-match:
 
 How will a model perform on my data?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -51,9 +53,9 @@ If you take a 🐸STT model trained on English, and pass Spanish into it, you sh
 
 An acoustic model (i.e. ``.pbmm`` or ``.tflite``) has "learned" how to transcribe a certain language, and the model probably understands some accents better than others. In addition to languages and accents, acoustic models are sensitive to the style of speech, the topic of speech, and the demographics of the person speaking. The language model (``.scorer``) has been trained on text alone. As such, the language model is sensitive to how well the topic and style of speech matches that of the text used in training. The 🐸STT `release notes <https://github.com/coqui-ai/STT/releases/tag/v0.9.3>`_ include detailed information on the data used to train the models. If the data used for training the off-the-shelf models does not align with your intended use case, it may be necessary to adapt or train new models in order to improve transcription on your data.
 
-Training your own language model is often a good way to improve transcription on your audio. The process and tools used to generate a language model are described in :ref:`scorer-scripts` and general information can be found in :ref:`decoder-docs`. Generating a scorer from a constrained topic dataset is a quick process and can bring significant accuracy improvements if your audio is from a specific topic.
+Training your own language model is often a good way to improve transcription on your audio. The process and tools used to generate a language model are described in :ref:`language-model` and general information can be found in :ref:`decoder-docs`. Generating a scorer from a constrained topic dataset is a quick process and can bring significant accuracy improvements if your audio is from a specific topic.
 
-Acoustic model training is described in :ref:`training-docs`. Fine tuning an off-the-shelf acoustic model to your own data can be a good way to improve performance. See the :ref:`fine tuning and transfer learning sections <training-fine-tuning>` for more information.
+Acoustic model training is described in :ref:`intro-training-docs`. Fine tuning an off-the-shelf acoustic model to your own data can be a good way to improve performance. See the :ref:`fine tuning and transfer learning sections <training-fine-tuning>` for more information.
 
 Model compatibility
 ^^^^^^^^^^^^^^^^^^^

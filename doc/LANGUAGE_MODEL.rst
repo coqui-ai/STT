@@ -1,4 +1,4 @@
-.. _scorer-scripts:
+.. _language-model:
 
 How to Train a Language Model
 =============================
@@ -45,7 +45,7 @@ Train the Language Model
 
 Assuming you found and formatted a text corpus, the next step is to use that text to train a KenLM language model with ``data/lm/generate_lm.py``.
 
-Before training the language model, you should first familiarize yourself with the `KenLM toolkit <https://kheafield.com/code/kenlm/>`_. Most of the options exposed by the ``generate_lm.py`` script are simply forwarded to KenLM options of the same name, so you should read the KenLM documentation in order to fully understand their behavior.
+For more custom use cases, you might familiarize yourself with the `KenLM toolkit <https://kheafield.com/code/kenlm/>`_. Most of the options exposed by the ``generate_lm.py`` script are simply forwarded to KenLM options of the same name, so you should read the `KenLM documentation <https://kheafield.com/code/kenlm/estimation/>`_ in order to fully understand their behavior.
 
 .. code-block:: bash
 
