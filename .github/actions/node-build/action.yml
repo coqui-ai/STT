@@ -19,14 +19,6 @@ inputs:
     description: "LIBS for NodeJS package"
     required: false
     default: ""
-  target:
-    description: "TARGET value"
-    required: false
-    default: "host"
-  chroot:
-    description: "RASPBIAN value"
-    required: false
-    default: ""
 runs:
   using: "composite"
   steps:
@@ -38,18 +30,12 @@ runs:
         npm update
       shell: bash
     - run: |
-        mkdir -p tmp/headers/nodejs tmp/headers/electronjs
-      shell: bash
-    - run: |
         for node in ${{ inputs.nodejs_versions }}; do
           EXTRA_CFLAGS=${{ inputs.local_cflags }} \
           EXTRA_LDFLAGS=${{ inputs.local_ldflags }} \
           EXTRA_LIBS=${{ inputs.local_libs }} \
             make -C native_client/javascript \
-              TARGET=${{ inputs.target }} \
-              RASPBIAN=${{ inputs.chroot }} \
               NODE_ABI_TARGET=--target=${node} \
-              NODE_DEVDIR=--devdir=headers/nodejs \
             clean node-wrapper
         done;
       shell: bash
@@ -59,12 +45,9 @@ runs:
           EXTRA_LDFLAGS=${{ inputs.local_ldflags }} \
           EXTRA_LIBS=${{ inputs.local_libs }} \
             make -C native_client/javascript \
-              TARGET=${{ inputs.target }} \
-              RASPBIAN=${{ inputs.chroot }} \
               NODE_ABI_TARGET=--target=${electron} \
               NODE_DIST_URL=--disturl=https://electronjs.org/headers \
               NODE_RUNTIME=--runtime=electron \
-              NODE_DEVDIR=--devdir=headers/electronjs \
             clean node-wrapper
         done;
       shell: bash

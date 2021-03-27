@@ -20,10 +20,6 @@ inputs:
     description: "Repository name with owner (like actions/checkout)"
     required: false
     default: ${{ github.repository }}
-  release-tag:
-    description: "Tag of release to check artifacts under"
-    required: false
-    default: "v0.10.0-alpha.7"
 outputs:
   status:
     description: "Status string of the artifact: 'missing' or 'found'"

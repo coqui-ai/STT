@@ -1,21 +1,9 @@
 name: "get cache key for submodule"
 description: "Compute a cache key based on git submodule"
 inputs:
-  submodule:
-    description: "Name of submodule"
-    default: "tensorflow"
-    required: false
-  flavor:
-    description: "Cache flavor"
-    default: "opt"
-    required: false
-  arch:
-    description: "Cache architecture"
-    required: true
   extras:
     description: "Extra cache key value"
-    default: "0"
-    required: false
+    required: true
 outputs:
   key:
     description: "Computed cache key name"
@@ -25,9 +13,13 @@ runs:
   steps:
     - id: compute_cache_key
       run: |
-        set -xe
-        SUBMODULE=${{ inputs.submodule }}
+        JOB=${{ github.job }}
+        SUBMODULE=$(echo $JOB | cut -d'-' -f1 | cut -d'_' -f1)
+        FLAVOR=$(echo $JOB | cut -d'-' -f1 | cut -d'_' -f2)
+        OSARCH=$(echo $JOB | cut -d'-' -f2)
+
         SHA=$(git submodule status ${SUBMODULE} | sed -e 's/^-//g' -e 's/^+//g' -e 's/^U//g' | awk '{ print $1 }')
-        KEY=${SUBMODULE}-${{ inputs.flavor }}_${{ inputs.arch }}_${SHA}_${{ inputs.extras }}
+
+        KEY=${SUBMODULE}-${FLAVOR}_${OSARCH}_${SHA}_${{ inputs.extras }}
         echo "::set-output name=key::${KEY}"
       shell: bash

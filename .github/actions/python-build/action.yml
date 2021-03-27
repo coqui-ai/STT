@@ -1,11 +1,8 @@
 name: "Python binding"
 description: "Binding a python binding"
 inputs:
-  numpy_build:
-    description: "NumPy build dependecy"
-    required: true
-  numpy_dep:
-    description: "NumPy runtime dependecy"
+  build_flavor:
+    description: "Python package name"
     required: true
   local_cflags:
     description: "CFLAGS for Python package"
@@ -19,14 +16,6 @@ inputs:
     description: "LIBS for Python package"
     required: false
     default: ""
-  target:
-    description: "TARGET value"
-    required: false
-    default: "host"
-  chroot:
-    description: "RASPBIAN value"
-    required: false
-    default: ""
 runs:
   using: "composite"
   steps:
@@ -35,24 +24,24 @@ runs:
         pip3 --version
       shell: bash
     - run: |
-        set -xe
-
-        PROJECT_NAME="stt"
-
-        OS=$(uname)
-        if [ "${OS}" = "Linux" -a "${{ inputs.target }}" != "host" ]; then
-          python3 -m venv stt-build
-          source stt-build/bin/activate
+        mkdir -p wheels
+      shell: bash
+    - run: |
+        PROJECT_NAME="deepspeech"
+        if [ "${{ inputs.build_flavor }}" = "tflite" ]; then
+          PROJECT_NAME="deepspeech-tflite"
         fi
 
-        NUMPY_BUILD_VERSION="${{ inputs.numpy_build }}" \
-        NUMPY_DEP_VERSION="${{ inputs.numpy_dep }}" \
         EXTRA_CFLAGS=${{ inputs.local_cflags }} \
         EXTRA_LDFLAGS=${{ inputs.local_ldflags }} \
         EXTRA_LIBS=${{ inputs.local_libs }} \
           make -C native_client/python/ \
-            TARGET=${{ inputs.target }} \
-            RASPBIAN=${{ inputs.chroot }} \
             SETUP_FLAGS="--project_name ${PROJECT_NAME}" \
             bindings-clean bindings
+      shell: bash
+    - run: |
+        cp native_client/python/dist/*.whl wheels
+      shell: bash
+    - run: |
+        make -C native_client/python/ bindings-clean
       shell: bash

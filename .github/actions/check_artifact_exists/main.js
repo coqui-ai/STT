@@ -1,128 +1,119 @@
 const core = require('@actions/core');
-const exec = require('@actions/exec');
 const github = require('@actions/github');
 const AdmZip = require('adm-zip');
 const filesize = require('filesize');
 const pathname = require('path');
 const fs = require('fs');
-const { throttling } = require('@octokit/plugin-throttling');
-const { GitHub } = require('@actions/github/lib/utils');
-const Util = require('util');
-const Stream = require('stream');
 
-async function getGoodArtifacts(client, owner, repo, releaseId, name) {
-    console.log(`==> GET /repos/${owner}/${repo}/releases/${releaseId}/assets`);
-    const goodRepoArtifacts = await client.paginate(
-        "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
+async function getGoodArtifacts(client, owner, repo, name) {
+    const goodWorkflowArtifacts = await client.paginate(
+        "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
         {
             owner: owner,
             repo: repo,
-            release_id: releaseId,
-            per_page: 100,
+            run_id: github.context.runId,
         },
-        (releaseAssets, done) => {
-            console.log(" ==> releaseAssets", releaseAssets);
-            const goodAssets = releaseAssets.data.filter((a) => {
-                console.log("==> Asset check", a);
+        (workflowArtifacts) => {
+            // console.log(" ==> workflowArtifacts", workflowArtifacts);
+            return workflowArtifacts.data.filter((a) => {
+                // console.log("==> Artifact check", a);
                 return a.name == name
-            });
-            if (goodAssets.length > 0) {
-                done();
-            }
-            return goodAssets;
+            })
+        }
+    );
+
+    console.log("==> maybe goodWorkflowArtifacts:", goodWorkflowArtifacts);
+    if (goodWorkflowArtifacts.length > 0) {
+        return goodWorkflowArtifacts;
+    }
+
+    const goodRepoArtifacts = await client.paginate(
+        "GET /repos/{owner}/{repo}/actions/artifacts",
+        {
+            owner: owner,
+            repo: repo,
+        },
+        (repoArtifacts) => {
+            // console.log(" ==> repoArtifacts", repoArtifacts);
+            return repoArtifacts.data.filter((a) => {
+                // console.log("==> Artifact check", a);
+                return a.name == name
+            })
         }
     );
 
     console.log("==> maybe goodRepoArtifacts:", goodRepoArtifacts);
-    return goodRepoArtifacts;
+    if (goodRepoArtifacts.length > 0) {
+        return goodRepoArtifacts;
+    }
+
+    // We have not been able to find a repo artifact, it's really no good news
+    return [];
 }
 
 async function main() {
-    try {
-        const token = core.getInput("github_token", { required: true });
-        const [owner, repo] = core.getInput("repo", { required: true }).split("/");
-        const path = core.getInput("path", { required: true });
-        const name = core.getInput("name");
-        const download = core.getInput("download");
-        const releaseTag = core.getInput("release-tag");
-        const OctokitWithThrottling = GitHub.plugin(throttling);
-        const client = new OctokitWithThrottling({
-            auth: token,
-            throttle: {
-                onRateLimit: (retryAfter, options) => {
-                    console.log(
-                        `Request quota exhausted for request ${options.method} ${options.url}`
-                    );
+    const token = core.getInput("github_token", { required: true });
+    const [owner, repo] = core.getInput("repo", { required: true }).split("/");
+    const path = core.getInput("path", { required: true });
+    const name = core.getInput("name");
+    const download = core.getInput("download");
+    const client = github.getOctokit(token)
 
-                    // Retry twice after hitting a rate limit error, then give up
-                    if (options.request.retryCount <= 2) {
-                        console.log(`Retrying after ${retryAfter} seconds!`);
-                        return true;
-                    } else {
-                        console.log("Exhausted 2 retries");
-                        core.setFailed("Exhausted 2 retries");
-                    }
-                },
-                onAbuseLimit: (retryAfter, options) => {
-                    // does not retry, only logs a warning
-                    console.log(
-                        `Abuse detected for request ${options.method} ${options.url}`
-                    );
-                    core.setFailed(`GitHub REST API Abuse detected for request ${options.method} ${options.url}`)
-                },
-            },
-        });
-        console.log("==> Repo:", owner + "/" + repo);
+    console.log("==> Repo:", owner + "/" + repo);
 
-        const releaseInfo = await client.repos.getReleaseByTag({
-            owner,
-            repo,
-            tag: releaseTag,
-        });
-        console.log(`==> Release info for tag ${releaseTag} = ${JSON.stringify(releaseInfo.data, null, 2)}`);
-        const releaseId = releaseInfo.data.id;
+    const goodArtifacts = await getGoodArtifacts(client, owner, repo, name);
+    console.log("==> goodArtifacts:", goodArtifacts);
 
-        const goodArtifacts = await getGoodArtifacts(client, owner, repo, releaseId, name);
-        console.log("==> goodArtifacts:", goodArtifacts);
-
-        const artifactStatus = goodArtifacts.length === 0 ? "missing" : "found";
-
-        console.log("==> Artifact", name, artifactStatus);
-        console.log("==> download", download);
-
-        core.setOutput("status", artifactStatus);
-
-        if (artifactStatus === "found" && download == "true") {
-            console.log("==> # artifacts:", goodArtifacts.length);
-
-            const artifact = goodArtifacts[0];
-            console.log("==> Artifact:", artifact.id)
-
-            const size = filesize(artifact.size, { base: 10 })
-            console.log(`==> Downloading: ${artifact.name} (${size}) to path: ${path}`)
-
-            const dir = pathname.dirname(path)
-            console.log(`==> Creating containing dir if needed: ${dir}`)
-            fs.mkdirSync(dir, { recursive: true })
-
-            await exec.exec('curl', [
-                '-L',
-                '-o', path,
-                '-H', 'Accept: application/octet-stream',
-                '-H', `Authorization: token ${token}`,
-                artifact.url
-            ])
-        }
-
-        if (artifactStatus === "missing" && download == "true") {
-            core.setFailed("Required", name, "that is missing");
-        }
-
-        return;
-    } catch (err) {
-        console.error(err.stack);
-        core.setFailed(err.message);
+    let artifactStatus = "";
+        if (goodArtifacts.length === 0) {
+        artifactStatus = "missing";
+    } else {
+        artifactStatus = "found";
     }
+
+    console.log("==> Artifact", name, artifactStatus);
+    console.log("==> download", download);
+
+    core.setOutput("status", artifactStatus);
+
+    if (artifactStatus === "found" && download == "true") {
+        console.log("==> # artifacts:", goodArtifacts.length);
+
+        let artifact = goodArtifacts[0];
+
+        console.log("==> Artifact:", artifact.id)
+
+        const size = filesize(artifact.size_in_bytes, { base: 10 })
+
+        console.log("==> Downloading:", artifact.name + ".zip", `(${size})`)
+
+        const zip = await client.actions.downloadArtifact({
+            owner: owner,
+            repo: repo,
+            artifact_id: artifact.id,
+            archive_format: "zip",
+        })
+
+        const dir = name ? path : pathname.join(path, artifact.name)
+
+        fs.mkdirSync(dir, { recursive: true })
+
+        const adm = new AdmZip(Buffer.from(zip.data))
+
+        adm.getEntries().forEach((entry) => {
+            const action = entry.isDirectory ? "creating" : "inflating"
+            const filepath = pathname.join(dir, entry.entryName)
+            console.log(`  ${action}: ${filepath}`)
+        })
+
+        adm.extractAllTo(dir, true)
+    }
+
+    if (artifactStatus === "missing" && download == "true") {
+        core.setFailed("Required", name, "that is missing");
+    }
+
+    return;
 }
 
 main();
