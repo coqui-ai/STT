@@ -21,9 +21,14 @@ package_native_client()
     echo "Please specify artifact name."
   fi;
 
+  win_lib=""
+  if [ -f "${tensorflow_dir}/bazel-bin/native_client/libstt.so.if.lib" ]; then
+    win_lib="-C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so.if.lib"
+  fi;
+
   ${TAR} -cf - \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
-    -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so.if.lib \
+    ${win_lib} \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
     -C ${deepspeech_dir}/ LICENSE \
     -C ${deepspeech_dir}/native_client/ stt${PLATFORM_EXE_SUFFIX} \
@@ -55,7 +60,7 @@ package_native_client_ndk()
     echo "Please specify arch abi."
   fi;
 
-  tar -cf - \
+  ${TAR} -cf - \
     -C ${deepspeech_dir}/native_client/libs/${arch_abi}/ stt \
     -C ${deepspeech_dir}/native_client/libs/${arch_abi}/ libstt.so \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
@@ -63,7 +68,7 @@ package_native_client_ndk()
     -C ${deepspeech_dir}/native_client/ coqui-stt.h \
     -C ${deepspeech_dir}/ LICENSE \
     -C ${deepspeech_dir}/native_client/kenlm/ README.coqui \
-    | pixz -9 > "${artifacts_dir}/${artifact_name}"
+    | ${XZ} > "${artifacts_dir}/${artifact_name}"
 }
 
 package_libdeepspeech_as_zip()
@@ -83,5 +88,5 @@ package_libdeepspeech_as_zip()
     echo "Please specify artifact name."
   fi;
 
-  zip -r9 --junk-paths "${artifacts_dir}/${artifact_name}" ${tensorflow_dir}/bazel-bin/native_client/libstt.so
+  ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" ${tensorflow_dir}/bazel-bin/native_client/libstt.so
 }
