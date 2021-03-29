@@ -9,10 +9,11 @@ source $(dirname "$0")/asserts.sh
 bitrate=$1
 set_ldc_sample_filename "${bitrate}"
 
-model_source=${DEEPSPEECH_PROD_MODEL//.pb/.tflite}
+model_source=${DEEPSPEECH_PROD_MODEL}
 model_name=$(basename "${model_source}")
-model_name_mmap=$(basename "${model_source}")
-model_source_mmap=${DEEPSPEECH_PROD_MODEL_MMAP//.pbmm/.tflite}
+
+model_source_mmap=${DEEPSPEECH_PROD_MODEL_MMAP}
+model_name_mmap=$(basename "${model_source_mmap}")
 
 download_model_prod
 
@@ -21,4 +22,6 @@ download_material
 which deepspeech
 deepspeech --version
 
-run_prodtflite_inference_tests "${bitrate}"
+run_prod_inference_tests "${bitrate}"
+
+run_prod_concurrent_stream_tests "${bitrate}"

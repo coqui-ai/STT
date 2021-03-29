@@ -9,15 +9,22 @@ source $(dirname "$0")/asserts.sh
 bitrate=$1
 set_ldc_sample_filename "${bitrate}"
 
-model_source=${DEEPSPEECH_TEST_MODEL//.pb/.tflite}
-model_name=$(basename "${model_source}")
-model_name_mmap=$(basename "${model_source}")
-
 download_data
 
-which deepspeech
+node --version
+npm --version
+
+symlink_electron
+
+export_node_bin_path
+
+which electron
+which node
+
+node --version
+
 deepspeech --version
 
-run_all_inference_tests
+check_runtime_electronjs
 
-run_hotword_tests
+run_electronjs_inference_tests
