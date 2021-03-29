@@ -1,49 +1,3 @@
-<<<<<<< HEAD
-# This is a Dockerfile useful for training models with Coqui STT.
-# You can train "acoustic models" with audio + Tensorflow, and
-# you can create "scorers" with text + KenLM.
-
-FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3 AS kenlm-build
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential cmake libboost-system-dev \
-    libboost-thread-dev libboost-program-options-dev \
-    libboost-test-dev libeigen3-dev zlib1g-dev \
-    libbz2-dev liblzma-dev && \
-    rm -rf /var/lib/apt/lists/*
-
-# Build KenLM to generate new scorers
-WORKDIR /code
-COPY kenlm /code/kenlm
-RUN cd /code/kenlm && \
-    mkdir -p build && \
-    cd build && \
-    cmake .. && \
-    make -j $(nproc) || \
-    ( echo "ERROR: Failed to build KenLM."; \
-    echo "ERROR: Make sure you update the kenlm submodule on host before building this Dockerfile."; \
-    echo "ERROR: $ cd STT; git submodule update --init kenlm"; \
-    exit 1; )
-
-
-FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        git \
-        wget \
-        libopus0 \
-        libopusfile0 \
-        libsndfile1 \
-        sox \
-        libsox-fmt-mp3 && \
-    rm -rf /var/lib/apt/lists/*
-
-# Make sure pip and its dependencies are up-to-date
-=======
 # Please refer to the TRAINING documentation, "Basic Dockerfile for training"
 
 FROM tensorflow/tensorflow:1.15.4-gpu-py3
@@ -70,18 +24,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/
 
 # Make sure pip and its deps  are up-to-date
->>>>>>> 6efe3358 (Fixes for Dockerfile.{train,build} and adjust instructions for new image)
 RUN pip3 install --upgrade pip wheel setuptools
 
 WORKDIR /code
 
-<<<<<<< HEAD
-=======
 # Tool to convert output graph for inference
 RUN wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
     unzip temp.zip && rm temp.zip
 
->>>>>>> 6efe3358 (Fixes for Dockerfile.{train,build} and adjust instructions for new image)
 COPY native_client /code/native_client
 COPY .git /code/.git
 COPY training/coqui_stt_training/VERSION /code/training/coqui_stt_training/VERSION
@@ -91,28 +41,6 @@ COPY training/coqui_stt_training/GRAPH_VERSION /code/training/coqui_stt_training
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
 RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 
-<<<<<<< HEAD
-COPY setup.py /code/setup.py
-COPY VERSION /code/VERSION
-COPY training /code/training
-# Copy files from previous build stages
-RUN mkdir -p /code/kenlm/build/
-COPY --from=kenlm-build /code/kenlm/build/bin /code/kenlm/build/bin
-
-# Tool to convert output graph for inference
-RUN curl -L https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip | funzip > convert_graphdef_memmapped_format && \
-    chmod +x convert_graphdef_memmapped_format
-
-# Pre-built native client tools
-RUN curl -L https://github.com/coqui-ai/STT/releases/download/v1.1.0/native_client.tflite.Linux.tar.xz | tar -xJvf -
-
-# Install STT
-# No need for the decoder since we did it earlier
-# TensorFlow GPU should already be installed on the base image,
-# and we don't want to break that
-RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
-
-=======
 # Install STT
 #  - No need for the decoder since we did it earlier
 #  - There is already correct TensorFlow GPU installed on the base image,
@@ -130,7 +58,6 @@ RUN cd /code/kenlm && \
     cmake .. && \
     make -j $(nproc)
 
->>>>>>> 6efe3358 (Fixes for Dockerfile.{train,build} and adjust instructions for new image)
 # Copy rest of the code and test training
 COPY . /code
 RUN ./bin/run-ldc93s1.sh && rm -rf ~/.local/share/stt
