@@ -14,7 +14,7 @@ Creating a model instance and loading model
    :end-before: sphinx-doc: csharp_ref_model_stop
 
 Deploying trained model
---------------------
+-----------------------
 
 .. literalinclude:: ../native_client/dotnet/STTConsole/Program.cs
    :language: csharp

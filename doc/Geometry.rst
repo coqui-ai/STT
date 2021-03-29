@@ -1,7 +1,9 @@
-Geometric Constants
-===================
+.. _model-geometry:
 
-This is about several constants related to the geometry of the network.
+Model Geometry
+==============
+
+This document explains several constants related to the geometry of an STT model.
 
 n_input
 -------

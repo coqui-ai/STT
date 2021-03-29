@@ -16,7 +16,7 @@ Creating a model instance and loading model
    :end-before: sphinx-doc: python_ref_model_stop
 
 Deploying trained model
---------------------
+-----------------------
 
 .. literalinclude:: ../native_client/python/client.py
    :language: python
