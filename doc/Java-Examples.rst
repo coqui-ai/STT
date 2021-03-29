@@ -14,7 +14,7 @@ Creating a model instance and loading model
    :end-before: sphinx-doc: java_ref_model_stop
 
 Deploying trained model
---------------------
+-----------------------
 
 .. literalinclude:: ../native_client/java/app/src/main/java/ai/coqui/sttexampleapp/STTActivity.java
    :language: java

@@ -16,7 +16,7 @@ Creating a model instance and loading model
    :end-before: sphinx-doc: js_ref_model_stop
 
 Deploying trained model
---------------------
+-----------------------
 
 .. literalinclude:: ../native_client/javascript/client.ts
    :language: javascript
