@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # This is a Dockerfile useful for training models with Coqui STT.
 # You can train "acoustic models" with audio + Tensorflow, and
 # you can create "scorers" with text + KenLM.
@@ -42,10 +43,45 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Make sure pip and its dependencies are up-to-date
+=======
+# Please refer to the TRAINING documentation, "Basic Dockerfile for training"
+
+FROM tensorflow/tensorflow:1.15.4-gpu-py3
+ENV DEBIAN_FRONTEND=noninteractive
+
+# We need to purge python3-xdg because it's breaking STT install later with
+# weird errors about setuptools
+#
+# libopus0 and libsndfile1 are dependencies for audio augmentation
+#
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        curl \
+        git \
+        libboost-all-dev \
+        libbz2-dev \
+        libopus0 \
+        libsndfile1 \
+        unzip \
+        wget && \
+    apt-get purge -y python3-xdg && \
+    rm -rf /var/lib/apt/lists/
+
+# Make sure pip and its deps  are up-to-date
+>>>>>>> 6efe3358 (Fixes for Dockerfile.{train,build} and adjust instructions for new image)
 RUN pip3 install --upgrade pip wheel setuptools
 
 WORKDIR /code
 
+<<<<<<< HEAD
+=======
+# Tool to convert output graph for inference
+RUN wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
+    unzip temp.zip && rm temp.zip
+
+>>>>>>> 6efe3358 (Fixes for Dockerfile.{train,build} and adjust instructions for new image)
 COPY native_client /code/native_client
 COPY .git /code/.git
 COPY training/coqui_stt_training/VERSION /code/training/coqui_stt_training/VERSION
@@ -55,6 +91,7 @@ COPY training/coqui_stt_training/GRAPH_VERSION /code/training/coqui_stt_training
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
 RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 
+<<<<<<< HEAD
 COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
 COPY training /code/training
@@ -75,6 +112,25 @@ RUN curl -L https://github.com/coqui-ai/STT/releases/download/v1.1.0/native_clie
 # and we don't want to break that
 RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
 
+=======
+# Install STT
+#  - No need for the decoder since we did it earlier
+#  - There is already correct TensorFlow GPU installed on the base image,
+#    we don't want to break that
+COPY setup.py /code/setup.py
+COPY VERSION /code/VERSION
+COPY training /code/training
+RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
+
+# Build KenLM to generate new scorers
+COPY kenlm /code/kenlm
+RUN cd /code/kenlm && \
+    mkdir -p build && \
+    cd build && \
+    cmake .. && \
+    make -j $(nproc)
+
+>>>>>>> 6efe3358 (Fixes for Dockerfile.{train,build} and adjust instructions for new image)
 # Copy rest of the code and test training
 COPY . /code
 RUN ./bin/run-ldc93s1.sh && rm -rf ~/.local/share/stt

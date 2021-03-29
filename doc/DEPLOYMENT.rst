@@ -181,17 +181,12 @@ Dockerfile for building from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide ``Dockerfile.build`` to automatically build ``libstt.so``, the C++ native client, Python bindings, and KenLM.
-You need to generate the Dockerfile from the template using:
+
+If you want to specify a different repository or branch, you can specify the ``STT_REPO`` or ``STT_SHA`` arguments:
 
 .. code-block:: bash
 
-   make Dockerfile.build
-
-If you want to specify a different repository or branch, you can pass ``STT_REPO`` or ``STT_SHA`` parameters:
-
-.. code-block:: bash
-
-   make Dockerfile.build STT_REPO=git://your/fork STT_SHA=origin/your-branch
+   docker build . -f Dockerfile.build --build-arg STT_REPO=git://your/fork --build-arg STT_SHA=origin/your-branch
 
 .. _runtime-deps:
 

@@ -3,6 +3,9 @@
 # Need devel version cause we need /usr/include/cudnn.h
 FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
+ARG STT_REPO=https://github.com/coqui-ai/STT.git
+ARG STT_SHA=origin/main
+
 # >> START Install base software
 
 # Get basic packages
