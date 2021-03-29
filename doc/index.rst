@@ -87,7 +87,7 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
 
    Scorer
 
-.. include:: ../SUPPORT.rst
+.. include:: SUPPORT.rst
 
 Indices and tables
 ==================

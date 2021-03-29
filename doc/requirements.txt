@@ -3,8 +3,6 @@ semver==2.8.1
 sphinx==3.5.2
 sphinx-js==3.1
 furo==2021.2.28b28
-pygments==2.7.4
-docutils>=0.12,<=0.17.1
+pygments==2.6.1
 #FIXME: switch to stable after C# changes have been merged: https://github.com/djungelorm/sphinx-csharp/pull/8
-git+https://github.com/reuben/sphinx-csharp.git@9dc6202f558e3d3fa14ec7f5f1e36a8e66e6d622
-recommonmark==0.7.1
+git+https://github.com/rogerbarton/sphinx-csharp.git

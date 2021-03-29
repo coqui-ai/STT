@@ -14,17 +14,17 @@ If your own data uses the *extact* same alphabet as the English release model (i
 Fine-Tuning (same alphabet)
 ---------------------------
 
-You can fine-tune pre-trained model checkpoints by using the ``--checkpoint_dir`` flag. Specify the path to the checkpoints, and training will resume from the pre-trained model.
+You can fine-tune pre-trained model checkpoints by using the ``--checkpoint_dir`` flag in ``train.py``. Specify the path to the checkpoints, and training will resume from the pre-trained model.
 
 For example, if you want to fine tune existing checkpoints to your own data in ``my-train.csv``, ``my-dev.csv``, and ``my-test.csv``, you can do the following:
 
 .. code-block:: bash
 
-   $ python -m coqui_stt_training.train \
-         --checkpoint_dir path/to/checkpoint/folder \
-         --train_files my-train.csv \
-         --dev_files my-dev.csv \
-         --test_files my_test.csv
+   $ python3 train.py \
+	--checkpoint_dir path/to/checkpoint/folder \
+	--train_files my-train.csv \
+	--dev_files my-dev.csv \
+	--test_files my_test.csv
 
 Transfer-Learning (new alphabet)
 --------------------------------
@@ -39,12 +39,12 @@ You need to specify the location of the pre-trained model with ``--load_checkpoi
 
 .. code-block:: bash
 
-       python -m coqui_stt_training.train \
+       python3 train.py \
            --drop_source_layers 1 \
            --alphabet_config_path my-alphabet.txt \
            --save_checkpoint_dir path/to/output-checkpoint/folder \
            --load_checkpoint_dir path/to/input-checkpoint/folder \
-           --train_files my-new-language-train.csv \
+	   --train_files my-new-language-train.csv \
            --dev_files   my-new-language-dev.csv \
            --test_files  my-new-language-test.csv
 
