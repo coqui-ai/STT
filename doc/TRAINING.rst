@@ -88,18 +88,7 @@ Setting the ``TF_FORCE_GPU_ALLOW_GROWTH`` environment variable to ``true`` seems
 Basic Dockerfile for training
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We provide ``Dockerfile.train`` to automatically set up a basic training environment in Docker. You need to generate the Dockerfile from the template using:
-This should ensure that you'll re-use the upstream Python 3 TensorFlow GPU-enabled Docker image.
-
-.. code-block:: bash
-
-   make Dockerfile.train
-
-If you want to specify a different 🐸STT repository / branch, you can pass ``STT_REPO`` or ``STT_SHA`` parameters:
-
-.. code-block:: bash
-
-   make Dockerfile.train STT_REPO=git://your/fork STT_SHA=origin/your-branch
+We provide ``Dockerfile.train`` to automatically set up a basic training environment in Docker. This should ensure that you'll re-use the upstream Python 3 TensorFlow GPU-enabled Docker image. The image can be used with ``FROM ghcr.io/coqui-ai/stt-train``.
 
 Common Voice training data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -32,8 +32,6 @@
 /doc/.build/
 /doc/xml-c/
 /doc/xml-java/
-Dockerfile.build
-Dockerfile.train
 doc/xml-c
 doc/xml-java
 doc/xml-dotnet
