@@ -1,0 +1,10 @@
+.git/lfs
+tensorflow
+.git/modules/tensorflow
+native_client/ds-swig
+native_client/libstt.so
+native_client/stt
+native_client/ctcdecode/dist/
+native_client/ctcdecode/temp_build
+native_client/ctcdecode/third_party.a
+native_client/ctcdecode/workspace_status.cc
