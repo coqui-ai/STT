@@ -26,6 +26,10 @@ Before you can train a model, you will need to collect and format your _corpus_ 
 
 If you are training a model that uses a different alphabet to English, for example a language with diacritical marks, then you will need to modify the `alphabet.txt` file.
 
+## [Building your own scorer](SCORER.md)
+
+Learn what the scorer does, and how you can go about building your own. 
+
 ## [Acoustic model and language model](AM_vs_LM.md)
 
 Learn about the differences between STT's _acoustic_ model and _language_ model and how they combine to provide end to end speech recognition.
@@ -37,10 +41,6 @@ This section walks you through building a Docker image, and spawning STT in a Do
 ## [Training a model](TRAINING.md)
 
 Once you have your training data formatted, and your training environment established, this section will show you how to train a model, and provide guidance for overcoming common pitfalls.
-
-## [Building your own scorer](SCORER.md)
-
-Learn what the scorer does, and how you can go about building your own.
 
 ## [Testing a model](TESTING.md)
 
@@ -66,7 +66,7 @@ Here, we've linked to several resources that you may find helpful; they're liste
 
 * [Google's machine learning crash course](https://developers.google.com/machine-learning/crash-course/ml-intro) provides a gentle introduction to the main concepts of machine learning, including _gradient descent_, _learning rate_, _training, test and validation sets_ and _overfitting_.
 
-* If machine learning is something that sparks your interest, then you may enjoy [the MIT Open Learning Library's Introduction to Machine Learning course](https://openlearninglibrary.mit.edu/courses/course-v1:MITx+6.036+1T2019/course/), a 13-week college-level course covering perceptrons, neural networks, support vector machines and convolutional neural networks.
+* If machine learning is something that sparks your interest, then you may enjoy [the MIT Open Learning Library's Introduction to Machine Learning course](https://openlearninglibrary.mit.edu/courses/course-v1:MITx+6.036+1T2019/course/), a 13-week college-level course covering perceptrons, neural networks, support vector machines and convolutional neural networks. 
 
 ---
 

@@ -79,7 +79,7 @@ python3 train.py \
 
 _Checkpoints_ are stored as [Tensorflow `tf.Variable` objects](https://www.tensorflow.org/guide/checkpoint). This is a binary file format; that is, you won't be able to read it with a text editor. The _checkpoint_ stores all the weights and biases of the current state of the _neural network_ as training progresses.
 
-_Checkpoints_ are named by the total number of steps completed. For example, if you train for 100 epochs at 2000 steps per epoch, then the final _checkpoint_ will be named `200000`.
+_Checkpoints_ are named by the total number of steps completed. For example, if you train for 100 epochs at 2000 steps per epoch, then the final _checkpoint_ will be named `20000`.
 
 ```
 ~/stt-data/checkpoints-true-id$ ls

@@ -76,7 +76,7 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
    DotNet-Examples
 
    Java-Examples
-   
+
    HotWordBoosting-Examples
 
    Contributed-Examples
@@ -85,9 +85,15 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
    :maxdepth: 1
    :caption: Language Model
 
-   Scorer
+   LANGUAGE_MODEL
 
 .. include:: SUPPORT.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: STT Playbook
+
+   playbook/README
 
 Indices and tables
 ==================

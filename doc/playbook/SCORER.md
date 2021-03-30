@@ -20,7 +20,7 @@
 
 A scorer is a _language model_ and it is used by 🐸STT to improve the accuracy of transcription. A _language model_ predicts which words are more likely to follow each other. For example, the word `chicken` might be frequently followed by the words `nuggets`, `soup` or `rissoles`, but is unlikely to be followed by the word `purple`. The scorer identifies probabilities of words occurring together.
 
-The default scorer used by 🐸STT is trained on [the English text from the Multilingual LibriSpeech dataset](https://dl.fbaipublicfiles.com/mls/mls_lm_english.tar.gz) (44G).
+The default scorer used by 🐸STT is trained on the LibriSpeech dataset. The LibriSpeech dataset is based on [LibriVox](https://librivox.org/) - an open collection of out-of-copyright and public domain works.
 
 You may need to build your own scorer - your own _language model_ if:
 
@@ -38,7 +38,7 @@ _This section assumes that you have already trained a model and have a set of **
 
 🐸STT uses an algorithm called [_connectionist temporal classification_](https://distill.pub/2017/ctc/) or CTC for short, to map between _input_ sequences of audio and _output_ sequences of characters. The mapping between _inputs_ and _outputs_ is called an _alignment_. The alignment between _inputs_ and _outputs_ is not one-to-one; many _inputs_ may make up an _output_. CTC is therefore a _probabilistic_ algorithm. This means that for each _input_ there are many possible _outputs_ that can be selected. A process call _beam search_ is used to identify the possible _outputs_ and select the one with the highest probability. A [language model](AM_vs_LM.md) or _scorer_ helps the _beam search_ algorithm select the most optimal _output_ value. This is why building your own _scorer_ is necessary for training a model on a narrow domain - otherwise the _beam search_ algorithm would probably select the wrong _output_.
 
-The default English _scorer_ released with 🐸STT is trained on [Multilingual LibriSpeech](https://dl.fbaipublicfiles.com/mls/mls_lm_english.tar.gz). It's a general model. But let's say that you want to train a speech recognition model for agriculture. If you have the phrase `tomatoes are ...`, a general scorer might identify `red` as the most likely next word - but an agricultural model might identify `ready` as the most likely next word.
+The default _scorer_ used with 🐸STT is trained on Librivox. It's a general model. But let's say that you want to train a speech recognition model for agriculture. If you have the phrase `tomatoes are ...`, a general scorer might identify `red` as the most likely next word - but an agricultural model might identify `ready` as the most likely next word.
 
 The _scorer_ is only used during the _test_ stage of [training](TRAINING.md) (rather than at the _train_ or _validate_ stages) because this is where the _beam search_ decdoder determines which words are formed from the identified characters.
 
@@ -219,12 +219,12 @@ Next, we need to install the `native_client` package, which contains the `genera
 
 The `generate_scorer_package`, once installed via the `native client` package, is usable on _all platforms_ supported by 🐸STT. This is so that developers can generate scorers _on-device_, such as on an Android device, or Raspberry Pi 3.
 
-To install `generate_scorer_package`, first download the relevant `native client` package from the [🐸STT GitHub releases page](https://github.com/coqui-ai/STT/releases/latest) into the `data/lm` directory.  The Docker image uses Ubuntu Linux, so you should use either the `native_client.amd64.cuda.linux.tar.xz` package if you are using `cuda` or the `native_client.amd64.cpu.linux.tar.xz` package if not.
+To install `generate_scorer_package`, first download the relevant `native client` package from the [🐸STT GitHub releases page](https://github.com/coqui-ai/STT/releases/tag/v0.9.3) into the `data/lm` directory.  The Docker image uses Ubuntu Linux, so you should use either the `native_client.amd64.cuda.linux.tar.xz` package if you are using `cuda` or the `native_client.amd64.cpu.linux.tar.xz` package if not.
 
-The easiest way to download the package and extract it is using `curl -L [URL] | tar -Jxvf [FILENAME]`:
+The easiest way to download the package and extract it is using `curl [URL] | tar -Jxvf [FILENAME]`:
 
 ```
-root@dcb62aada58b:/STT/data/lm# curl -L https://github.com/coqui-ai/STT/releases/download/v1.0.0/native_client.tflite.Linux.tar.xz | tar -Jxvf -
+root@dcb62aada58b:/STT/data/lm# curl https://github.com/coqui-ai/STT/releases/download/v0.9.3/native_client.amd64.cuda.linux.tar.xz | tar -Jxvf native_client.amd64.cuda.linux.tar.xz
 libstt.so
 generate_scorer_package
 LICENSE
@@ -233,11 +233,11 @@ coqui-stt.h
 README.coqui
 ```
 
-You can now generate a KenLM scorer file.
+You can now generate a `ken.lm` scorer file.
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \
-  --checkpoint ../stt-data/checkpoints-newscorer-id  \
+  --alphabet ../alphabet.txt  \
   --lm ../../stt-data/indonesian-scorer/lm.binary
   --vocab ../../stt-data/indonesian-scorer/vocab-500000.txt \
   --package kenlm-indonesian.scorer \
@@ -263,7 +263,7 @@ then you should add the parameter `--force_bytes_output_mode` when calling `gene
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \
-  --checkpoint ../../checkpoints-newscorer-id  \
+  --alphabet ../alphabet.txt  \
   --lm ../../stt-data/indonesian-scorer/lm.binary
   --vocab ../../stt-data/indonesian-scorer/vocab-500000.txt \
   --package kenlm-indonesian.scorer \
