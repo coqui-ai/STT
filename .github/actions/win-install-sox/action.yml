@@ -5,7 +5,7 @@ runs:
   steps:
     - run: |
         set -ex
-        curl -sSLO https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/sox-14.4.2-win32.zip
+        wget https://sourceforge.net/projects/sox/files/sox/14.4.2/sox-14.4.2-win32.zip/download -O sox-14.4.2-win32.zip
         "C:/Program Files/7-Zip/7z.exe" x -o`pwd`/bin/ -tzip -aoa sox-14.4.2-win32.zip
         rm sox-*zip
         echo "`pwd`/bin/sox-14.4.2/" >> $GITHUB_PATH
