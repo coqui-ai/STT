@@ -66,7 +66,7 @@ For more custom use cases, you might familiarize yourself with the `KenLM toolki
 Package the Language Model for Deployment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Finally, we package the trained KenLM model for deployment with ``generate_scorer_package``. You should always use one of the pre-built release binaries for ``generate_scorer_package``, but if for some reason you need to compile it yourself, please refer to :ref:`build-generate-scorer-package`.
+Finally, we package the trained KenLM model for deployment with ``generate_scorer_package``. You can find pre-built binaries for ``generate_scorer_package`` on the official 🐸STT `release page <https://github.com/coqui-ai/STT/releases>`_ (inside ``native_client.*.tar.xz``). If for some reason you need to compile ``generate_scorer_package`` yourself, please refer to :ref:`build-generate-scorer-package`.
 
 Package the language model for deployment with ``generate_scorer_package`` as such:
 
