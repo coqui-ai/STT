@@ -9,9 +9,9 @@ source $(dirname "$0")/asserts.sh
 bitrate=$1
 set_ldc_sample_filename "${bitrate}"
 
-model_source=${DEEPSPEECH_PROD_MODEL}
+model_source=${STT_PROD_MODEL}
 model_name=$(basename "${model_source}")
-model_source_mmap=${DEEPSPEECH_PROD_MODEL_MMAP}
+model_source_mmap=${STT_PROD_MODEL_MMAP}
 model_name_mmap=$(basename "${model_source_mmap}")
 
 download_model_prod
@@ -30,8 +30,8 @@ which node
 
 node --version
 
-deepspeech --version
+stt --version
 
 check_runtime_electronjs
 
-run_prod_inference_tests "${bitrate}"
+run_electronjs_prod_inference_tests "${bitrate}"
