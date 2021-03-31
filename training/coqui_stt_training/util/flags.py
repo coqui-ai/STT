@@ -54,8 +54,8 @@ def create_flags():
 
     # Batch sizes
 
-    f.DEFINE_integer('train_batch_size', 1, 'number of elements in a training batch')
-    f.DEFINE_integer('dev_batch_size', 1, 'number of elements in a validation batch')
+    f.DEFINE_integer('train_batch_size', 0, 'number of elements in a training batch')
+    f.DEFINE_integer('dev_batch_size', 0, 'number of elements in a validation batch')
     f.DEFINE_integer('test_batch_size', 1, 'number of elements in a test batch')
 
     f.DEFINE_integer('export_batch_size', 1, 'number of elements per batch on the exported graph')
@@ -186,5 +186,13 @@ def create_flags():
     f.register_validator('one_shot_infer',
                          lambda value: not value or os.path.isfile(value),
                          message='The file pointed to by --one_shot_infer must exist and be readable.')
+    
+    f.register_validator('train_batch_size',
+                         lambda value: int(value) > 0,
+                         message='The value of train_batch_size must be greater than 0')
+    
+    f.register_validator('dev_batch_size',
+                         lambda value: int(value) > 0,
+                         message='The value of train_batch_size must be greater than 0')
 
 # sphinx-doc: training_ref_flags_end
