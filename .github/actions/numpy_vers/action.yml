@@ -16,7 +16,6 @@ runs:
   steps:
     - id: numpy
       run: |
-        set -ex
         NUMPY_BUILD_VERSION="==1.7.0"
         NUMPY_DEP_VERSION=">=1.7.0"
 
@@ -38,10 +37,6 @@ runs:
                         NUMPY_BUILD_VERSION="==1.19.4"
                         NUMPY_DEP_VERSION=">=1.19.4"
                     ;;
-                    3.10*)
-                        NUMPY_BUILD_VERSION="==1.21.4"
-                        NUMPY_DEP_VERSION=">=1.21.4"
-                    ;;
                 esac
             ;;
 
@@ -53,48 +48,41 @@ runs:
                     ;;
                     3.7*)
                         NUMPY_BUILD_VERSION="==1.14.5"
-                        NUMPY_DEP_VERSION=">=1.14.5"
+                        NUMPY_DEP_VERSION=">=1.14.5,<=1.17.0"
                     ;;
                     3.8*)
                         NUMPY_BUILD_VERSION="==1.17.3"
-                        NUMPY_DEP_VERSION=">=1.17.3"
+                        NUMPY_DEP_VERSION=">=1.17.3,<=1.17.3"
                     ;;
                     3.9*)
                         NUMPY_BUILD_VERSION="==1.19.4"
                         NUMPY_DEP_VERSION=">=1.19.4"
-                    ;;
-                    3.10*)
-                        NUMPY_BUILD_VERSION="==1.21.4"
-                        NUMPY_DEP_VERSION=">=1.21.4"
                     ;;
                 esac
             ;;
 
-            ${CI_MSYS_VERSION}:x86_64)
+            # TODO: 'Windows*' might not be good
+            Windows*:x86_64)
                 case "${{ inputs.pyver }}" in
                     3.5*)
                         NUMPY_BUILD_VERSION="==1.11.0"
-                        NUMPY_DEP_VERSION=">=1.11.0"
+                        NUMPY_DEP_VERSION=">=1.11.0,<1.12.0"
                     ;;
                     3.6*)
                         NUMPY_BUILD_VERSION="==1.12.0"
-                        NUMPY_DEP_VERSION=">=1.12.0"
+                        NUMPY_DEP_VERSION=">=1.12.0,<1.14.5"
                     ;;
                     3.7*)
                         NUMPY_BUILD_VERSION="==1.14.5"
-                        NUMPY_DEP_VERSION=">=1.14.5"
+                        NUMPY_DEP_VERSION=">=1.14.5,<=1.17.0"
                     ;;
                     3.8*)
                         NUMPY_BUILD_VERSION="==1.17.3"
-                        NUMPY_DEP_VERSION=">=1.17.3"
+                        NUMPY_DEP_VERSION=">=1.17.3,<=1.17.3"
                     ;;
                     3.9*)
                         NUMPY_BUILD_VERSION="==1.19.4"
                         NUMPY_DEP_VERSION=">=1.19.4"
-                    ;;
-                    3.10*)
-                        NUMPY_BUILD_VERSION="==1.21.4"
-                        NUMPY_DEP_VERSION=">=1.21.4"
                     ;;
                 esac
             ;;
