@@ -1,4 +1,3 @@
-exclude: '^(taskcluster|.github|native_client/kenlm|native_client/ctcdecode/third_party|tensorflow|kenlm|doc/examples|data/alphabet.txt|data/smoke_test)'
 repos:
   - repo: 'https://github.com/pre-commit/pre-commit-hooks'
     rev: v2.3.0
@@ -11,14 +10,3 @@ repos:
     hooks:
       - id: black
         language_version: python3
-  # - repo: https://github.com/pycqa/isort
-  #   rev: 5.8.0
-  #   hooks:
-  #     - id: isort
-  #       name: isort (python)
-  #     - id: isort
-  #       name: isort (cython)
-  #       types: [cython]
-  #     - id: isort
-  #       name: isort (pyi)
-  #       types: [pyi]
