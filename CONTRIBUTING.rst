@@ -26,7 +26,7 @@ Whenever you add a new feature to 🐸STT and what to contribute that feature ba
 
 1. You've made changes to the core C++ code. Core changes can have downstream effects on all parts of the 🐸STT project, so keep that in mind. You should minimally also make necessary changes to the C client (i.e. **args.h** and **client.cc**). The bindings for Python, Java, and Javascript are SWIG generated, and in the best-case scenario you won't have to worry about them. However, if you've added a whole new feature, you may need to make custom tweaks to those bindings, because SWIG may not automagically work with your new feature, especially if you've exposed new arguments. The bindings for .NET and Swift are not generated automatically. It would be best if you also made the necessary manual changes to these bindings as well. It is best to communicate with the core 🐸STT team and come to an understanding of where you will likely need to work with the bindings. They can't predict all the bugs you will run into, but they will have a good idea of how to plan for some obvious challenges.
 2. You've made changes to the Python code. Make sure you run a linter (described below).
-3. Make sure your new feature doesn't regress the project. If you've added a significant feature or amount of code, you want to be sure your new feature doesn't create performance issues. For example, if you've made a change to the 🐸STT decoder, you should know that inference performance doesn't drop in terms of latency, accuracy, or memory usage. Unless you're proposing a new decoding algorithm, you probably don't have to worry about affecting accuracy. However, it's very possible you've affected latency or memory usage. You should run local performance tests to make sure no bugs have crept in. There are lots of tools to check latency and memory usage, and you should use what is most comfortable for you and gets the job done. If you're on Linux, you might find [[perf](https://perf.wiki.kernel.org/index.php/Main_Page)] to be a useful tool. You can use sample WAV files for testing which are provided in the `STT/data/` directory.
+3. Make sure your new feature doesn't regress the project. If you've added a significant feature or amount of code, you want to be sure your new feature doesn't create performance issues. For example, if you've made a change to the 🐸STT decoder, you should know that inference performance doesn't drop in terms of latency, accuracy, or memory usage. Unless you're proposing a new decoding algorithm, you probably don't have to worry about affecting accuracy. However, it's very possible you've affected latency or memory usage. You should run local performance tests to make sure no bugs have crept in. There are lots of tools to check latency and memory usage, and you should use what is most comfortable for you and gets the job done. If you're on Linux, you might find `perf <https://perf.wiki.kernel.org/index.php/Main_Page>`_ to be a useful tool. You can use sample WAV files for testing which are provided in the `STT/data/` directory.
 
 Requesting review on your PR
 ----------------------------
@@ -34,54 +34,14 @@ Requesting review on your PR
 Generally, a code owner will be notified of your pull request and will either review it or ask some other code owner for their review. If you'd like to proactively request review as you open the PR, see the the CODE_OWNERS.rst file which describes who's an appropriate reviewer depending on which parts of the code you're changing.
 
 
-Python Linter
--------------
+Code linting
+------------
 
-Before making a Pull Request for Python code changes, check your changes for basic mistakes and style problems by using a linter. We have cardboardlinter setup in this repository, so for example, if you've made some changes and would like to run the linter on just the changed code, you can use the follow command:
-
-.. code-block:: bash
-
-   pip install pylint cardboardlint
-   cardboardlinter --refspec main
-
-This will compare the code against the main branch and run the linter on all the changes. We plan to introduce more linter checks (e.g. for C++) in the future. To run it automatically as a git pre-commit hook, do the following:
+We use `pre-commit <https://pre-commit.com/>`_ to manage pre-commit hooks that take care of checking your changes for code style violations. Before committing changes, make sure you have the hook installed in your setup by running, in the virtual environment you use for running the code:
 
 .. code-block:: bash
 
-   cat <<\EOF > .git/hooks/pre-commit
-   #!/bin/bash
-   if [ ! -x "$(command -v cardboardlinter)" ]; then
-       exit 0
-   fi
+   cd STT
+   python .pre-commit-2.11.1.pyz install
 
-   # First, stash index and work dir, keeping only the
-   # to-be-committed changes in the working directory.
-   echo "Stashing working tree changes..." 1>&2
-   old_stash=$(git rev-parse -q --verify refs/stash)
-   git stash save -q --keep-index
-   new_stash=$(git rev-parse -q --verify refs/stash)
-
-   # If there were no changes (e.g., `--amend` or `--allow-empty`)
-   # then nothing was stashed, and we should skip everything,
-   # including the tests themselves.  (Presumably the tests passed
-   # on the previous commit, so there is no need to re-run them.)
-   if [ "$old_stash" = "$new_stash" ]; then
-       echo "No changes, skipping lint." 1>&2
-       exit 0
-   fi
-
-   # Run tests
-   cardboardlinter --refspec HEAD -n auto
-   status=$?
-
-   # Restore changes
-   echo "Restoring working tree changes..." 1>&2
-   git reset --hard -q && git stash apply --index -q && git stash drop -q
-
-   # Exit with status from test-run: nonzero prevents commit
-   exit $status
-   EOF
-   chmod +x .git/hooks/pre-commit
-
-This will run the linters on just the changes made in your commit.
-
+This will install a git pre-commit hook which will check your commits and let you know about any style violations that need fixing.
