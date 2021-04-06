@@ -28,6 +28,7 @@ from datetime import datetime
 from ds_ctcdecoder import ctc_beam_search_decoder, Scorer
 from .evaluate import evaluate
 from six.moves import zip, range
+from .util.augmentations import NormalizeSampleRate
 from .util.config import Config, initialize_globals
 from .util.checkpoints import load_or_init_graph_for_training, load_graph_for_evaluation, reload_best_checkpoint
 from .util.evaluate_tools import save_samples_json
