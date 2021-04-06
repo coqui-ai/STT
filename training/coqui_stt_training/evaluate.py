@@ -14,7 +14,7 @@ import tensorflow.compat.v1 as tfv1
 
 from ds_ctcdecoder import ctc_beam_search_decoder_batch, Scorer
 from six.moves import zip
-
+from .util.augmentations import NormalizeSampleRate
 from .util.config import Config, initialize_globals
 from .util.checkpoints import load_graph_for_evaluation
 from .util.evaluate_tools import calculate_and_print_report, save_samples_json
@@ -53,6 +53,7 @@ def evaluate(test_csvs, create_model):
     test_sets = [create_dataset([csv],
                                 batch_size=FLAGS.test_batch_size,
                                 train_phase=False,
+                                augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
                                 reverse=FLAGS.reverse_test,
                                 limit=FLAGS.limit_test) for csv in test_csvs]
     iterator = tfv1.data.Iterator.from_structure(tfv1.data.get_output_types(test_sets[0]),
