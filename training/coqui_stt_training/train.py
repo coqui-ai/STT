@@ -351,10 +351,32 @@ def train_impl(epochs=0, reverse=False, limit=0, write=True, silent_load=False):
 
     # Make initialization ops for switching between the two sets
     train_init_op = iterator.make_initializer(train_set)
-    dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
-    metrics_init_ops = [
-        iterator.make_initializer(metrics_set) for metrics_set in metrics_sets
-    ]
+
+    if FLAGS.dev_files:
+        dev_sources = FLAGS.dev_files.split(',')
+        dev_sets = [create_dataset([source],
+                                   batch_size=FLAGS.dev_batch_size,
+                                   train_phase=False,
+                                   augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
+                                   exception_box=exception_box,
+                                   process_ahead=len(Config.available_devices) * FLAGS.dev_batch_size * 2,
+                                   reverse=FLAGS.reverse_dev,
+                                   limit=FLAGS.limit_dev,
+                                   buffering=FLAGS.read_buffer) for source in dev_sources]
+        dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
+
+    if FLAGS.metrics_files:
+        metrics_sources = FLAGS.metrics_files.split(',')
+        metrics_sets = [create_dataset([source],
+                                       batch_size=FLAGS.dev_batch_size,
+                                       train_phase=False,
+                                       augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
+                                       exception_box=exception_box,
+                                       process_ahead=len(Config.available_devices) * FLAGS.dev_batch_size * 2,
+                                       reverse=FLAGS.reverse_dev,
+                                       limit=FLAGS.limit_dev,
+                                       buffering=FLAGS.read_buffer) for source in metrics_sources]
+        metrics_init_ops = [iterator.make_initializer(metrics_set) for metrics_set in metrics_sets]
 
     # Dropout
     dropout_rates = [
