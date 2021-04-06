@@ -10,11 +10,8 @@ import progressbar
 import tensorflow.compat.v1 as tfv1
 from coqui_stt_ctcdecoder import Scorer, ctc_beam_search_decoder_batch
 from six.moves import zip
-
-import tensorflow as tf
-
-from .deepspeech_model import create_model
 from .util.augmentations import NormalizeSampleRate
+from .util.config import Config, initialize_globals
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import (
     Config,
@@ -56,22 +53,15 @@ def evaluate(test_csvs, create_model):
     else:
         scorer = None
 
-    test_sets = [
-        create_dataset(
-            [csv],
-            batch_size=Config.test_batch_size,
-            train_phase=False,
-            augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
-            reverse=Config.reverse_test,
-            limit=Config.limit_test,
-        )
-        for csv in test_csvs
-    ]
-    iterator = tfv1.data.Iterator.from_structure(
-        tfv1.data.get_output_types(test_sets[0]),
-        tfv1.data.get_output_shapes(test_sets[0]),
-        output_classes=tfv1.data.get_output_classes(test_sets[0]),
-    )
+    test_sets = [create_dataset([csv],
+                                batch_size=FLAGS.test_batch_size,
+                                train_phase=False,
+                                augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
+                                reverse=FLAGS.reverse_test,
+                                limit=FLAGS.limit_test) for csv in test_csvs]
+    iterator = tfv1.data.Iterator.from_structure(tfv1.data.get_output_types(test_sets[0]),
+                                                 tfv1.data.get_output_shapes(test_sets[0]),
+                                                 output_classes=tfv1.data.get_output_classes(test_sets[0]))
     test_init_ops = [iterator.make_initializer(test_set) for test_set in test_sets]
 
     batch_wav_filename, (batch_x, batch_x_len), batch_y = iterator.get_next()

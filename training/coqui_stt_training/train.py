@@ -21,14 +21,43 @@ import tensorflow.compat.v1 as tfv1
 import tensorflow as tf
 from coqui_stt_ctcdecoder import Scorer
 
-tfv1.logging.set_verbosity(
-    {
-        "0": tfv1.logging.DEBUG,
-        "1": tfv1.logging.INFO,
-        "2": tfv1.logging.WARN,
-        "3": tfv1.logging.ERROR,
-    }.get(DESIRED_LOG_LEVEL)
-)
+tfv1.logging.set_verbosity({
+    '0': tfv1.logging.DEBUG,
+    '1': tfv1.logging.INFO,
+    '2': tfv1.logging.WARN,
+    '3': tfv1.logging.ERROR
+}.get(DESIRED_LOG_LEVEL))
+
+from datetime import datetime
+from ds_ctcdecoder import ctc_beam_search_decoder, Scorer
+from .evaluate import evaluate
+from six.moves import zip, range
+from .util.augmentations import NormalizeSampleRate
+from .util.config import Config, initialize_globals
+from .util.checkpoints import load_or_init_graph_for_training, load_graph_for_evaluation, reload_best_checkpoint
+from .util.evaluate_tools import save_samples_json
+from .util.feeding import create_dataset, audio_to_features, audiofile_to_features
+from .util.flags import create_flags, FLAGS
+from .util.helpers import check_ctcdecoder_version, ExceptionBox
+from .util.logging import create_progressbar, log_debug, log_error, log_info, log_progress, log_warn
+from .util.io import open_remote, remove_remote, listdir_remote, is_remote_path, isdir_remote
+
+check_ctcdecoder_version()
+
+# Graph Creation
+# ==============
+
+def variable_on_cpu(name, shape, initializer):
+    r"""
+    Next we concern ourselves with graph creation.
+    However, before we do so we must introduce a utility function ``variable_on_cpu()``
+    used to create a variable in CPU memory.
+    """
+    # Use the /cpu:0 device for scoped operations
+    with tf.device(Config.cpu_device):
+        # Create or get apropos variable
+        var = tfv1.get_variable(name=name, shape=shape, initializer=initializer)
+    return var
 
 
 from . import evaluate
