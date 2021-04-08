@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "9.0" }
   s.source       = { :git => "https://github.com/coqui-ai/STT.git", :tag => "v#{s.version}" }
 
-  # Assuming taskcluster build location. Depending on your Xcode setup, this might be in
+  # Assuming CI build location. Depending on your Xcode setup, this might be in
   # build/Release-iphoneos/stt_ios.framework instead.
   s.vendored_frameworks = "native_client/swift/DerivedData/Build/Products/Release-iphoneos/stt_ios.framework"
   s.source_files = "native_client/swift/stt_ios/**/*.{h,m,mm,swift}"
