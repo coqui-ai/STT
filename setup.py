@@ -37,7 +37,7 @@ def main():
 
     tensorflow_pypi_dep = ["tensorflow == 1.15.4"]
 
-    if os.environ.get("DS_NODECODER", ""):
+    if os.environ.get('DS_NODECODER', ''):
         install_requires = install_requires_base
     else:
         install_requires = install_requires_base + decoder_pypi_dep
