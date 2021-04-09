@@ -6,11 +6,14 @@ source $(dirname "$0")/all-vars.sh
 source $(dirname "$0")/all-utils.sh
 source $(dirname "$0")/asserts.sh
 
-samplerate=$1
-ldc93s1_sample_filename="LDC93S1_pcms16le_1_${samplerate}.wav"
+bitrate=$1
+set_ldc_sample_filename "${bitrate}"
 
-model_source=${STT_PROD_MODEL}
+model_source=${DEEPSPEECH_PROD_MODEL//.pb/.tflite}
 model_name=$(basename "${model_source}")
+model_source_mmap=${DEEPSPEECH_PROD_MODEL_MMAP//.pbmm/.tflite}
+model_name_mmap=$(basename "${model_source}")
+
 download_model_prod
 
 download_data
@@ -25,21 +28,10 @@ export_node_bin_path
 which electron
 which node
 
-if [ "${OS}" = "Linux" ]; then
-  export DISPLAY=':99.0'
-  sudo Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-  xvfb_process=$!
-fi
-
 node --version
 
-stt --version
+deepspeech --version
 
 check_runtime_electronjs
 
-run_electronjs_prodtflite_inference_tests "${samplerate}"
-
-if [ "${OS}" = "Linux" ]; then
-  sleep 1
-  sudo kill -9 ${xvfb_process} || true
-fi
+run_prodtflite_inference_tests "${bitrate}"
