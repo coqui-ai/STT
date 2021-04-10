@@ -32,7 +32,7 @@ shutdown_bazel()
   bazel ${BAZEL_OUTPUT_USER_ROOT} shutdown
 }
 
-do_deepspeech_binary_build()
+do_stt_binary_build()
 {
   cd ${DS_DSDIR}
   make -C native_client/ \
@@ -42,5 +42,5 @@ do_deepspeech_binary_build()
     EXTRA_CFLAGS="${EXTRA_LOCAL_CFLAGS}" \
     EXTRA_LDFLAGS="${EXTRA_LOCAL_LDFLAGS}" \
     EXTRA_LIBS="${EXTRA_LOCAL_LIBS}" \
-    deepspeech${PLATFORM_EXE_SUFFIX}
+    stt${PLATFORM_EXE_SUFFIX}
 }

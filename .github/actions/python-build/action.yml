@@ -33,9 +33,9 @@ runs:
         mkdir -p wheels
       shell: bash
     - run: |
-        PROJECT_NAME="deepspeech"
+        PROJECT_NAME="stt"
         if [ "${{ inputs.build_flavor }}" = "tflite" ]; then
-          PROJECT_NAME="deepspeech-tflite"
+          PROJECT_NAME="stt-tflite"
         fi
 
         NUMPY_BUILD_VERSION="${{ inputs.numpy_build }}" \

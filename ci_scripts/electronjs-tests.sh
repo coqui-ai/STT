@@ -23,7 +23,7 @@ which node
 
 node --version
 
-deepspeech --version
+stt --version
 
 check_runtime_electronjs
 
