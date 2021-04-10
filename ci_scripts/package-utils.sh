@@ -5,14 +5,14 @@ set -xe
 package_native_client()
 {
   tensorflow_dir=${DS_TFDIR}
-  deepspeech_dir=${DS_DSDIR}
+  stt_dir=${DS_DSDIR}
   artifacts_dir=${TASKCLUSTER_ARTIFACTS}
   artifact_name=$1
 
-  if [ ! -d ${tensorflow_dir} -o ! -d ${deepspeech_dir} -o ! -d ${artifacts_dir} ]; then
+  if [ ! -d ${tensorflow_dir} -o ! -d ${stt_dir} -o ! -d ${artifacts_dir} ]; then
     echo "Missing directory. Please check:"
     echo "tensorflow_dir=${tensorflow_dir}"
-    echo "deepspeech_dir=${deepspeech_dir}"
+    echo "stt_dir=${stt_dir}"
     echo "artifacts_dir=${artifacts_dir}"
     exit 1
   fi;
@@ -22,32 +22,32 @@ package_native_client()
   fi;
 
   win_lib=""
-  if [ -f "${tensorflow_dir}/bazel-bin/native_client/libdeepspeech.so.if.lib" ]; then
-    win_lib="-C ${tensorflow_dir}/bazel-bin/native_client/ libdeepspeech.so.if.lib"
+  if [ -f "${tensorflow_dir}/bazel-bin/native_client/libstt.so.if.lib" ]; then
+    win_lib="-C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so.if.lib"
   fi;
 
   ${TAR} -cf - \
-    -C ${tensorflow_dir}/bazel-bin/native_client/ libdeepspeech.so \
+    -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
     ${win_lib} \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
-    -C ${deepspeech_dir}/ LICENSE \
-    -C ${deepspeech_dir}/native_client/ deepspeech${PLATFORM_EXE_SUFFIX} \
-    -C ${deepspeech_dir}/native_client/ deepspeech.h \
-    -C ${deepspeech_dir}/native_client/kenlm/ README.mozilla \
+    -C ${stt_dir}/ LICENSE \
+    -C ${stt_dir}/native_client/ stt${PLATFORM_EXE_SUFFIX} \
+    -C ${stt_dir}/native_client/ coqui-stt.h \
+    -C ${stt_dir}/native_client/kenlm/ README.coqui \
     | ${XZ} > "${artifacts_dir}/${artifact_name}"
 }
 
 package_native_client_ndk()
 {
-  deepspeech_dir=${DS_DSDIR}
+  stt_dir=${DS_DSDIR}
   tensorflow_dir=${DS_TFDIR}
   artifacts_dir=${TASKCLUSTER_ARTIFACTS}
   artifact_name=$1
   arch_abi=$2
 
-  if [ ! -d ${deepspeech_dir} -o ! -d ${artifacts_dir} ]; then
+  if [ ! -d ${stt_dir} -o ! -d ${artifacts_dir} ]; then
     echo "Missing directory. Please check:"
-    echo "deepspeech_dir=${deepspeech_dir}"
+    echo "stt_dir=${stt_dir}"
     echo "artifacts_dir=${artifacts_dir}"
     exit 1
   fi;
@@ -61,17 +61,17 @@ package_native_client_ndk()
   fi;
 
   ${TAR} -cf - \
-    -C ${deepspeech_dir}/native_client/libs/${arch_abi}/ deepspeech \
-    -C ${deepspeech_dir}/native_client/libs/${arch_abi}/ libdeepspeech.so \
+    -C ${stt_dir}/native_client/libs/${arch_abi}/ stt \
+    -C ${stt_dir}/native_client/libs/${arch_abi}/ libstt.so \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
-    -C ${deepspeech_dir}/native_client/libs/${arch_abi}/ libc++_shared.so \
-    -C ${deepspeech_dir}/native_client/ deepspeech.h \
-    -C ${deepspeech_dir}/ LICENSE \
-    -C ${deepspeech_dir}/native_client/kenlm/ README.mozilla \
+    -C ${stt_dir}/native_client/libs/${arch_abi}/ libc++_shared.so \
+    -C ${stt_dir}/native_client/ coqui-stt.h \
+    -C ${stt_dir}/ LICENSE \
+    -C ${stt_dir}/native_client/kenlm/ README.coqui \
     | ${XZ} > "${artifacts_dir}/${artifact_name}"
 }
 
-package_libdeepspeech_as_zip()
+package_libstt_as_zip()
 {
   tensorflow_dir=${DS_TFDIR}
   artifacts_dir=${TASKCLUSTER_ARTIFACTS}
@@ -88,5 +88,5 @@ package_libdeepspeech_as_zip()
     echo "Please specify artifact name."
   fi;
 
-  ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" ${tensorflow_dir}/bazel-bin/native_client/libdeepspeech.so
+  ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" ${tensorflow_dir}/bazel-bin/native_client/libstt.so
 }
