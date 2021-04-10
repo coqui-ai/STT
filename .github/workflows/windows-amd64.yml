@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 env:
   TASKCLUSTER_TASK_DIR: ${{ github.workspace }}
   TASKCLUSTER_ARTIFACTS: ${{ github.workspace }}/artifacts
@@ -180,7 +180,9 @@ jobs:
       - run: |
           pip install ds_ctcdecoder-*-cp36-cp36m-manylinux1_x86_64.whl
           DS_NODECODER=y pip install --upgrade .
-      - run: |
+      - name: Run training script
+        run: |
+          set -ex
           bits=""
           if [ "${{ matrix.bitrate }}" = "8k" ]; then
             bits=8000
@@ -194,12 +196,17 @@ jobs:
           echo "Moving ${bits} to LDC93S1.wav"
           mv data/smoke_test/LDC93S1_pcms16le_1_${bits}.wav data/smoke_test/LDC93S1.wav
 
-          ./bin/run-tc-ldc93s1_new.sh 249 ${bits}
+          ./bin/run-ci-ldc93s1_new.sh 249 ${bits}
           if [ "${{ matrix.build-flavor }}" = "tflite" ]; then
-            ./bin/run-tc-ldc93s1_tflite.sh ${bits}
+            ./bin/run-ci-ldc93s1_tflite.sh ${bits}
           fi
-      - run: |
-          curl -vsSL https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/linux.amd64.convert_graphdef_memmapped_format.xz | xz -d > /tmp/convert_graphdef_memmapped_format
+      - name: Download convert_graphdef_memmapped_format tool
+        run: |
+          set -ex
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          mv convert_graphdef_memmapped_format /tmp
           chmod +x /tmp/convert_graphdef_memmapped_format
           /tmp/convert_graphdef_memmapped_format --in_graph=/tmp/train/output_graph.pb --out_graph=/tmp/train/output_graph.pbmm
         if: matrix.build-flavor == 'tf'
@@ -281,7 +288,7 @@ jobs:
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
   build-lib_Windows:
-    name: "Build libdeepspeech.so and deepspeech C++ binary"
+    name: "Build libstt+client"
     runs-on: windows-2019
     needs: [build-tensorflow-Windows, tensorflow_opt-Windows]
     strategy:
@@ -330,8 +337,8 @@ jobs:
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libdeepspeech.${{ matrix.build-flavor }}.zip"
-          path: ${{ github.workspace }}/artifacts/libdeepspeech.zip
+          name: "libstt.${{ matrix.build-flavor }}.zip"
+          path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-Windows:
     name: "Build Python bindings for Windows"
     runs-on: windows-2019
@@ -390,7 +397,7 @@ jobs:
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
       - uses: actions/upload-artifact@v2
         with:
-          name: "deepspeech-${{ matrix.build-flavor }}-${{ matrix.python-version }}.whl"
+          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}.whl"
           path: ${{ github.workspace }}/wheels/*.whl
   build-nodejs-Windows:
     name: "Build NodeJS/ElectronJS for Windows"
@@ -445,8 +452,8 @@ jobs:
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
       - uses: actions/upload-artifact@v2
         with:
-          name: "deepspeech-${{ matrix.build-flavor }}.tgz"
-          path: ${{ github.workspace }}/native_client/javascript/deepspeech-*.tgz
+          name: "stt-${{ matrix.build-flavor }}.tgz"
+          path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   test-cpp-Windows:
     name: "Test C++ binary on Windows"
     runs-on: windows-2019
@@ -456,7 +463,7 @@ jobs:
         build-flavor: ["tf", "tflite"]
     env:
       TASKCLUSTER_TMP_DIR: tmp/
-      DEEPSPEECH_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.pb
       EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
@@ -504,9 +511,9 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       TASKCLUSTER_TMP_DIR: tmp/
-      DEEPSPEECH_PROD_MODEL: https://github.com/reuben/DeepSpeech/releases/download/v0.7.0-alpha.3/output_graph.pb
-      DEEPSPEECH_PROD_MODEL_MMAP: https://github.com/reuben/DeepSpeech/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      DEEPSPEECH_TEST_MODEL: tmp/output_graph.pb
+      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
+      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
+      STT_TEST_MODEL: tmp/output_graph.pb
       EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
@@ -524,7 +531,7 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "deepspeech-${{ matrix.build-flavor }}-${{ matrix.python-version }}.whl"
+          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}.whl"
           path: ${{ env.TASKCLUSTER_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
@@ -536,7 +543,7 @@ jobs:
         if: matrix.models == 'test'
       - run: |
           ls -hal ${{ env.TASKCLUSTER_TMP_DIR }}/
-          python -m pip install --only-binary :all: --upgrade ${{ env.TASKCLUSTER_TMP_DIR }}/deepspeech*.whl
+          python -m pip install --only-binary :all: --upgrade ${{ env.TASKCLUSTER_TMP_DIR }}/stt*.whl
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
@@ -556,9 +563,9 @@ jobs:
         bitrate: ["16k"]
     env:
       TASKCLUSTER_TMP_DIR: tmp/
-      DEEPSPEECH_PROD_MODEL: https://github.com/reuben/DeepSpeech/releases/download/v0.7.0-alpha.3/output_graph.pb
-      DEEPSPEECH_PROD_MODEL_MMAP: https://github.com/reuben/DeepSpeech/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      DEEPSPEECH_TEST_MODEL: tmp/output_graph.pb
+      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
+      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
+      STT_TEST_MODEL: tmp/output_graph.pb
       EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
@@ -576,7 +583,7 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "deepspeech-${{ matrix.build-flavor }}.tgz"
+          name: "stt-${{ matrix.build-flavor }}.tgz"
           path: ${{ env.TASKCLUSTER_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
@@ -588,7 +595,7 @@ jobs:
         if: matrix.models == 'test'
       - run: |
           ls -hal ${{ env.TASKCLUSTER_TMP_DIR }}/
-          npm install ${{ env.TASKCLUSTER_TMP_DIR }}/deepspeech*.tgz
+          npm install ${{ env.TASKCLUSTER_TMP_DIR }}/stt*.tgz
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
@@ -608,9 +615,9 @@ jobs:
         bitrate: ["16k"]
     env:
       TASKCLUSTER_TMP_DIR: tmp/
-      DEEPSPEECH_PROD_MODEL: https://github.com/reuben/DeepSpeech/releases/download/v0.7.0-alpha.3/output_graph.pb
-      DEEPSPEECH_PROD_MODEL_MMAP: https://github.com/reuben/DeepSpeech/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      DEEPSPEECH_TEST_MODEL: tmp/output_graph.pb
+      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
+      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
+      STT_TEST_MODEL: tmp/output_graph.pb
       EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
@@ -628,7 +635,7 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "deepspeech-${{ matrix.build-flavor }}.tgz"
+          name: "stt-${{ matrix.build-flavor }}.tgz"
           path: ${{ env.TASKCLUSTER_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
@@ -638,10 +645,10 @@ jobs:
       - run: |
           ls -hal ${{ env.TASKCLUSTER_TMP_DIR }}/
         if: matrix.models == 'test'
-      - name: Install deepspeech NodeJS package
+      - name: Install STT NodeJS package
         run: |
           ls -hal ${{ env.TASKCLUSTER_TMP_DIR }}/
-          npm install ${{ env.TASKCLUSTER_TMP_DIR }}/deepspeech*.tgz
+          npm install ${{ env.TASKCLUSTER_TMP_DIR }}/stt*.tgz
       - run: |
           npm install electron@${{ matrix.electronjs-version }}
       - uses: ./.github/actions/run-tests

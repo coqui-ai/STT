@@ -28,9 +28,9 @@ if [ -f "${OUTPUT_ROOT}/tensorflow/lite/tools/benchmark/benchmark_model" ]; then
 fi
 
 # It seems that bsdtar and gnutar are behaving a bit differently on the way
-# they deal with --exclude="./public/*" ; this caused ./DeepSpeech/tensorflow/core/public/
+# they deal with --exclude="./public/*" ; this caused ./STT/tensorflow/core/public/
 # to be ditched when we just wanted to get rid of ./public/ on OSX.
-# Switching to gnutar (already needed for the --transform on DeepSpeech tasks)
+# Switching to gnutar (already needed for the --transform on STT tasks)
 # does the trick.
 TAR_EXCLUDE="--exclude=./dls/*"
 if [ "${OS}" = "Darwin" ]; then

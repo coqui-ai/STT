@@ -54,11 +54,11 @@ export DS_TFDIR=${DS_ROOT_TASK}/tensorflow
 export DS_DSDIR=${DS_ROOT_TASK}/
 export DS_EXAMPLEDIR=${DS_ROOT_TASK}/examples
 
-export DS_VERSION="$(cat ${DS_DSDIR}/training/deepspeech_training/VERSION)"
+export DS_VERSION="$(cat ${DS_DSDIR}/training/coqui_stt_training/VERSION)"
 
 export GRADLE_USER_HOME=${DS_ROOT_TASK}/gradle-cache
-export ANDROID_SDK_HOME=${DS_ROOT_TASK}/DeepSpeech/Android/SDK/
-export ANDROID_NDK_HOME=${DS_ROOT_TASK}/DeepSpeech/Android/android-ndk-r18b/
+export ANDROID_SDK_HOME=${DS_ROOT_TASK}/STT/Android/SDK/
+export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r18b/
 
 WGET=${WGET:-"wget"}
 TAR=${TAR:-"tar"}
@@ -78,7 +78,7 @@ if [ "${OS}" = "${TC_MSYS_VERSION}" ]; then
   UNXZ="xz -9 -T0 -d"
 fi
 
-model_source="${DEEPSPEECH_TEST_MODEL}"
+model_source="${STT_TEST_MODEL}"
 model_name="$(basename "${model_source}")"
 model_name_mmap="$(basename -s ".pb" "${model_source}").pbmm"
 model_source_mmap="$(dirname "${model_source}")/${model_name_mmap}"

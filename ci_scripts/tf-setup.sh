@@ -65,22 +65,22 @@ bazel shutdown
 
 if [ ! -z "${install_cuda}" ]; then
     # Install CUDA and CuDNN
-    mkdir -p ${DS_ROOT_TASK}/DeepSpeech/CUDA/ || true
+    mkdir -p ${DS_ROOT_TASK}/STT/CUDA/ || true
     pushd ${DS_ROOT_TASK}
         CUDA_FILE=`basename ${CUDA_URL}`
-        PERL5LIB=. sh ${DS_ROOT_TASK}/dls/${CUDA_FILE} --silent --override --toolkit --toolkitpath=${DS_ROOT_TASK}/DeepSpeech/CUDA/ --defaultroot=${DS_ROOT_TASK}/DeepSpeech/CUDA/
+        PERL5LIB=. sh ${DS_ROOT_TASK}/dls/${CUDA_FILE} --silent --override --toolkit --toolkitpath=${DS_ROOT_TASK}/STT/CUDA/ --defaultroot=${DS_ROOT_TASK}/STT/CUDA/
 
         CUDNN_FILE=`basename ${CUDNN_URL}`
-        tar xvf ${DS_ROOT_TASK}/dls/${CUDNN_FILE} --strip-components=1 -C ${DS_ROOT_TASK}/DeepSpeech/CUDA/
+        tar xvf ${DS_ROOT_TASK}/dls/${CUDNN_FILE} --strip-components=1 -C ${DS_ROOT_TASK}/STT/CUDA/
     popd
 
-    LD_LIBRARY_PATH=${DS_ROOT_TASK}/DeepSpeech/CUDA/lib64/:${DS_ROOT_TASK}/DeepSpeech/CUDA/lib64/stubs/:$LD_LIBRARY_PATH
+    LD_LIBRARY_PATH=${DS_ROOT_TASK}/STT/CUDA/lib64/:${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH
 
     # We might lack libcuda.so.1 symlink, let's fix as upstream does:
     # https://github.com/tensorflow/tensorflow/pull/13811/files?diff=split#diff-2352449eb75e66016e97a591d3f0f43dR96
-    if [ ! -h "${DS_ROOT_TASK}/DeepSpeech/CUDA/lib64/stubs/libcuda.so.1" ]; then
-        ln -s "${DS_ROOT_TASK}/DeepSpeech/CUDA/lib64/stubs/libcuda.so" "${DS_ROOT_TASK}/DeepSpeech/CUDA/lib64/stubs/libcuda.so.1"
+    if [ ! -h "${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/libcuda.so.1" ]; then
+        ln -s "${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/libcuda.so" "${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/libcuda.so.1"
     fi;
 
 else
@@ -88,15 +88,15 @@ else
 fi
 
 if [ ! -z "${install_android}" ]; then
-    mkdir -p ${DS_ROOT_TASK}/DeepSpeech/Android/SDK || true
+    mkdir -p ${DS_ROOT_TASK}/STT/Android/SDK || true
     ANDROID_NDK_FILE=`basename ${ANDROID_NDK_URL}`
     ANDROID_SDK_FILE=`basename ${ANDROID_SDK_URL}`
 
-    pushd ${DS_ROOT_TASK}/DeepSpeech/Android
+    pushd ${DS_ROOT_TASK}/STT/Android
         unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
     popd
 
-    pushd ${DS_ROOT_TASK}/DeepSpeech/Android/SDK
+    pushd ${DS_ROOT_TASK}/STT/Android/SDK
         unzip ${DS_ROOT_TASK}/dls/${ANDROID_SDK_FILE}
         yes | ./tools/bin/sdkmanager --licenses
         ./tools/bin/sdkmanager --update
