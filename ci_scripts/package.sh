@@ -11,11 +11,11 @@ cp ${DS_DSDIR}/tensorflow/bazel*.log ${TASKCLUSTER_ARTIFACTS}/
 
 package_native_client "native_client.tar.xz"
 
-package_libdeepspeech_as_zip "libdeepspeech.zip"
+package_libstt_as_zip "libstt.zip"
 
 if [ -d ${DS_DSDIR}/wheels ]; then
     cp ${DS_DSDIR}/wheels/* ${TASKCLUSTER_ARTIFACTS}/
-    cp ${DS_DSDIR}/native_client/javascript/deepspeech-*.tgz ${TASKCLUSTER_ARTIFACTS}/
+    cp ${DS_DSDIR}/native_client/javascript/stt-*.tgz ${TASKCLUSTER_ARTIFACTS}/
 fi;
 
 if [ -f ${DS_DSDIR}/native_client/javascript/wrapper.tar.gz ]; then

@@ -9,7 +9,7 @@ source $(dirname "$0")/asserts.sh
 bitrate=$1
 set_ldc_sample_filename "${bitrate}"
 
-model_source=${DEEPSPEECH_TEST_MODEL//.pb/.tflite}
+model_source=${STT_TEST_MODEL//.pb/.tflite}
 model_name=$(basename "${model_source}")
 model_name_mmap=$(basename "${model_source}")
 
@@ -27,7 +27,7 @@ which node
 
 node --version
 
-deepspeech --version
+stt --version
 
 check_runtime_electronjs
 

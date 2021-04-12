@@ -11,7 +11,7 @@ source $(dirname "$0")/build-utils.sh
 source $(dirname "$0")/tf-vars.sh
 
 BAZEL_TARGETS="
-//native_client:libdeepspeech.so
+//native_client:libstt.so
 //native_client:generate_scorer_package
 "
 
@@ -25,4 +25,4 @@ SYSTEM_TARGET=host
 
 do_bazel_build
 
-do_deepspeech_binary_build
+do_stt_binary_build

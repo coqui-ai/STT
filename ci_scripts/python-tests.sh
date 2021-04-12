@@ -11,8 +11,8 @@ set_ldc_sample_filename "${bitrate}"
 
 download_data
 
-which deepspeech
-deepspeech --version
+which stt
+stt --version
 
 run_all_inference_tests
 

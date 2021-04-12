@@ -85,7 +85,7 @@ verify_bazel_rebuild()
 
   cp ${DS_DSDIR}/tensorflow/bazel*.log ${TASKCLUSTER_ARTIFACTS}/
 
-  spurious_rebuilds=$(grep 'Executing action' "${bazel_explain_file}" | grep 'Compiling' | grep -v -E 'no entry in the cache|[for host]|unconditional execution is requested|Executing genrule //native_client:workspace_status|Compiling native_client/workspace_status.cc|Linking native_client/libdeepspeech.so' | wc -l)
+  spurious_rebuilds=$(grep 'Executing action' "${bazel_explain_file}" | grep 'Compiling' | grep -v -E 'no entry in the cache|[for host]|unconditional execution is requested|Executing genrule //native_client:workspace_status|Compiling native_client/workspace_status.cc|Linking native_client/libstt.so' | wc -l)
   if [ "${spurious_rebuilds}" -ne 0 ]; then
     echo "Bazel rebuilds some file it should not, please check."
 
@@ -109,7 +109,14 @@ verify_bazel_rebuild()
 
 symlink_electron()
 {
-  ln -s Electron.app/Contents/MacOS/Electron node_modules/electron/dist/node
+  if [ "${OS}" = "Darwin" ]; then
+    ln -s Electron.app/Contents/MacOS/Electron node_modules/electron/dist/node
+  else
+    ln -s electron "node_modules/electron/dist/node"
+    if [ -f "node_modules/electron/dist/chrome-sandbox" ]; then
+      export ELECTRON_DISABLE_SANDBOX=1
+    fi
+  fi
 }
 
 export_node_bin_path()

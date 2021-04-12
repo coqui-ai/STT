@@ -12,12 +12,12 @@ set_ldc_sample_filename "${bitrate}"
 model_source=${STT_TEST_MODEL//.pb/.tflite}
 model_name=$(basename "${model_source}")
 model_name_mmap=$(basename "${model_source}")
+export DATA_TMP_DIR=${TASKCLUSTER_TMP_DIR}
 
-download_data
+download_material "${TASKCLUSTER_TMP_DIR}/ds"
 
-which stt
-stt --version
+export PATH=${TASKCLUSTER_TMP_DIR}/ds/:$PATH
 
-run_all_inference_tests
+check_versions
 
-run_hotword_tests
+run_basic_inference_tests
