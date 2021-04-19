@@ -18,6 +18,8 @@ download_model_prod
 
 download_material
 
+export_py_bin_path
+
 which stt
 stt --version
 
