@@ -70,11 +70,11 @@ PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 endif
 
 ifeq ($(TARGET),rpi3)
-TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/armhf_linux_toolchain
-TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/arm-linux-gnueabihf-
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroArmGcc72/bin
+TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/arm-linux-gnueabihf-
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian-buster)
 # -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
-CFLAGS      := -march=armv7-a -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 -isystem $(TOOLCHAIN_DIR)/lib/gcc/arm-linux-gnueabihf/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/arm-linux-gnueabihf/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/arm-linux-gnueabihf/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/arm-linux-gnueabihf/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include -no-canonical-prefixes -fno-canonical-system-headers
+CFLAGS      := -march=armv7-a -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 --sysroot $(RASPBIAN)
 CXXFLAGS    := $(CFLAGS)
 LDFLAGS     := -Wl,-rpath-link,$(RASPBIAN)/lib/arm-linux-gnueabihf/ -Wl,-rpath-link,$(RASPBIAN)/usr/lib/arm-linux-gnueabihf/
 
@@ -92,8 +92,8 @@ TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
 endif # ($(TARGET),rpi3)
 
 ifeq ($(TARGET),rpi3-armv8)
-TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/aarch64_linux_toolchain
-TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/aarch64-linux-gnu-
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroAarch64Gcc72/bin
+TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/aarch64-linux-gnu-
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian64-buster)
 CFLAGS      := -march=armv8-a -mtune=cortex-a53 -D_GLIBCXX_USE_CXX11_ABI=0 -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include/ -no-canonical-prefixes -fno-canonical-system-headers
 CXXFLAGS    := $(CFLAGS)
