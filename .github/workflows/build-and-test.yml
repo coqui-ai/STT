@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
