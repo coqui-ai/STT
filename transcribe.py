@@ -18,7 +18,7 @@ from coqui_stt_training.util.config import Config, initialize_globals
 from coqui_stt_training.util.feeding import split_audio_file
 from coqui_stt_training.util.flags import create_flags, FLAGS
 from coqui_stt_training.util.logging import log_error, log_info, log_progress, create_progressbar
-from ds_ctcdecoder import ctc_beam_search_decoder_batch, Scorer
+from coqui_stt_ctcdecoder import ctc_beam_search_decoder_batch, Scorer
 from multiprocessing import Process, cpu_count
 
 

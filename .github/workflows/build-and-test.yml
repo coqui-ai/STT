@@ -145,7 +145,7 @@ jobs:
             bindings
       - uses: actions/upload-artifact@v2
         with:
-          name: "ds_ctcdecoder-Linux-test.whl"
+          name: "coqui_stt_ctcdecoder-Linux-test.whl"
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
       - run: |
           make -C native_client/ctcdecode clean-keep-third-party
@@ -166,14 +166,14 @@ jobs:
           python-version: 3.6
       - uses: actions/download-artifact@v2
         with:
-          name: "ds_ctcdecoder-Linux-test.whl"
+          name: "coqui_stt_ctcdecoder-Linux-test.whl"
       - run: |
           python --version
           pip --version
       - run: |
           pip install --upgrade pip==19.3.1 setuptools==45.0.0 wheel==0.33.6
       - run: |
-          pip install ds_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
+          pip install coqui_stt_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
           DS_NODECODER=y pip install --upgrade .
       - run: |
           bits=""
@@ -685,7 +685,7 @@ jobs:
             bindings
       - uses: actions/upload-artifact@v2
         with:
-          name: "ds_ctcdecoder-macOS-test.whl"
+          name: "coqui_stt_ctcdecoder-macOS-test.whl"
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
       - run: |
           make -C native_client/ctcdecode clean-keep-third-party
@@ -706,14 +706,14 @@ jobs:
           python-version: 3.6
       - uses: actions/download-artifact@v2
         with:
-          name: "ds_ctcdecoder-macOS-test.whl"
+          name: "coqui_stt_ctcdecoder-macOS-test.whl"
       - run: |
           python --version
           pip --version
       - run: |
           pip install --upgrade pip==19.3.1 setuptools==45.0.0 wheel==0.33.6
       - run: |
-          pip install ds_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
+          pip install coqui_stt_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
           DS_NODECODER=y pip install --upgrade .
       - run: |
           bits=""
@@ -1190,7 +1190,7 @@ jobs:
             bindings
       - uses: actions/upload-artifact@v2
         with:
-          name: "ds_ctcdecoder-windows-test.whl"
+          name: "coqui_stt_ctcdecoder-windows-test.whl"
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
       - run: |
           make -C native_client/ctcdecode clean-keep-third-party
