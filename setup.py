@@ -32,7 +32,7 @@ def main():
     ]
 
     decoder_pypi_dep = [
-        'ds_ctcdecoder == {}'.format(version)
+        'coqui_stt_ctcdecoder == {}'.format(version)
     ]
 
     tensorflow_pypi_dep = [
