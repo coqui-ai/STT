@@ -10,7 +10,7 @@ from typing import List
 import progressbar
 import tensorflow.compat.v1 as tfv1
 from attrdict import AttrDict
-from coqpit import MISSING, Coqpit, check_argument
+from xdg import BaseDirectory as xdg
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
 
 from .augmentations import NormalizeSampleRate, parse_augmentations

@@ -15,6 +15,7 @@ from coqui_stt_training.util.config import (
     log_error,
 )
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
+from coqui_stt_ctcdecoder import Scorer
 
 
 def character_based():

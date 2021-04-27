@@ -53,13 +53,9 @@ def check_ctcdecoder_version():
         # pylint: disable=import-outside-toplevel
         from coqui_stt_ctcdecoder import __version__ as decoder_version
     except ImportError as e:
-        if e.msg.find("__version__") > 0:
-            print(
-                "Coqui STT version ({ds_version}) requires CTC decoder to expose __version__. "
-                "Please upgrade the coqui_stt_ctcdecoder package to version {ds_version}".format(
-                    ds_version=ds_version_s
-                )
-            )
+        if e.msg.find('__version__') > 0:
+            print("Coqui STT version ({ds_version}) requires CTC decoder to expose __version__. "
+                  "Please upgrade the coqui_stt_ctcdecoder package to version {ds_version}".format(ds_version=ds_version_s))
             sys.exit(1)
         raise e
 
