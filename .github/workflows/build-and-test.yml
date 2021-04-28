@@ -387,7 +387,7 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_15.0.0
+          key: node-headers-10.0.0_16.0.0
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
@@ -395,7 +395,7 @@ jobs:
           key: electron-headers-5.0.13_12.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0"
+          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
       - uses: actions/upload-artifact@v2
         with:
@@ -501,7 +501,7 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 12, 14, 15]
+        nodejs-version: [10, 12, 14, 16]
         build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
@@ -933,7 +933,7 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_15.0.0
+          key: node-headers-10.0.0_16.0.0
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
@@ -941,7 +941,7 @@ jobs:
           key: electron-headers-5.0.13_12.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0"
+          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
       - uses: actions/upload-artifact@v2
         with:
@@ -1045,7 +1045,7 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 12, 14, 15]
+        nodejs-version: [10, 12, 14, 16]
         build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
@@ -1419,7 +1419,7 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-win-10.0.0_15.0.0
+          key: node-headers-win-10.0.0_16.0.0
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
@@ -1427,7 +1427,7 @@ jobs:
           key: electron-headers-win-5.0.13_12.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0"
+          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
       - uses: actions/upload-artifact@v2
         with:
@@ -1549,7 +1549,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        nodejs-version: [10, 12, 14, 15]
+        nodejs-version: [10, 12, 14, 16]
         build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
@@ -1740,7 +1740,7 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 15]
+        nodejs-version: [10, 16]
         build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
@@ -1852,7 +1852,7 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 15]
+        nodejs-version: [10, 16]
         build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
@@ -1960,7 +1960,7 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 15]
+        nodejs-version: [10, 16]
         build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
@@ -2416,7 +2416,7 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_15.0.0
+          key: node-headers-10.0.0_16.0.0
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
@@ -2424,7 +2424,7 @@ jobs:
           key: electron-headers-5.0.13_12.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0"
+          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
@@ -2573,7 +2573,7 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_15.0.0
+          key: node-headers-10.0.0_16.0.0
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
@@ -2581,7 +2581,7 @@ jobs:
           key: electron-headers-5.0.13_12.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0"
+          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
@@ -2756,7 +2756,7 @@ jobs:
       matrix:
         arch: [ "armv7", "aarch64" ]
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 12, 14, 15]
+        nodejs-version: [10, 12, 14, 16]
         build-flavor: ["tflite"]
         models: ["test"]
         bitrate: ["16k"]
