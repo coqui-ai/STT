@@ -13,7 +13,7 @@ from coqui_stt_training.util.config import Config, initialize_globals
 from coqui_stt_training.util.flags import create_flags, FLAGS
 from coqui_stt_training.util.logging import log_error
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
-from ds_ctcdecoder import Scorer
+from coqui_stt_ctcdecoder import Scorer
 
 
 def character_based():

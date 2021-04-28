@@ -20,7 +20,7 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from ds_ctcdecoder import Alphabet
+from coqui_stt_ctcdecoder import Alphabet
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
