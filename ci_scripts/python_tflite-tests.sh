@@ -15,6 +15,8 @@ model_name_mmap=$(basename "${model_source}")
 
 download_data
 
+export_py_bin_path
+
 which stt
 stt --version
 

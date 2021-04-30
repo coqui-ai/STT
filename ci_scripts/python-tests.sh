@@ -11,6 +11,8 @@ set_ldc_sample_filename "${bitrate}"
 
 download_data
 
+export_py_bin_path
+
 which stt
 stt --version
 
