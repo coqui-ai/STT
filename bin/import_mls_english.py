@@ -29,7 +29,11 @@ def read_ogg_opus_duration(ogg_file_path):
 
 
 def main(root_dir):
-    for subset in ("test",):
+    for subset in (
+        "train",
+        "dev",
+        "test",
+    ):
         print("Processing {} subset...".format(subset))
         with open(Path(root_dir) / subset / "transcripts.txt") as fin:
             subset_entries = []
@@ -45,7 +49,7 @@ def main(root_dir):
                     / audio_id_parts[1]
                     / "{}.opus".format(audio_id)
                 )
-                audio_filesize = os.path.getsize(audio_path)
+                audio_duration = read_ogg_opus_duration(audio_path)
                 # TODO: support other languages
                 transcript = (
                     transcript.strip()
@@ -76,7 +80,7 @@ def main(root_dir):
                 subset_entries.append(
                     (
                         audio_path.relative_to(root_dir),
-                        audio_filesize,
+                        audio_duration,
                         transcript.strip(),
                     )
                 )
