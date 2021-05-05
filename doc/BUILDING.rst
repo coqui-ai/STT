@@ -162,7 +162,7 @@ We only support building CTC Decoder on x86-64 architectures. However, we offer 
 
 Feedback on improving this section or usage on other architectures is welcome.
 
-First, you need to build SWIG from scratch. Given that `SWIG >= 3.0.12 <http://www.swig.org/>`_ does not include our patches please use https://github.com/lissyx/swig/tree/taskcluster for building SWIG from source.
+First, you need to build SWIG from scratch.
 
 You can supply your prebuild SWIG using ``SWIG_DIST_URL``
 
