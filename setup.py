@@ -39,6 +39,9 @@ def main():
         'tensorflow == 1.15.4'
     ]
 
+    horovod_pypi_dep = [
+        'horovod[tensorflow] == 0.21.3'
+    ]
     if os.environ.get('DS_NODECODER', ''):
         install_requires = install_requires_base
     else:
@@ -48,6 +51,12 @@ def main():
         install_requires = install_requires
     else:
         install_requires = install_requires + tensorflow_pypi_dep
+
+
+    if os.environ.get('DS_WITH_HOROVOD', ''):
+        install_requires = install_requires + horovod_pypi_dep
+    else:
+        install_requires = install_requires
 
     setup(
         name='coqui_stt_training',
