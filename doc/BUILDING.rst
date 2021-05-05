@@ -17,9 +17,9 @@ It is required to use our fork of TensorFlow since it includes fixes for common 
 
 If you'd like to build the language bindings or the decoder package, you'll also need:
 
-* `SWIG >= 3.0.12 <http://www.swig.org/>`_.
-  Unfortunately, NodeJS / ElectronJS after 10.x support on SWIG is a bit behind, and while there are pending patches proposed to upstream, it is not yet merged.
-  The proper prebuilt patched version (covering linux, windows and macOS) of SWIG should get installed under `native_client/ <native_client/>`_ as soon as you build any bindings that requires it.
+* `SWIG master <https://github.com/swig/swig>`_.
+  Unfortunately, NodeJS / ElectronJS after 10.x support on SWIG is a bit behind, and while there are fixes merged on master, they have not been released.
+  Prebuilt patched versions (covering Linux, Windows and macOS) of SWIG should get installed under `native_client/ <native_client/>`_ automatically as soon as you build any bindings that requires it.
 
 * `node-pre-gyp <https://github.com/mapbox/node-pre-gyp>`_ (for Node.JS bindings only)
 
@@ -162,7 +162,7 @@ We only support building CTC Decoder on x86-64 architectures. However, we offer 
 
 Feedback on improving this section or usage on other architectures is welcome.
 
-First, you need to build SWIG from scratch.
+First, you need to build SWIG from scratch, from the master branch. Our pre-built binaries are built from the tree `90cdbee6a69d13b39d734083b9f91069533b0d7b <https://github.com/swig/swig/tree/90cdbee6a69d13b39d734083b9f91069533b0d7b>`_.
 
 You can supply your prebuild SWIG using ``SWIG_DIST_URL``
 
@@ -212,6 +212,30 @@ The path of the system tree can be overridden from the default values defined in
 
    cd ../STT/native_client
    make TARGET=<system> stt
+
+Android devices support
+-----------------------
+
+We have support for Android relying on TensorFlow Lite, with Java and JNI bindinds. For more details on how to experiment with those, please refer to the section below.
+
+Please refer to TensorFlow documentation on how to setup the environment to build for Android (SDK and NDK required).
+
+Using the library from Android project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Due to the discontinuation of Bintray JCenter we do not have pre-built Android packages published for now. We are working to move to Maven Central and will update this section when it's available.
+
+.. We provide uptodate and tested ``libstt`` usable as an ``AAR`` package,
+  for Android versions starting with 7.0 to 11.0. The package is published on
+  `JCenter <https://bintray.com/coqui/ai.coqui.stt/libstt>`_,
+  and the ``JCenter`` repository should be available by default in any Android
+  project.  Please make sure your project is setup to pull from this repository.
+  You can then include the library by just adding this line to your
+  ``gradle.build``, adjusting ``VERSION`` to  the version you need:
+
+  .. code-block::
+
+     implementation 'stt.coqui.ai:libstt:VERSION@aar'
 
 Building ``libstt.so`` for Android
 ----------------------------------
