@@ -17,3 +17,5 @@ This document contains more advanced topics with regard to training models with 
 9. :ref:`parallel-training-optimization`
 10. :ref:`data-importers`
 11. :ref:`byte-output-mode`
+12. :ref:`horovod-parallel-training`
+
