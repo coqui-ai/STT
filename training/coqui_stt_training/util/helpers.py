@@ -163,27 +163,43 @@ def remember_exception(iterable, exception_box=None):
 
 
 def get_value_range(value, target_type):
+    """
+    This function converts all possible supplied values for augmentation
+    into the [start,end,r] ValueRange type. The expected inputs are of the form:
+
+    <value>
+    <value>~<r>
+    <value>:<value>~<r>
+
+    Any "missing" values are filled so that ValueRange always includes [value,value,r].
+    """
     if isinstance(value, str):
-        r = target_type(0)
-        parts = value.split('~')
-        if len(parts) == 2:
-            value = parts[0]
-            r = target_type(parts[1])
-        elif len(parts) > 2:
-            raise ValueError('Cannot parse value range')
+        if '~' in value:
+            parts = value.split('~')
+            if len(parts) == 2:
+                value = parts[0]
+                r = target_type(parts[1])
+            elif len(parts) > 2:
+                raise ValueError('Cannot parse value range')
+        else:
+            # if no <r> supplied, use 0
+            r = target_type(0)
         parts = value.split(':')
-        if len(parts) == 1:
-            parts.append(parts[0])
-        elif len(parts) > 2:
+        if len(parts) > 2:
             raise ValueError('Cannot parse value range')
+        elif len(parts) == 1:
+            # only one "<value>" supplied
+            parts.append(parts[0])
         return ValueRange(target_type(parts[0]), target_type(parts[1]), r)
     if isinstance(value, tuple):
         if len(value) == 2:
             return ValueRange(target_type(value[0]), target_type(value[1]), 0)
-        if len(value) == 3:
+        elif len(value) == 3:
             return ValueRange(target_type(value[0]), target_type(value[1]), target_type(value[2]))
-        raise ValueError('Cannot convert to ValueRange: Wrong tuple size')
-    return ValueRange(target_type(value), target_type(value), 0)
+        else:
+            raise ValueError('Cannot convert to ValueRange: Wrong tuple size')
+    elif isinstance(value, int) or isinstance(value, float):
+         return ValueRange(target_type(value), target_type(value), 0)
 
 
 def int_range(value):
@@ -203,14 +219,20 @@ def pick_value_from_range(value_range, clock=None):
 
 def tf_pick_value_from_range(value_range, clock=None, double_precision=False):
     import tensorflow as tf  # pylint: disable=import-outside-toplevel
-    clock = (tf.random.stateless_uniform([], seed=(-1, 1), dtype=tf.float64) if clock is None
-             else tf.maximum(tf.constant(0.0, dtype=tf.float64), tf.minimum(tf.constant(1.0, dtype=tf.float64), clock)))
+    if clock is None:
+        clock = tf.random.stateless_uniform([], seed=(-1, 1), dtype=tf.float64)
+    else:
+        clock = tf.maximum(tf.constant(0.0, dtype=tf.float64),
+                           tf.minimum(tf.constant(1.0, dtype=tf.float64), clock))
     value = value_range.start + clock * (value_range.end - value_range.start)
-    value = tf.random.stateless_uniform([],
-                                        minval=value - value_range.r,
-                                        maxval=value + value_range.r,
-                                        seed=(clock * tf.int32.min, clock * tf.int32.max),
-                                        dtype=tf.float64)
+    if value_range.r:
+        # if the option <r> (<value>~<r>, randomization radius) is supplied,
+        # sample the value from a uniform distribution with "radius" <r>
+        value = tf.random.stateless_uniform([],
+                                            minval=value - value_range.r,
+                                            maxval=value + value_range.r,
+                                            seed=(clock * tf.int32.min, clock * tf.int32.max),
+                                            dtype=tf.float64)
     if isinstance(value_range.start, int):
         return tf.cast(tf.math.round(value), tf.int64 if double_precision else tf.int32)
     return tf.cast(value, tf.float64 if double_precision else tf.float32)
