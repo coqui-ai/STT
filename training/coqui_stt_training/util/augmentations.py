@@ -1,4 +1,3 @@
-
 import os
 import re
 import math
@@ -10,6 +9,7 @@ from multiprocessing import Queue, Process
 from .audio import gain_db_to_ratio, max_dbfs, normalize_audio, AUDIO_TYPE_NP, AUDIO_TYPE_PCM, AUDIO_TYPE_OPUS
 from .helpers import LimitingPool, int_range, float_range, pick_value_from_range, tf_pick_value_from_range, MEGABYTE
 from .sample_collections import samples_from_source, unpack_maybe
+from .logging import log_info
 
 BUFFER_SIZE = 1 * MEGABYTE
 SPEC_PARSER = re.compile(r'^(?P<cls>[a-z_]+)(\[(?P<params>.*)\])?$')
@@ -90,6 +90,7 @@ def parse_augmentation(augmentation_spec):
             kwargs[pair[0]] = pair[1]
         else:
             raise ValueError('Unable to parse augmentation value assignment')
+    log_info('Processed augmentation type: [{}] with parameter settings: {}'.format(augmentation_cls().name, kwargs))
     return augmentation_cls(*args, **kwargs)
 
 
@@ -106,7 +107,10 @@ def parse_augmentations(augmentation_specs):
     -------
     List of augmentation class instances from util.augmentations.*.
     """
-    return [] if augmentation_specs is None else list(map(parse_augmentation, augmentation_specs))
+    if augmentation_specs is None:
+        return []
+    else:
+        return list(map(parse_augmentation, augmentation_specs))
 
 
 def apply_graph_augmentations(domain, tensor, augmentations, transcript=None, clock=0.0):
@@ -254,6 +258,7 @@ class Overlay(SampleAugmentation):
         self.current_sample = None
         self.queue = None
         self.enqueue_process = None
+        self.name = "Overlay"
 
     def start(self, buffering=BUFFER_SIZE):
         self.queue = Queue(max(1, math.floor(self.probability * self.layers[1] * os.cpu_count())))
@@ -305,6 +310,7 @@ class Codec(SampleAugmentation):
     def __init__(self, p=1.0, bitrate=3200):
         super(Codec, self).__init__(p)
         self.bitrate = int_range(bitrate)
+        self.name = "Codec"
 
     def apply(self, sample, clock=0.0):
         bitrate = pick_value_from_range(self.bitrate, clock=clock)
@@ -318,6 +324,7 @@ class Reverb(SampleAugmentation):
         super(Reverb, self).__init__(p)
         self.delay = float_range(delay)
         self.decay = float_range(decay)
+        self.name = "Reverb"
 
     def apply(self, sample, clock=0.0):
         sample.change_audio_type(new_audio_type=AUDIO_TYPE_NP)
@@ -347,6 +354,7 @@ class Resample(SampleAugmentation):
     def __init__(self, p=1.0, rate=8000):
         super(Resample, self).__init__(p)
         self.rate = int_range(rate)
+        self.name = "Resample"
 
     def apply(self, sample, clock=0.0):
         sample.change_audio_type(new_audio_type=AUDIO_TYPE_NP)
@@ -360,6 +368,7 @@ class NormalizeSampleRate(SampleAugmentation):
     def __init__(self, rate):
         super().__init__(p=1.0)
         self.rate = rate
+        self.name = "Normalize Sample Rate"
 
     def apply(self, sample, clock=0.0):
         if sample.audio_format.rate == self.rate:
@@ -375,6 +384,7 @@ class Volume(SampleAugmentation):
     def __init__(self, p=1.0, dbfs=3.0103):
         super(Volume, self).__init__(p)
         self.target_dbfs = float_range(dbfs)
+        self.name = "Volume"
 
     def apply(self, sample, clock=0.0):
         sample.change_audio_type(new_audio_type=AUDIO_TYPE_NP)
@@ -387,6 +397,7 @@ class Pitch(GraphAugmentation):
     def __init__(self, p=1.0, pitch=(1.075, 1.075, 0.125)):
         super(Pitch, self).__init__(p, domain='spectrogram')
         self.pitch = float_range(pitch)
+        self.name = "Pitch"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -415,6 +426,7 @@ class Tempo(GraphAugmentation):
         super(Tempo, self).__init__(p, domain='spectrogram')
         self.factor = float_range(factor)
         self.max_time = float(max_time)
+        self.name = "Tempo"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -437,6 +449,7 @@ class Warp(GraphAugmentation):
         self.num_f = int_range(nf)
         self.warp_t = float_range(wt)
         self.warp_f = float_range(wf)
+        self.name = "Warp"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -464,6 +477,7 @@ class FrequencyMask(GraphAugmentation):
         super(FrequencyMask, self).__init__(p, domain='spectrogram')
         self.n = int_range(n)  # pylint: disable=invalid-name
         self.size = int_range(size)
+        self.name = "Frequency Mask"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -490,6 +504,7 @@ class TimeMask(GraphAugmentation):
         super(TimeMask, self).__init__(p, domain=domain)
         self.n = int_range(n)  # pylint: disable=invalid-name
         self.size = float_range(size)
+        self.name = "Time Mask"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -519,6 +534,7 @@ class Dropout(GraphAugmentation):
     def __init__(self, p=1.0, domain='spectrogram', rate=0.05):
         super(Dropout, self).__init__(p, domain=domain)
         self.rate = float_range(rate)
+        self.name = "Dropout"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -537,6 +553,7 @@ class Add(GraphAugmentation):
     def __init__(self, p=1.0, domain='features', stddev=5):
         super(Add, self).__init__(p, domain=domain)
         self.stddev = float_range(stddev)
+        self.name = "Add"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -550,6 +567,7 @@ class Multiply(GraphAugmentation):
     def __init__(self, p=1.0, domain='features', stddev=5):
         super(Multiply, self).__init__(p, domain=domain)
         self.stddev = float_range(stddev)
+        self.name = "Multiply"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
