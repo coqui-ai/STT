@@ -16,11 +16,9 @@ checkpoint_dir="$HOME/.local/share/stt/ldc93s1"
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -m coqui_stt_training.train \
-  --alphabet_config_path "data/alphabet.txt" \
-  --show_progressbar false \
-  --train_files data/smoke_test/ldc93s1.csv \
-  --test_files data/smoke_test/ldc93s1.csv \
+python -u train.py --show_progressbar false \
+  --train_files data/ldc93s1/ldc93s1.csv \
+  --test_files data/ldc93s1/ldc93s1.csv \
   --train_batch_size 1 \
   --test_batch_size 1 \
   --n_hidden 100 \

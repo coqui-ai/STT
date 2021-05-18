@@ -16,8 +16,7 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --alphabet_config_path "data/alphabet.txt" \
-  --show_progressbar false \
+python -u train.py --show_progressbar false \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt' \
   --export_dir '/tmp/train_tflite' \
@@ -27,8 +26,7 @@ python -u train.py --alphabet_config_path "data/alphabet.txt" \
 
 mkdir /tmp/train_tflite/en-us
 
-python -u train.py --alphabet_config_path "data/alphabet.txt" \
-  --show_progressbar false \
+python -u train.py --show_progressbar false \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt' \
   --export_dir '/tmp/train_tflite/en-us' \

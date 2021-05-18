@@ -59,7 +59,7 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
         queue_in.task_done()
 
 
-def main(args, _):
+def main(args):
     manager = Manager()
     work_todo = JoinableQueue()  # this is where we are going to store input data
     work_done = manager.Queue()  # this where we are gonna push them out
@@ -153,5 +153,4 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    create_flags()
-    absl.app.run(partial(main, parse_args()))
+    main(parse_args())

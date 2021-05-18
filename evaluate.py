@@ -9,4 +9,4 @@ if __name__ == "__main__":
         print("Training package is not installed. See training documentation.")
         raise
 
-    stt_evaluate.main()
+    ds_evaluate.main()

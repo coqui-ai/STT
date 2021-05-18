@@ -3,8 +3,7 @@ import sys
 import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 
-from .flags import FLAGS
-from .logging import log_error, log_info, log_warn
+from .config import Config, log_error, log_info, log_warn
 
 
 def _load_checkpoint_impl(
@@ -28,13 +27,13 @@ def _load_checkpoint_impl(
     lr_var = set(v for v in load_vars if v.op.name == "learning_rate")
     if lr_var and (
         "learning_rate" not in vars_in_ckpt
-        or (FLAGS.force_initialize_learning_rate and allow_lr_init)
+        or (Config.force_initialize_learning_rate and allow_lr_init)
     ):
         assert len(lr_var) <= 1
         load_vars -= lr_var
         init_vars |= lr_var
 
-    if load_cudnn:
+    if Config.load_cudnn:
         # Initialize training from a CuDNN RNN checkpoint
         # Identify the variables which we cannot load, and set them
         # for initialization
@@ -65,16 +64,16 @@ def _load_checkpoint_impl(
         # then we are dropping five layers total, so: drop_source_layers=5
         # If we want to use all layers from the source model except
         # the last one, we use this: drop_source_layers=1
-        if FLAGS.drop_source_layers >= 6:
+        if Config.drop_source_layers >= 6:
             log_warn(
                 "The checkpoint only has 6 layers, but you are trying to drop "
                 "all of them or more than all of them. Continuing and "
                 "dropping only 5 layers."
             )
-            FLAGS.drop_source_layers = 5
+            Config.drop_source_layers = 5
 
         dropped_layers = ["2", "3", "lstm", "5", "6"][
-            -1 * int(FLAGS.drop_source_layers) :
+            -1 * int(Config.drop_source_layers) :
         ]
         # Initialize all variables needed for DS, but not loaded from ckpt
         for v in load_vars:
@@ -97,7 +96,7 @@ def _load_checkpoint_impl(
 
 def _checkpoint_path_or_none(checkpoint_filename):
     checkpoint = tfv1.train.get_checkpoint_state(
-        FLAGS.load_checkpoint_dir, checkpoint_filename
+        Config.load_checkpoint_dir, checkpoint_filename
     )
     if not checkpoint:
         return None
@@ -200,11 +199,11 @@ def load_or_init_graph_for_training(session):
     and finally initialize the weights from scratch. This can be overriden with
     the `--load_train` flag. See its documentation for more info.
     """
-    if FLAGS.load_train == "auto":
+    if Config.load_train == "auto":
         methods = ["best", "last", "init"]
     else:
         methods = [Config.load_train]
-    _load_or_init_impl(session, methods, allow_drop_layers=True, silent=silent)
+    _load_or_init_impl(session, methods, allow_drop_layers=True)
 
 
 def load_graph_for_evaluation(session):
@@ -214,8 +213,8 @@ def load_graph_for_evaluation(session):
     checkpoint. This can be overriden with the `--load_evaluate` flag. See its
     documentation for more info.
     """
-    if FLAGS.load_evaluate == "auto":
+    if Config.load_evaluate == "auto":
         methods = ["best", "last"]
     else:
         methods = [Config.load_evaluate]
-    _load_or_init_impl(session, methods, allow_drop_layers=False, silent=silent)
+    _load_or_init_impl(session, methods, allow_drop_layers=False)

@@ -27,5 +27,4 @@ python -u train.py --show_progressbar false --early_stop false \
   --learning_rate 0.001 --dropout_rate 0.05  --export_dir '/tmp/train_bytes' \
   --scorer_path 'data/smoke_test/pruned_lm.bytes.scorer' \
   --audio_sample_rate ${audio_sample_rate} \
-  --bytes_output_mode true \
-  --export_tflite false
+  --bytes_output_mode true

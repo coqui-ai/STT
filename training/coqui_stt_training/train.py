@@ -11,6 +11,7 @@ DESIRED_LOG_LEVEL = (
 )
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = DESIRED_LOG_LEVEL
 
+import json
 import shutil
 import time
 
@@ -41,10 +42,18 @@ from .util.checkpoints import (
     load_or_init_graph_for_training,
     reload_best_checkpoint,
 )
-from .util.config import Config, initialize_globals
+from .util.config import (
+    Config,
+    create_progressbar,
+    initialize_globals,
+    log_debug,
+    log_error,
+    log_info,
+    log_progress,
+    log_warn,
+)
 from .util.evaluate_tools import save_samples_json
 from .util.feeding import audio_to_features, audiofile_to_features, create_dataset
-from .util.flags import FLAGS, create_flags
 from .util.helpers import ExceptionBox, check_ctcdecoder_version
 from .util.io import (
     is_remote_path,
@@ -52,14 +61,6 @@ from .util.io import (
     listdir_remote,
     open_remote,
     remove_remote,
-)
-from .util.logging import (
-    create_progressbar,
-    log_debug,
-    log_error,
-    log_info,
-    log_progress,
-    log_warn,
 )
 
 check_ctcdecoder_version()
@@ -119,7 +120,7 @@ def dense(name, x, units, dropout_rate=None, relu=True, layer_norm=False):
     output = tf.nn.bias_add(tf.matmul(x, weights), bias)
 
     if relu:
-        output = tf.minimum(tf.nn.relu(output), FLAGS.relu_clip)
+        output = tf.minimum(tf.nn.relu(output), Config.relu_clip)
 
     if layer_norm:
         with tfv1.variable_scope(name):
@@ -248,21 +249,21 @@ def create_model(
         batch_x,
         Config.n_hidden_1,
         dropout_rate=dropout[0],
-        layer_norm=FLAGS.layer_norm,
+        layer_norm=Config.layer_norm,
     )
     layers["layer_2"] = layer_2 = dense(
         "layer_2",
         layer_1,
         Config.n_hidden_2,
         dropout_rate=dropout[1],
-        layer_norm=FLAGS.layer_norm,
+        layer_norm=Config.layer_norm,
     )
     layers["layer_3"] = layer_3 = dense(
         "layer_3",
         layer_2,
         Config.n_hidden_3,
         dropout_rate=dropout[2],
-        layer_norm=FLAGS.layer_norm,
+        layer_norm=Config.layer_norm,
     )
 
     # `layer_3` is now reshaped into `[n_steps, batch_size, 2*n_cell_dim]`,
@@ -285,7 +286,7 @@ def create_model(
         output,
         Config.n_hidden_5,
         dropout_rate=dropout[5],
-        layer_norm=FLAGS.layer_norm,
+        layer_norm=Config.layer_norm,
     )
 
     # Now we apply a final linear layer creating `n_classes` dimensional vectors, the logits.
@@ -364,9 +365,9 @@ def calculate_mean_edit_distance_and_loss(iterator, dropout, reuse):
 def create_optimizer(learning_rate_var):
     optimizer = tfv1.train.AdamOptimizer(
         learning_rate=learning_rate_var,
-        beta1=FLAGS.beta1,
-        beta2=FLAGS.beta2,
-        epsilon=FLAGS.epsilon,
+        beta1=Config.beta1,
+        beta2=Config.beta2,
+        epsilon=Config.epsilon,
     )
     return optimizer
 
@@ -530,17 +531,17 @@ def train():
 
     # Create training and validation datasets
     train_set = create_dataset(
-        FLAGS.train_files.split(","),
-        batch_size=FLAGS.train_batch_size,
-        epochs=FLAGS.epochs,
+        Config.train_files,
+        batch_size=Config.train_batch_size,
+        epochs=Config.epochs,
         augmentations=Config.augmentations,
-        cache_path=FLAGS.feature_cache,
+        cache_path=Config.feature_cache,
         train_phase=True,
         exception_box=exception_box,
-        process_ahead=len(Config.available_devices) * FLAGS.train_batch_size * 2,
-        reverse=FLAGS.reverse_train,
-        limit=FLAGS.limit_train,
-        buffering=FLAGS.read_buffer,
+        process_ahead=len(Config.available_devices) * Config.train_batch_size * 2,
+        reverse=Config.reverse_train,
+        limit=Config.limit_train,
+        buffering=Config.read_buffer,
     )
 
     iterator = tfv1.data.Iterator.from_structure(
@@ -552,37 +553,37 @@ def train():
     # Make initialization ops for switching between the two sets
     train_init_op = iterator.make_initializer(train_set)
 
-    if FLAGS.dev_files:
-        dev_sources = FLAGS.dev_files.split(",")
+    if Config.dev_files:
+        dev_sources = Config.dev_files
         dev_sets = [
             create_dataset(
                 [source],
-                batch_size=FLAGS.dev_batch_size,
+                batch_size=Config.dev_batch_size,
                 train_phase=False,
-                augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
+                augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
                 exception_box=exception_box,
-                process_ahead=len(Config.available_devices) * FLAGS.dev_batch_size * 2,
-                reverse=FLAGS.reverse_dev,
-                limit=FLAGS.limit_dev,
-                buffering=FLAGS.read_buffer,
+                process_ahead=len(Config.available_devices) * Config.dev_batch_size * 2,
+                reverse=Config.reverse_dev,
+                limit=Config.limit_dev,
+                buffering=Config.read_buffer,
             )
             for source in dev_sources
         ]
         dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
 
-    if FLAGS.metrics_files:
-        metrics_sources = FLAGS.metrics_files.split(",")
+    if Config.metrics_files:
+        metrics_sources = Config.metrics_files
         metrics_sets = [
             create_dataset(
                 [source],
-                batch_size=FLAGS.dev_batch_size,
+                batch_size=Config.dev_batch_size,
                 train_phase=False,
-                augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
+                augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
                 exception_box=exception_box,
-                process_ahead=len(Config.available_devices) * FLAGS.dev_batch_size * 2,
-                reverse=FLAGS.reverse_dev,
-                limit=FLAGS.limit_dev,
-                buffering=FLAGS.read_buffer,
+                process_ahead=len(Config.available_devices) * Config.dev_batch_size * 2,
+                reverse=Config.reverse_dev,
+                limit=Config.limit_dev,
+                buffering=Config.read_buffer,
             )
             for source in metrics_sources
         ]
@@ -595,26 +596,26 @@ def train():
         tfv1.placeholder(tf.float32, name="dropout_{}".format(i)) for i in range(6)
     ]
     dropout_feed_dict = {
-        dropout_rates[0]: FLAGS.dropout_rate,
-        dropout_rates[1]: FLAGS.dropout_rate2,
-        dropout_rates[2]: FLAGS.dropout_rate3,
-        dropout_rates[3]: FLAGS.dropout_rate4,
-        dropout_rates[4]: FLAGS.dropout_rate5,
-        dropout_rates[5]: FLAGS.dropout_rate6,
+        dropout_rates[0]: Config.dropout_rate,
+        dropout_rates[1]: Config.dropout_rate2,
+        dropout_rates[2]: Config.dropout_rate3,
+        dropout_rates[3]: Config.dropout_rate4,
+        dropout_rates[4]: Config.dropout_rate5,
+        dropout_rates[5]: Config.dropout_rate6,
     }
     no_dropout_feed_dict = {rate: 0.0 for rate in dropout_rates}
 
     # Building the graph
     learning_rate_var = tfv1.get_variable(
-        "learning_rate", initializer=FLAGS.learning_rate, trainable=False
+        "learning_rate", initializer=Config.learning_rate, trainable=False
     )
     reduce_learning_rate_op = learning_rate_var.assign(
-        tf.multiply(learning_rate_var, FLAGS.plateau_reduction)
+        tf.multiply(learning_rate_var, Config.plateau_reduction)
     )
     optimizer = create_optimizer(learning_rate_var)
 
     # Enable mixed precision training
-    if FLAGS.automatic_mixed_precision:
+    if Config.automatic_mixed_precision:
         log_info("Enabling automatic mixed precision training.")
         optimizer = tfv1.train.experimental.enable_mixed_precision_graph_rewrite(
             optimizer
@@ -637,13 +638,13 @@ def train():
     step_summaries_op = tfv1.summary.merge_all("step_summaries")
     step_summary_writers = {
         "train": tfv1.summary.FileWriter(
-            os.path.join(FLAGS.summary_dir, "train"), max_queue=120
+            os.path.join(Config.summary_dir, "train"), max_queue=120
         ),
         "dev": tfv1.summary.FileWriter(
-            os.path.join(FLAGS.summary_dir, "dev"), max_queue=120
+            os.path.join(Config.summary_dir, "dev"), max_queue=120
         ),
         "metrics": tfv1.summary.FileWriter(
-            os.path.join(FLAGS.summary_dir, "metrics"), max_queue=120
+            os.path.join(Config.summary_dir, "metrics"), max_queue=120
         ),
     }
 
@@ -654,18 +655,18 @@ def train():
     }
 
     # Checkpointing
-    checkpoint_saver = tfv1.train.Saver(max_to_keep=FLAGS.max_to_keep)
-    checkpoint_path = os.path.join(FLAGS.save_checkpoint_dir, "train")
+    checkpoint_saver = tfv1.train.Saver(max_to_keep=Config.max_to_keep)
+    checkpoint_path = os.path.join(Config.save_checkpoint_dir, "train")
 
     best_dev_saver = tfv1.train.Saver(max_to_keep=1)
-    best_dev_path = os.path.join(FLAGS.save_checkpoint_dir, "best_dev")
+    best_dev_path = os.path.join(Config.save_checkpoint_dir, "best_dev")
 
     # Save flags next to checkpoints
-    if not is_remote_path(FLAGS.save_checkpoint_dir):
-        os.makedirs(FLAGS.save_checkpoint_dir, exist_ok=True)
-    flags_file = os.path.join(FLAGS.save_checkpoint_dir, "flags.txt")
+    if not is_remote_path(Config.save_checkpoint_dir):
+        os.makedirs(Config.save_checkpoint_dir, exist_ok=True)
+    flags_file = os.path.join(Config.save_checkpoint_dir, "flags.txt")
     with open_remote(flags_file, "w") as fout:
-        fout.write(FLAGS.flags_into_string())
+        json.dump(Config.serialize(), fout, indent=2)
 
     with tfv1.Session(config=Config.session_config) as session:
         log_debug("Session opened.")
@@ -686,9 +687,9 @@ def train():
 
             checkpoint_time = time.time()
 
-            if is_train and FLAGS.cache_for_epochs > 0 and FLAGS.feature_cache:
-                feature_cache_index = FLAGS.feature_cache + ".index"
-                if epoch % FLAGS.cache_for_epochs == 0 and os.path.isfile(
+            if is_train and Config.cache_for_epochs > 0 and Config.feature_cache:
+                feature_cache_index = Config.feature_cache + ".index"
+                if epoch % Config.cache_for_epochs == 0 and os.path.isfile(
                     feature_cache_index
                 ):
                     log_info("Invalidating feature cache")
@@ -770,8 +771,8 @@ def train():
 
                 if (
                     is_train
-                    and FLAGS.checkpoint_secs > 0
-                    and time.time() - checkpoint_time > FLAGS.checkpoint_secs
+                    and Config.checkpoint_secs > 0
+                    and time.time() - checkpoint_time > Config.checkpoint_secs
                 ):
                     checkpoint_saver.save(
                         session, checkpoint_path, global_step=current_step
@@ -788,7 +789,7 @@ def train():
         dev_losses = []
         epochs_without_improvement = 0
         try:
-            for epoch in range(epochs):
+            for epoch in range(Config.epochs):
                 # Training
                 log_progress("Training epoch %d..." % epoch)
                 train_loss, _ = run_set("train", epoch, train_init_op)
@@ -837,8 +838,8 @@ def train():
 
                     # Early stopping
                     if (
-                        FLAGS.early_stop
-                        and epochs_without_improvement == FLAGS.es_epochs
+                        Config.early_stop
+                        and epochs_without_improvement == Config.es_epochs
                     ):
                         log_info(
                             "Early stop triggered as the loss did not improve the last {} epochs".format(
@@ -900,9 +901,9 @@ def train():
 
 
 def test():
-    samples = evaluate(FLAGS.test_files.split(","), create_model)
-    if FLAGS.test_output_file:
-        save_samples_json(samples, FLAGS.test_output_file)
+    samples = evaluate(Config.test_files, create_model)
+    if Config.test_output_file:
+        save_samples_json(samples, Config.test_output_file)
 
 
 def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
@@ -913,7 +914,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         tf.float32, [Config.audio_window_samples], "input_samples"
     )
     samples = tf.expand_dims(input_samples, -1)
-    mfccs, _ = audio_to_features(samples, FLAGS.audio_sample_rate)
+    mfccs, _ = audio_to_features(samples, Config.audio_sample_rate)
     mfccs = tf.identity(mfccs, name="mfccs")
 
     # Input tensor will be of shape [batch_size, n_steps, 2*n_context+1, n_input]
@@ -958,7 +959,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
     logits, layers = create_model(
         batch_x=input_tensor,
         batch_size=batch_size,
-        seq_length=seq_length if not FLAGS.export_tflite else None,
+        seq_length=seq_length if not Config.export_tflite else None,
         dropout=no_dropout,
         previous_state=previous_state,
         overlap=False,
@@ -1005,7 +1006,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         "input_samples": input_samples,
     }
 
-    if not FLAGS.export_tflite:
+    if not Config.export_tflite:
         inputs["input_lengths"] = seq_length
 
     outputs = {
@@ -1032,9 +1033,9 @@ def export():
     log_info("Exporting the model...")
 
     inputs, outputs, _ = create_inference_graph(
-        batch_size=FLAGS.export_batch_size,
-        n_steps=FLAGS.n_steps,
-        tflite=FLAGS.export_tflite,
+        batch_size=Config.export_batch_size,
+        n_steps=Config.n_steps,
+        tflite=Config.export_tflite,
     )
 
     graph_version = int(file_relative_read("GRAPH_VERSION").strip())
@@ -1042,24 +1043,24 @@ def export():
 
     outputs["metadata_version"] = tf.constant([graph_version], name="metadata_version")
     outputs["metadata_sample_rate"] = tf.constant(
-        [FLAGS.audio_sample_rate], name="metadata_sample_rate"
+        [Config.audio_sample_rate], name="metadata_sample_rate"
     )
     outputs["metadata_feature_win_len"] = tf.constant(
-        [FLAGS.feature_win_len], name="metadata_feature_win_len"
+        [Config.feature_win_len], name="metadata_feature_win_len"
     )
     outputs["metadata_feature_win_step"] = tf.constant(
-        [FLAGS.feature_win_step], name="metadata_feature_win_step"
+        [Config.feature_win_step], name="metadata_feature_win_step"
     )
     outputs["metadata_beam_width"] = tf.constant(
-        [FLAGS.export_beam_width], name="metadata_beam_width"
+        [Config.export_beam_width], name="metadata_beam_width"
     )
     outputs["metadata_alphabet"] = tf.constant(
         [Config.alphabet.Serialize()], name="metadata_alphabet"
     )
 
-    if FLAGS.export_language:
+    if Config.export_language:
         outputs["metadata_language"] = tf.constant(
-            [FLAGS.export_language.encode("utf-8")], name="metadata_language"
+            [Config.export_language.encode("utf-8")], name="metadata_language"
         )
 
     # Prevent further graph changes
@@ -1077,16 +1078,18 @@ def export():
         # Restore variables from checkpoint
         load_graph_for_evaluation(session)
 
-        output_filename = FLAGS.export_file_name + ".pb"
-        if FLAGS.remove_export:
-            if isdir_remote(FLAGS.export_dir):
+        output_filename = Config.export_file_name + ".pb"
+        if Config.remove_export:
+            if isdir_remote(Config.export_dir):
                 log_info("Removing old export")
-                remove_remote(FLAGS.export_dir)
+                remove_remote(Config.export_dir)
 
-        output_graph_path = os.path.join(FLAGS.export_dir, output_filename)
+        output_graph_path = os.path.join(Config.export_dir, output_filename)
 
-        if not is_remote_path(FLAGS.export_dir) and not os.path.isdir(FLAGS.export_dir):
-            os.makedirs(FLAGS.export_dir)
+        if not is_remote_path(Config.export_dir) and not os.path.isdir(
+            Config.export_dir
+        ):
+            os.makedirs(Config.export_dir)
 
         frozen_graph = tfv1.graph_util.convert_variables_to_constants(
             sess=session,
@@ -1098,12 +1101,12 @@ def export():
             graph_def=frozen_graph, dest_nodes=output_names
         )
 
-        if not FLAGS.export_tflite:
+        if not Config.export_tflite:
             with open_remote(output_graph_path, "wb") as fout:
                 fout.write(frozen_graph.SerializeToString())
         else:
             output_tflite_path = os.path.join(
-                FLAGS.export_dir, output_filename.replace(".pb", ".tflite")
+                Config.export_dir, output_filename.replace(".pb", ".tflite")
             )
 
             converter = tf.lite.TFLiteConverter(
@@ -1119,27 +1122,29 @@ def export():
             with open_remote(output_tflite_path, "wb") as fout:
                 fout.write(tflite_model)
 
-        log_info("Models exported at %s" % (FLAGS.export_dir))
+        log_info("Models exported at %s" % (Config.export_dir))
 
     metadata_fname = os.path.join(
-        FLAGS.export_dir,
+        Config.export_dir,
         "{}_{}_{}.md".format(
-            FLAGS.export_author_id, FLAGS.export_model_name, FLAGS.export_model_version
+            Config.export_author_id,
+            Config.export_model_name,
+            Config.export_model_version,
         ),
     )
 
-    model_runtime = "tflite" if FLAGS.export_tflite else "tensorflow"
+    model_runtime = "tflite" if Config.export_tflite else "tensorflow"
     with open_remote(metadata_fname, "w") as f:
         f.write("---\n")
-        f.write("author: {}\n".format(FLAGS.export_author_id))
-        f.write("model_name: {}\n".format(FLAGS.export_model_name))
-        f.write("model_version: {}\n".format(FLAGS.export_model_version))
-        f.write("contact_info: {}\n".format(FLAGS.export_contact_info))
-        f.write("license: {}\n".format(FLAGS.export_license))
-        f.write("language: {}\n".format(FLAGS.export_language))
+        f.write("author: {}\n".format(Config.export_author_id))
+        f.write("model_name: {}\n".format(Config.export_model_name))
+        f.write("model_version: {}\n".format(Config.export_model_version))
+        f.write("contact_info: {}\n".format(Config.export_contact_info))
+        f.write("license: {}\n".format(Config.export_license))
+        f.write("language: {}\n".format(Config.export_language))
         f.write("runtime: {}\n".format(model_runtime))
-        f.write("min_stt_version: {}\n".format(FLAGS.export_min_stt_version))
-        f.write("max_stt_version: {}\n".format(FLAGS.export_max_stt_version))
+        f.write("min_stt_version: {}\n".format(Config.export_min_stt_version))
+        f.write("max_stt_version: {}\n".format(Config.export_max_stt_version))
         f.write(
             "acoustic_model_url: <replace this with a publicly available URL of the acoustic model>\n"
         )
@@ -1147,7 +1152,7 @@ def export():
             "scorer_url: <replace this with a publicly available URL of the scorer, if present>\n"
         )
         f.write("---\n")
-        f.write("{}\n".format(FLAGS.export_description))
+        f.write("{}\n".format(Config.export_description))
 
     log_info(
         "Model metadata file saved to {}. Before submitting the exported model for publishing make sure all information in the metadata file is correct, and complete the URL fields.".format(
@@ -1158,7 +1163,9 @@ def export():
 
 def package_zip():
     # --export_dir path/to/export/LANG_CODE/ => path/to/export/LANG_CODE.zip
-    export_dir = os.path.join(os.path.abspath(FLAGS.export_dir), "")  # Force ending '/'
+    export_dir = os.path.join(
+        os.path.abspath(Config.export_dir), ""
+    )  # Force ending '/'
     if is_remote_path(export_dir):
         log_error(
             "Cannot package remote path zip %s. Please do this manually." % export_dir
@@ -1167,7 +1174,7 @@ def package_zip():
 
     zip_filename = os.path.dirname(export_dir)
 
-    shutil.copy(FLAGS.scorer_path, export_dir)
+    shutil.copy(Config.scorer_path, export_dir)
 
     archive = shutil.make_archive(zip_filename, "zip", export_dir)
     log_info("Exported packaged model {}".format(archive))
@@ -1204,19 +1211,19 @@ def do_single_file_inference(input_file_path):
 
         probs = np.squeeze(probs)
 
-        if FLAGS.scorer_path:
+        if Config.scorer_path:
             scorer = Scorer(
-                FLAGS.lm_alpha, FLAGS.lm_beta, FLAGS.scorer_path, Config.alphabet
+                Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
             )
         else:
             scorer = None
         decoded = ctc_beam_search_decoder(
             probs,
             Config.alphabet,
-            FLAGS.beam_width,
+            Config.beam_width,
             scorer=scorer,
-            cutoff_prob=FLAGS.cutoff_prob,
-            cutoff_top_n=FLAGS.cutoff_top_n,
+            cutoff_prob=Config.cutoff_prob,
+            cutoff_top_n=Config.cutoff_top_n,
         )
         # Print highest probability result
         print(decoded[0][1])
@@ -1224,16 +1231,16 @@ def do_single_file_inference(input_file_path):
 
 def early_training_checks():
     # Check for proper scorer early
-    if FLAGS.scorer_path:
+    if Config.scorer_path:
         scorer = Scorer(
-            FLAGS.lm_alpha, FLAGS.lm_beta, FLAGS.scorer_path, Config.alphabet
+            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
         )
         del scorer
 
     if (
-        FLAGS.train_files
-        and FLAGS.test_files
-        and FLAGS.load_checkpoint_dir != FLAGS.save_checkpoint_dir
+        Config.train_files
+        and Config.test_files
+        and Config.load_checkpoint_dir != Config.save_checkpoint_dir
     ):
         log_warn(
             "WARNING: You specified different values for --load_checkpoint_dir "
@@ -1246,55 +1253,42 @@ def early_training_checks():
         )
 
 
-def main(_):
+def main():
     initialize_globals()
     early_training_checks()
 
-    if FLAGS.train_files:
+    if Config.train_files:
         tfv1.reset_default_graph()
-        tfv1.set_random_seed(FLAGS.random_seed)
+        tfv1.set_random_seed(Config.random_seed)
         train()
     else:
         log_warn(deprecated_msg("Calling training module without --train_files."))
 
     if Config.test_files:
-        log_warn(
-            deprecated_msg(
-                "Specifying --test_files when calling train module. Use python -m coqui_stt_training.evaluate"
-            )
-        )
-        evaluate.test()
-
-    if Config.export_dir:
-        log_warn(
-            deprecated_msg(
-                "Specifying --export_dir when calling train module. Use python -m coqui_stt_training.export"
-            )
-        )
-        export.export()
-
-    if FLAGS.export_zip:
         tfv1.reset_default_graph()
-        FLAGS.export_tflite = True
+        test()
 
-        if listdir_remote(FLAGS.export_dir):
+    if Config.export_dir and not Config.export_zip:
+        tfv1.reset_default_graph()
+        export()
+
+    if Config.export_zip:
+        tfv1.reset_default_graph()
+        Config.export_tflite = True
+
+        if listdir_remote(Config.export_dir):
             log_error(
-                "Directory {} is not empty, please fix this.".format(FLAGS.export_dir)
+                "Directory {} is not empty, please fix this.".format(Config.export_dir)
             )
             sys.exit(1)
 
         export()
         package_zip()
 
-    if FLAGS.one_shot_infer:
+    if Config.one_shot_infer:
         tfv1.reset_default_graph()
-        do_single_file_inference(FLAGS.one_shot_infer)
-
-
-def run_script():
-    create_flags()
-    absl.app.run(main)
+        do_single_file_inference(Config.one_shot_infer)
 
 
 if __name__ == "__main__":
-    run_script()
+    main()
