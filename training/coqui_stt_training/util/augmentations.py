@@ -1,4 +1,3 @@
-
 import os
 import re
 import math
@@ -10,6 +9,7 @@ from multiprocessing import Queue, Process
 from .audio import gain_db_to_ratio, max_dbfs, normalize_audio, AUDIO_TYPE_NP, AUDIO_TYPE_PCM, AUDIO_TYPE_OPUS
 from .helpers import LimitingPool, int_range, float_range, pick_value_from_range, tf_pick_value_from_range, MEGABYTE
 from .sample_collections import samples_from_source, unpack_maybe
+from .logging import log_info
 
 BUFFER_SIZE = 1 * MEGABYTE
 SPEC_PARSER = re.compile(r'^(?P<cls>[a-z_]+)(\[(?P<params>.*)\])?$')
@@ -90,6 +90,7 @@ def parse_augmentation(augmentation_spec):
             kwargs[pair[0]] = pair[1]
         else:
             raise ValueError('Unable to parse augmentation value assignment')
+    log_info('Processed augmentation type: [{}] with parameter settings: {}'.format(augmentation_cls.__name__, kwargs))
     return augmentation_cls(*args, **kwargs)
 
 
@@ -106,7 +107,7 @@ def parse_augmentations(augmentation_specs):
     -------
     List of augmentation class instances from util.augmentations.*.
     """
-    return [] if augmentation_specs is None else list(map(parse_augmentation, augmentation_specs))
+    return list(map(parse_augmentation, augmentation_specs or []))
 
 
 def apply_graph_augmentations(domain, tensor, augmentations, transcript=None, clock=0.0):
