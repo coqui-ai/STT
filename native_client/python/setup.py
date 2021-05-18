@@ -26,9 +26,9 @@ def main():
     numpy_include = os.getenv("NUMPY_INCLUDE", numpy_include)
     numpy_min_ver = os.getenv("NUMPY_DEP_VERSION", "")
 
-    project_name = 'STT'
-    if '--project_name' in sys.argv:
-        project_name_idx = sys.argv.index('--project_name')
+    project_name = "STT"
+    if "--project_name" in sys.argv:
+        project_name_idx = sys.argv.index("--project_name")
         project_name = sys.argv[project_name_idx + 1]
         sys.argv.remove("--project_name")
         sys.argv.pop(project_name_idx)
@@ -99,7 +99,6 @@ def main():
         py_modules=["stt", "stt.client", "stt.impl"],
         entry_points={"console_scripts": ["stt=stt.client:main"]},
         install_requires=["numpy%s" % numpy_min_ver],
-        python_requires=">=3.6,<3.11",
         include_package_data=True,
         classifiers=[
             "Development Status :: 3 - Alpha",

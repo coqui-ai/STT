@@ -3,7 +3,6 @@ import unittest
 
 from coqui_stt_ctcdecoder import Alphabet
 
-from coqui_stt_ctcdecoder import Alphabet
 
 class TestAlphabetParsing(unittest.TestCase):
     def _ending_tester(self, file, expected):

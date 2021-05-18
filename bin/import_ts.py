@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import csv
 import os
+import re
 import subprocess
-import tarfile
-import unicodedata
-from glob import glob
+import zipfile
 from multiprocessing import Pool
 
 import progressbar
-from coqui_stt_ctcdecoder import Alphabet
+import sox
+import unidecode
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
     get_counter,
@@ -21,21 +21,26 @@ from coqui_stt_training.util.importers import (
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
 MAX_SECS = 15
+ARCHIVE_NAME = "2019-04-11_fr_FR"
+ARCHIVE_DIR_NAME = "ts_" + ARCHIVE_NAME
+ARCHIVE_URL = (
+    "https://Coqui STT-storage-mirror.s3.fr-par.scw.cloud/" + ARCHIVE_NAME + ".zip"
+)
 
-ARCHIVE_DIR_NAME = "African_Accented_French"
-ARCHIVE_NAME = "African_Accented_French.tar.gz"
-ARCHIVE_URL = "http://www.openslr.org/resources/57/" + ARCHIVE_NAME
 
-
-def _download_and_preprocess_data(target_dir):
+def _download_and_preprocess_data(target_dir, english_compatible=False):
     # Making path absolute
     target_dir = os.path.abspath(target_dir)
     # Conditionally download data
-    archive_path = maybe_download(ARCHIVE_NAME, target_dir, ARCHIVE_URL)
-    # Conditionally extract data
+    archive_path = maybe_download(
+        "ts_" + ARCHIVE_NAME + ".zip", target_dir, ARCHIVE_URL
+    )
+    # Conditionally extract archive data
     _maybe_extract(target_dir, ARCHIVE_DIR_NAME, archive_path)
-    # Produce CSV files
-    _maybe_convert_sets(target_dir, ARCHIVE_DIR_NAME)
+    # Conditionally convert TrainingSpeech data to Coqui STT CSVs and wav
+    _maybe_convert_sets(
+        target_dir, ARCHIVE_DIR_NAME, english_compatible=english_compatible
+    )
 
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
@@ -45,16 +50,18 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         print('No directory "%s" - extracting archive...' % extracted_path)
         if not os.path.isdir(extracted_path):
             os.mkdir(extracted_path)
-        tar = tarfile.open(archive_path)
-        tar.extractall(target_dir)
-        tar.close()
+        with zipfile.ZipFile(archive_path) as zip_f:
+            zip_f.extractall(extracted_path)
     else:
         print('Found directory "%s" - not extracting it from archive.' % archive_path)
 
 
 def one_sample(sample):
     """ Take a audio file, and optionally convert it to 16kHz WAV """
-    wav_filename = sample[0]
+    orig_filename = sample["path"]
+    # Storing wav files next to the wav ones - just with a different suffix
+    wav_filename = os.path.splitext(orig_filename)[0] + ".converted.wav"
+    _maybe_convert_wav(orig_filename, wav_filename)
     file_size = -1
     frames = 0
     if os.path.exists(wav_filename):
@@ -64,16 +71,19 @@ def one_sample(sample):
                 ["soxi", "-s", wav_filename], stderr=subprocess.STDOUT
             )
         )
-    label = label_filter(sample[1])
-    counter = get_counter()
+    label = sample["text"]
+
     rows = []
+
+    # Keep track of how many samples are good vs. problematic
+    counter = get_counter()
     if file_size == -1:
         # Excluding samples that failed upon conversion
         counter["failed"] += 1
     elif label is None:
         # Excluding samples that failed on label validation
         counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < len(str(label)):
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)):
         # Excluding samples that are too short to fit the transcript
         counter["too_short"] += 1
     elif frames / SAMPLE_RATE > MAX_SECS:
@@ -89,66 +99,31 @@ def one_sample(sample):
     return (counter, rows)
 
 
-def _maybe_convert_sets(target_dir, extracted_data):
+def _maybe_convert_sets(target_dir, extracted_data, english_compatible=False):
     extracted_dir = os.path.join(target_dir, extracted_data)
     # override existing CSV with normalized one
-    target_csv_template = os.path.join(
-        target_dir, ARCHIVE_DIR_NAME, ARCHIVE_NAME.replace(".tar.gz", "_{}.csv")
-    )
+    target_csv_template = os.path.join(target_dir, "ts_" + ARCHIVE_NAME + "_{}.csv")
     if os.path.isfile(target_csv_template):
         return
+    path_to_original_csv = os.path.join(extracted_dir, "data.csv")
+    with open(path_to_original_csv) as csv_f:
+        data = [
+            d
+            for d in csv.DictReader(csv_f, delimiter=",")
+            if float(d["duration"]) <= MAX_SECS
+        ]
 
-    wav_root_dir = os.path.join(extracted_dir)
+    for line in data:
+        line["path"] = os.path.join(extracted_dir, line["path"])
 
-    all_files = [
-        "transcripts/train/yaounde/fn_text.txt",
-        "transcripts/train/ca16_conv/transcripts.txt",
-        "transcripts/train/ca16_read/conditioned.txt",
-        "transcripts/dev/niger_west_african_fr/transcripts.txt",
-        "speech/dev/niger_west_african_fr/niger_wav_file_name_transcript.tsv",
-        "transcripts/devtest/ca16_read/conditioned.txt",
-        "transcripts/test/ca16/prompts.txt",
-    ]
-
-    transcripts = {}
-    for tr in all_files:
-        with open(os.path.join(target_dir, ARCHIVE_DIR_NAME, tr), "r") as tr_source:
-            for line in tr_source.readlines():
-                line = line.strip()
-
-                if ".tsv" in tr:
-                    sep = "	"
-                else:
-                    sep = " "
-
-                audio = os.path.basename(line.split(sep)[0])
-
-                if not (".wav" in audio):
-                    if ".tdf" in audio:
-                        audio = audio.replace(".tdf", ".wav")
-                    else:
-                        audio += ".wav"
-
-                transcript = " ".join(line.split(sep)[1:])
-                transcripts[audio] = transcript
-
-    # Get audiofile path and transcript for each sentence in tsv
-    samples = []
-    glob_dir = os.path.join(wav_root_dir, "**/*.wav")
-    for record in glob(glob_dir, recursive=True):
-        record_file = os.path.basename(record)
-        if record_file in transcripts:
-            samples.append((record, transcripts[record_file]))
-
-    # Keep track of how many samples are good vs. problematic
-    counter = get_counter()
-    num_samples = len(samples)
+    num_samples = len(data)
     rows = []
+    counter = get_counter()
 
-    print("Importing WAV files...")
+    print("Importing {} wav files...".format(num_samples))
     pool = Pool()
     bar = progressbar.ProgressBar(max_value=num_samples, widgets=SIMPLE_BAR)
-    for i, processed in enumerate(pool.imap_unordered(one_sample, samples), start=1):
+    for i, processed in enumerate(pool.imap_unordered(one_sample, data), start=1):
         counter += processed[0]
         rows += processed[1]
         bar.update(i)
@@ -173,10 +148,14 @@ def _maybe_convert_sets(target_dir, extracted_data):
                 test_writer.writeheader()
 
                 for i, item in enumerate(rows):
-                    transcript = validate_label(item[2])
+                    transcript = validate_label(
+                        cleanup_transcript(
+                            item[2], english_compatible=english_compatible
+                        )
+                    )
                     if not transcript:
                         continue
-                    wav_filename = item[0]
+                    wav_filename = os.path.join(target_dir, extracted_data, item[0])
                     i_mod = i % 10
                     if i_mod == 0:
                         writer = test_writer
@@ -199,38 +178,42 @@ def _maybe_convert_sets(target_dir, extracted_data):
     print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
 
+def _maybe_convert_wav(orig_filename, wav_filename):
+    if not os.path.exists(wav_filename):
+        transformer = sox.Transformer()
+        transformer.convert(samplerate=SAMPLE_RATE)
+        try:
+            transformer.build(orig_filename, wav_filename)
+        except sox.core.SoxError as ex:
+            print("SoX processing error", ex, orig_filename, wav_filename)
+
+
+PUNCTUATIONS_REG = re.compile(r"[°\-,;!?.()\[\]*…—]")
+MULTIPLE_SPACES_REG = re.compile(r"\s{2,}")
+
+
+def cleanup_transcript(text, english_compatible=False):
+    text = text.replace("’", "'").replace("\u00A0", " ")
+    text = PUNCTUATIONS_REG.sub(" ", text)
+    text = MULTIPLE_SPACES_REG.sub(" ", text)
+    if english_compatible:
+        text = unidecode.unidecode(text)
+    return text.strip().lower()
+
+
 def handle_args():
-    parser = get_importers_parser(
-        description="Importer for African Accented French dataset. More information on http://www.openslr.org/57/."
-    )
+    parser = get_importers_parser(description="Importer for TrainingSpeech dataset.")
     parser.add_argument(dest="target_dir")
     parser.add_argument(
-        "--filter_alphabet",
-        help="Exclude samples with characters not in provided alphabet",
-    )
-    parser.add_argument(
-        "--normalize",
+        "--english-compatible",
         action="store_true",
-        help="Converts diacritic characters to their base ones",
+        dest="english_compatible",
+        help="Remove diactrics and other non-ascii chars.",
     )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    CLI_ARGS = handle_args()
-    ALPHABET = Alphabet(CLI_ARGS.filter_alphabet) if CLI_ARGS.filter_alphabet else None
-    validate_label = get_validate_label(CLI_ARGS)
-
-    def label_filter(label):
-        if CLI_ARGS.normalize:
-            label = (
-                unicodedata.normalize("NFKD", label.strip())
-                .encode("ascii", "ignore")
-                .decode("ascii", "ignore")
-            )
-        label = validate_label(label)
-        if ALPHABET and label and not ALPHABET.CanEncode(label):
-            label = None
-        return label
-
-    _download_and_preprocess_data(target_dir=CLI_ARGS.target_dir)
+    cli_args = handle_args()
+    validate_label = get_validate_label(cli_args)
+    _download_and_preprocess_data(cli_args.target_dir, cli_args.english_compatible)

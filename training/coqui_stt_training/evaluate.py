@@ -7,23 +7,20 @@ import sys
 from multiprocessing import cpu_count
 
 import progressbar
+from coqui_stt_ctcdecoder import Scorer, ctc_beam_search_decoder_batch
+from six.moves import zip
+
+import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 
-from coqui_stt_ctcdecoder import ctc_beam_search_decoder_batch, Scorer
-from six.moves import zip
 from .util.augmentations import NormalizeSampleRate
-from .util.config import Config, initialize_globals
 from .util.checkpoints import load_graph_for_evaluation
-from .util.config import (
-    Config,
-    create_progressbar,
-    initialize_globals_from_cli,
-    log_error,
-    log_progress,
-)
+from .util.config import Config, initialize_globals
 from .util.evaluate_tools import calculate_and_print_report, save_samples_json
 from .util.feeding import create_dataset
+from .util.flags import FLAGS, create_flags
 from .util.helpers import check_ctcdecoder_version
+
 
 
 def sparse_tensor_value_to_texts(value, alphabet):
@@ -47,22 +44,29 @@ def sparse_tuple_to_texts(sp_tuple, alphabet):
 
 
 def evaluate(test_csvs, create_model):
-    if Config.scorer_path:
+    if FLAGS.scorer_path:
         scorer = Scorer(
-            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
+            FLAGS.lm_alpha, FLAGS.lm_beta, FLAGS.scorer_path, Config.alphabet
         )
     else:
         scorer = None
 
-    test_sets = [create_dataset([csv],
-                                batch_size=FLAGS.test_batch_size,
-                                train_phase=False,
-                                augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
-                                reverse=FLAGS.reverse_test,
-                                limit=FLAGS.limit_test) for csv in test_csvs]
-    iterator = tfv1.data.Iterator.from_structure(tfv1.data.get_output_types(test_sets[0]),
-                                                 tfv1.data.get_output_shapes(test_sets[0]),
-                                                 output_classes=tfv1.data.get_output_classes(test_sets[0]))
+    test_sets = [
+        create_dataset(
+            [csv],
+            batch_size=FLAGS.test_batch_size,
+            train_phase=False,
+            augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
+            reverse=FLAGS.reverse_test,
+            limit=FLAGS.limit_test,
+        )
+        for csv in test_csvs
+    ]
+    iterator = tfv1.data.Iterator.from_structure(
+        tfv1.data.get_output_types(test_sets[0]),
+        tfv1.data.get_output_shapes(test_sets[0]),
+        output_classes=tfv1.data.get_output_classes(test_sets[0]),
+    )
     test_init_ops = [iterator.make_initializer(test_set) for test_set in test_sets]
 
     batch_wav_filename, (batch_x, batch_x_len), batch_y = iterator.get_next()
@@ -125,11 +129,11 @@ def evaluate(test_csvs, create_model):
                     batch_logits,
                     batch_lengths,
                     Config.alphabet,
-                    Config.export_beam_width,
+                    FLAGS.beam_width,
                     num_processes=num_processes,
                     scorer=scorer,
-                    cutoff_prob=Config.cutoff_prob,
-                    cutoff_top_n=Config.cutoff_top_n,
+                    cutoff_prob=FLAGS.cutoff_prob,
+                    cutoff_top_n=FLAGS.cutoff_top_n,
                 )
                 predictions.extend(d[0][1] for d in decoded)
                 ground_truths.extend(
@@ -147,13 +151,7 @@ def evaluate(test_csvs, create_model):
 
             # Print test summary
             test_samples = calculate_and_print_report(
-                wav_filenames,
-                ground_truths,
-                predictions,
-                losses,
-                dataset,
-                "cer" if Config.bytes_output_mode else "wer",
-                Config.report_count,
+                wav_filenames, ground_truths, predictions, losses, dataset
             )
             return test_samples
 
@@ -167,23 +165,27 @@ def evaluate(test_csvs, create_model):
 def test():
     tfv1.reset_default_graph()
 
-    samples = evaluate(Config.test_files, create_model)
-    if Config.test_output_file:
-        save_samples_json(samples, Config.test_output_file)
+    if not FLAGS.test_files:
+        log_error(
+            "You need to specify what files to use for evaluation via "
+            "the --test_files flag."
+        )
+        sys.exit(1)
+
+    from .train import (  # pylint: disable=cyclic-import,import-outside-toplevel
+        create_model,
+    )
+
+    samples = evaluate(FLAGS.test_files.split(","), create_model)
+
+    if FLAGS.test_output_file:
+        save_samples_json(samples, FLAGS.test_output_file)
 
 
 def main():
     initialize_globals_from_cli()
     check_ctcdecoder_version()
 
-    if not Config.test_files:
-        raise RuntimeError(
-            "You need to specify what files to use for evaluation via "
-            "the --test_files flag."
-        )
-
-    test()
-
 
 if __name__ == "__main__":
-    main()
+    run_script()

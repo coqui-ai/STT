@@ -1,5 +1,3 @@
-import os
-import re
 import math
 import os
 import random
@@ -25,8 +23,8 @@ from .helpers import (
     pick_value_from_range,
     tf_pick_value_from_range,
 )
-from .sample_collections import samples_from_source, unpack_maybe
 from .logging import log_info
+from .sample_collections import samples_from_source, unpack_maybe
 
 BUFFER_SIZE = 1 * MEGABYTE
 SPEC_PARSER = re.compile(r"^(?P<cls>[a-z_]+)(\[(?P<params>.*)\])?$")
@@ -78,12 +76,12 @@ class GraphAugmentation(Augmentation):
         return tensor
 
     def units_per_ms(self):
-        from .config import Config  # pylint: disable=import-outside-toplevel
+        from .flags import FLAGS  # pylint: disable=import-outside-toplevel
 
         return (
-            Config.audio_sample_rate / 1000.0
+            FLAGS.audio_sample_rate / 1000.0
             if self.domain == "signal"
-            else 1.0 / Config.feature_win_step
+            else 1.0 / FLAGS.feature_win_step
         )
 
 
@@ -124,8 +122,12 @@ def parse_augmentation(augmentation_spec):
         elif len(pair) == 2:
             kwargs[pair[0]] = pair[1]
         else:
-            raise ValueError('Unable to parse augmentation value assignment')
-    log_info('Processed augmentation type: [{}] with parameter settings: {}'.format(augmentation_cls.__name__, kwargs))
+            raise ValueError("Unable to parse augmentation value assignment")
+    log_info(
+        "Processed augmentation type: [{}] with parameter settings: {}".format(
+            augmentation_cls.__name__, kwargs
+        )
+    )
     return augmentation_cls(*args, **kwargs)
 
 
@@ -249,13 +251,9 @@ def apply_sample_augmentations(
                 yield sample, clock
         else:
             for sample_index, sample in enumerate(samples):
-                try:
-                    sample_clock = clock + (final_clock - clock) * (
-                        sample_index / len(samples)
-                    )
-                except TypeError:
-                    # Dataset has no len
-                    sample_clock = 0.0
+                sample_clock = clock + (final_clock - clock) * (
+                    sample_index / len(samples)
+                )
                 yield sample, sample_clock
 
     assert 0.0 <= clock <= 1.0
@@ -561,8 +559,9 @@ class Tempo(GraphAugmentation):
 
 class Warp(GraphAugmentation):
     """See "Warp augmentation" in training documentation"""
+
     def __init__(self, p=1.0, nt=1, nf=1, wt=0.1, wf=0.0):
-        super(Warp, self).__init__(p, domain='spectrogram')
+        super(Warp, self).__init__(p, domain="spectrogram")
         self.num_t = int_range(nt)
         self.num_f = int_range(nf)
         self.warp_t = float_range(wt)

@@ -24,8 +24,7 @@ AUDIO_TYPE_NP = "application/vnd.mozilla.np"
 AUDIO_TYPE_PCM = "application/vnd.mozilla.pcm"
 AUDIO_TYPE_WAV = "audio/wav"
 AUDIO_TYPE_OPUS = "application/vnd.mozilla.opus"
-AUDIO_TYPE_OGG_OPUS = "audio/ogg;codecs=opus"
-AUDIO_TYPE_OGG_VORBIS = "audio/vorbis"
+AUDIO_TYPE_OGG_OPUS = "application/vnd.deepspeech.ogg_opus"
 
 SERIALIZABLE_AUDIO_TYPES = [
     AUDIO_TYPE_WAV,
@@ -177,7 +176,6 @@ def get_loadable_audio_type_from_extension(ext):
     return {
         ".wav": AUDIO_TYPE_WAV,
         ".opus": AUDIO_TYPE_OGG_OPUS,
-        ".ogg": AUDIO_TYPE_OGG_VORBIS,
     }.get(ext, None)
 
 
@@ -633,8 +631,6 @@ def read_audio(audio_type, audio_file):
         return read_opus(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus(audio_file)
-    if audio_type == AUDIO_TYPE_OGG_VORBIS:
-        return read_ogg_vorbis(audio_file)
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -716,8 +712,6 @@ def read_duration(audio_type, audio_file):
         return read_opus_duration(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus_duration(audio_file)
-    if audio_type == AUDIO_TYPE_OGG_VORBIS:
-        return read_ogg_vorbis_duration(audio_file)
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -755,23 +749,6 @@ def read_ogg_opus_format(ogg_file):
     return AudioFormat(sample_rate, channel_count, sample_width)
 
 
-def read_ogg_vorbis_format(ogg_file):
-    ogg_file.seek(0)
-    vf = pyogg.vorbis.OggVorbis_File()
-    callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
-
-    buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
-    error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
-    if error != 0:
-        raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
-
-    info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
-    channel_count = info.contents.channels
-    sample_rate = info.contents.rate
-    sample_width = 2  # always 16-bit
-    return AudioFormat(sample_rate, channel_count, sample_width)
-
-
 def read_format(audio_type, audio_file):
     if audio_type == AUDIO_TYPE_WAV:
         return read_wav_format(audio_file)
@@ -779,8 +756,6 @@ def read_format(audio_type, audio_file):
         return read_opus_format(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus_format(audio_file)
-    if audio_type == AUDIO_TYPE_OGG_VORBIS:
-        return read_ogg_vorbis_format(audio_file)
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -801,8 +776,8 @@ def pcm_to_np(pcm_data, audio_format=DEFAULT_FORMAT):
 
     # Read interleaved channels
     nchannels = audio_format.channels
-    samples = samples.reshape((int(len(samples)/nchannels), nchannels))
-    
+    samples = samples.reshape((int(len(samples) / nchannels), nchannels))
+
     # Convert to 0.0-1.0 range
     samples = samples.astype(np.float32) / np.iinfo(dtype).max
 

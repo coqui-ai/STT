@@ -8,38 +8,34 @@ from setuptools import find_packages, setup
 
 
 def main():
-    version_file = Path(__file__).parent / "training" / "coqui_stt_training" / "VERSION"
+    version_file = Path(__file__).parent / "VERSION"
     with open(str(version_file)) as fin:
         version = fin.read().strip()
 
     install_requires_base = [
+        "absl-py",
         "attrdict",
         "bs4",
-        "coqpit",
         "numpy",
         "optuna",
-        "numba <= 0.53.1",
         "opuslib == 2.0.0",
         "pandas",
         "progressbar2",
         "pyogg >= 0.6.14a1",
+        "pyxdg",
         "resampy >= 0.2.2",
         "requests",
         "semver",
         "six",
         "sox",
         "soundfile",
-        "tqdm",
-        "webdataset",
     ]
 
-    decoder_pypi_dep = [
-        'coqui_stt_ctcdecoder == {}'.format(version)
-    ]
+    decoder_pypi_dep = ["coqui_stt_ctcdecoder == {}".format(version)]
 
     tensorflow_pypi_dep = ["tensorflow == 1.15.4"]
 
-    if os.environ.get('DS_NODECODER', ''):
+    if os.environ.get("DS_NODECODER", ""):
         install_requires = install_requires_base
     else:
         install_requires = install_requires_base + decoder_pypi_dep
@@ -68,11 +64,15 @@ def main():
         ],
         package_dir={"": "training"},
         packages=find_packages(where="training"),
-        python_requires=">=3.6, <3.8",
+        python_requires=">=3.5, <4",
         install_requires=install_requires,
-        include_package_data=True,
-        extras_require={
-            "transcribe": ["webrtcvad == 2.0.10"],
+        # If there are data files included in your packages that need to be
+        # installed, specify them here.
+        package_data={
+            "coqui_stt_training": [
+                "VERSION",
+                "GRAPH_VERSION",
+            ],
         },
     )
 

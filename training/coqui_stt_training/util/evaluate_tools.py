@@ -8,7 +8,7 @@ from multiprocessing.dummy import Pool
 import numpy as np
 from attrdict import AttrDict
 
-from .config import Config
+from .flags import FLAGS
 from .io import open_remote
 from .text import levenshtein
 
@@ -59,15 +59,7 @@ def process_decode_result(item):
     )
 
 
-def calculate_and_print_report(
-    wav_filenames,
-    labels,
-    decodings,
-    losses,
-    dataset_name,
-    sort_by="wer",
-    report_count=5,
-):
+def calculate_and_print_report(wav_filenames, labels, decodings, losses, dataset_name):
     r"""
     This routine will calculate and print a WER report.
     It'll compute the `mean` WER and create ``Sample`` objects of the ``report_count`` top lowest
@@ -104,11 +96,11 @@ def print_report(samples, losses, wer, cer, dataset_name, report_count=5):
     )
     print("-" * 80)
 
-    best_samples = samples[:report_count]
-    worst_samples = samples[-report_count:]
+    best_samples = samples[: FLAGS.report_count]
+    worst_samples = samples[-FLAGS.report_count :]
     median_index = int(len(samples) / 2)
-    median_left = int(report_count / 2)
-    median_right = report_count - median_left
+    median_left = int(FLAGS.report_count / 2)
+    median_right = FLAGS.report_count - median_left
     median_samples = samples[median_index - median_left : median_index + median_right]
 
     def print_single_sample(sample):

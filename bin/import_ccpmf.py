@@ -8,13 +8,13 @@ import csv
 import decimal
 import hashlib
 import math
-import random
 import os
 import re
 import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
+import zipfile
 from glob import glob
 from multiprocessing import Pool
 
@@ -42,7 +42,6 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from coqui_stt_ctcdecoder import Alphabet
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -528,7 +527,7 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         _counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < int(len(str(label)) * 1.15):
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)):
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
@@ -667,92 +666,28 @@ def write_general_csv(target_dir, _rows, _counter):
         test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
         test_writer.writeheader()
 
-        train_set, dev_set, test_set = _split_sets(_rows)
-
-        train_bar = progressbar.ProgressBar(
-            max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set"
-        )
-        for item in train_bar(train_set):
-            train_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
-
-        dev_bar = progressbar.ProgressBar(
-            max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set"
-        )
-        for item in dev_bar(dev_set):
-            dev_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
-
-        test_bar = progressbar.ProgressBar(
-            max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set"
-        )
-        for item in test_bar(test_set):
-            test_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
+                bar = progressbar.ProgressBar(max_value=len(_rows), widgets=SIMPLE_BAR)
+                for i, item in enumerate(bar(_rows)):
+                    i_mod = i % 10
+                    if i_mod == 0:
+                        writer = test_writer
+                    elif i_mod == 1:
+                        writer = dev_writer
+                    else:
+                        writer = train_writer
+                    writer.writerow(
+                        {
+                            "wav_filename": item[0],
+                            "wav_filesize": item[1],
+                            "transcript": item[2],
+                        }
+                    )
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
     print_import_report(_counter, SAMPLE_RATE, MAX_SECS)
     print("~~~~ (FINAL STATISTICS) ~~~~")
     print("")
-
-
-def _split_sets(rows):
-    """
-    randomply split the datasets into train, validation, and test sets where the size of the
-    validation and test sets are determined by the `get_sample_size` function.
-    """
-    random.shuffle(rows)
-    sample_size = get_sample_size(len(rows))
-
-    train_beg = 0
-    train_end = len(rows) - 2 * sample_size
-
-    dev_beg = train_end
-    dev_end = train_end + sample_size
-
-    test_beg = dev_end
-    test_end = len(rows)
-
-    return (
-        rows[train_beg:train_end],
-        rows[dev_beg:dev_end],
-        rows[test_beg:test_end],
-    )
-
-
-def get_sample_size(population_size):
-    """calculates the sample size for a 99% confidence and 1% margin of error"""
-    margin_of_error = 0.01
-    fraction_picking = 0.50
-    z_score = 2.58  # Corresponds to confidence level 99%
-    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-        margin_of_error ** 2
-    )
-    sample_size = 0
-    for train_size in range(population_size, 0, -1):
-        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-            margin_of_error ** 2 * train_size
-        )
-        sample_size = int(numerator / denominator)
-        if 2 * sample_size + train_size <= population_size:
-            break
-    return sample_size
 
 
 if __name__ == "__main__":

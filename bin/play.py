@@ -4,33 +4,26 @@ Tool for playing (and augmenting) single samples or samples from Sample Database
 Use "python3 play.py -h" for help
 """
 
+import argparse
 import os
 import random
 import sys
-from dataclasses import dataclass, field
-from typing import List
 
 from coqui_stt_training.util.audio import (
     AUDIO_TYPE_PCM,
     AUDIO_TYPE_WAV,
     get_loadable_audio_type_from_extension,
-    Sample,
 )
 from coqui_stt_training.util.augmentations import (
     SampleAugmentation,
     apply_sample_augmentations,
     parse_augmentations,
 )
-from coqui_stt_training.util.config import (
-    BaseSttConfig,
-    Config,
-    initialize_globals_from_instance,
-)
 from coqui_stt_training.util.sample_collections import (
     LabeledSample,
+    SampleList,
     samples_from_source,
 )
-from coqpit import Coqpit
 
 
 def get_samples_in_play_order():
@@ -64,9 +57,9 @@ def play_collection():
     samples = apply_sample_augmentations(
         samples,
         audio_type=AUDIO_TYPE_PCM,
-        augmentations=Config.augmentations,
+        augmentations=augmentations,
         process_ahead=0,
-        clock=Config.clock,
+        clock=CLI_ARGS.clock,
     )
     for sample in samples:
         if not Config.quiet:
@@ -77,8 +70,6 @@ def play_collection():
             sample.change_audio_type(AUDIO_TYPE_WAV)
             sys.stdout.buffer.write(sample.audio.getvalue())
             return
-        import simpleaudio
-
         wave_obj = simpleaudio.WaveObject(
             sample.audio,
             sample.audio_format.channels,
@@ -97,7 +88,12 @@ class PlayConfig(Coqpit):
             help="Sample DB, CSV or WAV file to play samples from",
         ),
     )
-    start: int = field(
+    parser.add_argument(
+        "source", help="Sample DB, CSV or WAV file to play samples from"
+    )
+    parser.add_argument(
+        "--start",
+        type=int,
         default=0,
         metadata=dict(
             help="Sample index to start at (negative numbers are relative to the end of the collection)",
@@ -115,13 +111,18 @@ class PlayConfig(Coqpit):
             help="If samples should be played in random order",
         ),
     )
-    clock: float = field(
+    parser.add_argument(
+        "--augment",
+        action="append",
+        help="Add an augmentation operation",
+    )
+    parser.add_argument(
+        "--clock",
+        type=float,
         default=0.5,
-        metadata=dict(
-            help="Simulates clock value used for augmentations during training."
-            "Ranges from 0.0 (representing parameter start values) to"
-            "1.0 (representing parameter end values)",
-        ),
+        help="Simulates clock value used for augmentations during training."
+        "Ranges from 0.0 (representing parameter start values) to"
+        "1.0 (representing parameter end values)",
     )
     pipe: bool = field(
         default=False,
@@ -154,10 +155,16 @@ class PlayConfig(Coqpit):
         self.augmentations = parse_augmentations(self.augment)
 
 
-def main():
-    config = PlayConfig.init_from_argparse(arg_prefix="")
-    initialize_globals_from_instance(config)
-
+if __name__ == "__main__":
+    CLI_ARGS = handle_args()
+    if not CLI_ARGS.pipe:
+        try:
+            import simpleaudio
+        except ModuleNotFoundError:
+            print(
+                'Unless using the --pipe flag, play.py requires Python package "simpleaudio" for playing samples'
+            )
+            sys.exit(1)
     try:
         play_collection()
     except KeyboardInterrupt:

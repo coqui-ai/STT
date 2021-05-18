@@ -3,8 +3,9 @@
 
 import sys
 
-import tensorflow.compat.v1 as tfv1
 from google.protobuf import text_format
+
+import tensorflow.compat.v1 as tfv1
 
 
 def main():

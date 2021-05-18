@@ -24,7 +24,7 @@
 Quickstart: Deployment
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 3.5 or higher (*Note - only Linux supported at this time. We are working to get our normally supported packages back up and running.*): 
+The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 3.5 or higher (*Note - only Linux supported at this time. We are working to get our normally supported packages back up and running.*):
 
 .. code-block:: bash
 

@@ -3,7 +3,8 @@
 Tool for building a combined SDB or CSV sample-set from other sets
 Use 'python3 data_set_tool.py -h' for help
 """
-from dataclasses import dataclass, field
+import argparse
+import sys
 from pathlib import Path
 from typing import List, Optional
 
@@ -18,11 +19,6 @@ from coqui_stt_training.util.augmentations import (
     SampleAugmentation,
     apply_sample_augmentations,
     parse_augmentations,
-)
-from coqui_stt_training.util.config import (
-    BaseSttConfig,
-    Config,
-    initialize_globals_from_instance,
 )
 from coqui_stt_training.util.downloader import SIMPLE_BAR
 from coqui_stt_training.util.sample_collections import (
@@ -44,26 +40,29 @@ def build_data_set():
             "Warning: Some of the specified augmentations will not get applied, as this tool only supports "
             "overlay, codec, reverb, resample and volume."
         )
-    extension = "".join(Path(Config.target).suffixes).lower()
-    labeled = not Config.unlabeled
+    extension = Path(CLI_ARGS.target).suffix.lower()
+    labeled = not CLI_ARGS.unlabeled
     if extension == ".csv":
         writer = CSVWriter(
-            Config.target, absolute_paths=Config.absolute_paths, labeled=labeled
+            CLI_ARGS.target, absolute_paths=CLI_ARGS.absolute_paths, labeled=labeled
         )
     elif extension == ".sdb":
-        writer = DirectSDBWriter(Config.target, audio_type=audio_type, labeled=labeled)
+        writer = DirectSDBWriter(
+            CLI_ARGS.target, audio_type=audio_type, labeled=labeled
+        )
     elif extension == ".tar":
         writer = TarWriter(
-            Config.target, labeled=labeled, gz=False, include=Config.include
+            CLI_ARGS.target, labeled=labeled, gz=False, include=CLI_ARGS.include
         )
-    elif extension in (".tgz", ".tar.gz"):
+    elif extension == ".tgz" or CLI_ARGS.target.lower().endswith(".tar.gz"):
         writer = TarWriter(
-            Config.target, labeled=labeled, gz=True, include=Config.include
+            CLI_ARGS.target, labeled=labeled, gz=True, include=CLI_ARGS.include
         )
     else:
-        raise RuntimeError(
+        print(
             "Unknown extension of target file - has to be either .csv, .sdb, .tar, .tar.gz or .tgz"
         )
+        sys.exit(1)
     with writer:
         samples = samples_from_sources(Config.sources, labeled=not Config.unlabeled)
         num_samples = len(samples)
@@ -76,84 +75,65 @@ def build_data_set():
             change_audio_types(
                 samples,
                 audio_type=audio_type,
-                bitrate=Config.bitrate,
-                processes=Config.workers,
+                bitrate=CLI_ARGS.bitrate,
+                processes=CLI_ARGS.workers,
             )
         ):
             writer.add(sample)
 
 
-@dataclass
-class DatasetToolConfig(BaseSttConfig):
-    sources: List[str] = field(
-        default_factory=list,
-        metadata=dict(
-            help="Source CSV and/or SDB files - "
-            "Note: For getting a correctly ordered target set, source SDBs have to have their samples "
-            "already ordered from shortest to longest.",
-        ),
+def handle_args():
+    parser = argparse.ArgumentParser(
+        description="Tool for building a combined SDB or CSV sample-set from other sets"
     )
-    target: str = field(
-        default="",
-        metadata=dict(
-            help="SDB, CSV or TAR(.gz) file to create",
-        ),
+    parser.add_argument(
+        "sources",
+        nargs="+",
+        help="Source CSV and/or SDB files - "
+        "Note: For getting a correctly ordered target set, source SDBs have to have their samples "
+        "already ordered from shortest to longest.",
     )
-    audio_type: str = field(
+    parser.add_argument("target", help="SDB, CSV or TAR(.gz) file to create")
+    parser.add_argument(
+        "--audio-type",
         default="opus",
-        metadata=dict(
-            help="Audio representation inside target SDB",
-        ),
+        choices=AUDIO_TYPE_LOOKUP.keys(),
+        help="Audio representation inside target SDB",
     )
-    bitrate: int = field(
-        default=16000,
-        metadata=dict(
-            help="Bitrate for lossy compressed SDB samples like in case of --audio-type opus",
-        ),
+    parser.add_argument(
+        "--bitrate",
+        type=int,
+        help="Bitrate for lossy compressed SDB samples like in case of --audio-type opus",
     )
-    workers: Optional[int] = field(
-        default=None,
-        metadata=dict(
-            help="Number of encoding SDB workers",
-        ),
+    parser.add_argument(
+        "--workers", type=int, default=None, help="Number of encoding SDB workers"
     )
-    unlabeled: bool = field(
-        default=False,
-        metadata=dict(
-            help="If to build an data-set with unlabeled (audio only) samples - "
-            "typically used for building noise augmentation corpora",
-        ),
+    parser.add_argument(
+        "--unlabeled",
+        action="store_true",
+        help="If to build an data-set with unlabeled (audio only) samples - "
+        "typically used for building noise augmentation corpora",
     )
-    absolute_paths: bool = field(
-        default=False,
-        metadata=dict(
-            help="If to reference samples by their absolute paths when writing CSV files",
-        ),
+    parser.add_argument(
+        "--absolute-paths",
+        action="store_true",
+        help="If to reference samples by their absolute paths when writing CSV files",
     )
-    include: List[str] = field(
-        default_factory=list,
-        metadata=dict(
-            help="Adds files to the root directory of .tar(.gz) targets",
-        ),
+    parser.add_argument(
+        "--augment",
+        action="append",
+        help="Add an augmentation operation",
     )
-
-    def __post_init__(self):
-        if self.audio_type not in AUDIO_TYPE_LOOKUP.keys():
-            raise RuntimeError(
-                f"--audio_type must be one of {tuple(AUDIO_TYPE_LOOKUP.keys())}"
-            )
-
-        if not self.sources:
-            raise RuntimeError("No source specified with --sources")
-
-        if not self.target:
-            raise RuntimeError("No target specified with --target")
+    parser.add_argument(
+        "--include",
+        action="append",
+        help="Adds a file to the root directory of .tar(.gz) targets",
+    )
+    return parser.parse_args()
 
 
-def main():
-    config = DatasetToolConfig.init_from_argparse(arg_prefix="")
-    initialize_globals_from_instance(config)
-
+if __name__ == "__main__":
+    CLI_ARGS = handle_args()
     build_data_set()
 
 

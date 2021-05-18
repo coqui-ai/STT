@@ -74,10 +74,10 @@ maybe_rebuild(THIRD_PARTY_FILES, third_party_build, build_dir)
 maybe_rebuild(CTC_DECODER_FILES, ctc_decoder_build, build_dir)
 
 decoder_module = Extension(
-    name='coqui_stt_ctcdecoder._swigwrapper',
-    sources=['swigwrapper.i'],
-    swig_opts=['-c++', '-extranative'],
-    language='c++',
+    name="coqui_stt_ctcdecoder._swigwrapper",
+    sources=["swigwrapper.i"],
+    swig_opts=["-c++", "-extranative"],
+    language="c++",
     include_dirs=INCLUDES + [numpy_include],
     extra_compile_args=ARGS + (DBG_ARGS if debug else OPT_ARGS),
     extra_link_args=[ctc_decoder_build, third_party_build],
@@ -94,14 +94,12 @@ class BuildExtFirst(build):
 
 
 setup(
-    name='coqui_stt_ctcdecoder',
+    name="coqui_stt_ctcdecoder",
     version=project_version,
-    description="Coqui STT Python decoder package.",
-    long_description="Documentation available at `stt.readthedocs.io <https://stt.readthedocs.io/en/latest/Decoder-API.html>`_",
-    long_description_content_type="text/x-rst; charset=UTF-8",
+    description="""DS CTC decoder""",
     cmdclass={"build": BuildExtFirst},
     ext_modules=[decoder_module],
-    package_dir = {'coqui_stt_ctcdecoder': '.'},
-    py_modules=['coqui_stt_ctcdecoder', 'coqui_stt_ctcdecoder.swigwrapper'],
-    install_requires = ['numpy%s' % numpy_min_ver],
+    package_dir={"coqui_stt_ctcdecoder": "."},
+    py_modules=["coqui_stt_ctcdecoder", "coqui_stt_ctcdecoder.swigwrapper"],
+    install_requires=["numpy%s" % numpy_min_ver],
 )

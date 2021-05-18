@@ -24,8 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../"))
 
-autodoc_mock_imports = ["stt", "native_client.ctcdecode.swigwrapper"]
-autodoc_member_order = "bysource"
+autodoc_mock_imports = ["stt"]
 
 # This is in fact only relevant on ReadTheDocs, but we want to run the same way
 # on our CI as in RTD to avoid regressions on RTD that we would not catch on CI
@@ -51,9 +50,9 @@ import semver
 
 # -- Project information -----------------------------------------------------
 
-project = u'Coqui STT'
-copyright = '2021 Coqui GmbH, 2020 DeepSpeech authors, 2019-2020 Mozilla Corporation'
-author = 'Coqui GmbH'
+project = u"Coqui STT"
+copyright = "2021 Coqui GmbH, 2020 DeepSpeech authors, 2019-2020 Mozilla Corporation"
+author = "Coqui GmbH"
 
 with open("../VERSION", "r") as ver:
     v = ver.read().strip()
@@ -75,15 +74,15 @@ release = v
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-  'sphinx.ext.autodoc',
-  'sphinx.ext.extlinks',
-  'sphinx.ext.intersphinx',
-  'sphinx.ext.mathjax',
-  'sphinx.ext.viewcode',
-  'sphinx_js',
-  'sphinx_csharp',
-  'breathe',
-  'recommonmark',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "sphinx_js",
+    "sphinx_csharp",
+    "breathe",
+    "recommonmark",
 ]
 
 
@@ -119,7 +118,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['.build', 'Thumbs.db', '.DS_Store', 'node_modules', 'examples']
+exclude_patterns = [".build", "Thumbs.db", ".DS_Store", "node_modules", "examples"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -134,7 +133,7 @@ add_module_names = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'furo'
+html_theme = "furo"
 
 html_css_files = [
     "custom.css",
@@ -143,7 +142,7 @@ html_css_files = [
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["static"]
+html_static_path = [".static"]
 
 
 # -- Options for HTMLHelp output ------------------------------------------

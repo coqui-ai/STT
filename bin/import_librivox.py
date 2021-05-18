@@ -12,10 +12,13 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional
 
 import pandas
+import progressbar
 from coqui_stt_training.util.downloader import maybe_download
 from sox import Transformer
+
 from tensorflow.python.platform import gfile
-from tqdm import tqdm
+
+SAMPLE_RATE = 16000
 
 
 @dataclass(frozen=True)

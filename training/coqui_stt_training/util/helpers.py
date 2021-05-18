@@ -19,19 +19,14 @@ ValueRange = namedtuple("ValueRange", "start end r")
 
 
 def parse_file_size(file_size):
-    if type(file_size) is str:
-        file_size = file_size.lower().strip()
-        if len(file_size) == 0:
-            return 0
-        n = int(keep_only_digits(file_size))
-        if file_size[-1] == "b":
-            file_size = file_size[:-1]
-        e = file_size[-1]
-        return SIZE_PREFIX_LOOKUP[e] * n if e in SIZE_PREFIX_LOOKUP else n
-    elif type(file_size) is int:
-        return file_size
-    else:
-        raise ValueError("file_size not of type 'int' or 'str'")
+    file_size = file_size.lower().strip()
+    if len(file_size) == 0:
+        return 0
+    n = int(keep_only_digits(file_size))
+    if file_size[-1] == "b":
+        file_size = file_size[:-1]
+    e = file_size[-1]
+    return SIZE_PREFIX_LOOKUP[e] * n if e in SIZE_PREFIX_LOOKUP else n
 
 
 def keep_only_digits(txt):
@@ -53,9 +48,13 @@ def check_ctcdecoder_version():
         # pylint: disable=import-outside-toplevel
         from coqui_stt_ctcdecoder import __version__ as decoder_version
     except ImportError as e:
-        if e.msg.find('__version__') > 0:
-            print("Coqui STT version ({ds_version}) requires CTC decoder to expose __version__. "
-                  "Please upgrade the coqui_stt_ctcdecoder package to version {ds_version}".format(ds_version=ds_version_s))
+        if e.msg.find("__version__") > 0:
+            print(
+                "Coqui STT version ({ds_version}) requires CTC decoder to expose __version__. "
+                "Please upgrade the coqui_stt_ctcdecoder package to version {ds_version}".format(
+                    ds_version=ds_version_s
+                )
+            )
             sys.exit(1)
         raise e
 
@@ -159,6 +158,35 @@ class LimitingPool:
         self.pool.close()
 
 
+class ExceptionBox:
+    """Helper class for passing-back and re-raising an exception from inside a TensorFlow dataset generator.
+    Used in conjunction with `remember_exception`."""
+
+    def __init__(self):
+        self.exception = None
+
+    def raise_if_set(self):
+        if self.exception is not None:
+            exception = self.exception
+            self.exception = None
+            raise exception  # pylint: disable = raising-bad-type
+
+
+def remember_exception(iterable, exception_box=None):
+    """Wraps a TensorFlow dataset generator for catching its actual exceptions
+    that would otherwise just interrupt iteration w/o bubbling up."""
+
+    def do_iterate():
+        try:
+            yield from iterable()
+        except StopIteration:
+            return
+        except Exception as ex:  # pylint: disable = broad-except
+            exception_box.exception = ex
+
+    return iterable if exception_box is None else do_iterate
+
+
 def get_value_range(value, target_type):
     """
     This function converts all possible supplied values for augmentation
@@ -171,30 +199,34 @@ def get_value_range(value, target_type):
     Any "missing" values are filled so that ValueRange always includes [start,end,r].
     """
     if isinstance(value, str):
-        if '~' in value:
-            parts = value.split('~')
+        if "~" in value:
+            parts = value.split("~")
             if len(parts) != 2:
-                raise ValueError('Cannot parse value range')
+                raise ValueError("Cannot parse value range")
             value = parts[0]
             r = parts[1]
         else:
-            r = 0 # if no <r> supplied, use 0
-        parts = value.split(':')
+            r = 0  # if no <r> supplied, use 0
+        parts = value.split(":")
         if len(parts) == 1:
-            parts.append(parts[0]) # only one <value> given, so double it
+            parts.append(parts[0])  # only one <value> given, so double it
         if len(parts) != 2:
-            raise ValueError('Cannot parse value range')
+            raise ValueError("Cannot parse value range")
         return ValueRange(target_type(parts[0]), target_type(parts[1]), target_type(r))
     if isinstance(value, tuple):
         if len(value) == 2:
-            return ValueRange(target_type(value[0]), target_type(value[1]), target_type(0))
+            return ValueRange(
+                target_type(value[0]), target_type(value[1]), target_type(0)
+            )
         if len(value) == 3:
-            return ValueRange(target_type(value[0]), target_type(value[1]), target_type(value[2]))
+            return ValueRange(
+                target_type(value[0]), target_type(value[1]), target_type(value[2])
+            )
         else:
-            raise ValueError('Cannot convert to ValueRange: Wrong tuple size')
+            raise ValueError("Cannot convert to ValueRange: Wrong tuple size")
     if isinstance(value, int) or isinstance(value, float):
         return ValueRange(target_type(value), target_type(value), target_type(0))
-    raise ValueError('Cannot convert to ValueRange: Wrong tuple size')
+    raise ValueError("Cannot convert to ValueRange: Wrong tuple size")
 
 
 def int_range(value):
@@ -214,20 +246,25 @@ def pick_value_from_range(value_range, clock=None):
 
 def tf_pick_value_from_range(value_range, clock=None, double_precision=False):
     import tensorflow as tf  # pylint: disable=import-outside-toplevel
+
     if clock is None:
         clock = tf.random.stateless_uniform([], seed=(-1, 1), dtype=tf.float64)
     else:
-        clock = tf.maximum(tf.constant(0.0, dtype=tf.float64),
-                           tf.minimum(tf.constant(1.0, dtype=tf.float64), clock))
+        clock = tf.maximum(
+            tf.constant(0.0, dtype=tf.float64),
+            tf.minimum(tf.constant(1.0, dtype=tf.float64), clock),
+        )
     value = value_range.start + clock * (value_range.end - value_range.start)
     if value_range.r:
         # if the option <r> (<value>~<r>, randomization radius) is supplied,
         # sample the value from a uniform distribution with "radius" <r>
-        value = tf.random.stateless_uniform([],
-                                            minval=value - value_range.r,
-                                            maxval=value + value_range.r,
-                                            seed=(clock * tf.int32.min, clock * tf.int32.max),
-                                            dtype=tf.float64)
+        value = tf.random.stateless_uniform(
+            [],
+            minval=value - value_range.r,
+            maxval=value + value_range.r,
+            seed=(clock * tf.int32.min, clock * tf.int32.max),
+            dtype=tf.float64,
+        )
     if isinstance(value_range.start, int):
         return tf.cast(tf.math.round(value), tf.int64 if double_precision else tf.int32)
     return tf.cast(value, tf.float64 if double_precision else tf.float32)

@@ -1,7 +1,6 @@
 #ifdef _MSC_VER
   #include <stdlib.h>
   #include <io.h>
-  #define NOMINMAX
   #include <windows.h>
 
   #define R_OK    4       /* Read permission.  */

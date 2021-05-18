@@ -13,28 +13,45 @@ for symbol in dir(swigwrapper):
         globals()[symbol] = getattr(swigwrapper, symbol)
 
 
-class Alphabet(swigwrapper.Alphabet):
-    """An Alphabet is a bidirectional map from tokens (eg. characters) to
-    internal integer representations used by the underlying acoustic models
-    and external scorers. It can be created from alphabet configuration file
-    via the constructor, or from a list of tokens via :py:meth:`Alphabet.InitFromLabels`.
+class Scorer(swigwrapper.Scorer):
+    """Wrapper for Scorer.
+
+    :param alpha: Language model weight.
+    :type alpha: float
+    :param beta: Word insertion bonus.
+    :type beta: float
+    :scorer_path: Path to load scorer from.
+    :alphabet: Alphabet
+    :type scorer_path: basestring
     """
 
-    def __init__(self, config_path=None):
-        super(Alphabet, self).__init__()
-        if config_path:
-            err = self.init(config_path.encode("utf-8"))
+    def __init__(self, alpha=None, beta=None, scorer_path=None, alphabet=None):
+        super(Scorer, self).__init__()
+        # Allow bare initialization
+        if alphabet:
+            assert alpha is not None, "alpha parameter is required"
+            assert beta is not None, "beta parameter is required"
+            assert scorer_path, "scorer_path parameter is required"
+
+            err = self.init(scorer_path.encode("utf-8"), alphabet)
             if err != 0:
                 raise ValueError(
-                    "Alphabet initialization failed with error code 0x{:X}".format(err)
+                    "Scorer initialization failed with error code 0x{:X}".format(err)
                 )
 
-    def InitFromLabels(self, data):
-        """
-        Initialize Alphabet from a list of labels ``data``. Each label gets
-        associated with an integer value corresponding to its position in the list.
-        """
-        return super(Alphabet, self).InitFromLabels([c.encode("utf-8") for c in data])
+            self.reset_params(alpha, beta)
+
+
+class Alphabet(swigwrapper.Alphabet):
+    """Convenience wrapper for Alphabet which calls init in the constructor"""
+
+    def __init__(self, config_path):
+        super(Alphabet, self).__init__()
+        err = self.init(config_path.encode("utf-8"))
+        if err != 0:
+            raise ValueError(
+                "Alphabet initialization failed with error code 0x{:X}".format(err)
+            )
 
     def CanEncodeSingle(self, input):
         """
@@ -62,7 +79,7 @@ class Alphabet(swigwrapper.Alphabet):
         Encode a sequence of character/output classes into a sequence of labels.
         Characters are assumed to always take a single Unicode codepoint.
         Characters must be in the alphabet, this method will assert that. Use
-        ``CanEncode`` and ``CanEncodeSingle`` to test.
+        `CanEncode` and `CanEncodeSingle` to test.
         """
         # Convert SWIG's UnsignedIntVec to a Python list
         res = super(Alphabet, self).Encode(input.encode("utf-8"))
@@ -78,39 +95,57 @@ class Alphabet(swigwrapper.Alphabet):
         return res.decode("utf-8")
 
 
-class Scorer(swigwrapper.Scorer):
-    """An external scorer is a data structure composed of a language model built
-        from text data, as well as the vocabulary used in the construction of this
-        language model and additional parameters related to how the decoding
-        process uses the external scorer, such as the language model weight
-        ``alpha`` and the word insertion score ``beta``.
+class UTF8Alphabet(swigwrapper.UTF8Alphabet):
+    """Convenience wrapper for Alphabet which calls init in the constructor"""
 
-    :param alpha: Language model weight.
-    :type alpha: float
-    :param beta: Word insertion score.
-    :type beta: float
-    :param scorer_path: Path to load scorer from.
-    :type scorer_path: str
-    :param alphabet: Alphabet object matching the tokens used when creating the
-                     external scorer.
-    :type alphabet: Alphabet
-    """
+    def __init__(self):
+        super(UTF8Alphabet, self).__init__()
+        err = self.init(b"")
+        if err != 0:
+            raise ValueError(
+                "UTF8Alphabet initialization failed with error code 0x{:X}".format(err)
+            )
 
-    def __init__(self, alpha=None, beta=None, scorer_path=None, alphabet=None):
-        super(Scorer, self).__init__()
-        # Allow bare initialization
-        if alphabet:
-            assert alpha is not None, "alpha parameter is required"
-            assert beta is not None, "beta parameter is required"
-            assert scorer_path, "scorer_path parameter is required"
+    def CanEncodeSingle(self, input):
+        """
+        Returns true if the single character/output class has a corresponding label
+        in the alphabet.
+        """
+        return super(UTF8Alphabet, self).CanEncodeSingle(input.encode("utf-8"))
 
-            err = self.init(scorer_path.encode("utf-8"), alphabet)
-            if err != 0:
-                raise ValueError(
-                    "Scorer initialization failed with error code 0x{:X}".format(err)
-                )
+    def CanEncode(self, input):
+        """
+        Returns true if the entire string can be encoded into labels in this
+        alphabet.
+        """
+        return super(UTF8Alphabet, self).CanEncode(input.encode("utf-8"))
 
-            self.reset_params(alpha, beta)
+    def EncodeSingle(self, input):
+        """
+        Encode a single character/output class into a label. Character must be in
+        the alphabet, this method will assert that. Use `CanEncodeSingle` to test.
+        """
+        return super(UTF8Alphabet, self).EncodeSingle(input.encode("utf-8"))
+
+    def Encode(self, input):
+        """
+        Encode a sequence of character/output classes into a sequence of labels.
+        Characters are assumed to always take a single Unicode codepoint.
+        Characters must be in the alphabet, this method will assert that. Use
+        `CanEncode` and `CanEncodeSingle` to test.
+        """
+        # Convert SWIG's UnsignedIntVec to a Python list
+        res = super(UTF8Alphabet, self).Encode(input.encode("utf-8"))
+        return [el for el in res]
+
+    def DecodeSingle(self, input):
+        res = super(UTF8Alphabet, self).DecodeSingle(input)
+        return res.decode("utf-8")
+
+    def Decode(self, input):
+        """Decode a sequence of labels into a string."""
+        res = super(UTF8Alphabet, self).Decode(input)
+        return res.decode("utf-8")
 
 
 def ctc_beam_search_decoder(

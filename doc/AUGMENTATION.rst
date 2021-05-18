@@ -5,7 +5,7 @@ Training Data Augmentation
 
 This document is an overview of the augmentation techniques available for training with STT.
 
-Training data augmentations can help STT models better transcribe new speech at deployment time. The basic intuition behind data augmentation is the following: by distorting, modifying, or adding to your existing audio data, you can create a training set many times larger than what you started with. If you use a larger training data set to train as STT model, you force the model to learn more generalizable characteristics of speech, making `overfitting <https://en.wikipedia.org/wiki/Overfitting>`_ more difficult. If you can't find a larger data set of speech, you can create one with data augmentation. 
+Training data augmentations can help STT models better transcribe new speech at deployment time. The basic intuition behind data augmentation is the following: by distorting, modifying, or adding to your existing audio data, you can create a training set many times larger than what you started with. If you use a larger training data set to train as STT model, you force the model to learn more generalizable characteristics of speech, making `overfitting <https://en.wikipedia.org/wiki/Overfitting>`_ more difficult. If you can't find a larger data set of speech, you can create one with data augmentation.
 
 We have implemented a pre-processing pipeline with various augmentation techniques on audio data (i.e. raw ``PCM`` and spectrograms).
 

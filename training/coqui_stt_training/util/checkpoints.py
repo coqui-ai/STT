@@ -1,10 +1,10 @@
 import sys
 
+import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 
-import tensorflow as tf
-
-from .config import Config, log_error, log_info, log_warn
+from .flags import FLAGS
+from .logging import log_error, log_info, log_warn
 
 
 def _load_checkpoint_impl(
@@ -28,7 +28,7 @@ def _load_checkpoint_impl(
     lr_var = set(v for v in load_vars if v.op.name == "learning_rate")
     if lr_var and (
         "learning_rate" not in vars_in_ckpt
-        or (Config.force_initialize_learning_rate and allow_lr_init)
+        or (FLAGS.force_initialize_learning_rate and allow_lr_init)
     ):
         assert len(lr_var) <= 1
         load_vars -= lr_var
@@ -65,16 +65,16 @@ def _load_checkpoint_impl(
         # then we are dropping five layers total, so: drop_source_layers=5
         # If we want to use all layers from the source model except
         # the last one, we use this: drop_source_layers=1
-        if Config.drop_source_layers >= 6:
+        if FLAGS.drop_source_layers >= 6:
             log_warn(
                 "The checkpoint only has 6 layers, but you are trying to drop "
                 "all of them or more than all of them. Continuing and "
                 "dropping only 5 layers."
             )
-            Config.drop_source_layers = 5
+            FLAGS.drop_source_layers = 5
 
         dropped_layers = ["2", "3", "lstm", "5", "6"][
-            -1 * int(Config.drop_source_layers) :
+            -1 * int(FLAGS.drop_source_layers) :
         ]
         # Initialize all variables needed for DS, but not loaded from ckpt
         for v in load_vars:
@@ -87,17 +87,17 @@ def _load_checkpoint_impl(
             log_info(*args, **kwargs)
 
     for v in sorted(load_vars, key=lambda v: v.op.name):
-        maybe_log_info(f"Loading variable from checkpoint: {v.op.name}")
+        log_info("Loading variable from checkpoint: %s" % (v.op.name))
         v.load(ckpt.get_tensor(v.op.name), session=session)
 
     for v in sorted(init_vars, key=lambda v: v.op.name):
-        maybe_log_info("Initializing variable: %s" % (v.op.name))
+        log_info("Initializing variable: %s" % (v.op.name))
         session.run(v.initializer)
 
 
 def _checkpoint_path_or_none(checkpoint_filename):
     checkpoint = tfv1.train.get_checkpoint_state(
-        Config.load_checkpoint_dir, checkpoint_filename
+        FLAGS.load_checkpoint_dir, checkpoint_filename
     )
     if not checkpoint:
         return None
@@ -160,37 +160,25 @@ def _load_or_init_impl(
         if method == "best":
             ckpt_path = _checkpoint_path_or_none("best_dev_checkpoint")
             if ckpt_path:
-                maybe_log_info(
-                    "Loading best validating checkpoint from {}".format(ckpt_path)
-                )
+                log_info("Loading best validating checkpoint from {}".format(ckpt_path))
                 return _load_checkpoint(
-                    session,
-                    ckpt_path,
-                    allow_drop_layers,
-                    allow_lr_init=allow_lr_init,
-                    silent=silent,
+                    session, ckpt_path, allow_drop_layers, allow_lr_init=allow_lr_init
                 )
-            maybe_log_info("Could not find best validating checkpoint.")
+            log_info("Could not find best validating checkpoint.")
 
         # Load most recent checkpoint, saved in checkpoint file 'checkpoint'
         elif method == "last":
             ckpt_path = _checkpoint_path_or_none("checkpoint")
             if ckpt_path:
-                maybe_log_info(
-                    "Loading most recent checkpoint from {}".format(ckpt_path)
-                )
+                log_info("Loading most recent checkpoint from {}".format(ckpt_path))
                 return _load_checkpoint(
-                    session,
-                    ckpt_path,
-                    allow_drop_layers,
-                    allow_lr_init=allow_lr_init,
-                    silent=silent,
+                    session, ckpt_path, allow_drop_layers, allow_lr_init=allow_lr_init
                 )
-            maybe_log_info("Could not find most recent checkpoint.")
+            log_info("Could not find most recent checkpoint.")
 
         # Initialize all variables
         elif method == "init":
-            maybe_log_info("Initializing all variables.")
+            log_info("Initializing all variables.")
             return _initialize_all_variables(session)
 
         else:
@@ -205,28 +193,28 @@ def reload_best_checkpoint(session):
     _load_or_init_impl(session, ["best"], allow_drop_layers=False, allow_lr_init=False)
 
 
-def load_or_init_graph_for_training(session, silent: bool = False):
+def load_or_init_graph_for_training(session):
     """
     Load variables from checkpoint or initialize variables. By default this will
     try to load the best validating checkpoint, then try the last checkpoint,
     and finally initialize the weights from scratch. This can be overriden with
     the `--load_train` flag. See its documentation for more info.
     """
-    if Config.load_train == "auto":
+    if FLAGS.load_train == "auto":
         methods = ["best", "last", "init"]
     else:
         methods = [Config.load_train]
     _load_or_init_impl(session, methods, allow_drop_layers=True, silent=silent)
 
 
-def load_graph_for_evaluation(session, silent: bool = False):
+def load_graph_for_evaluation(session):
     """
     Load variables from checkpoint. Initialization is not allowed. By default
     this will try to load the best validating checkpoint, then try the last
     checkpoint. This can be overriden with the `--load_evaluate` flag. See its
     documentation for more info.
     """
-    if Config.load_evaluate == "auto":
+    if FLAGS.load_evaluate == "auto":
         methods = ["best", "last"]
     else:
         methods = [Config.load_evaluate]

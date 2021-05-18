@@ -3,7 +3,7 @@
         {
             "target_name": "stt",
             "sources": ["stt_wrap.cxx"],
-            "libraries": [],
+            "libraries": ["$(LIBS)"],
             "include_dirs": ["../"],
             "conditions": [
                 [
@@ -20,22 +20,7 @@
                             ],
                         }
                     },
-                ],
-                [
-                    "OS=='win'",
-                    {
-                        "libraries": [
-                            "../../../tensorflow/bazel-bin/native_client/libstt.so.if.lib",
-                            "../../../tensorflow/bazel-bin/native_client/libkenlm.so.if.lib",
-                        ],
-                    },
-                    {
-                        "libraries": [
-                            "../../../tensorflow/bazel-bin/native_client/libstt.so",
-                            "../../../tensorflow/bazel-bin/native_client/libkenlm.so",
-                        ],
-                    },
-                ],
+                ]
             ],
         },
         {

@@ -5,14 +5,15 @@ from collections import Counter
 from functools import partial
 
 import numpy as np
-from tensorflow.python.ops import gen_audio_ops as contrib_audio
 
 import tensorflow as tf
+from tensorflow.python.ops import gen_audio_ops as contrib_audio
 
 from .audio import DEFAULT_FORMAT, pcm_to_np, read_frames_from_file, vad_split
 from .augmentations import apply_graph_augmentations, apply_sample_augmentations
 from .config import Config
-from .helpers import MEGABYTE
+from .flags import FLAGS
+from .helpers import MEGABYTE, remember_exception
 from .sample_collections import samples_from_sources
 from .text import text_to_char_array
 
@@ -30,14 +31,14 @@ def audio_to_features(
         # We need the lambdas to make TensorFlow happy.
         # pylint: disable=unnecessary-lambda
         tf.cond(
-            tf.math.not_equal(sample_rate, Config.audio_sample_rate),
+            tf.math.not_equal(sample_rate, FLAGS.audio_sample_rate),
             lambda: tf.print(
                 "WARNING: sample rate of sample",
                 sample_id,
                 "(",
                 sample_rate,
                 ") "
-                "does not match Config.audio_sample_rate. This can lead to incorrect results.",
+                "does not match FLAGS.audio_sample_rate. This can lead to incorrect results.",
             ),
             lambda: tf.no_op(),
             name="matching_sample_rate",
@@ -68,7 +69,7 @@ def audio_to_features(
         spectrogram=spectrogram,
         sample_rate=sample_rate,
         dct_coefficient_count=Config.n_input,
-        upper_frequency_limit=Config.audio_sample_rate / 2,
+        upper_frequency_limit=FLAGS.audio_sample_rate / 2,
     )
     features = tf.reshape(features, [-1, Config.n_input])
 
@@ -99,7 +100,7 @@ def wavfile_bytes_to_features(
         clock=clock,
         train_phase=train_phase,
         augmentations=augmentations,
-        sample_id=sample_id,
+        sample_id=wav_filename,
     )
 
 
@@ -146,9 +147,9 @@ def create_dataset(
     train_phase=False,
     reverse=False,
     limit=0,
+    exception_box=None,
     process_ahead=None,
     buffering=1 * MEGABYTE,
-    epoch_ph=None,
 ):
     epoch_counter = Counter()  # survives restarts of the dataset and its generator
 
@@ -159,15 +160,9 @@ def create_dataset(
         samples = samples_from_sources(
             sources, buffering=buffering, labeled=True, reverse=reverse
         )
-        try:
-            num_samples = len(samples)
-        except TypeError:
-            # Dataset doesn't support len
-            num_samples = float("inf")
-
+        num_samples = len(samples)
         if limit > 0:
             num_samples = min(limit, num_samples)
-
         samples = apply_sample_augmentations(
             samples,
             augmentations,
@@ -181,7 +176,7 @@ def create_dataset(
                 break
             clock = (
                 (epoch * num_samples + sample_index) / (epochs * num_samples)
-                if train_phase and num_samples and epochs > 0
+                if train_phase and epochs > 0
                 else 0.0
             )
             transcript = text_to_char_array(
@@ -211,7 +206,7 @@ def create_dataset(
     )
 
     dataset = tf.data.Dataset.from_generator(
-        generate_values,
+        remember_exception(generate_values, exception_box),
         output_types=(
             tf.string,
             tf.float32,
@@ -222,18 +217,11 @@ def create_dataset(
     ).map(process_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if cache_path:
         dataset = dataset.cache(cache_path)
-    dataset = dataset.window(batch_size, drop_remainder=train_phase).flat_map(batch_fn)
-
-    if Config.shuffle_batches and epoch_ph is not None:
-        with tf.control_dependencies([tf.print("epoch:", epoch_ph)]):
-            epoch_buffer_size = tf.cond(
-                tf.less(epoch_ph, Config.shuffle_start),
-                lambda: tf.constant(1, tf.int64),
-                lambda: tf.constant(Config.shuffle_buffer, tf.int64),
-            )
-        dataset = dataset.shuffle(epoch_buffer_size, seed=epoch_ph)
-
-    dataset = dataset.prefetch(len(Config.available_devices))
+    dataset = (
+        dataset.window(batch_size, drop_remainder=train_phase)
+        .flat_map(batch_fn)
+        .prefetch(len(Config.available_devices))
+    )
     return dataset
 
 
@@ -244,6 +232,7 @@ def split_audio_file(
     aggressiveness=3,
     outlier_duration_ms=10000,
     outlier_batch_size=1,
+    exception_box=None,
 ):
     def generate_values():
         frames = read_frames_from_file(audio_path)
@@ -260,7 +249,7 @@ def split_audio_file(
     def create_batch_set(bs, criteria):
         return (
             tf.data.Dataset.from_generator(
-                generate_values,
+                remember_exception(generate_values, exception_box),
                 output_types=(tf.int32, tf.int32, tf.float32),
             )
             .map(to_mfccs, num_parallel_calls=tf.data.experimental.AUTOTUNE)
