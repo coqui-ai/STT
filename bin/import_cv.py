@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 import csv
 import os
-import sys
 import subprocess
+import sys
 import tarfile
 from glob import glob
 from multiprocessing import Pool
 
 import progressbar
 import sox
-
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
     get_counter,

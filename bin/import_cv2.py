@@ -14,7 +14,7 @@ from multiprocessing import Pool
 
 import progressbar
 import sox
-
+from coqui_stt_ctcdecoder import Alphabet
 from coqui_stt_training.util.downloader import SIMPLE_BAR
 from coqui_stt_training.util.importers import (
     get_counter,
@@ -23,7 +23,6 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from coqui_stt_ctcdecoder import Alphabet
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -41,7 +40,11 @@ class LabelFilter:
 
     def filter(self, label):
         if self.normalize:
-            label = unicodedata.normalize("NFKD", label.strip()).encode("ascii", "ignore").decode("ascii", "ignore")
+            label = (
+                unicodedata.normalize("NFKD", label.strip())
+                .encode("ascii", "ignore")
+                .decode("ascii", "ignore")
+            )
         label = self.validate_fun(label)
         if self.alphabet and label and not self.alphabet.CanEncode(label):
             label = None
@@ -97,7 +100,15 @@ def one_sample(sample):
     return (counter, rows)
 
 
-def _maybe_convert_set(dataset, tsv_dir, audio_dir, filter_obj, space_after_every_character=None, rows=None, exclude=None):
+def _maybe_convert_set(
+    dataset,
+    tsv_dir,
+    audio_dir,
+    filter_obj,
+    space_after_every_character=None,
+    rows=None,
+    exclude=None,
+):
     exclude_transcripts = set()
     exclude_speakers = set()
     if exclude is not None:
@@ -116,7 +127,13 @@ def _maybe_convert_set(dataset, tsv_dir, audio_dir, filter_obj, space_after_ever
         with open(input_tsv, encoding="utf-8") as input_tsv_file:
             reader = csv.DictReader(input_tsv_file, delimiter="\t")
             for row in reader:
-                samples.append((os.path.join(audio_dir, row["path"]), row["sentence"], row["client_id"]))
+                samples.append(
+                    (
+                        os.path.join(audio_dir, row["path"]),
+                        row["sentence"],
+                        row["client_id"],
+                    )
+                )
 
         counter = get_counter()
         num_samples = len(samples)
@@ -124,7 +141,9 @@ def _maybe_convert_set(dataset, tsv_dir, audio_dir, filter_obj, space_after_ever
         print("Importing mp3 files...")
         pool = Pool(initializer=init_worker, initargs=(PARAMS,))
         bar = progressbar.ProgressBar(max_value=num_samples, widgets=SIMPLE_BAR)
-        for i, processed in enumerate(pool.imap_unordered(one_sample, samples), start=1):
+        for i, processed in enumerate(
+            pool.imap_unordered(one_sample, samples), start=1
+        ):
             counter += processed[0]
             rows += processed[1]
             bar.update(i)
@@ -169,12 +188,20 @@ def _maybe_convert_set(dataset, tsv_dir, audio_dir, filter_obj, space_after_ever
 def _preprocess_data(tsv_dir, audio_dir, space_after_every_character=False):
     exclude = []
     for dataset in ["test", "dev", "train", "validated", "other"]:
-        set_samples = _maybe_convert_set(dataset, tsv_dir, audio_dir, space_after_every_character)
+        set_samples = _maybe_convert_set(
+            dataset, tsv_dir, audio_dir, space_after_every_character
+        )
         if dataset in ["test", "dev"]:
             exclude += set_samples
         if dataset == "validated":
-            _maybe_convert_set("train-all", tsv_dir, audio_dir, space_after_every_character,
-                               rows=set_samples, exclude=exclude)
+            _maybe_convert_set(
+                "train-all",
+                tsv_dir,
+                audio_dir,
+                space_after_every_character,
+                rows=set_samples,
+                exclude=exclude,
+            )
 
 
 def _maybe_convert_wav(mp3_filename, wav_filename):
@@ -212,7 +239,9 @@ def parse_args():
 
 
 def main():
-    audio_dir = PARAMS.audio_dir if PARAMS.audio_dir else os.path.join(PARAMS.tsv_dir, "clips")
+    audio_dir = (
+        PARAMS.audio_dir if PARAMS.audio_dir else os.path.join(PARAMS.tsv_dir, "clips")
+    )
     _preprocess_data(PARAMS.tsv_dir, audio_dir, PARAMS.space_after_every_character)
 
 

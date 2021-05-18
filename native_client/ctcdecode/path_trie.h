@@ -93,8 +93,8 @@ public:
   unsigned int character;
   TimestepTreeNode* timesteps = nullptr;
 
-  // timestep temporary storage for each decoding step. 
-  TimestepTreeNode* previous_timesteps = nullptr; 
+  // timestep temporary storage for each decoding step.
+  TimestepTreeNode* previous_timesteps = nullptr;
   unsigned int new_timestep;
 
   PathTrie* parent;

@@ -9,10 +9,10 @@ import unicodedata
 
 import pandas
 import progressbar
-from sox import Transformer
-from tensorflow.python.platform import gfile
-
 from coqui_stt_training.util.downloader import maybe_download
+from sox import Transformer
+
+from tensorflow.python.platform import gfile
 
 SAMPLE_RATE = 16000
 

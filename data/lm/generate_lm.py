@@ -78,20 +78,20 @@ def build_lm(args, data_lower, vocab_str):
     print("\nCreating ARPA file ...")
     lm_path = os.path.join(args.output_dir, "lm.arpa")
     subargs = [
-            os.path.join(args.kenlm_bins, "lmplz"),
-            "--order",
-            str(args.arpa_order),
-            "--temp_prefix",
-            args.output_dir,
-            "--memory",
-            args.max_arpa_memory,
-            "--text",
-            data_lower,
-            "--arpa",
-            lm_path,
-            "--prune",
-            *args.arpa_prune.split("|"),
-        ]
+        os.path.join(args.kenlm_bins, "lmplz"),
+        "--order",
+        str(args.arpa_order),
+        "--temp_prefix",
+        args.output_dir,
+        "--memory",
+        args.max_arpa_memory,
+        "--text",
+        data_lower,
+        "--arpa",
+        lm_path,
+        "--prune",
+        *args.arpa_prune.split("|"),
+    ]
     if args.discount_fallback:
         subargs += ["--discount_fallback"]
     subprocess.check_call(subargs)

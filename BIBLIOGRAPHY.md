@@ -3,16 +3,16 @@ This file contains a list of papers in chronological order that have been publis
 To appear
 ==========
 
-* Raghuveer Peri, Haoqi Li, Krishna Somandepalli, Arindam Jati, Shrikanth Narayanan (2020) "An empirical analysis of information encoded in disentangled neural speaker representations". 
+* Raghuveer Peri, Haoqi Li, Krishna Somandepalli, Arindam Jati, Shrikanth Narayanan (2020) "An empirical analysis of information encoded in disentangled neural speaker representations".
 * Rosana Ardila, Megan Branson, Kelly Davis, Michael Henretty, Michael Kohler, Josh Meyer, Reuben Morais, Lindsay Saunders, Francis M. Tyers, and Gregor Weber (2020) "Common Voice: A Massively-Multilingual Speech Corpus".
 
-Published 
+Published
 ==========
 
 2020
 ----------
 
-* Nils Hjortnaes, Niko Partanen, Michael Rießler and Francis M. Tyers (2020) 
+* Nils Hjortnaes, Niko Partanen, Michael Rießler and Francis M. Tyers (2020)
 "Towards a Speech Recognizer for Komi, an Endangered and Low-Resource Uralic Language". *Proceedings of the 6th International Workshop on Computational Linguistics of Uralic Languages*.
 
 ```
@@ -72,5 +72,5 @@ Published
     booktitle = {2018 IEEE/ACM Machine Learning in HPC Environments (MLHPC)},
     doi = {https://doi.org/10.1109/MLHPC.2018.8638637}
     year = 2018
-}    
+}
 ```

@@ -40,7 +40,7 @@ public class Metadata {
   }
 
   /**
-   *  Size of the transcripts array 
+   *  Size of the transcripts array
    */
   public long getNumTranscripts() {
     return implJNI.Metadata_NumTranscripts_get(swigCPtr, this);

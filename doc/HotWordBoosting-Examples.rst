@@ -1,12 +1,12 @@
 Hot-word boosting API Usage example
 ===================================
 
-With the 🐸STT 0.9 release a new API feature was introduced that allows boosting probability from the scorer of given words. It is exposed in all bindings (C, Python, JS, Java and .Net). 
+With the 🐸STT 0.9 release a new API feature was introduced that allows boosting probability from the scorer of given words. It is exposed in all bindings (C, Python, JS, Java and .Net).
 
 Currently, it provides three methods for the Model class:
 
 - ``AddHotWord(word, boost)``
-- ``EraseHotWord(word)`` 
+- ``EraseHotWord(word)``
 - ``ClearHotWords()``
 
 Exact API binding for the language you are using can be found in API Reference.
@@ -14,7 +14,7 @@ Exact API binding for the language you are using can be found in API Reference.
 General usage
 -------------
 
-It is worth noting that boosting non-existent words in scorer (mostly proper nouns) or a word that share no phonetic prefix with other word in the input audio don't change the final transcription. Additionally, hot-word that has a space will not be taken into consideration, meaning that combination of words can not be boosted and each word must be added as hot-word separately. 
+It is worth noting that boosting non-existent words in scorer (mostly proper nouns) or a word that share no phonetic prefix with other word in the input audio don't change the final transcription. Additionally, hot-word that has a space will not be taken into consideration, meaning that combination of words can not be boosted and each word must be added as hot-word separately.
 
 Adjusting the boosting value
 ----------------------------
@@ -29,9 +29,9 @@ There is a user contributed script available on ``STT-examples`` repository for 
 Positive value boosting
 -----------------------
 
-By adding a positive boost value to one of the words it is possible to increase the probability of the word occurence. This is particularly useful for detecting speech that is expected by the system. 
+By adding a positive boost value to one of the words it is possible to increase the probability of the word occurence. This is particularly useful for detecting speech that is expected by the system.
 
-In the output, overextensive positive boost value (e.g. 250.0 but it does vary) may cause a word following the boosted hot-word to be split into separate letters. This problem is related to the scorer structure and currently only way to avoid it is to tune boost to a lower value.  
+In the output, overextensive positive boost value (e.g. 250.0 but it does vary) may cause a word following the boosted hot-word to be split into separate letters. This problem is related to the scorer structure and currently only way to avoid it is to tune boost to a lower value.
 
 Negative value boosting
 -----------------------
@@ -40,7 +40,7 @@ Respectively, applying negative boost value might cause the selected word to occ
 
 Previously mentioned problem where extensive boost value caused letter splitting doesn't arise for negative boost values.
 
-Example 
+Example
 -------
 
 To use hot-word boosting just add hot-words of your choice performing a speech-to-text operation with a ``Model``. You can also erase boosting of a chosen word or clear it for all hot-words.
@@ -52,5 +52,5 @@ To use hot-word boosting just add hot-words of your choice performing a speech-t
 	ds.addHotWord(word, boosting)
 	...
 	print(ds.stt(audio))
-	
+
 Adding boost value to a word repeatedly or erasing hot-word without previously boosting it results in an error.

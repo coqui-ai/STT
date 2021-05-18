@@ -9,10 +9,9 @@ import urllib
 from pathlib import Path
 
 import pandas as pd
-from sox import Transformer
-
 import swifter
 from coqui_stt_training.util.importers import get_importers_parser, get_validate_label
+from sox import Transformer
 
 __version__ = "0.1.0"
 _logger = logging.getLogger(__name__)

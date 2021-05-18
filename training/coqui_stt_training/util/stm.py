@@ -1,27 +1,31 @@
 import codecs
 import unicodedata
 
+
 class STMSegment(object):
     r"""
     Representation of an individual segment in an STM file.
     """
+
     def __init__(self, stm_line):
         tokens = stm_line.split()
-        self._filename    = tokens[0]
-        self._channel     = tokens[1]
-        self._speaker_id  = tokens[2]
-        self._start_time  = float(tokens[3])
-        self._stop_time   = float(tokens[4])
-        self._labels      = tokens[5]
-        self._transcript  = ""
+        self._filename = tokens[0]
+        self._channel = tokens[1]
+        self._speaker_id = tokens[2]
+        self._start_time = float(tokens[3])
+        self._stop_time = float(tokens[4])
+        self._labels = tokens[5]
+        self._transcript = ""
         for token in tokens[6:]:
-          self._transcript += token + " "
+            self._transcript += token + " "
         # We need to do the encode-decode dance here because encode
         # returns a bytes() object on Python 3, and text_to_char_array
         # expects a string.
-        self._transcript = unicodedata.normalize("NFKD", self._transcript.strip())  \
-                                      .encode("ascii", "ignore")                    \
-                                      .decode("ascii", "ignore")
+        self._transcript = (
+            unicodedata.normalize("NFKD", self._transcript.strip())
+            .encode("ascii", "ignore")
+            .decode("ascii", "ignore")
+        )
 
     @property
     def filename(self):
@@ -50,6 +54,7 @@ class STMSegment(object):
     @property
     def transcript(self):
         return self._transcript
+
 
 def parse_stm_file(stm_file):
     r"""

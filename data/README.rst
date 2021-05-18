@@ -8,4 +8,3 @@ This directory contains language-specific data files. Most importantly, you will
 2. A script used to generate a binary n-gram language model: ``data/lm/generate_lm.py``.
 
 For more information on how to build these resources from scratch, see the ``External scorer scripts`` section on `stt.readthedocs.io <https://stt.readthedocs.io/>`_.
-

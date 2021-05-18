@@ -11,7 +11,7 @@ from multiprocessing import Pool
 
 import progressbar
 import sox
-
+from coqui_stt_ctcdecoder import Alphabet
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
     get_counter,
@@ -20,7 +20,6 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from coqui_stt_ctcdecoder import Alphabet
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -137,9 +136,15 @@ def _maybe_convert_sets(target_dir, extracted_data):
     pool.close()
     pool.join()
 
-    with open(target_csv_template.format("train"), "w", encoding="utf-8", newline="") as train_csv_file:  # 80%
-        with open(target_csv_template.format("dev"), "w", encoding="utf-8", newline="") as dev_csv_file:  # 10%
-            with open(target_csv_template.format("test"), "w", encoding="utf-8", newline="") as test_csv_file:  # 10%
+    with open(
+        target_csv_template.format("train"), "w", encoding="utf-8", newline=""
+    ) as train_csv_file:  # 80%
+        with open(
+            target_csv_template.format("dev"), "w", encoding="utf-8", newline=""
+        ) as dev_csv_file:  # 10%
+            with open(
+                target_csv_template.format("test"), "w", encoding="utf-8", newline=""
+            ) as test_csv_file:  # 10%
                 train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
                 train_writer.writeheader()
                 dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
@@ -179,7 +184,9 @@ def _maybe_convert_sets(target_dir, extracted_data):
 def _maybe_convert_wav(ogg_filename, wav_filename):
     if not os.path.exists(wav_filename):
         transformer = sox.Transformer()
-        transformer.convert(samplerate=SAMPLE_RATE, n_channels=N_CHANNELS, bitdepth=BITDEPTH)
+        transformer.convert(
+            samplerate=SAMPLE_RATE, n_channels=N_CHANNELS, bitdepth=BITDEPTH
+        )
         try:
             transformer.build(ogg_filename, wav_filename)
         except sox.core.SoxError as ex:

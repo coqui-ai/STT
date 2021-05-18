@@ -4,14 +4,26 @@ Tool for playing (and augmenting) single samples or samples from Sample Database
 Use "python3 play.py -h" for help
 """
 
-import os
-import sys
-import random
 import argparse
+import os
+import random
+import sys
 
-from coqui_stt_training.util.audio import get_loadable_audio_type_from_extension, AUDIO_TYPE_PCM, AUDIO_TYPE_WAV
-from coqui_stt_training.util.sample_collections import SampleList, LabeledSample, samples_from_source
-from coqui_stt_training.util.augmentations import parse_augmentations, apply_sample_augmentations, SampleAugmentation
+from coqui_stt_training.util.audio import (
+    AUDIO_TYPE_PCM,
+    AUDIO_TYPE_WAV,
+    get_loadable_audio_type_from_extension,
+)
+from coqui_stt_training.util.augmentations import (
+    SampleAugmentation,
+    apply_sample_augmentations,
+    parse_augmentations,
+)
+from coqui_stt_training.util.sample_collections import (
+    LabeledSample,
+    SampleList,
+    samples_from_source,
+)
 
 
 def get_samples_in_play_order():
@@ -43,11 +55,13 @@ def play_collection():
     if any(not isinstance(a, SampleAugmentation) for a in augmentations):
         print("Warning: Some of the augmentations cannot be simulated by this command.")
     samples = get_samples_in_play_order()
-    samples = apply_sample_augmentations(samples,
-                                         audio_type=AUDIO_TYPE_PCM,
-                                         augmentations=augmentations,
-                                         process_ahead=0,
-                                         clock=CLI_ARGS.clock)
+    samples = apply_sample_augmentations(
+        samples,
+        audio_type=AUDIO_TYPE_PCM,
+        augmentations=augmentations,
+        process_ahead=0,
+        clock=CLI_ARGS.clock,
+    )
     for sample in samples:
         if not CLI_ARGS.quiet:
             print('Sample "{}"'.format(sample.sample_id), file=sys.stderr)
@@ -57,10 +71,12 @@ def play_collection():
             sample.change_audio_type(AUDIO_TYPE_WAV)
             sys.stdout.buffer.write(sample.audio.getvalue())
             return
-        wave_obj = simpleaudio.WaveObject(sample.audio,
-                                          sample.audio_format.channels,
-                                          sample.audio_format.width,
-                                          sample.audio_format.rate)
+        wave_obj = simpleaudio.WaveObject(
+            sample.audio,
+            sample.audio_format.channels,
+            sample.audio_format.width,
+            sample.audio_format.rate,
+        )
         play_obj = wave_obj.play()
         play_obj.wait_done()
 
@@ -70,7 +86,9 @@ def handle_args():
         description="Tool for playing (and augmenting) single samples or samples from Sample Databases (SDB files) "
         "and Coqui STT CSV files"
     )
-    parser.add_argument("source", help="Sample DB, CSV or WAV file to play samples from")
+    parser.add_argument(
+        "source", help="Sample DB, CSV or WAV file to play samples from"
+    )
     parser.add_argument(
         "--start",
         type=int,
@@ -90,7 +108,7 @@ def handle_args():
     )
     parser.add_argument(
         "--augment",
-        action='append',
+        action="append",
         help="Add an augmentation operation",
     )
     parser.add_argument(
@@ -98,8 +116,8 @@ def handle_args():
         type=float,
         default=0.5,
         help="Simulates clock value used for augmentations during training."
-             "Ranges from 0.0 (representing parameter start values) to"
-             "1.0 (representing parameter end values)",
+        "Ranges from 0.0 (representing parameter start values) to"
+        "1.0 (representing parameter end values)",
     )
     parser.add_argument(
         "--pipe",
@@ -120,7 +138,9 @@ if __name__ == "__main__":
         try:
             import simpleaudio
         except ModuleNotFoundError:
-            print('Unless using the --pipe flag, play.py requires Python package "simpleaudio" for playing samples')
+            print(
+                'Unless using the --pipe flag, play.py requires Python package "simpleaudio" for playing samples'
+            )
             sys.exit(1)
     try:
         play_collection()

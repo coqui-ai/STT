@@ -36,7 +36,7 @@ public class CandidateTranscript {
   }
 
   /**
-   *  Size of the tokens array 
+   *  Size of the tokens array
    */
   public long getNumTokens() {
     return implJNI.CandidateTranscript_NumTokens_get(swigCPtr, this);

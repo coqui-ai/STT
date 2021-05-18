@@ -20,7 +20,7 @@
 %extend struct CandidateTranscript {
   /**
    * Retrieve one TokenMetadata element
-   * 
+   *
    * @param i Array index of the TokenMetadata to get
    *
    * @return The TokenMetadata requested or null
@@ -33,7 +33,7 @@
 %extend struct Metadata {
   /**
    * Retrieve one CandidateTranscript element
-   * 
+   *
    * @param i Array index of the CandidateTranscript to get
    *
    * @return The CandidateTranscript requested or null

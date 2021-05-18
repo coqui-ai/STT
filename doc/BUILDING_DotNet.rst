@@ -119,7 +119,7 @@ Building the native_client
 
 There's one last command to run before building, you need to run the `configure.py <https://github.com/coqui-ai/tensorflow/blob/master/configure.py>`_ inside ``tensorflow`` cloned directory.
 
-At this point we are ready to start building the ``native_client``, go to ``tensorflow`` sub-directory, following our examples should be ``D:\cloned\STT\tensorflow``.  
+At this point we are ready to start building the ``native_client``, go to ``tensorflow`` sub-directory, following our examples should be ``D:\cloned\STT\tensorflow``.
 
 CPU
 ~~~

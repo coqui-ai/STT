@@ -1,45 +1,47 @@
 # -*- coding: utf-8 -*-
-import os
-import io
 import csv
+import io
 import json
+import os
 import tarfile
-
-from pathlib import Path
 from functools import partial
+from pathlib import Path
 
-from .helpers import KILOBYTE, MEGABYTE, GIGABYTE, Interleaved, LenMap
 from .audio import (
-    Sample,
-    AUDIO_TYPE_PCM,
     AUDIO_TYPE_OPUS,
+    AUDIO_TYPE_PCM,
     SERIALIZABLE_AUDIO_TYPES,
+    Sample,
     get_loadable_audio_type_from_extension,
-    write_wav
+    write_wav,
 )
-from .io import open_remote, is_remote_path
+from .helpers import GIGABYTE, KILOBYTE, MEGABYTE, Interleaved, LenMap
+from .io import is_remote_path, open_remote
 
-BIG_ENDIAN = 'big'
+BIG_ENDIAN = "big"
 INT_SIZE = 4
 BIGINT_SIZE = 2 * INT_SIZE
-MAGIC = b'SAMPLEDB'
+MAGIC = b"SAMPLEDB"
 
 BUFFER_SIZE = 1 * MEGABYTE
 REVERSE_BUFFER_SIZE = 16 * KILOBYTE
 CACHE_SIZE = 1 * GIGABYTE
 
-SCHEMA_KEY = 'schema'
-CONTENT_KEY = 'content'
-MIME_TYPE_KEY = 'mime-type'
-MIME_TYPE_TEXT = 'text/plain'
-CONTENT_TYPE_SPEECH = 'speech'
-CONTENT_TYPE_TRANSCRIPT = 'transcript'
+SCHEMA_KEY = "schema"
+CONTENT_KEY = "content"
+MIME_TYPE_KEY = "mime-type"
+MIME_TYPE_TEXT = "text/plain"
+CONTENT_TYPE_SPEECH = "speech"
+CONTENT_TYPE_TRANSCRIPT = "transcript"
 
 
 class LabeledSample(Sample):
     """In-memory labeled audio sample representing an utterance.
     Derived from util.audio.Sample and used by sample collection readers and writers."""
-    def __init__(self, audio_type, raw_data, transcript, audio_format=None, sample_id=None):
+
+    def __init__(
+        self, audio_type, raw_data, transcript, audio_format=None, sample_id=None
+    ):
         """
         Parameters
         ----------
@@ -55,7 +57,9 @@ class LabeledSample(Sample):
             Tracking ID - should indicate sample's origin as precisely as possible.
             It is typically assigned by collection readers.
         """
-        super().__init__(audio_type, raw_data, audio_format=audio_format, sample_id=sample_id)
+        super().__init__(
+            audio_type, raw_data, audio_format=audio_format, sample_id=sample_id
+        )
         self.transcript = transcript
 
 
@@ -65,13 +69,14 @@ class PackedSample:
     have the child process do the loading/unpacking of the sample, allowing for parallel file
     I/O.
     """
+
     def __init__(self, filename, audio_type, label):
         self.filename = filename
         self.audio_type = audio_type
         self.label = label
 
     def unpack(self):
-        with open_remote(self.filename, 'rb') as audio_file:
+        with open_remote(self.filename, "rb") as audio_file:
             data = audio_file.read()
         if self.label is None:
             s = Sample(self.audio_type, data, sample_id=self.filename)
@@ -83,7 +88,7 @@ def unpack_maybe(sample):
     """
     Loads the supplied sample from disk (or the network) if the audio isn't loaded in to memory already.
     """
-    if hasattr(sample, 'unpack'):
+    if hasattr(sample, "unpack"):
         realized_sample = sample.unpack()
     else:
         realized_sample = sample
@@ -117,13 +122,16 @@ def load_sample(filename, label=None):
 
 class DirectSDBWriter:
     """Sample collection writer for creating a Sample DB (SDB) file"""
-    def __init__(self,
-                 sdb_filename,
-                 buffering=BUFFER_SIZE,
-                 audio_type=AUDIO_TYPE_OPUS,
-                 bitrate=None,
-                 id_prefix=None,
-                 labeled=True):
+
+    def __init__(
+        self,
+        sdb_filename,
+        buffering=BUFFER_SIZE,
+        audio_type=AUDIO_TYPE_OPUS,
+        bitrate=None,
+        id_prefix=None,
+        labeled=True,
+    ):
         """
         Parameters
         ----------
@@ -148,7 +156,7 @@ class DirectSDBWriter:
             raise ValueError('Audio type "{}" not supported'.format(audio_type))
         self.audio_type = audio_type
         self.bitrate = bitrate
-        self.sdb_file = open_remote(sdb_filename, 'wb', buffering=buffering)
+        self.sdb_file = open_remote(sdb_filename, "wb", buffering=buffering)
         self.offsets = []
         self.num_samples = 0
 
@@ -156,7 +164,9 @@ class DirectSDBWriter:
 
         schema_entries = [{CONTENT_KEY: CONTENT_TYPE_SPEECH, MIME_TYPE_KEY: audio_type}]
         if self.labeled:
-            schema_entries.append({CONTENT_KEY: CONTENT_TYPE_TRANSCRIPT, MIME_TYPE_KEY: MIME_TYPE_TEXT})
+            schema_entries.append(
+                {CONTENT_KEY: CONTENT_TYPE_TRANSCRIPT, MIME_TYPE_KEY: MIME_TYPE_TEXT}
+            )
         meta_data = {SCHEMA_KEY: schema_entries}
         meta_data = json.dumps(meta_data).encode()
         self.write_big_int(len(meta_data))
@@ -177,20 +187,23 @@ class DirectSDBWriter:
     def add(self, sample):
         def to_bytes(n):
             return n.to_bytes(INT_SIZE, BIG_ENDIAN)
+
         sample.change_audio_type(self.audio_type, bitrate=self.bitrate)
         opus = sample.audio.getbuffer()
         opus_len = to_bytes(len(opus))
         if self.labeled:
             transcript = sample.transcript.encode()
             transcript_len = to_bytes(len(transcript))
-            entry_len = to_bytes(len(opus_len) + len(opus) + len(transcript_len) + len(transcript))
-            buffer = b''.join([entry_len, opus_len, opus, transcript_len, transcript])
+            entry_len = to_bytes(
+                len(opus_len) + len(opus) + len(transcript_len) + len(transcript)
+            )
+            buffer = b"".join([entry_len, opus_len, opus, transcript_len, transcript])
         else:
             entry_len = to_bytes(len(opus_len) + len(opus))
-            buffer = b''.join([entry_len, opus_len, opus])
+            buffer = b"".join([entry_len, opus_len, opus])
         self.offsets.append(self.sdb_file.tell())
         self.sdb_file.write(buffer)
-        sample.sample_id = '{}:{}'.format(self.id_prefix, self.num_samples)
+        sample.sample_id = "{}:{}".format(self.id_prefix, self.num_samples)
         self.num_samples += 1
         return sample.sample_id
 
@@ -221,12 +234,15 @@ class DirectSDBWriter:
 
 class SDB:  # pylint: disable=too-many-instance-attributes
     """Sample collection reader for reading a Sample DB (SDB) file"""
-    def __init__(self,
-                 sdb_filename,
-                 buffering=BUFFER_SIZE,
-                 id_prefix=None,
-                 labeled=True,
-                 reverse=False):
+
+    def __init__(
+        self,
+        sdb_filename,
+        buffering=BUFFER_SIZE,
+        id_prefix=None,
+        labeled=True,
+        reverse=False,
+    ):
         """
         Parameters
         ----------
@@ -244,30 +260,36 @@ class SDB:  # pylint: disable=too-many-instance-attributes
         """
         self.sdb_filename = sdb_filename
         self.id_prefix = sdb_filename if id_prefix is None else id_prefix
-        self.sdb_file = open_remote(sdb_filename, 'rb', buffering=REVERSE_BUFFER_SIZE if reverse else buffering)
+        self.sdb_file = open_remote(
+            sdb_filename, "rb", buffering=REVERSE_BUFFER_SIZE if reverse else buffering
+        )
         self.offsets = []
         if self.sdb_file.read(len(MAGIC)) != MAGIC:
-            raise RuntimeError('No Sample Database')
+            raise RuntimeError("No Sample Database")
         meta_chunk_len = self.read_big_int()
         self.meta = json.loads(self.sdb_file.read(meta_chunk_len).decode())
         if SCHEMA_KEY not in self.meta:
-            raise RuntimeError('Missing schema')
+            raise RuntimeError("Missing schema")
         self.schema = self.meta[SCHEMA_KEY]
 
-        speech_columns = self.find_columns(content=CONTENT_TYPE_SPEECH, mime_type=SERIALIZABLE_AUDIO_TYPES)
+        speech_columns = self.find_columns(
+            content=CONTENT_TYPE_SPEECH, mime_type=SERIALIZABLE_AUDIO_TYPES
+        )
         if not speech_columns:
-            raise RuntimeError('No speech data (missing in schema)')
+            raise RuntimeError("No speech data (missing in schema)")
         self.speech_index = speech_columns[0]
         self.audio_type = self.schema[self.speech_index][MIME_TYPE_KEY]
 
         self.transcript_index = None
         if labeled is not False:
-            transcript_columns = self.find_columns(content=CONTENT_TYPE_TRANSCRIPT, mime_type=MIME_TYPE_TEXT)
+            transcript_columns = self.find_columns(
+                content=CONTENT_TYPE_TRANSCRIPT, mime_type=MIME_TYPE_TEXT
+            )
             if transcript_columns:
                 self.transcript_index = transcript_columns[0]
             else:
                 if labeled is True:
-                    raise RuntimeError('No transcript data (missing in schema)')
+                    raise RuntimeError("No transcript data (missing in schema)")
 
         sample_chunk_len = self.read_big_int()
         self.sdb_file.seek(sample_chunk_len + BIGINT_SIZE, 1)
@@ -290,12 +312,16 @@ class SDB:  # pylint: disable=too-many-instance-attributes
         if mime_type is not None:
             criteria.append((MIME_TYPE_KEY, mime_type))
         if len(criteria) == 0:
-            raise ValueError('At least one of "content" or "mime-type" has to be provided')
+            raise ValueError(
+                'At least one of "content" or "mime-type" has to be provided'
+            )
         matches = []
         for index, column in enumerate(self.schema):
             matched = 0
             for field, value in criteria:
-                if column[field] == value or (isinstance(value, list) and column[field] in value):
+                if column[field] == value or (
+                    isinstance(value, list) and column[field] in value
+                ):
                     matched += 1
             if matched == len(criteria):
                 matches.append(index)
@@ -306,8 +332,11 @@ class SDB:  # pylint: disable=too-many-instance-attributes
         column_data = [None] * len(columns)
         found = 0
         if not 0 <= row_index < len(self.offsets):
-            raise ValueError('Wrong sample index: {} - has to be between 0 and {}'
-                             .format(row_index, len(self.offsets) - 1))
+            raise ValueError(
+                "Wrong sample index: {} - has to be between 0 and {}".format(
+                    row_index, len(self.offsets) - 1
+                )
+            )
         self.sdb_file.seek(self.offsets[row_index] + INT_SIZE)
         for index in range(len(self.schema)):
             chunk_len = self.read_int()
@@ -321,13 +350,17 @@ class SDB:  # pylint: disable=too-many-instance-attributes
         return tuple(column_data)
 
     def __getitem__(self, i):
-        sample_id = '{}:{}'.format(self.id_prefix, i)
+        sample_id = "{}:{}".format(self.id_prefix, i)
         if self.transcript_index is None:
             [audio_data] = self.read_row(i, self.speech_index)
             return Sample(self.audio_type, audio_data, sample_id=sample_id)
-        audio_data, transcript = self.read_row(i, self.speech_index, self.transcript_index)
+        audio_data, transcript = self.read_row(
+            i, self.speech_index, self.transcript_index
+        )
         transcript = transcript.decode()
-        return LabeledSample(self.audio_type, audio_data, transcript, sample_id=sample_id)
+        return LabeledSample(
+            self.audio_type, audio_data, transcript, sample_id=sample_id
+        )
 
     def __iter__(self):
         for i in range(len(self.offsets)):
@@ -346,10 +379,8 @@ class SDB:  # pylint: disable=too-many-instance-attributes
 
 class CSVWriter:  # pylint: disable=too-many-instance-attributes
     """Sample collection writer for writing a CSV data-set and all its referenced WAV samples"""
-    def __init__(self,
-                 csv_filename,
-                 absolute_paths=False,
-                 labeled=True):
+
+    def __init__(self, csv_filename, absolute_paths=False, labeled=True):
         """
         Parameters
         ----------
@@ -361,7 +392,7 @@ class CSVWriter:  # pylint: disable=too-many-instance-attributes
         labeled : bool or None
             If True: Writes labeled samples (util.sample_collections.LabeledSample) only.
             If False: Ignores transcripts (if available) and writes (unlabeled) util.audio.Sample instances.
-        
+
         Currently only works with local files (not gs:// or hdfs://...)
         """
         self.csv_filename = Path(csv_filename)
@@ -372,11 +403,11 @@ class CSVWriter:  # pylint: disable=too-many-instance-attributes
             raise RuntimeError('"{}" already existing'.format(self.csv_dir))
         os.mkdir(str(self.csv_dir))
         self.absolute_paths = absolute_paths
-        fieldnames = ['wav_filename', 'wav_filesize']
+        fieldnames = ["wav_filename", "wav_filesize"]
         self.labeled = labeled
         if labeled:
-            fieldnames.append('transcript')
-        self.csv_file = open_remote(csv_filename, 'w', encoding='utf-8', newline='')
+            fieldnames.append("transcript")
+        self.csv_file = open_remote(csv_filename, "w", encoding="utf-8", newline="")
         self.csv_writer = csv.DictWriter(self.csv_file, fieldnames=fieldnames)
         self.csv_writer.writeheader()
         self.counter = 0
@@ -385,17 +416,19 @@ class CSVWriter:  # pylint: disable=too-many-instance-attributes
         return self
 
     def add(self, sample):
-        sample_filename = self.csv_dir / 'sample{0:08d}.wav'.format(self.counter)
+        sample_filename = self.csv_dir / "sample{0:08d}.wav".format(self.counter)
         self.counter += 1
         sample.change_audio_type(AUDIO_TYPE_PCM)
         write_wav(str(sample_filename), sample.audio, audio_format=sample.audio_format)
         sample.sample_id = str(sample_filename.relative_to(self.csv_base_dir))
         row = {
-            'wav_filename': str(sample_filename.absolute()) if self.absolute_paths else sample.sample_id,
-            'wav_filesize': sample_filename.stat().st_size
+            "wav_filename": str(sample_filename.absolute())
+            if self.absolute_paths
+            else sample.sample_id,
+            "wav_filesize": sample_filename.stat().st_size,
         }
         if self.labeled:
-            row['transcript'] = sample.transcript
+            row["transcript"] = sample.transcript
         self.csv_writer.writerow(row)
         return sample.sample_id
 
@@ -412,11 +445,8 @@ class CSVWriter:  # pylint: disable=too-many-instance-attributes
 
 class TarWriter:  # pylint: disable=too-many-instance-attributes
     """Sample collection writer for writing a CSV data-set and all its referenced WAV samples to a tar file."""
-    def __init__(self,
-                 tar_filename,
-                 gz=False,
-                 labeled=True,
-                 include=None):
+
+    def __init__(self, tar_filename, gz=False, labeled=True, include=None):
         """
         Parameters
         ----------
@@ -432,17 +462,19 @@ class TarWriter:  # pylint: disable=too-many-instance-attributes
 
         Currently only works with local files (not gs:// or hdfs://...)
         """
-        self.tar = tarfile.open(tar_filename, 'w:gz' if gz else 'w')
-        samples_dir = tarfile.TarInfo('samples')
+        self.tar = tarfile.open(tar_filename, "w:gz" if gz else "w")
+        samples_dir = tarfile.TarInfo("samples")
         samples_dir.type = tarfile.DIRTYPE
         self.tar.addfile(samples_dir)
         if include:
             for include_path in include:
-                self.tar.add(include_path, recursive=False, arcname=Path(include_path).name)
-        fieldnames = ['wav_filename', 'wav_filesize']
+                self.tar.add(
+                    include_path, recursive=False, arcname=Path(include_path).name
+                )
+        fieldnames = ["wav_filename", "wav_filesize"]
         self.labeled = labeled
         if labeled:
-            fieldnames.append('transcript')
+            fieldnames.append("transcript")
         self.csv_file = io.StringIO()
         self.csv_writer = csv.DictWriter(self.csv_file, fieldnames=fieldnames)
         self.csv_writer.writeheader()
@@ -452,7 +484,7 @@ class TarWriter:  # pylint: disable=too-many-instance-attributes
         return self
 
     def add(self, sample):
-        sample_filename = 'samples/sample{0:08d}.wav'.format(self.counter)
+        sample_filename = "samples/sample{0:08d}.wav".format(self.counter)
         self.counter += 1
         sample.change_audio_type(AUDIO_TYPE_PCM)
         sample_file = io.BytesIO()
@@ -462,21 +494,18 @@ class TarWriter:  # pylint: disable=too-many-instance-attributes
         sample_tar = tarfile.TarInfo(sample_filename)
         sample_tar.size = sample_size
         self.tar.addfile(sample_tar, sample_file)
-        row = {
-            'wav_filename': sample_filename,
-            'wav_filesize': sample_size
-        }
+        row = {"wav_filename": sample_filename, "wav_filesize": sample_size}
         if self.labeled:
-            row['transcript'] = sample.transcript
+            row["transcript"] = sample.transcript
         self.csv_writer.writerow(row)
         return sample_filename
 
     def close(self):
         if self.csv_file and self.tar:
-            csv_tar = tarfile.TarInfo('samples.csv')
+            csv_tar = tarfile.TarInfo("samples.csv")
             csv_tar.size = self.csv_file.tell()
             self.csv_file.seek(0)
-            self.tar.addfile(csv_tar, io.BytesIO(self.csv_file.read().encode('utf8')))
+            self.tar.addfile(csv_tar, io.BytesIO(self.csv_file.read().encode("utf8")))
         if self.tar:
             self.tar.close()
 
@@ -489,6 +518,7 @@ class TarWriter:  # pylint: disable=too-many-instance-attributes
 
 class SampleList:
     """Sample collection base class with samples loaded from a list of in-memory paths."""
+
     def __init__(self, samples, labeled=True, reverse=False):
         """
         Parameters
@@ -507,7 +537,9 @@ class SampleList:
 
     def __getitem__(self, i):
         sample_spec = self.samples[i]
-        return load_sample(sample_spec[0], label=sample_spec[2] if self.labeled else None)
+        return load_sample(
+            sample_spec[0], label=sample_spec[2] if self.labeled else None
+        )
 
     def __len__(self):
         return len(self.samples)
@@ -516,6 +548,7 @@ class SampleList:
 class CSV(SampleList):
     """Sample collection reader for reading a Coqui STT CSV file
     Automatically orders samples by CSV column wav_filesize (if available)."""
+
     def __init__(self, csv_filename, labeled=None, reverse=False):
         """
         Parameters
@@ -531,30 +564,34 @@ class CSV(SampleList):
             If the order of the samples should be reversed
         """
         rows = []
-        with open_remote(csv_filename, 'r', encoding='utf8') as csv_file:
+        with open_remote(csv_filename, "r", encoding="utf8") as csv_file:
             reader = csv.DictReader(csv_file)
-            if 'transcript' in reader.fieldnames:
+            if "transcript" in reader.fieldnames:
                 if labeled is None:
                     labeled = True
             elif labeled:
-                raise RuntimeError('No transcript data (missing CSV column)')
+                raise RuntimeError("No transcript data (missing CSV column)")
             for row in reader:
-                wav_filename = Path(row['wav_filename'])
-                if not wav_filename.is_absolute() and not is_remote_path(row['wav_filename']):
+                wav_filename = Path(row["wav_filename"])
+                if not wav_filename.is_absolute() and not is_remote_path(
+                    row["wav_filename"]
+                ):
                     wav_filename = Path(csv_filename).parent / wav_filename
                     wav_filename = str(wav_filename)
                 else:
                     # Pathlib otherwise removes a / from filenames like hdfs://
-                    wav_filename = row['wav_filename']
-                wav_filesize = int(row['wav_filesize']) if 'wav_filesize' in row else 0
+                    wav_filename = row["wav_filename"]
+                wav_filesize = int(row["wav_filesize"]) if "wav_filesize" in row else 0
                 if labeled:
-                    rows.append((wav_filename, wav_filesize, row['transcript']))
+                    rows.append((wav_filename, wav_filesize, row["transcript"]))
                 else:
                     rows.append((wav_filename, wav_filesize))
         super(CSV, self).__init__(rows, labeled=labeled, reverse=reverse)
 
 
-def samples_from_source(sample_source, buffering=BUFFER_SIZE, labeled=None, reverse=False):
+def samples_from_source(
+    sample_source, buffering=BUFFER_SIZE, labeled=None, reverse=False
+):
     """
     Loads samples from a sample source file.
 
@@ -577,14 +614,16 @@ def samples_from_source(sample_source, buffering=BUFFER_SIZE, labeled=None, reve
     iterable of util.sample_collections.LabeledSample or util.audio.Sample instances supporting len.
     """
     ext = os.path.splitext(sample_source)[1].lower()
-    if ext == '.sdb':
+    if ext == ".sdb":
         return SDB(sample_source, buffering=buffering, labeled=labeled, reverse=reverse)
-    if ext == '.csv':
+    if ext == ".csv":
         return CSV(sample_source, labeled=labeled, reverse=reverse)
     raise ValueError('Unknown file type: "{}"'.format(ext))
 
 
-def samples_from_sources(sample_sources, buffering=BUFFER_SIZE, labeled=None, reverse=False):
+def samples_from_sources(
+    sample_sources, buffering=BUFFER_SIZE, labeled=None, reverse=False
+):
     """
     Loads and combines samples from a list of source files. Sources are combined in an interleaving way to
     keep default sample order from shortest to longest.
@@ -616,14 +655,22 @@ def samples_from_sources(sample_sources, buffering=BUFFER_SIZE, labeled=None, re
     """
     sample_sources = list(sample_sources)
     if len(sample_sources) == 0:
-        raise ValueError('No files')
+        raise ValueError("No files")
     if len(sample_sources) == 1:
-        return samples_from_source(sample_sources[0], buffering=buffering, labeled=labeled, reverse=reverse)
+        return samples_from_source(
+            sample_sources[0], buffering=buffering, labeled=labeled, reverse=reverse
+        )
 
     # If we wish to interleave based on duration, we have to unpack the audio. Note that this unpacking should
     # be done lazily onn the fly so that it respects the LimitingPool logic used in the feeding code.
-    cols = [LenMap(
-        unpack_maybe, samples_from_source(source, buffering=buffering, labeled=labeled, reverse=reverse))
-        for source in sample_sources]
+    cols = [
+        LenMap(
+            unpack_maybe,
+            samples_from_source(
+                source, buffering=buffering, labeled=labeled, reverse=reverse
+            ),
+        )
+        for source in sample_sources
+    ]
 
     return Interleaved(*cols, key=lambda s: s.duration, reverse=reverse)

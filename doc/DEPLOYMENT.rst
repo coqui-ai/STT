@@ -134,7 +134,7 @@ The script ``taskcluster.py`` will download ``native_client.tar.xz`` (which incl
 
 Alternatively you may manually download the ``native_client.tar.xz`` from the `releases page <https://github.com/coqui-ai/STT/releases>`_.
 
-Assuming you have :ref:`downloaded the pre-trained models <download-models>`, you can use the client as such: 
+Assuming you have :ref:`downloaded the pre-trained models <download-models>`, you can use the client as such:
 
 .. code-block:: bash
 

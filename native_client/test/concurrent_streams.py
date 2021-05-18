@@ -3,22 +3,26 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-import numpy as np
 import wave
 
+import numpy as np
 from stt import Model
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Running STT inference.')
-    parser.add_argument('--model', required=True,
-                        help='Path to the model (protocol buffer binary file)')
-    parser.add_argument('--scorer', nargs='?',
-                        help='Path to the external scorer file')
-    parser.add_argument('--audio1', required=True,
-                        help='First audio file to use in interleaved streams')
-    parser.add_argument('--audio2', required=True,
-                        help='Second audio file to use in interleaved streams')
+    parser = argparse.ArgumentParser(description="Running STT inference.")
+    parser.add_argument(
+        "--model", required=True, help="Path to the model (protocol buffer binary file)"
+    )
+    parser.add_argument("--scorer", nargs="?", help="Path to the external scorer file")
+    parser.add_argument(
+        "--audio1", required=True, help="First audio file to use in interleaved streams"
+    )
+    parser.add_argument(
+        "--audio2",
+        required=True,
+        help="Second audio file to use in interleaved streams",
+    )
     args = parser.parse_args()
 
     ds = Model(args.model)
@@ -26,12 +30,12 @@ def main():
     if args.scorer:
         ds.enableExternalScorer(args.scorer)
 
-    fin = wave.open(args.audio1, 'rb')
+    fin = wave.open(args.audio1, "rb")
     fs1 = fin.getframerate()
     audio1 = np.frombuffer(fin.readframes(fin.getnframes()), np.int16)
     fin.close()
 
-    fin = wave.open(args.audio2, 'rb')
+    fin = wave.open(args.audio2, "rb")
     fs2 = fin.getframerate()
     audio2 = np.frombuffer(fin.readframes(fin.getnframes()), np.int16)
     fin.close()
@@ -49,5 +53,6 @@ def main():
     print(stream1.finishStream())
     print(stream2.finishStream())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

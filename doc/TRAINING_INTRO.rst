@@ -138,7 +138,7 @@ Data Format
 
 Audio data is expected to be stored as WAV, sampled at 16kHz, and mono-channel. There's no hard expectations for the length of individual audio files, but in our experience, training is most successful when WAV files range from 5 to 20 seconds in length. Your training data should match as closely as possible the kind of speech you expect at deployment. You can read more about the significant characteristics of speech with regard to STT :ref:`here <model-data-match>`.
 
-Text transcripts should be formatted exactly as the transcripts you expect your model to produce at deployment. If you want your model to produce capital letters, your transcripts should include capital letters. If you want your model to produce punctuation, your transcripts should include punctuation. Keep in mind that the more characters you include in your transcripts, the more difficult the task becomes for your model. STT models learn from experience, and if there's very few examples in the training data, the model will have a hard time learning rare characters (e.g. the "ï" in "naïve"). 
+Text transcripts should be formatted exactly as the transcripts you expect your model to produce at deployment. If you want your model to produce capital letters, your transcripts should include capital letters. If you want your model to produce punctuation, your transcripts should include punctuation. Keep in mind that the more characters you include in your transcripts, the more difficult the task becomes for your model. STT models learn from experience, and if there's very few examples in the training data, the model will have a hard time learning rare characters (e.g. the "ï" in "naïve").
 
 CSV file format
 """""""""""""""
