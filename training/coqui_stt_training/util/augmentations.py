@@ -560,12 +560,15 @@ class Tempo(GraphAugmentation):
 class Warp(GraphAugmentation):
     """See "Warp augmentation" in training documentation"""
 
-    def __init__(self, p=1.0, nt=1, nf=1, wt=0.1, wf=0.0):
+    def __init__(self, p=1.0, num_t=1, num_f=1, warp_t=0.1, warp_f=0.0):
         super(Warp, self).__init__(p, domain="spectrogram")
-        self.num_t = int_range(nt)
-        self.num_f = int_range(nf)
-        self.warp_t = float_range(wt)
-        self.warp_f = float_range(wf)
+        self.num_t = int_range(num_t)
+        self.num_f = int_range(num_f)
+        self.warp_t = float_range(warp_t)
+        self.warp_f = float_range(warp_f)
+
+    def __repr__(self):
+        return f"Warp(p={self.probability!r}, num_t={self.num_t!r}, num_f={self.num_f!r}, warp_t={self.warp_t!r}, warp_f={self.warp_f!r})"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
