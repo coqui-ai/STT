@@ -107,10 +107,7 @@ def parse_augmentations(augmentation_specs):
     -------
     List of augmentation class instances from util.augmentations.*.
     """
-    if augmentation_specs is None:
-        return []
-    else:
-        return list(map(parse_augmentation, augmentation_specs))
+    return list(map(parse_augmentation, augmentation_specs or []))
 
 
 def apply_graph_augmentations(domain, tensor, augmentations, transcript=None, clock=0.0):
