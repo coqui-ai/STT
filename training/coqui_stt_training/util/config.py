@@ -553,6 +553,7 @@ def initialize_globals():
 
     # Augmentations
     c.augmentations = parse_augmentations(c.augment)
+    print(f"Parsed augmentations from flags: {c.augmentations}")
     if c.augmentations and c.feature_cache and c.cache_for_epochs == 0:
         log_warn(
             "Due to current feature-cache settings the exact same sample augmentations of the first "
