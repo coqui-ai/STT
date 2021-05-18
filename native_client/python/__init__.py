@@ -1,26 +1,27 @@
 import os
 import platform
 
-#The API is not snake case which triggers linter errors
-#pylint: disable=invalid-name
+# The API is not snake case which triggers linter errors
+# pylint: disable=invalid-name
 
 if platform.system().lower() == "windows":
-    dslib_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
+    dslib_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "lib")
 
     # On Windows, we can't rely on RPATH being set to $ORIGIN/lib/ or on
     # @loader_path/lib
-    if hasattr(os, 'add_dll_directory'):
+    if hasattr(os, "add_dll_directory"):
         # Starting with Python 3.8 this properly handles the problem
         os.add_dll_directory(dslib_path)
     else:
         # Before Pythin 3.8 we need to change the PATH to include the proper
         # directory for the dynamic linker
-        os.environ['PATH'] = dslib_path + ';' + os.environ['PATH']
+        os.environ["PATH"] = dslib_path + ";" + os.environ["PATH"]
 
 import stt
 
 # rename for backwards compatibility
 from stt.impl import Version as version
+
 
 class Model(object):
     """
@@ -29,13 +30,18 @@ class Model(object):
     :param aModelPath: Path to model file to load
     :type aModelPath: str
     """
+
     def __init__(self, model_path):
         # make sure the attribute is there if CreateModel fails
         self._impl = None
 
         status, impl = stt.impl.CreateModel(model_path)
         if status != 0:
-            raise RuntimeError("CreateModel failed with '{}' (0x{:X})".format(stt.impl.ErrorCodeToErrorMessage(status),status))
+            raise RuntimeError(
+                "CreateModel failed with '{}' (0x{:X})".format(
+                    stt.impl.ErrorCodeToErrorMessage(status), status
+                )
+            )
         self._impl = impl
 
     def __del__(self):
@@ -85,7 +91,11 @@ class Model(object):
         """
         status = stt.impl.EnableExternalScorer(self._impl, scorer_path)
         if status != 0:
-            raise RuntimeError("EnableExternalScorer failed with '{}' (0x{:X})".format(stt.impl.ErrorCodeToErrorMessage(status),status))
+            raise RuntimeError(
+                "EnableExternalScorer failed with '{}' (0x{:X})".format(
+                    stt.impl.ErrorCodeToErrorMessage(status), status
+                )
+            )
 
     def disableExternalScorer(self):
         """
@@ -98,7 +108,7 @@ class Model(object):
     def addHotWord(self, word, boost):
         """
         Add a word and its boost for decoding.
-        
+
         Words that don't occur in the scorer (e.g. proper nouns) or strings that contain spaces won't be taken into account.
 
         :param word: the hot-word
@@ -111,7 +121,11 @@ class Model(object):
         """
         status = stt.impl.AddHotWord(self._impl, word, boost)
         if status != 0:
-            raise RuntimeError("AddHotWord failed with '{}' (0x{:X})".format(stt.impl.ErrorCodeToErrorMessage(status),status))
+            raise RuntimeError(
+                "AddHotWord failed with '{}' (0x{:X})".format(
+                    stt.impl.ErrorCodeToErrorMessage(status), status
+                )
+            )
 
     def eraseHotWord(self, word):
         """
@@ -124,7 +138,11 @@ class Model(object):
         """
         status = stt.impl.EraseHotWord(self._impl, word)
         if status != 0:
-            raise RuntimeError("EraseHotWord failed with '{}' (0x{:X})".format(stt.impl.ErrorCodeToErrorMessage(status),status))
+            raise RuntimeError(
+                "EraseHotWord failed with '{}' (0x{:X})".format(
+                    stt.impl.ErrorCodeToErrorMessage(status), status
+                )
+            )
 
     def clearHotWords(self):
         """
@@ -134,7 +152,11 @@ class Model(object):
         """
         status = stt.impl.ClearHotWords(self._impl)
         if status != 0:
-            raise RuntimeError("ClearHotWords failed with '{}' (0x{:X})".format(stt.impl.ErrorCodeToErrorMessage(status),status))
+            raise RuntimeError(
+                "ClearHotWords failed with '{}' (0x{:X})".format(
+                    stt.impl.ErrorCodeToErrorMessage(status), status
+                )
+            )
 
     def setScorerAlphaBeta(self, alpha, beta):
         """
@@ -190,7 +212,11 @@ class Model(object):
         """
         status, ctx = stt.impl.CreateStream(self._impl)
         if status != 0:
-            raise RuntimeError("CreateStream failed with '{}' (0x{:X})".format(stt.impl.ErrorCodeToErrorMessage(status),status))
+            raise RuntimeError(
+                "CreateStream failed with '{}' (0x{:X})".format(
+                    stt.impl.ErrorCodeToErrorMessage(status), status
+                )
+            )
         return Stream(ctx)
 
 
@@ -199,6 +225,7 @@ class Stream(object):
     Class wrapping a stt stream. The constructor cannot be called directly.
     Use :func:`Model.createStream()`
     """
+
     def __init__(self, native_stream):
         self._impl = native_stream
 
@@ -216,7 +243,9 @@ class Stream(object):
         :throws: RuntimeError if the stream object is not valid
         """
         if not self._impl:
-            raise RuntimeError("Stream object is not valid. Trying to feed an already finished stream?")
+            raise RuntimeError(
+                "Stream object is not valid. Trying to feed an already finished stream?"
+            )
         stt.impl.FeedAudioContent(self._impl, audio_buffer)
 
     def intermediateDecode(self):
@@ -229,7 +258,9 @@ class Stream(object):
         :throws: RuntimeError if the stream object is not valid
         """
         if not self._impl:
-            raise RuntimeError("Stream object is not valid. Trying to decode an already finished stream?")
+            raise RuntimeError(
+                "Stream object is not valid. Trying to decode an already finished stream?"
+            )
         return stt.impl.IntermediateDecode(self._impl)
 
     def intermediateDecodeWithMetadata(self, num_results=1):
@@ -245,7 +276,9 @@ class Stream(object):
         :throws: RuntimeError if the stream object is not valid
         """
         if not self._impl:
-            raise RuntimeError("Stream object is not valid. Trying to decode an already finished stream?")
+            raise RuntimeError(
+                "Stream object is not valid. Trying to decode an already finished stream?"
+            )
         return stt.impl.IntermediateDecodeWithMetadata(self._impl, num_results)
 
     def finishStream(self):
@@ -260,7 +293,9 @@ class Stream(object):
         :throws: RuntimeError if the stream object is not valid
         """
         if not self._impl:
-            raise RuntimeError("Stream object is not valid. Trying to finish an already finished stream?")
+            raise RuntimeError(
+                "Stream object is not valid. Trying to finish an already finished stream?"
+            )
         result = stt.impl.FinishStream(self._impl)
         self._impl = None
         return result
@@ -281,7 +316,9 @@ class Stream(object):
         :throws: RuntimeError if the stream object is not valid
         """
         if not self._impl:
-            raise RuntimeError("Stream object is not valid. Trying to finish an already finished stream?")
+            raise RuntimeError(
+                "Stream object is not valid. Trying to finish an already finished stream?"
+            )
         result = stt.impl.FinishStreamWithMetadata(self._impl, num_results)
         self._impl = None
         return result
@@ -294,7 +331,9 @@ class Stream(object):
         :throws: RuntimeError if the stream object is not valid
         """
         if not self._impl:
-            raise RuntimeError("Stream object is not valid. Trying to free an already finished stream?")
+            raise RuntimeError(
+                "Stream object is not valid. Trying to free an already finished stream?"
+            )
         stt.impl.FreeStream(self._impl)
         self._impl = None
 
@@ -311,12 +350,10 @@ class TokenMetadata(object):
         The text for this token
         """
 
-
     def timestep(self):
         """
         Position of the token in units of 20ms
         """
-
 
     def start_time(self):
         """
@@ -328,6 +365,7 @@ class CandidateTranscript(object):
     """
     Stores the entire CTC output as an array of character metadata objects
     """
+
     def tokens(self):
         """
         List of tokens
@@ -335,7 +373,6 @@ class CandidateTranscript(object):
         :return: A list of :func:`TokenMetadata` elements
         :type: list
         """
-
 
     def confidence(self):
         """

@@ -3,7 +3,6 @@ import os
 import sys
 
 import pandas
-
 from coqui_stt_training.util.downloader import maybe_download
 
 

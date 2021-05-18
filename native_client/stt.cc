@@ -474,7 +474,7 @@ STT_FinishStream(StreamingState* aSctx)
 }
 
 Metadata*
-STT_FinishStreamWithMetadata(StreamingState* aSctx, 
+STT_FinishStreamWithMetadata(StreamingState* aSctx,
                             unsigned int aNumResults)
 {
   Metadata* result = aSctx->finishStreamWithMetadata(aNumResults);

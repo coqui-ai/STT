@@ -3,7 +3,7 @@ framework module stt_ios {
 
   export *
   module * { export * }
-  
+
   explicit module libstt_Private {
       header "coqui-stt.h"
       export *

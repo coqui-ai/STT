@@ -9,7 +9,7 @@ from glob import glob
 from multiprocessing import Pool
 
 import progressbar
-
+from coqui_stt_ctcdecoder import Alphabet
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
     get_counter,
@@ -18,7 +18,6 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from coqui_stt_ctcdecoder import Alphabet
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -60,9 +59,20 @@ def one_sample(sample):
     file_size = -1
     frames = 0
     if os.path.exists(wav_filename):
-        tmp_filename = os.path.splitext(wav_filename)[0]+'.tmp.wav'
+        tmp_filename = os.path.splitext(wav_filename)[0] + ".tmp.wav"
         subprocess.check_call(
-            ['sox', wav_filename, '-r', str(SAMPLE_RATE), '-c', '1', '-b', '16', tmp_filename], stderr=subprocess.STDOUT
+            [
+                "sox",
+                wav_filename,
+                "-r",
+                str(SAMPLE_RATE),
+                "-c",
+                "1",
+                "-b",
+                "16",
+                tmp_filename,
+            ],
+            stderr=subprocess.STDOUT,
         )
         os.rename(tmp_filename, wav_filename)
         file_size = os.path.getsize(wav_filename)
@@ -138,9 +148,15 @@ def _maybe_convert_sets(target_dir, extracted_data):
     pool.close()
     pool.join()
 
-    with open(target_csv_template.format("train"), "w", encoding="utf-8", newline="") as train_csv_file:  # 80%
-        with open(target_csv_template.format("dev"), "w", encoding="utf-8", newline="") as dev_csv_file:  # 10%
-            with open(target_csv_template.format("test"), "w", encoding="utf-8", newline="") as test_csv_file:  # 10%
+    with open(
+        target_csv_template.format("train"), "w", encoding="utf-8", newline=""
+    ) as train_csv_file:  # 80%
+        with open(
+            target_csv_template.format("dev"), "w", encoding="utf-8", newline=""
+        ) as dev_csv_file:  # 10%
+            with open(
+                target_csv_template.format("test"), "w", encoding="utf-8", newline=""
+            ) as test_csv_file:  # 10%
                 train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
                 train_writer.writeheader()
                 dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)

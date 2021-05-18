@@ -131,7 +131,7 @@ namespace STT.WPF.ViewModels
         public MMDevice SelectedDevice
         {
             get => _selectedDevice;
-            set => SetProperty(ref _selectedDevice, value, 
+            set => SetProperty(ref _selectedDevice, value,
                 onChanged: UpdateSelectedDevice);
         }
 
@@ -255,7 +255,7 @@ namespace STT.WPF.ViewModels
         private void LoadAvailableCaptureDevices()
         {
             AvailableRecordDevices = new ObservableCollection<MMDevice>(
-                MMDeviceEnumerator.EnumerateDevices(DataFlow.All, DeviceState.Active)); //we get only enabled devices    
+                MMDeviceEnumerator.EnumerateDevices(DataFlow.All, DeviceState.Active)); //we get only enabled devices
             EnableStartRecord = true;
             if (AvailableRecordDevices?.Count != 0)
                 SelectedDevice = AvailableRecordDevices[0];
@@ -282,14 +282,14 @@ namespace STT.WPF.ViewModels
                    .ToWaveSource(16); //bits per sample
 
                 _convertedSource = _convertedSource.ToMono();
-            } 
+            }
         }
 
         private void Capture_DataAvailable(object sender, DataAvailableEventArgs e)
         {
             //read data from the converedSource
             //important: don't use the e.Data here
-            //the e.Data contains the raw data provided by the 
+            //the e.Data contains the raw data provided by the
             //soundInSource which won't have the STT required audio format
             byte[] buffer = new byte[_convertedSource.WaveFormat.BytesPerSecond / 2];
 
@@ -319,7 +319,7 @@ namespace STT.WPF.ViewModels
                 }
             }
         }
-       
+
         /// <summary>
         /// Enables the external scorer.
         /// </summary>

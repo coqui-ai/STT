@@ -2,10 +2,9 @@
 import argparse
 import ctypes
 import os
+from pathlib import Path
 
 import pandas
-
-from pathlib import Path
 from tqdm import tqdm
 
 

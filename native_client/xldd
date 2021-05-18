@@ -6,7 +6,7 @@
 # crosstool-ng 1.22.0
 
 # In order to use it, copy it in same directory than other
-# toolchain binaries and rename it with same tuple. 
+# toolchain binaries and rename it with same tuple.
 # (i.e. /opt/arm-sysmic-linux-gnueabihf/bin/arm-sysmic-linux-gnueabihf-ldd)
 # Thus, this will automaticaly detect necessary information
 # about your toolchain.

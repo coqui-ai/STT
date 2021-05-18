@@ -16,7 +16,7 @@
     + [Testing the image by creating a container and running a script](#testing-the-image-by-creating-a-container-and-running-a-script)
   * [Setting up a bind mount to store persistent data](#setting-up-a-bind-mount-to-store-persistent-data)
   * [Extending the base `stt-train` Docker image for your needs](#extending-the-base--stt-train--docker-image-for-your-needs)
-  
+
 This section of the Playbook assumes you are comfortable installing 🐸STT and using it with a pre-trained model, and that you are comfortable setting up a Python _virtual environment_.
 
 Here, we provide information on setting up a Docker environment for training your own speech recognition model using 🐸STT. We also cover dependencies Docker has for NVIDIA GPUs, so that you can use your GPU(s) for training a model.
@@ -48,7 +48,7 @@ By default, your machine should already have GPU drivers installed. A good way t
 ```
 $ nvidia-smi
 
-Sat Jan  9 11:48:50 2021       
+Sat Jan  9 11:48:50 2021
 +-----------------------------------------------------------------------------+
 | NVIDIA-SMI 450.80.02    Driver Version: 450.80.02    CUDA Version: 11.0     |
 |-------------------------------+----------------------+----------------------+
@@ -195,7 +195,7 @@ This command assumes that `/bin/bash` will be invoked as the `root` user. This i
 When you run the above command, you should see the following prompt:
 
 ```
-________                               _______________                
+________                               _______________
 ___  __/__________________________________  ____/__  /________      __
 __  /  _  _ \_  __ \_  ___/  __ \_  ___/_  /_   __  /_  __ \_ | /| / /
 _  /   /  __/  / / /(__  )/ /_/ /  /   _  __/   _  / / /_/ /_ |/ |/ /

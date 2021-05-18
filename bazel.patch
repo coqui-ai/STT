@@ -9,23 +9,23 @@ index c7aa4cb63..e084bc27c 100644
 +import java.io.PrintWriter;
  import java.util.zip.GZIPInputStream;
  import java.util.zip.GZIPOutputStream;
- 
+
 @@ -73,6 +74,8 @@ public final class FileWriteAction extends AbstractFileWriteAction {
     */
    private final CharSequence fileContents;
- 
+
 +  private final Artifact output;
 +
    /** Minimum length (in chars) for content to be eligible for compression. */
    private static final int COMPRESS_CHARS_THRESHOLD = 256;
- 
+
 @@ -90,6 +93,7 @@ public final class FileWriteAction extends AbstractFileWriteAction {
        fileContents = new CompressedString((String) fileContents);
      }
      this.fileContents = fileContents;
 +    this.output = output;
    }
- 
+
    /**
 @@ -230,11 +234,32 @@ public final class FileWriteAction extends AbstractFileWriteAction {
     */
@@ -59,7 +59,7 @@ index c7aa4cb63..e084bc27c 100644
 +    computeKeyDebugWriter.close();
 +    return rv;
    }
- 
+
    /**
 diff --git a/src/main/java/com/google/devtools/build/lib/analysis/actions/SpawnAction.java b/src/main/java/com/google/devtools/build/lib/analysis/actions/SpawnAction.java
 index 580788160..26883eb92 100644
@@ -74,9 +74,9 @@ index 580788160..26883eb92 100644
  import java.util.Collections;
  import java.util.LinkedHashMap;
 @@ -91,6 +92,9 @@ public class SpawnAction extends AbstractAction implements ExecutionInfoSpecifie
- 
+
    private final CommandLine argv;
- 
+
 +  private final Iterable<Artifact> inputs;
 +  private final Iterable<Artifact> outputs;
 +
@@ -91,10 +91,10 @@ index 580788160..26883eb92 100644
 +    this.inputs = inputs;
 +    this.outputs = outputs;
    }
- 
+
    @Override
 @@ -312,23 +319,89 @@ public class SpawnAction extends AbstractAction implements ExecutionInfoSpecifie
- 
+
    @Override
    protected String computeKey() {
 +    boolean genruleSetup = String.valueOf(Iterables.get(inputs, 0).getExecPath()).contains("genrule/genrule-setup.sh");
@@ -182,14 +182,14 @@ index 580788160..26883eb92 100644
 +    }
 +    return rv;
    }
- 
+
    @Override
 diff --git a/src/main/java/com/google/devtools/build/lib/rules/cpp/CppCompileAction.java b/src/main/java/com/google/devtools/build/lib/rules/cpp/CppCompileAction.java
 index 3559fffde..3ba39617c 100644
 --- a/src/main/java/com/google/devtools/build/lib/rules/cpp/CppCompileAction.java
 +++ b/src/main/java/com/google/devtools/build/lib/rules/cpp/CppCompileAction.java
 @@ -1111,10 +1111,30 @@ public class CppCompileAction extends AbstractAction
- 
+
    @Override
    public String computeKey() {
 +    // ".ckd" Compute Key Debug
@@ -216,7 +216,7 @@ index 3559fffde..3ba39617c 100644
 +    for (Map.Entry<String, String> entry : executionInfo.entrySet()) {
 +      computeKeyDebugWriter.println("EXECINFO: " + entry.getKey() + "=" + entry.getValue());
 +    }
- 
+
      // For the argv part of the cache key, ignore all compiler flags that explicitly denote module
      // file (.pcm) inputs. Depending on input discovery, some of the unused ones are removed from
 @@ -1124,6 +1144,9 @@ public class CppCompileAction extends AbstractAction
@@ -226,7 +226,7 @@ index 3559fffde..3ba39617c 100644
 +    for (String input : compileCommandLine.getArgv(getInternalOutputFile(), null)) {
 +      computeKeyDebugWriter.println("COMMAND: " + input);
 +    }
- 
+
      /*
       * getArgv() above captures all changes which affect the compilation
 @@ -1133,19 +1156,31 @@ public class CppCompileAction extends AbstractAction
@@ -260,5 +260,5 @@ index 3559fffde..3ba39617c 100644
 +    computeKeyDebugWriter.close();
 +    return rv;
    }
- 
+
    @Override

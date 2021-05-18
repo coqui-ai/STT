@@ -10,7 +10,6 @@ from zipfile import ZipFile
 
 import librosa
 import progressbar
-
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
     get_counter,

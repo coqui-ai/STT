@@ -1,5 +1,5 @@
 NODE_BUILD_TOOL    ?= node-pre-gyp
-NODE_ABI_TARGET    ?= 
+NODE_ABI_TARGET    ?=
 NODE_BUILD_VERBOSE ?= --verbose
 NPM_TOOL           ?= npm
 PROJECT_NAME       ?= stt

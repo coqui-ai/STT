@@ -152,7 +152,7 @@ MetadataToJSON(Metadata* result)
       }
     }
   }
-  
+
   out_string << "\n}\n";
 
   return strdup(out_string.str().c_str());

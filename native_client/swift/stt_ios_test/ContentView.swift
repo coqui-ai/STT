@@ -11,7 +11,7 @@ import SwiftUI
 struct ContentView: View {
     private var stt = SpeechRecognitionImpl()
     @State var isRecognizingMicrophone = false
-    
+
     var body: some View {
         VStack {
             Text("Coqui STT iOS Demo")
@@ -28,16 +28,16 @@ struct ContentView: View {
                 .padding(30)
         }
     }
-    
+
     func recognizeFiles() {
         self.stt.recognizeFiles()
     }
-    
+
     func startMicRecognition() {
         isRecognizingMicrophone = true
         self.stt.startMicrophoneRecognition()
     }
-    
+
     func stopMicRecognition() {
         isRecognizingMicrophone = false
         self.stt.stopMicrophoneRecognition()

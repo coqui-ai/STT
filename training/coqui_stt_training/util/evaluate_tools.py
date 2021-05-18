@@ -9,8 +9,9 @@ import numpy as np
 from attrdict import AttrDict
 
 from .flags import FLAGS
-from .text import levenshtein
 from .io import open_remote
+from .text import levenshtein
+
 
 def pmap(fun, iterable):
     pool = Pool()
@@ -42,26 +43,28 @@ def process_decode_result(item):
     char_length = len(ground_truth)
     word_distance = levenshtein(ground_truth.split(), prediction.split())
     word_length = len(ground_truth.split())
-    return AttrDict({
-        'wav_filename': wav_filename,
-        'src': ground_truth,
-        'res': prediction,
-        'loss': loss,
-        'char_distance': char_distance,
-        'char_length': char_length,
-        'word_distance': word_distance,
-        'word_length': word_length,
-        'cer': char_distance / char_length,
-        'wer': word_distance / word_length,
-    })
+    return AttrDict(
+        {
+            "wav_filename": wav_filename,
+            "src": ground_truth,
+            "res": prediction,
+            "loss": loss,
+            "char_distance": char_distance,
+            "char_length": char_length,
+            "word_distance": word_distance,
+            "word_length": word_length,
+            "cer": char_distance / char_length,
+            "wer": word_distance / word_length,
+        }
+    )
 
 
 def calculate_and_print_report(wav_filenames, labels, decodings, losses, dataset_name):
-    r'''
+    r"""
     This routine will calculate and print a WER report.
     It'll compute the `mean` WER and create ``Sample`` objects of the ``report_count`` top lowest
     loss items from the provided WER results tuple (only items with WER!=0 and ordered by their WER).
-    '''
+    """
     samples = pmap(process_decode_result, zip(wav_filenames, labels, decodings, losses))
 
     # Getting the WER and CER from the accumulated edit distances and lengths
@@ -88,41 +91,43 @@ def print_report(samples, losses, wer, cer, dataset_name):
 
     # Print summary
     mean_loss = np.mean(losses)
-    print('Test on %s - WER: %f, CER: %f, loss: %f' % (dataset_name, wer, cer, mean_loss))
-    print('-' * 80)
+    print(
+        "Test on %s - WER: %f, CER: %f, loss: %f" % (dataset_name, wer, cer, mean_loss)
+    )
+    print("-" * 80)
 
-    best_samples = samples[:FLAGS.report_count]
-    worst_samples = samples[-FLAGS.report_count:]
+    best_samples = samples[: FLAGS.report_count]
+    worst_samples = samples[-FLAGS.report_count :]
     median_index = int(len(samples) / 2)
     median_left = int(FLAGS.report_count / 2)
     median_right = FLAGS.report_count - median_left
-    median_samples = samples[median_index - median_left:median_index + median_right]
+    median_samples = samples[median_index - median_left : median_index + median_right]
 
     def print_single_sample(sample):
-        print('WER: %f, CER: %f, loss: %f' % (sample.wer, sample.cer, sample.loss))
-        print(' - wav: file://%s' % sample.wav_filename)
+        print("WER: %f, CER: %f, loss: %f" % (sample.wer, sample.cer, sample.loss))
+        print(" - wav: file://%s" % sample.wav_filename)
         print(' - src: "%s"' % sample.src)
         print(' - res: "%s"' % sample.res)
-        print('-' * 80)
+        print("-" * 80)
 
-    print('Best WER:', '\n' + '-' * 80)
+    print("Best WER:", "\n" + "-" * 80)
     for s in best_samples:
         print_single_sample(s)
 
-    print('Median WER:', '\n' + '-' * 80)
+    print("Median WER:", "\n" + "-" * 80)
     for s in median_samples:
         print_single_sample(s)
 
-    print('Worst WER:', '\n' + '-' * 80)
+    print("Worst WER:", "\n" + "-" * 80)
     for s in worst_samples:
         print_single_sample(s)
 
 
 def save_samples_json(samples, output_path):
-    ''' Save decoded tuples as JSON, converting NumPy floats to Python floats.
+    """Save decoded tuples as JSON, converting NumPy floats to Python floats.
 
-        We set ensure_ascii=True to prevent json from escaping non-ASCII chars
-        in the texts.
-    '''
-    with open_remote(output_path, 'w') as fout:
+    We set ensure_ascii=True to prevent json from escaping non-ASCII chars
+    in the texts.
+    """
+    with open_remote(output_path, "w") as fout:
         json.dump(samples, fout, default=float, ensure_ascii=False, indent=2)

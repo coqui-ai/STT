@@ -112,5 +112,5 @@ Documentation
 
 .. Third party bindings
    --------------------
-   
+
    Hosted externally and owned by the individual authors. See the `list of third-party bindings <https://stt.readthedocs.io/en/latest/   USING.html#third-party-bindings>`_ for more info.
