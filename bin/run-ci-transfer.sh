@@ -29,7 +29,7 @@ for LOAD in 'init' 'last' 'auto'; do
     echo "########################################################"
     echo "#### Train ENGLISH model with just --checkpoint_dir ####"
     echo "########################################################"
-    python -u train.py --noshow_progressbar --noearly_stop \
+    python -u train.py --show_progressbar false --early_stop false \
        --alphabet_config_path "./data/alphabet.txt" \
        --load_train "$LOAD" \
        --train_files  "${ldc93s1_csv}" --train_batch_size 1  \
@@ -43,7 +43,7 @@ for LOAD in 'init' 'last' 'auto'; do
     echo "##############################################################################"
     echo "#### Train ENGLISH model with --save_checkpoint_dir --load_checkpoint_dir ####"
     echo "##############################################################################"
-    python -u train.py --noshow_progressbar --noearly_stop \
+    python -u train.py --show_progressbar false --early_stop false \
            --alphabet_config_path "./data/alphabet.txt" \
            --load_train "$LOAD" \
            --train_files  "${ldc93s1_csv}" --train_batch_size 1  \
@@ -58,7 +58,7 @@ for LOAD in 'init' 'last' 'auto'; do
     echo "####################################################################################"
     echo "#### Transfer to RUSSIAN model with --save_checkpoint_dir --load_checkpoint_dir ####"
     echo "####################################################################################"
-    python -u train.py --noshow_progressbar --noearly_stop \
+    python -u train.py --show_progressbar false --early_stop false \
            --drop_source_layers 1 \
            --alphabet_config_path "${ru_dir}/alphabet.ru" \
            --load_train 'last' \
@@ -71,7 +71,7 @@ for LOAD in 'init' 'last' 'auto'; do
            --epochs 10
 
     # Test transfer learning checkpoint
-    python -u evaluate.py --noshow_progressbar \
+    python -u evaluate.py --show_progressbar false \
            --test_files  "${ru_csv}" --test_batch_size 1 \
            --alphabet_config_path "${ru_dir}/alphabet.ru" \
            --load_checkpoint_dir '/tmp/ckpt/transfer/ru' \
