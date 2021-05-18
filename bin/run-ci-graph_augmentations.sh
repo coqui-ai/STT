@@ -14,16 +14,16 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --noshow_progressbar --noearly_stop \
+python -u train.py --show_progressbar false --early_stop false \
   --train_files ${ldc93s1_csv} --train_batch_size 1 \
   --scorer "" \
   --augment dropout \
-  --augment pitch \
-  --augment tempo \
-  --augment warp \
-  --augment time_mask \
-  --augment frequency_mask \
-  --augment add \
-  --augment multiply \
+            pitch \
+            tempo \
+            warp \
+            time_mask \
+            frequency_mask \
+            add \
+            multiply \
   --n_hidden 100 \
   --epochs 1

@@ -6,7 +6,6 @@ import json
 import sys
 from multiprocessing import cpu_count
 
-import absl.app
 import progressbar
 from coqui_stt_ctcdecoder import Scorer, ctc_beam_search_decoder_batch
 from six.moves import zip
@@ -16,12 +15,16 @@ import tensorflow.compat.v1 as tfv1
 
 from .util.augmentations import NormalizeSampleRate
 from .util.checkpoints import load_graph_for_evaluation
-from .util.config import Config, initialize_globals
+from .util.config import (
+    Config,
+    create_progressbar,
+    initialize_globals,
+    log_error,
+    log_progress,
+)
 from .util.evaluate_tools import calculate_and_print_report, save_samples_json
 from .util.feeding import create_dataset
-from .util.flags import FLAGS, create_flags
 from .util.helpers import check_ctcdecoder_version
-from .util.logging import create_progressbar, log_error, log_progress
 
 check_ctcdecoder_version()
 
@@ -47,9 +50,9 @@ def sparse_tuple_to_texts(sp_tuple, alphabet):
 
 
 def evaluate(test_csvs, create_model):
-    if FLAGS.scorer_path:
+    if Config.scorer_path:
         scorer = Scorer(
-            FLAGS.lm_alpha, FLAGS.lm_beta, FLAGS.scorer_path, Config.alphabet
+            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
         )
     else:
         scorer = None
@@ -57,11 +60,11 @@ def evaluate(test_csvs, create_model):
     test_sets = [
         create_dataset(
             [csv],
-            batch_size=FLAGS.test_batch_size,
+            batch_size=Config.test_batch_size,
             train_phase=False,
-            augmentations=[NormalizeSampleRate(FLAGS.audio_sample_rate)],
-            reverse=FLAGS.reverse_test,
-            limit=FLAGS.limit_test,
+            augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
+            reverse=Config.reverse_test,
+            limit=Config.limit_test,
         )
         for csv in test_csvs
     ]
@@ -132,11 +135,11 @@ def evaluate(test_csvs, create_model):
                     batch_logits,
                     batch_lengths,
                     Config.alphabet,
-                    FLAGS.beam_width,
+                    Config.beam_width,
                     num_processes=num_processes,
                     scorer=scorer,
-                    cutoff_prob=FLAGS.cutoff_prob,
-                    cutoff_top_n=FLAGS.cutoff_top_n,
+                    cutoff_prob=Config.cutoff_prob,
+                    cutoff_top_n=Config.cutoff_top_n,
                 )
                 predictions.extend(d[0][1] for d in decoded)
                 ground_truths.extend(
@@ -165,10 +168,10 @@ def evaluate(test_csvs, create_model):
         return samples
 
 
-def main(_):
+def main():
     initialize_globals()
 
-    if not FLAGS.test_files:
+    if not Config.test_files:
         log_error(
             "You need to specify what files to use for evaluation via "
             "the --test_files flag."
@@ -179,16 +182,11 @@ def main(_):
         create_model,
     )
 
-    samples = evaluate(FLAGS.test_files.split(","), create_model)
+    samples = evaluate(Config.test_files, create_model)
 
-    if FLAGS.test_output_file:
-        save_samples_json(samples, FLAGS.test_output_file)
-
-
-def run_script():
-    create_flags()
-    absl.app.run(main)
+    if Config.test_output_file:
+        save_samples_json(samples, Config.test_output_file)
 
 
 if __name__ == "__main__":
-    run_script()
+    main()

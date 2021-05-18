@@ -16,21 +16,21 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --noshow_progressbar \
+python -u train.py --show_progressbar false \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt' \
   --export_dir '/tmp/train_tflite' \
   --scorer_path 'data/smoke_test/pruned_lm.scorer' \
   --audio_sample_rate ${audio_sample_rate} \
-  --export_tflite
+  --export_tflite true
 
 mkdir /tmp/train_tflite/en-us
 
-python -u train.py --noshow_progressbar \
+python -u train.py --show_progressbar false \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt' \
   --export_dir '/tmp/train_tflite/en-us' \
   --scorer_path 'data/smoke_test/pruned_lm.scorer' \
   --audio_sample_rate ${audio_sample_rate} \
   --export_language 'Fake English (fk-FK)' \
-  --export_zip
+  --export_zip true

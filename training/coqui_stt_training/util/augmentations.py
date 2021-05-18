@@ -15,6 +15,7 @@ from .audio import (
     max_dbfs,
     normalize_audio,
 )
+from .config import log_info
 from .helpers import (
     MEGABYTE,
     LimitingPool,
@@ -23,7 +24,6 @@ from .helpers import (
     pick_value_from_range,
     tf_pick_value_from_range,
 )
-from .logging import log_info
 from .sample_collections import samples_from_source, unpack_maybe
 
 BUFFER_SIZE = 1 * MEGABYTE
@@ -81,7 +81,7 @@ class GraphAugmentation(Augmentation):
         return (
             FLAGS.audio_sample_rate / 1000.0
             if self.domain == "signal"
-            else 1.0 / FLAGS.feature_win_step
+            else 1.0 / Config.feature_win_step
         )
 
 

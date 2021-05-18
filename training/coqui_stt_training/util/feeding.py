@@ -12,7 +12,6 @@ from tensorflow.python.ops import gen_audio_ops as contrib_audio
 from .audio import DEFAULT_FORMAT, pcm_to_np, read_frames_from_file, vad_split
 from .augmentations import apply_graph_augmentations, apply_sample_augmentations
 from .config import Config
-from .flags import FLAGS
 from .helpers import MEGABYTE, remember_exception
 from .sample_collections import samples_from_sources
 from .text import text_to_char_array
@@ -31,14 +30,14 @@ def audio_to_features(
         # We need the lambdas to make TensorFlow happy.
         # pylint: disable=unnecessary-lambda
         tf.cond(
-            tf.math.not_equal(sample_rate, FLAGS.audio_sample_rate),
+            tf.math.not_equal(sample_rate, Config.audio_sample_rate),
             lambda: tf.print(
                 "WARNING: sample rate of sample",
                 sample_id,
                 "(",
                 sample_rate,
                 ") "
-                "does not match FLAGS.audio_sample_rate. This can lead to incorrect results.",
+                "does not match Config.audio_sample_rate. This can lead to incorrect results.",
             ),
             lambda: tf.no_op(),
             name="matching_sample_rate",
@@ -69,7 +68,7 @@ def audio_to_features(
         spectrogram=spectrogram,
         sample_rate=sample_rate,
         dct_coefficient_count=Config.n_input,
-        upper_frequency_limit=FLAGS.audio_sample_rate / 2,
+        upper_frequency_limit=Config.audio_sample_rate / 2,
     )
     features = tf.reshape(features, [-1, Config.n_input])
 
