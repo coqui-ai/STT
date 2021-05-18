@@ -125,7 +125,7 @@ def parse_augmentation(augmentation_spec):
             kwargs[pair[0]] = pair[1]
         else:
             raise ValueError('Unable to parse augmentation value assignment')
-    log_info('Processed augmentation type: [{}] with parameter settings: {}'.format(augmentation_cls().name, kwargs))
+    log_info('Processed augmentation type: [{}] with parameter settings: {}'.format(augmentation_cls.__name__, kwargs))
     return augmentation_cls(*args, **kwargs)
 
 
@@ -313,7 +313,6 @@ class Overlay(SampleAugmentation):
         self.current_sample = None
         self.queue = None
         self.enqueue_process = None
-        self.name = "Overlay"
 
     def __repr__(self):
         return f"Overlay(source={self.source!r}, p={self.probability!r}, snr={self.snr!r}, layers={self.layers!r})"
@@ -377,7 +376,6 @@ class Codec(SampleAugmentation):
     def __init__(self, p=1.0, bitrate=3200):
         super(Codec, self).__init__(p)
         self.bitrate = int_range(bitrate)
-        self.name = "Codec"
 
     def __repr__(self):
         return f"Codec(p={self.probability!r}, bitrate={self.bitrate!r})"
@@ -399,7 +397,6 @@ class Reverb(SampleAugmentation):
         super(Reverb, self).__init__(p)
         self.delay = float_range(delay)
         self.decay = float_range(decay)
-        self.name = "Reverb"
 
     def __repr__(self):
         return f"Reverb(p={self.probability!r}, delay={self.delay!r}, decay={self.decay!r})"
@@ -437,7 +434,6 @@ class Resample(SampleAugmentation):
     def __init__(self, p=1.0, rate=8000):
         super(Resample, self).__init__(p)
         self.rate = int_range(rate)
-        self.name = "Resample"
 
     def __repr__(self):
         return f"Resample(p={self.probability!r}, rate={self.rate!r})"
@@ -458,7 +454,6 @@ class NormalizeSampleRate(SampleAugmentation):
     def __init__(self, rate):
         super().__init__(p=1.0)
         self.rate = rate
-        self.name = "Normalize Sample Rate"
 
     def __repr__(self):
         return f"NormalizeSampleRate(rate={self.rate!r})"
@@ -484,7 +479,6 @@ class Volume(SampleAugmentation):
     def __init__(self, p=1.0, dbfs=3.0103):
         super(Volume, self).__init__(p)
         self.target_dbfs = float_range(dbfs)
-        self.name = "Volume"
 
     def __repr__(self):
         return f"Volume(p={self.probability!r}, dbfs={self.target_dbfs!r})"
@@ -501,7 +495,6 @@ class Pitch(GraphAugmentation):
     def __init__(self, p=1.0, pitch=(1.075, 1.075, 0.125)):
         super(Pitch, self).__init__(p, domain="spectrogram")
         self.pitch = float_range(pitch)
-        self.name = "Pitch"
 
     def __repr__(self):
         return f"Pitch(p={self.probability!r}, pitch={self.pitch!r})"
@@ -545,7 +538,6 @@ class Tempo(GraphAugmentation):
         super(Tempo, self).__init__(p, domain="spectrogram")
         self.factor = float_range(factor)
         self.max_time = float(max_time)
-        self.name = "Tempo"
 
     def __repr__(self):
         return f"Tempo(p={self.probability!r}, factor={self.factor!r}, max_time={self.max_time!r})"
@@ -578,7 +570,6 @@ class Warp(GraphAugmentation):
         self.num_f = int_range(nf)
         self.warp_t = float_range(wt)
         self.warp_f = float_range(wf)
-        self.name = "Warp"
 
     def apply(self, tensor, transcript=None, clock=0.0):
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
@@ -624,7 +615,6 @@ class FrequencyMask(GraphAugmentation):
         super(FrequencyMask, self).__init__(p, domain="spectrogram")
         self.n = int_range(n)  # pylint: disable=invalid-name
         self.size = int_range(size)
-        self.name = "Frequency Mask"
 
     def __repr__(self):
         return (
@@ -669,7 +659,6 @@ class TimeMask(GraphAugmentation):
         super(TimeMask, self).__init__(p, domain=domain)
         self.n = int_range(n)  # pylint: disable=invalid-name
         self.size = float_range(size)
-        self.name = "Time Mask"
 
     def __repr__(self):
         return f"TimeMask(p={self.probability!r}, domain={self.domain!r}, n={self.n!r}, size={self.size!r})"
@@ -724,7 +713,6 @@ class Dropout(GraphAugmentation):
     def __init__(self, p=1.0, domain="spectrogram", rate=0.05):
         super(Dropout, self).__init__(p, domain=domain)
         self.rate = float_range(rate)
-        self.name = "Dropout"
 
     def __repr__(self):
         return f"Dropout(p={self.probability!r}, domain={self.domain!r}, rate={self.rate!r})"
@@ -750,7 +738,6 @@ class Add(GraphAugmentation):
     def __init__(self, p=1.0, domain="features", stddev=5):
         super(Add, self).__init__(p, domain=domain)
         self.stddev = float_range(stddev)
-        self.name = "Add"
 
     def __repr__(self):
         return f"Add(p={self.probability!r}, domain={self.domain!r}, stddev={self.stddev!r})"
@@ -771,7 +758,6 @@ class Multiply(GraphAugmentation):
     def __init__(self, p=1.0, domain="features", stddev=5):
         super(Multiply, self).__init__(p, domain=domain)
         self.stddev = float_range(stddev)
-        self.name = "Multiply"
 
     def __repr__(self):
         return f"Multiply(p={self.probability!r}, domain={self.domain!r}, stddev={self.stddev!r})"

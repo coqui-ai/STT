@@ -164,39 +164,37 @@ def get_value_range(value, target_type):
     This function converts all possible supplied values for augmentation
     into the [start,end,r] ValueRange type. The expected inputs are of the form:
 
-    <value>
-    <value>~<r>
-    <value>:<value>~<r>
+    <number>
+    <number>~<number>
+    <number>:<number>~<number>
 
-    Any "missing" values are filled so that ValueRange always includes [value,value,r].
+    Any "missing" values are filled so that ValueRange always includes [start,end,r].
     """
     if isinstance(value, str):
         if '~' in value:
             parts = value.split('~')
-            if len(parts) == 2:
-                value = parts[0]
-                r = target_type(parts[1])
-            elif len(parts) > 2:
+            if len(parts) != 2:
                 raise ValueError('Cannot parse value range')
+            value = parts[0]
+            r = parts[1]
         else:
-            # if no <r> supplied, use 0
-            r = target_type(0)
+            r = 0 # if no <r> supplied, use 0
         parts = value.split(':')
-        if len(parts) > 2:
+        if len(parts) == 1:
+            parts.append(parts[0]) # only one <value> given, so double it
+        if len(parts) != 2:
             raise ValueError('Cannot parse value range')
-        elif len(parts) == 1:
-            # only one "<value>" supplied
-            parts.append(parts[0])
-        return ValueRange(target_type(parts[0]), target_type(parts[1]), r)
+        return ValueRange(target_type(parts[0]), target_type(parts[1]), target_type(r))
     if isinstance(value, tuple):
         if len(value) == 2:
-            return ValueRange(target_type(value[0]), target_type(value[1]), 0)
-        elif len(value) == 3:
+            return ValueRange(target_type(value[0]), target_type(value[1]), target_type(0))
+        if len(value) == 3:
             return ValueRange(target_type(value[0]), target_type(value[1]), target_type(value[2]))
         else:
             raise ValueError('Cannot convert to ValueRange: Wrong tuple size')
-    elif isinstance(value, int) or isinstance(value, float):
-         return ValueRange(target_type(value), target_type(value), 0)
+    if isinstance(value, int) or isinstance(value, float):
+        return ValueRange(target_type(value), target_type(value), target_type(0))
+    raise ValueError('Cannot convert to ValueRange: Wrong tuple size')
 
 
 def int_range(value):
