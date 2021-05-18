@@ -16,7 +16,6 @@ import librosa
 import pandas
 import requests
 import soundfile  # <= Has an external dependency on libsndfile
-
 from coqui_stt_training.util.importers import validate_label_eng as validate_label
 
 # ARCHIVE_NAME refers to ISIP alignments from 01/29/03
@@ -293,7 +292,7 @@ def _split_wav(origAudio, start_time, stop_time, new_wav_file):
 def _split_sets(filelist):
     """
     randomply split the datasets into train, validation, and test sets where the size of the
-    validation and test sets are determined by the `get_sample_size` function. 
+    validation and test sets are determined by the `get_sample_size` function.
     """
     random.shuffle(filelist)
     sample_size = get_sample_size(len(filelist))
@@ -315,8 +314,7 @@ def _split_sets(filelist):
 
 
 def get_sample_size(population_size):
-    """calculates the sample size for a 99% confidence and 1% margin of error
-    """
+    """calculates the sample size for a 99% confidence and 1% margin of error"""
     margin_of_error = 0.01
     fraction_picking = 0.50
     z_score = 2.58  # Corresponds to confidence level 99%

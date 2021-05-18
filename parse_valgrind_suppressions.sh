@@ -13,7 +13,7 @@
 BEGIN { suppression=0; md5sum = "md5sum" }
   # If the line begins with '{', it's the start of a supression; so set the var and initialise things
   /^{/  {
-           suppression=1;  i=0; next 
+           suppression=1;  i=0; next
         }
   # If the line begins with '}' its the end of a suppression
   /^}/  {
@@ -26,7 +26,7 @@ BEGIN { suppression=0; md5sum = "md5sum" }
      }
   # Otherwise, it's a normal line. If we're inside a supression, store it, and pipe it to md5sum. Otherwise it's cruft, so ignore it
      { if (suppression)
-         { 
+         {
             supparray[++i] = $0
             print |& md5sum
          }
@@ -35,7 +35,7 @@ BEGIN { suppression=0; md5sum = "md5sum" }
 
  function ProcessInput()
  {
-    # Pipe the result from md5sum, then close it     
+    # Pipe the result from md5sum, then close it
     md5sum |& getline result
     close(md5sum)
     # gawk can't cope with enormous ints like $result would be, so stringify it first by prefixing a definite string
@@ -49,9 +49,9 @@ BEGIN { suppression=0; md5sum = "md5sum" }
 
  function OutputSuppression()
  {
-  # A suppression is surrounded by '{' and '}'. Its data was stored line by line in the array  
-  print "{"  
+  # A suppression is surrounded by '{' and '}'. Its data was stored line by line in the array
+  print "{"
   for (n=1; n <= i; ++n)
     { print supparray[n] }
-  print "}" 
+  print "}"
  }

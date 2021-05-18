@@ -7,11 +7,11 @@ from glob import glob
 from os import makedirs, path, remove, rmdir
 
 import pandas
-from sox import Transformer
-from tensorflow.python.platform import gfile
-
 from coqui_stt_training.util.downloader import maybe_download
 from coqui_stt_training.util.stm import parse_stm_file
+from sox import Transformer
+
+from tensorflow.python.platform import gfile
 
 
 def _download_and_preprocess_data(data_dir):

@@ -37,7 +37,7 @@ ModelState::decode(const DecoderState& state) const
 }
 
 Metadata*
-ModelState::decode_metadata(const DecoderState& state, 
+ModelState::decode_metadata(const DecoderState& state,
                             size_t num_results)
 {
   vector<Output> out = state.decode(num_results);

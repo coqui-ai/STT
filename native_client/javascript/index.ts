@@ -136,7 +136,7 @@ class StreamImpl {
 }
 /**
  * Exposes the type of Stream without actually exposing the class.
- * Because the Stream class should not be instantiated directly, 
+ * Because the Stream class should not be instantiated directly,
  * but instead be created via :js:func:`Model.createStream`.
  */
 export type Stream = StreamImpl;

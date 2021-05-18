@@ -2,10 +2,10 @@
 """
 Tool for comparing two wav samples
 """
-import sys
 import argparse
-import numpy as np
+import sys
 
+import numpy as np
 from coqui_stt_training.util.audio import AUDIO_TYPE_NP, mean_dbfs
 from coqui_stt_training.util.sample_collections import load_sample
 
@@ -19,19 +19,29 @@ def compare_samples():
     sample1 = load_sample(CLI_ARGS.sample1).unpack()
     sample2 = load_sample(CLI_ARGS.sample2).unpack()
     if sample1.audio_format != sample2.audio_format:
-        fail('Samples differ on: audio-format ({} and {})'.format(sample1.audio_format, sample2.audio_format))
+        fail(
+            "Samples differ on: audio-format ({} and {})".format(
+                sample1.audio_format, sample2.audio_format
+            )
+        )
     if abs(sample1.duration - sample2.duration) > 0.001:
-        fail('Samples differ on: duration ({} and {})'.format(sample1.duration, sample2.duration))
+        fail(
+            "Samples differ on: duration ({} and {})".format(
+                sample1.duration, sample2.duration
+            )
+        )
     sample1.change_audio_type(AUDIO_TYPE_NP)
     sample2.change_audio_type(AUDIO_TYPE_NP)
     samples = [sample1, sample2]
     largest = np.argmax([sample1.audio.shape[0], sample2.audio.shape[0]])
     smallest = (largest + 1) % 2
-    samples[largest].audio = samples[largest].audio[:len(samples[smallest].audio)]
+    samples[largest].audio = samples[largest].audio[: len(samples[smallest].audio)]
     audio_diff = samples[largest].audio - samples[smallest].audio
     diff_dbfs = mean_dbfs(audio_diff)
-    differ_msg = 'Samples differ on: sample data ({:0.2f} dB difference) '.format(diff_dbfs)
-    equal_msg = 'Samples are considered equal ({:0.2f} dB difference)'.format(diff_dbfs)
+    differ_msg = "Samples differ on: sample data ({:0.2f} dB difference) ".format(
+        diff_dbfs
+    )
+    equal_msg = "Samples are considered equal ({:0.2f} dB difference)".format(diff_dbfs)
     if CLI_ARGS.if_differ:
         if diff_dbfs <= CLI_ARGS.threshold:
             fail(equal_msg)
@@ -50,13 +60,17 @@ def handle_args():
     )
     parser.add_argument("sample1", help="Filename of sample 1 to compare")
     parser.add_argument("sample2", help="Filename of sample 2 to compare")
-    parser.add_argument("--threshold", type=float, default=-60.0,
-                        help="dB of sample deltas above which they are considered different")
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=-60.0,
+        help="dB of sample deltas above which they are considered different",
+    )
     parser.add_argument(
         "--if-differ",
         action="store_true",
         help="If to succeed and return status code 0 on different signals and fail on equal ones (inverse check)."
-             "This will still fail on different formats or durations.",
+        "This will still fail on different formats or durations.",
     )
     parser.add_argument(
         "--no-success-output",

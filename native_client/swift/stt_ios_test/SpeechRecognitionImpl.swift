@@ -21,58 +21,58 @@ struct FillComplexInputParm {
 class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDelegate {
     private var model: STTModel
     private var stream: STTStream?
-    
+
     private var captureSession = AVCaptureSession()
     private var audioData = Data()
-    
+
     override init() {
         let modelPath = Bundle.main.path(forResource: "coqui-stt-0.9.3-models", ofType: "tflite")!
         let scorerPath = Bundle.main.path(forResource: "coqui-stt-0.9.3-models", ofType: "scorer")!
 
         model = try! STTModel(modelPath: modelPath)
         try! model.enableExternalScorer(scorerPath: scorerPath)
-        
+
         super.init()
-        
+
         // prepare audio capture
         self.configureCaptureSession()
     }
-    
+
     // MARK: Microphone recognition
-    
+
     private func configureCaptureSession() {
         captureSession.beginConfiguration()
-        
+
         let audioDevice = AVCaptureDevice.default(.builtInMicrophone, for: .audio, position: .unspecified)
-        
+
         let audioDeviceInput = try! AVCaptureDeviceInput(device: audioDevice!)
         guard captureSession.canAddInput(audioDeviceInput) else { return }
         captureSession.addInput(audioDeviceInput)
-        
+
         let serialQueue = DispatchQueue(label: "serialQueue")
         let audioOutput = AVCaptureAudioDataOutput()
         audioOutput.setSampleBufferDelegate(self, queue: serialQueue)
-        
+
         guard captureSession.canAddOutput(audioOutput) else { return }
         captureSession.sessionPreset = .inputPriority
         captureSession.addOutput(audioOutput)
         captureSession.commitConfiguration()
     }
-    
+
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         var sourceFormat = (sampleBuffer.formatDescription?.audioFormatList[0].mASBD)!
         var destinationFormat = sourceFormat
         destinationFormat.mSampleRate = 16000.0
-        
+
         var audioConverterRef: AudioConverterRef?
         let createConverterStatus = AudioConverterNew(&sourceFormat, &destinationFormat, &audioConverterRef)
-        
+
         if (createConverterStatus != noErr) {
             print("Error creating converter")
         }
-        
+
         var quality = kAudioConverterQuality_Max
-        
+
         AudioConverterSetProperty(audioConverterRef!, kAudioConverterSampleRateConverterQuality, UInt32(MemoryLayout<UInt32>.size), &quality)
 
         let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer)
@@ -80,15 +80,15 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
         var pcmLength: Int = 0
         var pcmData: UnsafeMutablePointer<Int8>?
         let status: OSStatus = CMBlockBufferGetDataPointer(blockBuffer!, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: &pcmLength, dataPointerOut: &pcmData)
-        
+
         if status != noErr {
             print("Error getting something")
         } else {
             var input = FillComplexInputParm(source: pcmData!, sourceSize: UInt32(pcmLength))
-            
+
             let outputBuffer = malloc(pcmLength)
             memset(outputBuffer, 0, pcmLength);
-            
+
             var outputBufferList = AudioBufferList()
             outputBufferList.mNumberBuffers = 1
             outputBufferList.mBuffers.mData = outputBuffer
@@ -103,56 +103,56 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
                 inUserData: UnsafeMutableRawPointer?
             ) -> OSStatus {
                 var inputPtr = inUserData!.load(as: FillComplexInputParm.self)
-                
+
                 if (inputPtr.sourceSize <= 0) {
                     ioNumberDataPacket.pointee = 1
                     return -1
                 }
-                
+
                 let rawPtr = UnsafeMutableRawPointer(inputPtr.source)
-                
+
                 ioData.pointee.mNumberBuffers = 1
                 ioData.pointee.mBuffers.mData = rawPtr
                 ioData.pointee.mBuffers.mDataByteSize = inputPtr.sourceSize
                 ioData.pointee.mBuffers.mNumberChannels = 1
-                
+
                 ioNumberDataPacket.pointee = (inputPtr.sourceSize / 2)
                 inputPtr.sourceSize = 0
-                
+
                 return noErr
             };
-            
+
             var packetSize: UInt32 = UInt32(pcmLength / 2)
-            
+
             let status: OSStatus = AudioConverterFillComplexBuffer(audioConverterRef!, inputDataProc, &input, &packetSize, &outputBufferList, nil)
-        
+
             if (status != noErr) {
                 print("Error: " + status.description)
             } else {
                 let data = outputBufferList.mBuffers.mData!
                 let byteSize = outputBufferList.mBuffers.mDataByteSize
-                
+
                 let shorts = UnsafeBufferPointer(start: data.assumingMemoryBound(to: Int16.self), count: Int(byteSize / 2))
                 stream!.feedAudioContent(buffer: shorts)
-                
+
                 // save bytes to audio data for creating a pcm file later for the captured audio
                 let ptr = UnsafePointer(data.assumingMemoryBound(to: UInt8.self))
                 audioData.append(ptr, count: Int(byteSize))
             }
-            
+
             free(outputBuffer)
             AudioConverterDispose(audioConverterRef!)
         }
     }
-    
-    
+
+
     public func startMicrophoneRecognition() {
         audioData = Data()
         stream = try! model.createStream()
         captureSession.startRunning()
         print("Started listening...")
     }
-    
+
     private func writeAudioDataToPCMFile() {
         let documents = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true)[0]
         let filePath = documents + "/recording.pcm"
@@ -160,19 +160,19 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
         try! audioData.write(to: url)
         print("Saved audio to " + filePath)
     }
-    
+
     public func stopMicrophoneRecognition() {
         captureSession.stopRunning()
-        
+
         let result = stream?.finishStream()
         print("Result: " + result!)
-        
+
         // optional, useful for checking the recorded audio
         writeAudioDataToPCMFile()
     }
-    
+
     // MARK: Audio file recognition
-    
+
     private func render(audioContext: AudioContext?, stream: STTStream) {
         guard let audioContext = audioContext else {
             fatalError("Couldn't create the audioContext")
@@ -239,7 +239,7 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
             fatalError("Couldn't read the audio file")
         }
     }
-    
+
     private func recognizeFile(audioPath: String, completion: @escaping () -> ()) {
         let url = URL(fileURLWithPath: audioPath)
 
@@ -257,7 +257,7 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
             completion()
         })
     }
-    
+
     public func recognizeFiles() {
         // Add file names (without extension) here if you want to test recognition from files.
         // Remember to add them to the project under Copy Bundle Resources.
@@ -266,7 +266,7 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
         let serialQueue = DispatchQueue(label: "serialQueue")
         let group = DispatchGroup()
         group.enter()
-        
+
         if let first = files.first {
             serialQueue.async {
                 self.recognizeFile(audioPath: Bundle.main.path(forResource: first, ofType: "wav")!) {

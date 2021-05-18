@@ -545,7 +545,7 @@
     const npy_intp *dims = array_dimensions(ary);
     for (i=0; i < nd; ++i)
       n_non_one += (dims[i] != 1) ? 1 : 0;
-    if (n_non_one > 1)    
+    if (n_non_one > 1)
       array_clearflags(ary,NPY_ARRAY_CARRAY);
     array_enableflags(ary,NPY_ARRAY_FARRAY);
     /* Recompute the strides */

@@ -5,7 +5,6 @@ import tarfile
 
 import numpy as np
 import pandas
-
 from coqui_stt_training.util.importers import get_importers_parser
 
 COLUMN_NAMES = ["wav_filename", "wav_filesize", "transcript"]

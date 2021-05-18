@@ -1,3 +1,4 @@
+exclude: '^(taskcluster|.github|native_client/kenlm|native_client/ctcdecode/third_party|tensorflow|kenlm|doc/examples|data/alphabet.txt)'
 repos:
   - repo: 'https://github.com/pre-commit/pre-commit-hooks'
     rev: v2.3.0
@@ -21,7 +22,3 @@ repos:
       - id: isort
         name: isort (pyi)
         types: [pyi]
-  - repo: https://github.com/pycqa/pylint
-    rev: v2.8.2
-    hooks:
-    -   id: pylint

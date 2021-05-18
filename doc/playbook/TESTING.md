@@ -23,7 +23,7 @@ When you invoked `train.py` in the [training](TRAINING.md) section, and trained 
 
 ```
 Testing model on stt-data/cv-corpus-6.1-2020-12-11/id/clips/test.csv
-Test epoch | Steps: 1844 | Elapsed Time: 0:51:11                                                                                   
+Test epoch | Steps: 1844 | Elapsed Time: 0:51:11
 Test on stt-data/cv-corpus-6.1-2020-12-11/id/clips/test.csv - WER: 1.000000, CER: 0.824103, loss: 104.989326
 --------------------------------------------------------------------------------
 Best WER:
@@ -156,7 +156,7 @@ _Fine tuning_ and _transfer learning_ are two processes used to improve the accu
 
 For more information on [fine tuning in 🐸STT, please consult the documentation](https://stt.readthedocs.io/en/latest/TRAINING.html#fine-tuning-same-alphabet).
 
-For more information on [transfer learning in 🐸STT, please consult the documentation](https://stt.readthedocs.io/en/latest/TRAINING.html#transfer-learning-new-alphabet).  
+For more information on [transfer learning in 🐸STT, please consult the documentation](https://stt.readthedocs.io/en/latest/TRAINING.html#transfer-learning-new-alphabet).
 
 ---
 

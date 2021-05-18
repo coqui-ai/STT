@@ -35,7 +35,7 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
-  
+
   <PropertyGroup Condition=" '$(TargetFramework)' == 'uap10.0' ">
     <DefineConstants>$(DefineConstants);NO_HTTPS</DefineConstants>
   </PropertyGroup>

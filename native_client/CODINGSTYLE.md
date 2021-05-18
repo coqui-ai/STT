@@ -18,8 +18,8 @@ Variable naming
 File naming
 ===========
 
-* Source code files should have a `.cc` prefix and headers a `.h` prefix, excluding 
-  code important from elsewhere, which should follow local conventions, e.g. `.cpp` and `.h` 
+* Source code files should have a `.cc` prefix and headers a `.h` prefix, excluding
+  code important from elsewhere, which should follow local conventions, e.g. `.cpp` and `.h`
   in `ctcdecode/`.
 
 Doubts
