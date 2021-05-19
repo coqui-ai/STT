@@ -607,6 +607,96 @@ jobs:
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
+  training-basic-tests:
+    name: "Lin|Basic training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    strategy:
+      matrix:
+        bitrate: [8k, 16k]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - name: Run basic training tests
+        run: |
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+          ./ci_scripts/train-tests.sh ${{ matrix.bitrate }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-output_graph.pb
+          path: ${{ github.workspace }}/artifacts/output_graph.pb
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-output_graph.pbmm
+          path: ${{ github.workspace }}/artifacts/output_graph.pbmm
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-output_graph.tflite
+          path: ${{ github.workspace }}/artifacts/output_graph.tflite
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-checkpoint.tar.xz
+          path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
+  training-extra-tests:
+    name: "Lin|Extra training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    strategy:
+      matrix:
+        bitrate: [8k, 16k]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0
+      - name: Run extra training tests
+        run: |
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+          ./ci_scripts/train-extra-tests.sh ${{ matrix.bitrate }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-output_graph.pb
+          path: ${{ github.workspace }}/artifacts/output_graph.pb
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-output_graph.pbmm
+          path: ${{ github.workspace }}/artifacts/output_graph.pbmm
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-output_graph.tflite
+          path: ${{ github.workspace }}/artifacts/output_graph.tflite
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-checkpoint.tar.xz
+          path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
   # macOS jobs
   swig_macOS:
     name: "Mac|Build SWIG"
