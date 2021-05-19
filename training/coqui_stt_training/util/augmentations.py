@@ -15,7 +15,6 @@ from .audio import (
     max_dbfs,
     normalize_audio,
 )
-from .config import log_info
 from .helpers import (
     MEGABYTE,
     LimitingPool,
@@ -76,10 +75,10 @@ class GraphAugmentation(Augmentation):
         return tensor
 
     def units_per_ms(self):
-        from .flags import FLAGS  # pylint: disable=import-outside-toplevel
+        from .config import Config  # pylint: disable=import-outside-toplevel
 
         return (
-            FLAGS.audio_sample_rate / 1000.0
+            Config.audio_sample_rate / 1000.0
             if self.domain == "signal"
             else 1.0 / Config.feature_win_step
         )
@@ -123,11 +122,6 @@ def parse_augmentation(augmentation_spec):
             kwargs[pair[0]] = pair[1]
         else:
             raise ValueError("Unable to parse augmentation value assignment")
-    log_info(
-        "Processed augmentation type: [{}] with parameter settings: {}".format(
-            augmentation_cls.__name__, kwargs
-        )
-    )
     return augmentation_cls(*args, **kwargs)
 
 
