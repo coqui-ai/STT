@@ -556,7 +556,7 @@ def initialize_globals():
     c.augmentations = parse_augmentations(c.augment)
     print(f"Parsed augmentations from flags: {c.augmentations}")
     if c.augmentations and c.feature_cache and c.cache_for_epochs == 0:
-        log_warn(
+        print(
             "Due to current feature-cache settings the exact same sample augmentations of the first "
             "epoch will be repeated on all following epochs. This could lead to unintended over-fitting. "
             "You could use --cache_for_epochs <n_epochs> to invalidate the cache after a given number of epochs."
@@ -569,7 +569,7 @@ def initialize_globals():
 
     # Caching
     if c.cache_for_epochs == 1:
-        log_warn(
+        print(
             "--cache_for_epochs == 1 is (re-)creating the feature cache on every epoch but will never use it."
         )
 

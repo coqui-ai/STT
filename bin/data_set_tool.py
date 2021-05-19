@@ -32,8 +32,8 @@ AUDIO_TYPE_LOOKUP = {"wav": AUDIO_TYPE_WAV, "opus": AUDIO_TYPE_OPUS}
 
 
 def build_data_set():
-    audio_type = AUDIO_TYPE_LOOKUP[Config.audio_type]
-    augmentations = parse_augmentations(Config.augment)
+    audio_type = AUDIO_TYPE_LOOKUP[CLI_ARGS.audio_type]
+    augmentations = parse_augmentations(CLI_ARGS.augment)
     print(f"Parsed augmentations from flags: {augmentations}")
     if any(not isinstance(a, SampleAugmentation) for a in augmentations):
         print(
