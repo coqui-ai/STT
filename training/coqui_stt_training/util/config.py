@@ -467,7 +467,7 @@ class _SttConfig(Coqpit):
     )
 
     # Decoder
-    bytes_output_mode: float = field(
+    bytes_output_mode: bool = field(
         default=False,
         metadata=dict(
             help="enable Bytes Output Mode mode. When this is used the model outputs UTF-8 byte values directly rather than using an alphabet mapping. The --alphabet_config_path option will be ignored. See the training documentation for more details."
