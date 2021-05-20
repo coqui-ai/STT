@@ -17,7 +17,7 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --noshow_progressbar --noearly_stop \
+python -u train.py --show_progressbar false --early_stop false \
   --train_files ${ldc93s1_csv} --train_batch_size 1 \
   --feature_cache '/tmp/ldc93s1_cache' \
   --dev_files ${ldc93s1_csv} --dev_batch_size 1 \
@@ -27,4 +27,4 @@ python -u train.py --noshow_progressbar --noearly_stop \
   --learning_rate 0.001 --dropout_rate 0.05  --export_dir '/tmp/train_bytes' \
   --scorer_path 'data/smoke_test/pruned_lm.bytes.scorer' \
   --audio_sample_rate ${audio_sample_rate} \
-  --bytes_output_mode
+  --bytes_output_mode true

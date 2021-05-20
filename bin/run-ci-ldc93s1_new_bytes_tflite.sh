@@ -16,11 +16,11 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --noshow_progressbar \
+python -u train.py --show_progressbar false \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt_bytes' \
   --export_dir '/tmp/train_bytes_tflite' \
   --scorer_path 'data/smoke_test/pruned_lm.bytes.scorer' \
-  --bytes_output_mode \
+  --bytes_output_mode true \
   --audio_sample_rate ${audio_sample_rate} \
-  --export_tflite
+  --export_tflite true

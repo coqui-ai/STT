@@ -8,7 +8,7 @@ from multiprocessing.dummy import Pool
 import numpy as np
 from attrdict import AttrDict
 
-from .flags import FLAGS
+from .config import Config
 from .io import open_remote
 from .text import levenshtein
 
@@ -75,7 +75,7 @@ def calculate_and_print_report(wav_filenames, labels, decodings, losses, dataset
     samples.sort(key=lambda s: s.loss, reverse=True)
 
     # Then order by ascending WER/CER
-    if FLAGS.bytes_output_mode:
+    if Config.bytes_output_mode:
         samples.sort(key=lambda s: s.cer)
     else:
         samples.sort(key=lambda s: s.wer)
@@ -96,11 +96,11 @@ def print_report(samples, losses, wer, cer, dataset_name):
     )
     print("-" * 80)
 
-    best_samples = samples[: FLAGS.report_count]
-    worst_samples = samples[-FLAGS.report_count :]
+    best_samples = samples[: Config.report_count]
+    worst_samples = samples[-Config.report_count :]
     median_index = int(len(samples) / 2)
-    median_left = int(FLAGS.report_count / 2)
-    median_right = FLAGS.report_count - median_left
+    median_left = int(Config.report_count / 2)
+    median_right = Config.report_count - median_left
     median_samples = samples[median_index - median_left : median_index + median_right]
 
     def print_single_sample(sample):

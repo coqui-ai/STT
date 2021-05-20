@@ -13,9 +13,9 @@ def main():
         version = fin.read().strip()
 
     install_requires_base = [
-        "absl-py",
         "attrdict",
         "bs4",
+        "coqpit",
         "numpy",
         "optuna",
         "opuslib == 2.0.0",

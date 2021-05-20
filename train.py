@@ -9,4 +9,4 @@ if __name__ == "__main__":
         print("Training package is not installed. See training documentation.")
         raise
 
-    ds_train.run_script()
+    ds_train.main()
