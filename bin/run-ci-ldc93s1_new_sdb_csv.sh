@@ -24,10 +24,10 @@ fi;
 export CUDA_VISIBLE_DEVICES=0
 
 python -u train.py --show_progressbar false --early_stop false \
-  --train_files ${ldc93s1_sdb},${ldc93s1_csv} --train_batch_size 1 \
+  --train_files ${ldc93s1_sdb} ${ldc93s1_csv} --train_batch_size 1 \
   --feature_cache '/tmp/ldc93s1_cache_sdb_csv' \
-  --dev_files ${ldc93s1_sdb},${ldc93s1_csv} --dev_batch_size 1 \
-  --test_files ${ldc93s1_sdb},${ldc93s1_csv} --test_batch_size 1 \
+  --dev_files ${ldc93s1_sdb} ${ldc93s1_csv} --dev_batch_size 1 \
+  --test_files ${ldc93s1_sdb} ${ldc93s1_csv} --test_batch_size 1 \
   --n_hidden 100 --epochs $epoch_count \
   --max_to_keep 1 --checkpoint_dir '/tmp/ckpt_sdb_csv' \
   --learning_rate 0.001 --dropout_rate 0.05  --export_dir '/tmp/train_sdb_csv' \
