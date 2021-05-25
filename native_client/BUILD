@@ -210,7 +210,7 @@ tf_cc_shared_object(
 )
 
 ios_static_framework(
-    name = "coqui_stt_ios",
+    name = "stt_ios",
     deps = [":coqui_stt_bundle"],
     families = ["iphone", "ipad"],
     minimum_os_version = "9.0",
