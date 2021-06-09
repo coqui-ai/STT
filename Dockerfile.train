@@ -17,9 +17,11 @@ RUN apt-get update && \
         libboost-all-dev \
         libbz2-dev \
         libopus0 \
+	libopusfile0 \
         libsndfile1 \
         unzip \
-        wget && \
+        wget \
+	sox && \
     apt-get purge -y python3-xdg && \
     rm -rf /var/lib/apt/lists/
 
