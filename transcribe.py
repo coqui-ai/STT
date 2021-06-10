@@ -7,8 +7,9 @@ import os
 import sys
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-import tensorflow as tf
 import tensorflow.compat.v1.logging as tflogging
+
+import tensorflow as tf
 
 tflogging.set_verbosity(tflogging.ERROR)
 import logging
