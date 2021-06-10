@@ -3,9 +3,8 @@
 
 import sys
 
-from google.protobuf import text_format
-
 import tensorflow.compat.v1 as tfv1
+from google.protobuf import text_format
 
 
 def main():

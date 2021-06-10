@@ -14,7 +14,6 @@ from os import makedirs, path
 import pandas
 from bs4 import BeautifulSoup
 from coqui_stt_training.util.downloader import maybe_download
-
 from tensorflow.python.platform import gfile
 
 """The number of jobs to run in parallel"""
