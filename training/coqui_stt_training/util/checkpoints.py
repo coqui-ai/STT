@@ -1,7 +1,8 @@
 import sys
 
-import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
+
+import tensorflow as tf
 
 from .config import Config, log_error, log_info, log_warn
 

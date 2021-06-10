@@ -17,9 +17,9 @@ import time
 
 import numpy as np
 import progressbar
+import tensorflow.compat.v1 as tfv1
 
 import tensorflow as tf
-import tensorflow.compat.v1 as tfv1
 
 tfv1.logging.set_verbosity(
     {

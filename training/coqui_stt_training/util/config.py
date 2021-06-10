@@ -7,12 +7,11 @@ from dataclasses import asdict, dataclass, field
 from typing import List
 
 import progressbar
+import tensorflow.compat.v1 as tfv1
 from attrdict import AttrDict
 from coqpit import MISSING, Coqpit, check_argument
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
 from xdg import BaseDirectory as xdg
-
-import tensorflow.compat.v1 as tfv1
 
 from .augmentations import NormalizeSampleRate, parse_augmentations
 from .gpu import get_available_gpus
