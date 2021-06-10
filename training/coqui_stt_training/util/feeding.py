@@ -5,9 +5,9 @@ from collections import Counter
 from functools import partial
 
 import numpy as np
+from tensorflow.python.ops import gen_audio_ops as contrib_audio
 
 import tensorflow as tf
-from tensorflow.python.ops import gen_audio_ops as contrib_audio
 
 from .audio import DEFAULT_FORMAT, pcm_to_np, read_frames_from_file, vad_split
 from .augmentations import apply_graph_augmentations, apply_sample_augmentations
