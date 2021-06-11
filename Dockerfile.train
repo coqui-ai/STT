@@ -1,5 +1,38 @@
 # Please refer to the TRAINING documentation, "Basic Dockerfile for training"
 
+FROM ubuntu:20.04 AS kenlm-build
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential cmake libboost-system-dev \
+    libboost-thread-dev libboost-program-options-dev \
+    libboost-test-dev libeigen3-dev zlib1g-dev \
+    libbz2-dev liblzma-dev
+
+# Build KenLM to generate new scorers
+WORKDIR /code
+COPY kenlm /code/kenlm
+RUN cd /code/kenlm && \
+    mkdir -p build && \
+    cd build && \
+    cmake .. && \
+    make -j $(nproc)
+
+
+FROM ubuntu:20.04 AS wget-binaries
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget unzip xz-utils
+
+# Tool to convert output graph for inference
+RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
+    unzip temp.zip
+
+RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/native_client.tf.Linux.tar.xz -O temp.tar.xz && \
+    tar -xf temp.tar.xz
+
+
 FROM nvcr.io/nvidia/tensorflow:21.05-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,18 +43,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 #
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        cmake \
-        curl \
-        git \
-        libboost-all-dev \
-        libbz2-dev \
         libopus0 \
-	libopusfile0 \
+        libopusfile0 \
         libsndfile1 \
-        unzip \
-        wget \
-	sox && \
+        sox && \
     apt-get purge -y python3-xdg && \
     rm -rf /var/lib/apt/lists/
 
@@ -29,10 +54,6 @@ RUN apt-get update && \
 RUN pip3 install --upgrade pip wheel setuptools
 
 WORKDIR /code
-
-# Tool to convert output graph for inference
-RUN wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
-    unzip temp.zip && rm temp.zip
 
 COPY native_client /code/native_client
 COPY .git /code/.git
@@ -50,15 +71,12 @@ RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
 COPY training /code/training
-RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
+# Copy files from previous build stages
+COPY --from=kenlm-build /code/kenlm /code/kenlm
+COPY --from=wget-binaries /convert_graphdef_memmapped_format /code/convert_graphdef_memmapped_format
+COPY --from=wget-binaries /generate_scorer_package /code/generate_scorer_package
 
-# Build KenLM to generate new scorers
-COPY kenlm /code/kenlm
-RUN cd /code/kenlm && \
-    mkdir -p build && \
-    cd build && \
-    cmake .. && \
-    make -j $(nproc)
+RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
 
 # Copy rest of the code and test training
 COPY . /code
