@@ -1,4 +1,6 @@
-# Please refer to the TRAINING documentation, "Basic Dockerfile for training"
+# This is a Dockerfile useful for training models with Coqui STT.
+# You can train "acoustic" models with audio + Tensorflow, and
+# you can train "language" models with text + KenLM.
 
 FROM ubuntu:20.04 AS kenlm-build
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,7 +19,10 @@ RUN cd /code/kenlm && \
     mkdir -p build && \
     cd build && \
     cmake .. && \
-    make -j $(nproc)
+    make -j $(nproc) || \
+    echo "ERROR: Failed to build KenLM." \
+    echo "ERROR: You must the STT repo recursively before building this Dockerfile." \
+    echo "ERROR: $ git clone --recurse-submodules https://github.com/coqui-ai/STT.git"
 
 
 FROM ubuntu:20.04 AS wget-binaries
@@ -36,10 +41,9 @@ RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/downloa
 FROM nvcr.io/nvidia/tensorflow:21.05-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
-# We need to purge python3-xdg because it's breaking STT install later with
-# weird errors about setuptools
-#
-# libopus0 and libsndfile1 are dependencies for audio augmentation
+# We need to purge python3-xdg because
+# it's breaking STT install later with
+# errors about setuptools
 #
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -50,7 +54,7 @@ RUN apt-get update && \
     apt-get purge -y python3-xdg && \
     rm -rf /var/lib/apt/lists/
 
-# Make sure pip and its deps  are up-to-date
+# Make sure pip and its dependencies are up-to-date
 RUN pip3 install --upgrade pip wheel setuptools
 
 WORKDIR /code
@@ -64,10 +68,6 @@ COPY training/coqui_stt_training/GRAPH_VERSION /code/training/coqui_stt_training
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
 RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
 
-# Install STT
-#  - No need for the decoder since we did it earlier
-#  - There is already correct TensorFlow GPU installed on the base image,
-#    we don't want to break that
 COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
 COPY training /code/training
@@ -76,6 +76,10 @@ COPY --from=kenlm-build /code/kenlm /code/kenlm
 COPY --from=wget-binaries /convert_graphdef_memmapped_format /code/convert_graphdef_memmapped_format
 COPY --from=wget-binaries /generate_scorer_package /code/generate_scorer_package
 
+# Install STT
+# No need for the decoder since we did it earlier
+# TensorFlow GPU should already be installed on the base image,
+# and we don't want to break that
 RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
 
 # Copy rest of the code and test training
