@@ -20,9 +20,10 @@ RUN cd /code/kenlm && \
     cd build && \
     cmake .. && \
     make -j $(nproc) || \
-    echo "ERROR: Failed to build KenLM." \
-    echo "ERROR: You must the STT repo recursively before building this Dockerfile." \
-    echo "ERROR: $ git clone --recurse-submodules https://github.com/coqui-ai/STT.git"
+    echo "ERROR: Failed to build KenLM."; \
+    echo "ERROR: You must the STT repo recursively before building this Dockerfile."; \
+    echo "ERROR: $ git clone --recurse-submodules https://github.com/coqui-ai/STT.git"; \
+    exit 1;
 
 
 FROM ubuntu:20.04 AS wget-binaries
