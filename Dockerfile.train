@@ -53,7 +53,8 @@ RUN apt-get update && \
         libopus0 \
         libopusfile0 \
         libsndfile1 \
-        sox && \
+        sox \
+        libsox-fmt-mp3 && \
     apt-get purge -y python3-xdg && \
     rm -rf /var/lib/apt/lists/
 
