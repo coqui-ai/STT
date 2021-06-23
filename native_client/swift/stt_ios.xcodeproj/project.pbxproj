@@ -43,7 +43,7 @@
 		505B136524960D550007DADA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		505B136A24960D550007DADA /* stt_iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = stt_iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		505B137B249619C90007DADA /* stt_ios.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = stt_ios.modulemap; sourceTree = "<group>"; };
-		505B137C24961AF20007DADA /* coqui-stt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = coqui-stt.h; path = ../../coqui-stt.h; sourceTree = "<group>"; };
+		505B137C24961AF20007DADA /* coqui-stt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "coqui-stt.h"; path = "../../coqui-stt.h"; sourceTree = "<group>"; };
 		505B137E24961BA70007DADA /* STT.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = STT.swift; sourceTree = "<group>"; };
 		AD2FD0F825678F8800314F2E /* stt_ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = stt_ios.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
