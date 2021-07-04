@@ -23,12 +23,13 @@ def main():
         "progressbar2",
         "pyogg >= 0.6.14a1",
         "pyxdg",
-        "resampy >= 0.2.2",
         "requests",
+        "resampy >= 0.2.2",
         "semver",
         "six",
-        "sox",
         "soundfile",
+        "sox",
+        "tf2onnx",
     ]
 
     decoder_pypi_dep = ["coqui_stt_ctcdecoder == {}".format(version)]
