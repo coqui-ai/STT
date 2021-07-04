@@ -1270,7 +1270,7 @@ def export_onnx():
 
     meta = onnx_model.metadata_props.add()
     meta.key = "beam_width"
-    meta.value = str(Config.beam_width)
+    meta.value = str(Config.export_beam_width)
 
     meta = onnx_model.metadata_props.add()
     meta.key = "alphabet"
