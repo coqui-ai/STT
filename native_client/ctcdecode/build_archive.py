@@ -32,6 +32,7 @@ INCLUDES = [
     OPENFST_DIR + "/src/include",
     "third_party/ThreadPool",
     "third_party/object_pool",
+    "../cereal/include",
 ]
 
 KENLM_FILES = (

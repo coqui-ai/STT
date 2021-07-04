@@ -299,6 +299,9 @@ class _SttConfig(Coqpit):
     export_tflite: bool = field(
         default=False, metadata=dict(help="export a graph ready for TF Lite engine")
     )
+    export_onnx: bool = field(
+        default=False, metadata=dict(help="export a graph in ONNX format")
+    )
     n_steps: int = field(
         default=16,
         metadata=dict(

@@ -1,7 +1,10 @@
+#include <fstream>
+
 #include "alphabet.h"
 #include "ctcdecode/decoder_utils.h"
+#include "cereal/types/unordered_map.hpp"
+#include "cereal/archives/json.hpp"
 
-#include <fstream>
 
 // std::getline, but handle newline conventions from multiple platforms instead
 // of just the platform this code was built for
@@ -72,24 +75,10 @@ Alphabet::init(const char *config_file)
 std::string
 Alphabet::Serialize()
 {
-  // Serialization format is a sequence of (key, value) pairs, where key is
-  // a uint16_t and value is a uint16_t length followed by `length` UTF-8
-  // encoded bytes with the label.
   std::stringstream out;
-
-  // We start by writing the number of pairs in the buffer as uint16_t.
-  uint16_t size = size_;
-  out.write(reinterpret_cast<char*>(&size), sizeof(size));
-
-  for (auto it = label_to_str_.begin(); it != label_to_str_.end(); ++it) {
-    uint16_t key = it->first;
-    string str = it->second;
-    uint16_t len = str.length();
-    // Then we write the key as uint16_t, followed by the length of the value
-    // as uint16_t, followed by `length` bytes (the value itself).
-    out.write(reinterpret_cast<char*>(&key), sizeof(key));
-    out.write(reinterpret_cast<char*>(&len), sizeof(len));
-    out.write(str.data(), len);
+  {
+    cereal::JSONOutputArchive arc(out, cereal::JSONOutputArchive::Options::NoIndent());
+    arc(size_, label_to_str_);
   }
 
   return out.str();
@@ -98,39 +87,15 @@ Alphabet::Serialize()
 int
 Alphabet::Deserialize(const char* buffer, const int buffer_size)
 {
-  // See util/text.py for an explanation of the serialization format.
-  int offset = 0;
-  if (buffer_size - offset < sizeof(uint16_t)) {
-    return 1;
-  }
-  uint16_t size = *(uint16_t*)(buffer + offset);
-  offset += sizeof(uint16_t);
-  size_ = size;
+  std::string input(buffer, buffer_size);
+  std::stringstream stream(input);
+  cereal::JSONInputArchive arc(stream);
+  arc(size_, label_to_str_);
 
-  for (int i = 0; i < size; ++i) {
-    if (buffer_size - offset < sizeof(uint16_t)) {
-      return 1;
-    }
-    uint16_t label = *(uint16_t*)(buffer + offset);
-    offset += sizeof(uint16_t);
-
-    if (buffer_size - offset < sizeof(uint16_t)) {
-      return 1;
-    }
-    uint16_t val_len = *(uint16_t*)(buffer + offset);
-    offset += sizeof(uint16_t);
-
-    if (buffer_size - offset < val_len) {
-      return 1;
-    }
-    std::string val(buffer+offset, val_len);
-    offset += val_len;
-
-    label_to_str_[label] = val;
-    str_to_label_[val] = label;
-
-    if (val == " ") {
-      space_label_ = label;
+  for (auto it : label_to_str_) {
+    str_to_label_[it.second] = it.first;
+    if (it.second == " ") {
+      space_label_ = it.first;
     }
   }
 

@@ -901,16 +901,17 @@ def test():
         save_samples_json(samples, Config.test_output_file)
 
 
-def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
+def create_inference_graph(batch_size=1, n_steps=16, tflite=False, onnx=False):
     batch_size = batch_size if batch_size > 0 else None
 
     # Create feature computation graph
-    input_samples = tfv1.placeholder(
-        tf.float32, [Config.audio_window_samples], "input_samples"
-    )
-    samples = tf.expand_dims(input_samples, -1)
-    mfccs, _ = audio_to_features(samples, Config.audio_sample_rate)
-    mfccs = tf.identity(mfccs, name="mfccs")
+    if not onnx:
+        input_samples = tfv1.placeholder(
+            tf.float32, [Config.audio_window_samples], "input_samples"
+        )
+        samples = tf.expand_dims(input_samples, -1)
+        mfccs, _ = audio_to_features(samples, Config.audio_sample_rate)
+        mfccs = tf.identity(mfccs, name="mfccs")
 
     # Input tensor will be of shape [batch_size, n_steps, 2*n_context+1, n_input]
     # This shape is read by the native_client in STT_CreateModel to know the
@@ -946,7 +947,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
     # One rate per layer
     no_dropout = [None] * 6
 
-    if tflite:
+    if tflite or onnx:
         rnn_impl = rnn_impl_static_rnn
     else:
         rnn_impl = rnn_impl_lstmblockfusedcell
@@ -954,7 +955,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
     logits, layers = create_model(
         batch_x=input_tensor,
         batch_size=batch_size,
-        seq_length=seq_length if not Config.export_tflite else None,
+        seq_length=seq_length if not tflite and not onnx else None,
         dropout=no_dropout,
         previous_state=previous_state,
         overlap=False,
@@ -964,7 +965,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
     # TF Lite runtime will check that input dimensions are 1, 2 or 4
     # by default we get 3, the middle one being batch_size which is forced to
     # one on inference graph, so remove that dimension
-    if tflite:
+    if tflite or onnx:
         logits = tf.squeeze(logits, [1])
 
     # Apply softmax for CTC decoder
@@ -998,21 +999,21 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         "input": input_tensor,
         "previous_state_c": previous_state_c,
         "previous_state_h": previous_state_h,
-        "input_samples": input_samples,
     }
 
-    if not Config.export_tflite:
+    if not tflite and not onnx:
         inputs["input_lengths"] = seq_length
 
-    outputs = {
-        "outputs": probs,
-        "new_state_c": new_state_c,
-        "new_state_h": new_state_h,
-        "mfccs": mfccs,
+    if not onnx:
+        inputs["input_samples"] = (input_samples,)
+
+    outputs = {"outputs": probs, "new_state_c": new_state_c, "new_state_h": new_state_h}
+
+    if not onnx:
+        outputs["mfccs"] = mfccs
         # Expose internal layers for downstream applications
-        "layer_3": layers["layer_3"],
-        "layer_5": layers["layer_5"],
-    }
+        outputs["layer_3"] = layers["layer_3"]
+        outputs["layer_5"] = layers["layer_5"]
 
     return inputs, outputs, layers
 
@@ -1156,6 +1157,173 @@ def export():
     )
 
 
+def export_onnx():
+    r"""
+    Restores the trained variables into a simpler graph that will be exported for serving.
+    """
+    log_info("Exporting the model to ONNX format...")
+
+    inputs, outputs, _ = create_inference_graph(
+        batch_size=Config.export_batch_size,
+        n_steps=Config.n_steps,
+        onnx=True,
+    )
+
+    # Prevent further graph changes
+    tfv1.get_default_graph().finalize()
+
+    # Liftoff: frozen protobuf export
+    output_names_tensors = [
+        tensor.op.name for tensor in outputs.values() if isinstance(tensor, tf.Tensor)
+    ]
+    output_names_ops = [
+        op.name for op in outputs.values() if isinstance(op, tf.Operation)
+    ]
+    output_names = output_names_tensors + output_names_ops
+
+    with tf.Session() as session:
+        # Restore variables from checkpoint
+        load_graph_for_evaluation(session)
+
+        output_filename = Config.export_file_name + ".pb"
+        if Config.remove_export:
+            if isdir_remote(Config.export_dir):
+                log_info("Removing old export")
+                remove_remote(Config.export_dir)
+
+        output_graph_path = os.path.join(Config.export_dir, output_filename)
+
+        if not is_remote_path(Config.export_dir) and not os.path.isdir(
+            Config.export_dir
+        ):
+            os.makedirs(Config.export_dir)
+
+        frozen_graph = tfv1.graph_util.convert_variables_to_constants(
+            sess=session,
+            input_graph_def=tfv1.get_default_graph().as_graph_def(),
+            output_node_names=output_names,
+        )
+
+        frozen_graph = tfv1.graph_util.extract_sub_graph(
+            graph_def=frozen_graph, dest_nodes=output_names
+        )
+
+        # First stage separation: frozen protobuf to TFLite
+        output_tflite_path = os.path.join(
+            Config.export_dir, output_filename.replace(".pb", ".tflite")
+        )
+
+        converter = tf.lite.TFLiteConverter(
+            frozen_graph,
+            input_tensors=inputs.values(),
+            output_tensors=outputs.values(),
+        )
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        tflite_model = converter.convert()
+
+        with open_remote(output_tflite_path, "wb") as fout:
+            fout.write(tflite_model)
+
+    # Second stage ignition: TFLite to ONNX
+    output_onnx_path = os.path.join(
+        Config.export_dir, output_filename.replace(".pb", ".onnx")
+    )
+
+    # Sadly there's no stable programmatic API for TFLite conversion, so we spawn
+    # a subprocess here.
+    import subprocess
+
+    subprocess.run(
+        [
+            "python",
+            "-m",
+            "tf2onnx.convert",
+            "--opset",
+            "11",
+            "--tflite",
+            output_tflite_path,
+            "--output",
+            output_onnx_path,
+        ]
+    )
+
+    # Third stage ignition: load converted ONNX model and insert metadata
+    import onnx
+
+    onnx_model = onnx.load(output_onnx_path)
+
+    graph_version = int(file_relative_read("GRAPH_VERSION").strip())
+    assert graph_version > 0
+    onnx_model.model_version = graph_version
+
+    meta = onnx_model.metadata_props.add()
+    meta.key = "sample_rate"
+    meta.value = str(Config.audio_sample_rate)
+
+    meta = onnx_model.metadata_props.add()
+    meta.key = "feature_win_len"
+    meta.value = str(Config.feature_win_len)
+
+    meta = onnx_model.metadata_props.add()
+    meta.key = "feature_win_step"
+    meta.value = str(Config.feature_win_step)
+
+    meta = onnx_model.metadata_props.add()
+    meta.key = "beam_width"
+    meta.value = str(Config.beam_width)
+
+    meta = onnx_model.metadata_props.add()
+    meta.key = "alphabet"
+    meta.value = Config.alphabet.Serialize()
+
+    if Config.export_language:
+        meta = onnx_model.metadata_props.add()
+        meta.key = "language"
+        meta.value = str(Config.export_language)
+
+    print(f"Model metadata: {onnx_model.metadata_props}")
+    onnx.save(onnx_model, output_onnx_path)
+
+    # Cruise phase
+    log_info("ONNX model exported at %s" % (Config.export_dir))
+
+    metadata_fname = os.path.join(
+        Config.export_dir,
+        "{}_{}_{}.md".format(
+            Config.export_author_id,
+            Config.export_model_name,
+            Config.export_model_version,
+        ),
+    )
+
+    model_runtime = "onnx"
+    with open_remote(metadata_fname, "w") as f:
+        f.write("---\n")
+        f.write("author: {}\n".format(Config.export_author_id))
+        f.write("model_name: {}\n".format(Config.export_model_name))
+        f.write("model_version: {}\n".format(Config.export_model_version))
+        f.write("contact_info: {}\n".format(Config.export_contact_info))
+        f.write("license: {}\n".format(Config.export_license))
+        f.write("language: {}\n".format(Config.export_language))
+        f.write("runtime: {}\n".format(model_runtime))
+        f.write("min_stt_version: {}\n".format(Config.export_min_stt_version))
+        f.write("max_stt_version: {}\n".format(Config.export_max_stt_version))
+        f.write(
+            "acoustic_model_url: <replace this with a publicly available URL of the acoustic model>\n"
+        )
+        f.write(
+            "scorer_url: <replace this with a publicly available URL of the scorer, if present>\n"
+        )
+        f.write("---\n")
+        f.write("{}\n".format(Config.export_description))
+
+    log_info(
+        "Model metadata file saved to {}. Before submitting the exported model for publishing make sure all information in the metadata file is correct, and complete the URL fields.".format(
+            metadata_fname
+        )
+    )
+
+
 def package_zip():
     # --export_dir path/to/export/LANG_CODE/ => path/to/export/LANG_CODE.zip
     export_dir = os.path.join(
@@ -1263,7 +1431,10 @@ def main():
 
     if Config.export_dir and not Config.export_zip:
         tfv1.reset_default_graph()
-        export()
+        if Config.export_onnx:
+            export_onnx()
+        else:
+            export()
 
     if Config.export_zip:
         tfv1.reset_default_graph()
