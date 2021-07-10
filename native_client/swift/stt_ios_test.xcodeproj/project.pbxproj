@@ -133,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC34224CF4EFD0073C22E /* AudioContext.swift */,
+				38E76A822683AB0500E8DFA5 /* AudioInput.swift */,
 				504EC34124CF4EFD0073C22E /* SpeechRecognitionImpl.swift */,
 				50F787F22497683900D52237 /* AppDelegate.swift */,
 				50F787F42497683900D52237 /* SceneDelegate.swift */,
@@ -141,7 +142,6 @@
 				50F787FD2497683A00D52237 /* LaunchScreen.storyboard */,
 				50F788002497683A00D52237 /* Info.plist */,
 				50F787FA2497683A00D52237 /* Preview Content */,
-				38E76A822683AB0500E8DFA5 /* AudioInput.swift */,
 			);
 			path = stt_ios_test;
 			sourceTree = "<group>";
