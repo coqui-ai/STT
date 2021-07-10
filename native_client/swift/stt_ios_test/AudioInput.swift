@@ -2,12 +2,11 @@ import AVFAudio
 
 class AudioInput {
     private let engine: AVAudioEngine = AVAudioEngine()
-
     private let converter: AVAudioConverter
-
-    private let onShorts: (_ shorts: UnsafeBufferPointer<Int16>) -> Void
+    private let onData: (_ shorts: [Int16]) -> Void
 
     private let bus: Int = 0
+    private let processingInterval = 0.2
 
     private var audioData: Data = Data()
 
@@ -18,15 +17,15 @@ class AudioInput {
         interleaved: true
     )!
 
-    init(onShorts: @escaping (_ shorts: UnsafeBufferPointer<Int16>) -> Void) {
-        self.onShorts = onShorts
+    init(onData: @escaping (_ shorts: [Int16]) -> Void) {
+        self.onData = onData
 
         let inputFormat = engine.inputNode.outputFormat(forBus: bus)
         self.converter = AVAudioConverter(from: inputFormat, to: outputFormat)!
 
         engine.inputNode.installTap(
             onBus: bus,
-            bufferSize: 2048,
+            bufferSize: UInt32(processingInterval * inputFormat.sampleRate),
             format: inputFormat,
             block: handleInput
         )
@@ -61,7 +60,7 @@ class AudioInput {
             count: Int(convertedBuffer.frameLength)
         )
 
-        onShorts(shorts)
+        onData(Array(shorts))
     }
 
     func start() {

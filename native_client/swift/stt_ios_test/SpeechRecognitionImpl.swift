@@ -16,8 +16,12 @@ class SpeechRecognitionImpl {
     private var model: STTModel
     private var stream: STTStream?
 
+    private let modelFeedInterval = 0.1
+
     private var audioData = Data()
+    private var timer: Timer? = nil
     private var audioInput: AudioInput? = nil
+    private var bufferQueue: [[Int16]] = [[Int16]]()
 
     init() {
         let modelPath = Bundle.main.path(forResource: "model", ofType: "tflite")!
@@ -32,23 +36,43 @@ class SpeechRecognitionImpl {
         stream = try! model.createStream()
 
         audioInput = AudioInput() { shorts in
-            self.stream!.feedAudioContent(buffer: shorts)
-            self.audioData.append(shorts)
-            let partialResult = self.stream!.intermediateDecode()
-            print(partialResult)
+            self.bufferQueue.append(shorts)
         }
 
         print("Started listening...")
         audioInput!.start()
+
+        timer = Timer.scheduledTimer(
+            withTimeInterval: modelFeedInterval,
+            repeats: true
+        ) { _ in
+            if (!self.bufferQueue.isEmpty) {
+                let shorts = self.bufferQueue.removeFirst()
+                self.stream!.feedAudioContent(buffer: shorts)
+
+                // (optional) get partial result
+                let partialResult = self.stream!.intermediateDecode()
+                print(partialResult)
+
+                // (optional) collect audio data for writing to file
+                shorts.withUnsafeBufferPointer { buffPtr in
+                    self.audioData.append(buffPtr)
+                }
+            }
+        }
     }
 
     public func stopMicrophoneRecognition() {
         audioInput!.stop()
 
-        let result = stream?.finishStream()
-        print("Result: " + result!)
+        timer!.invalidate()
+        timer = nil
+        bufferQueue.removeAll()
 
-        // optional, useful for checking the recorded audio
+        let result = stream?.finishStream() ?? ""
+        print("Result: " + result)
+
+        // (optional) useful for checking the recorded audio
         writeAudioDataToPCMFile()
     }
 
