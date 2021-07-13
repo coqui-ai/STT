@@ -701,6 +701,110 @@ jobs:
         with:
           name: ${{ github.job }}-checkpoint.tar.xz
           path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
+  twine-upload:
+    name: "Upload to PyPI"
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: [build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Update pip and install twine
+        run: |
+          python -m pip install -U pip
+          python -m pip install -U twine
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.6.8-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.7.9-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.8.9-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.9.4-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.6.8-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7.9-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.8.9-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9.4-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.6.8-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.7.9-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.8.8-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.9.4-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.6.8-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7.9-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.8.8-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9.4-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.6-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.7-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.8-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tf-3.9-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.6-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.8-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7-armv7.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7-aarch64.whl
+      - name: Setup PyPI config
+        run: |
+          cat << EOF > ~/.pypirc
+          [pypi_stt]
+          username=__token__
+          password=${{ secrets.PYPI_STT_TOKEN }}
+          [pypi_tflite]
+          username=__token__
+          password=${{ secrets.PYPI_TFLITE_TOKEN }}
+          EOF
+      - run: |
+          twine upload --repository pypi_stt stt-*.whl
+          twine upload --repository pypi_tflite stt_tflite-*.whl
   # macOS jobs
   swig_macOS:
     name: "Mac|Build SWIG"
