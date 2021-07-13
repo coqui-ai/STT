@@ -613,6 +613,7 @@ jobs:
     name: "Lin|Basic training tests"
     runs-on: ubuntu-20.04
     needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         bitrate: [8k, 16k]
@@ -657,6 +658,7 @@ jobs:
     name: "Lin|Extra training tests"
     runs-on: ubuntu-20.04
     needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         bitrate: [8k, 16k]
@@ -1537,6 +1539,7 @@ jobs:
     name: "Win|Test C++ binary"
     runs-on: windows-2019
     needs: [build-lib_Windows, train-test-model-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         build-flavor: ["tf", "tflite"]
