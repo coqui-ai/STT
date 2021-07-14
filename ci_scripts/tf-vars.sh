@@ -124,7 +124,7 @@ if [ "${OS}" = "Linux" ]; then
         export PYTHON_BIN_PATH=/usr/bin/python3
     fi
 elif [ "${OS}" != "${TC_MSYS_VERSION}" ]; then
-    export PYTHON_BIN_PATH=/usr/bin/python2.7
+    export PYTHON_BIN_PATH=python
 fi
 
 ## Below, define or export some build variables
