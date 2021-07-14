@@ -239,7 +239,7 @@ jobs:
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
   build-tensorflow-Linux:
     name: "Lin|Build TensorFlow (opt)"
     needs: tensorflow_opt-Linux
@@ -263,9 +263,9 @@ jobs:
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - uses: actions/upload-artifact@v2
+      - uses: ./.github/actions/upload-cache-asset
         with:
-          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
   build-lib_Linux:
@@ -279,20 +279,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-Linux.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf ${{ github.workspace }}/home.tar.xz
-          rm ${{ github.workspace }}/home.tar.xz
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
+          rm ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
       - run: |
           sudo apt-get install -y --no-install-recommends make build-essential gfortran git libblas-dev liblapack-dev libsox-dev libmagic-dev libgsm1-dev libltdl-dev libpng-dev python python-dev zlib1g-dev
       - run: |
@@ -977,7 +971,7 @@ jobs:
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
   build-tensorflow-macOS:
     name: "Mac|Build TensorFlow (opt)"
     needs: tensorflow_opt-macOS
@@ -1002,9 +996,9 @@ jobs:
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: actions/upload-artifact@v2
+      - uses: ./.github/actions/upload-cache-asset
         with:
-          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
   build-lib_macOS:
@@ -1018,20 +1012,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-macOS.outputs.status == 'found'
       - run: |
-          tar xkf ${{ github.workspace }}/home.tar.xz
-          rm ${{ github.workspace }}/home.tar.xz
+          tar xkf ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
+          rm ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
       - run: |
           git status
       - uses: ./.github/actions/select-xcode
@@ -1413,7 +1401,7 @@ jobs:
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
   build-tensorflow-Windows:
     name: "Win|Build TensorFlow (opt)"
     needs: tensorflow_opt-Windows
@@ -1454,9 +1442,9 @@ jobs:
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - run: ./ci_scripts/tf-package.sh
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - uses: actions/upload-artifact@v2
+      - uses: ./.github/actions/upload-cache-asset
         with:
-          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
   build-lib_Windows:
@@ -1485,20 +1473,14 @@ jobs:
             tar
             unzip
             zip
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-Windows.outputs.status == 'found'
       - run: |
-          "C:/Program Files/7-Zip/7z.exe" x home.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -ttar -o`pwd`
-          rm home.tar.xz
+          "C:/Program Files/7-Zip/7z.exe" x ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -ttar -o`pwd`
+          rm ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
       - run: |
           git status
       - run: ./ci_scripts/host-build.sh ${{ matrix.build-flavor }}
@@ -2310,7 +2292,7 @@ jobs:
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
   tensorflow_opt-LinuxAarch64:
     name: "LinAarch64|Check TensorFlow cache"
     runs-on: ubuntu-20.04
@@ -2331,7 +2313,7 @@ jobs:
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
   build-tensorflow-LinuxArmv7:
     name: "LinArmv7|Build TensorFlow (opt)"
     needs: tensorflow_opt-LinuxArmv7
@@ -2355,9 +2337,9 @@ jobs:
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-      - uses: actions/upload-artifact@v2
+      - uses: ./.github/actions/upload-cache-asset
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
   build-tensorflow-LinuxAarch64:
@@ -2383,9 +2365,9 @@ jobs:
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-      - uses: actions/upload-artifact@v2
+      - uses: ./.github/actions/upload-cache-asset
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
   build-lib_LinuxArmv7:
@@ -2403,20 +2385,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'found'
       - run: |
-          tar -xf ${{ github.workspace }}/home.tar.xz --skip-old-files
-          rm ${{ github.workspace }}/home.tar.xz
+          tar -xf ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz --skip-old-files
+          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
       - run: |
           git status
       - name: "Install chroot"
@@ -2451,20 +2427,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'found'
       - run: |
-          tar -xf ${{ github.workspace }}/home.tar.xz --skip-old-files
-          rm ${{ github.workspace }}/home.tar.xz
+          tar -xf ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz --skip-old-files
+          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
       - run: |
           git status
       - name: "Install chroot"
@@ -2519,20 +2489,14 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'found'
       - run: |
-          tar -xf ${{ github.workspace }}/home.tar.xz --skip-old-files
-          rm ${{ github.workspace }}/home.tar.xz
+          tar -xf ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz --skip-old-files
+          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -2591,20 +2555,14 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'found'
       - run: |
-          tar -xf ${{ github.workspace }}/home.tar.xz --skip-old-files
-          rm ${{ github.workspace }}/home.tar.xz
+          tar -xf ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz --skip-old-files
+          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -2676,20 +2634,14 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'found'
       - run: |
-          tar -xf ${{ github.workspace }}/home.tar.xz --skip-old-files
-          rm ${{ github.workspace }}/home.tar.xz
+          tar -xf ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz --skip-old-files
+          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -2748,20 +2700,14 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
-          path: ${{ github.workspace }}/
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'found'
       - run: |
-          tar -xf ${{ github.workspace }}/home.tar.xz --skip-old-files
-          rm ${{ github.workspace }}/home.tar.xz
+          tar -xf ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz --skip-old-files
+          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
