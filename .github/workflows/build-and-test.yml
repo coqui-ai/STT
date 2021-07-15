@@ -695,8 +695,8 @@ jobs:
         with:
           name: ${{ github.job }}-checkpoint.tar.xz
           path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
-  twine-upload:
-    name: "Upload to PyPI"
+  twine-upload-stt:
+    name: "Upload STT packages to PyPI"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
@@ -722,18 +722,6 @@ jobs:
           name: stt-tf-3.9.4-macOS.whl
       - uses: actions/download-artifact@v2
         with:
-          name: stt-tflite-3.6.8-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.7.9-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.8.9-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.9.4-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
           name: stt-tf-3.6.8-Windows.whl
       - uses: actions/download-artifact@v2
         with:
@@ -746,18 +734,6 @@ jobs:
           name: stt-tf-3.9.4-Windows.whl
       - uses: actions/download-artifact@v2
         with:
-          name: stt-tflite-3.6.8-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.7.9-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.8.8-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.9.4-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
           name: stt-tf-3.6-Linux.whl
       - uses: actions/download-artifact@v2
         with:
@@ -768,6 +744,52 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tf-3.9-Linux.whl
+      - name: Setup PyPI config
+        run: |
+          cat << EOF > ~/.pypirc
+          [pypi]
+          username=__token__
+          password=${{ secrets.PYPI_STT_TOKEN }}
+          EOF
+      - run: |
+          twine upload --repository pypi *.whl
+  twine-upload-tflite:
+    name: "Upload STT-tflite packages to PyPI"
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: [build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Update pip and install twine
+        run: |
+          python -m pip install -U pip
+          python -m pip install -U twine
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.6.8-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7.9-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.8.9-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9.4-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.6.8-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7.9-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.8.8-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9.4-Windows.whl
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.6-Linux.whl
@@ -789,16 +811,61 @@ jobs:
       - name: Setup PyPI config
         run: |
           cat << EOF > ~/.pypirc
-          [pypi_stt]
-          username=__token__
-          password=${{ secrets.PYPI_STT_TOKEN }}
-          [pypi_tflite]
+          [pypi]
           username=__token__
           password=${{ secrets.PYPI_TFLITE_TOKEN }}
           EOF
       - run: |
-          twine upload --repository pypi_stt stt-*.whl
-          twine upload --repository pypi_tflite stt_tflite-*.whl
+          twine upload --repository pypi *.whl
+  twine-upload-decoder:
+    name: "Upload coqui_stt_ctcdecoder packages to PyPI"
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: [build-ctc-decoder-Linux, build-ctc-decoder-macos, build-ctc-decoder-windows]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Update pip and install twine
+        run: |
+          python -m pip install -U pip
+          python -m pip install -U twine
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-Linux-3.6.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-Linux-3.7.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-Linux-3.8.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-Linux-3.9.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-macOS-3.6.8.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-macOS-3.7.9.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-macOS-3.8.9.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-macOS-3.9.4.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-windows-test.whl
+      - name: Setup PyPI config
+        run: |
+          cat << EOF > ~/.pypirc
+          [pypi]
+          username=__token__
+          password=${{ secrets.PYPI_DECODER_TOKEN }}
+          EOF
+      - run: |
+          twine upload --repository pypi *.whl
   # macOS jobs
   swig_macOS:
     name: "Mac|Build SWIG"
