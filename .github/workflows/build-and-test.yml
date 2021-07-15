@@ -1409,6 +1409,8 @@ jobs:
     steps:
       - run: true
         if: needs.tensorflow_opt-Windows.outputs.status == 'found'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
