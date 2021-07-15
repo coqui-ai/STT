@@ -802,12 +802,14 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.9-Linux.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.7-armv7.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.7-aarch64.whl
+      # We need proper manylinux2014 builds before we can publish these wheels.
+      # https://github.com/coqui-ai/STT/issues/1904
+      # - uses: actions/download-artifact@v2
+      #   with:
+      #     name: stt-tflite-3.7-armv7.whl
+      # - uses: actions/download-artifact@v2
+      #   with:
+      #     name: stt-tflite-3.7-aarch64.whl
       - name: Setup PyPI config
         run: |
           cat << EOF > ~/.pypirc
