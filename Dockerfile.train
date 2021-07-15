@@ -1,6 +1,6 @@
 # This is a Dockerfile useful for training models with Coqui STT.
-# You can train "acoustic" models with audio + Tensorflow, and
-# you can train "language" models with text + KenLM.
+# You can train "acoustic models" with audio + Tensorflow, and
+# you can create "scorers" with text + KenLM.
 
 FROM ubuntu:20.04 AS kenlm-build
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,7 +10,8 @@ RUN apt-get update && \
     build-essential cmake libboost-system-dev \
     libboost-thread-dev libboost-program-options-dev \
     libboost-test-dev libeigen3-dev zlib1g-dev \
-    libbz2-dev liblzma-dev
+    libbz2-dev liblzma-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 # Build KenLM to generate new scorers
 WORKDIR /code
@@ -33,10 +34,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget unzip xz-u
 
 # Tool to convert output graph for inference
 RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
-    unzip temp.zip
+    unzip temp.zip && \
+    rm temp.zip
 
 RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/native_client.tf.Linux.tar.xz -O temp.tar.xz && \
-    tar -xf temp.tar.xz
+    tar -xf temp.tar.xz && \
+    rm temp.tar.xz
 
 
 FROM nvcr.io/nvidia/tensorflow:21.05-tf1-py3
@@ -76,7 +79,8 @@ COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
 COPY training /code/training
 # Copy files from previous build stages
-COPY --from=kenlm-build /code/kenlm /code/kenlm
+RUN mkdir -p /code/kenlm/build/
+COPY --from=kenlm-build /code/kenlm/build/bin /code/kenlm/build/bin
 COPY --from=wget-binaries /convert_graphdef_memmapped_format /code/convert_graphdef_memmapped_format
 COPY --from=wget-binaries /generate_scorer_package /code/generate_scorer_package
 
