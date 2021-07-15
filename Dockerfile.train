@@ -22,7 +22,7 @@ RUN cd /code/kenlm && \
     cmake .. && \
     make -j $(nproc) || \
     ( echo "ERROR: Failed to build KenLM."; \
-    echo "ERROR: You must update the kenlm submodule on host before building this Dockerfile."; \
+    echo "ERROR: Make sure you update the kenlm submodule on host before building this Dockerfile."; \
     echo "ERROR: $ cd STT; git submodule update --init kenlm"; \
     exit 1; )
 
