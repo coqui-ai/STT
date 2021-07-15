@@ -6,25 +6,28 @@ const pathname = require('path');
 const fs = require('fs');
 const { throttling } = require('@octokit/plugin-throttling');
 const { GitHub } = require('@actions/github/lib/utils');
+const Download = require('download');
 
-async function getGoodArtifacts(client, owner, repo, name) {
+async function getGoodArtifacts(client, owner, repo, releaseId, name) {
+    console.log(`==> GET /repos/${owner}/${repo}/releases/${releaseId}/assets`);
     const goodRepoArtifacts = await client.paginate(
-        "GET /repos/{owner}/{repo}/actions/artifacts",
+        "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
         {
             owner: owner,
             repo: repo,
+            release_id: releaseId,
             per_page: 100,
         },
-        (repoArtifacts, done) => {
-            // console.log(" ==> repoArtifacts", repoArtifacts);
-            const goodArtifacts = repoArtifacts.data.filter((a) => {
-                // console.log("==> Artifact check", a);
+        (releaseAssets, done) => {
+            console.log(" ==> releaseAssets", releaseAssets);
+            const goodAssets = releaseAssets.data.filter((a) => {
+                console.log("==> Asset check", a);
                 return a.name == name
             });
-            if (goodArtifacts.length > 0) {
+            if (goodAssets.length > 0) {
                 done();
             }
-            return goodArtifacts;
+            return goodAssets;
         }
     );
 
@@ -33,96 +36,84 @@ async function getGoodArtifacts(client, owner, repo, name) {
 }
 
 async function main() {
-    const token = core.getInput("github_token", { required: true });
-    const [owner, repo] = core.getInput("repo", { required: true }).split("/");
-    const path = core.getInput("path", { required: true });
-    const name = core.getInput("name");
-    const download = core.getInput("download");
-    const OctokitWithThrottling = GitHub.plugin(throttling);
-    const client = new OctokitWithThrottling({
-        auth: token,
-        throttle: {
-            onRateLimit: (retryAfter, options) => {
-                console.log(
-                    `Request quota exhausted for request ${options.method} ${options.url}`
-                );
+    try {
+        const [owner, repo] = core.getInput("repo", { required: true }).split("/");
+        const path = core.getInput("path", { required: true });
+        const name = core.getInput("name");
+        const download = core.getInput("download");
+        const releaseTag = core.getInput("release-tag");
+        const OctokitWithThrottling = GitHub.plugin(throttling);
+        const client = new OctokitWithThrottling({
+            throttle: {
+                onRateLimit: (retryAfter, options) => {
+                    console.log(
+                        `Request quota exhausted for request ${options.method} ${options.url}`
+                    );
 
-                // Retry twice after hitting a rate limit error, then give up
-                if (options.request.retryCount <= 2) {
-                    console.log(`Retrying after ${retryAfter} seconds!`);
-                    return true;
-                }
+                    // Retry twice after hitting a rate limit error, then give up
+                    if (options.request.retryCount <= 2) {
+                        console.log(`Retrying after ${retryAfter} seconds!`);
+                        return true;
+                    }
+                },
+                onAbuseLimit: (retryAfter, options) => {
+                    // does not retry, only logs a warning
+                    console.log(
+                        `Abuse detected for request ${options.method} ${options.url}`
+                    );
+                },
             },
-            onAbuseLimit: (retryAfter, options) => {
-                // does not retry, only logs a warning
-                console.log(
-                    `Abuse detected for request ${options.method} ${options.url}`
-                );
-            },
-        },
-    });
-    console.log("==> Repo:", owner + "/" + repo);
+        });
+        console.log("==> Repo:", owner + "/" + repo);
 
-    const goodArtifacts = await getGoodArtifacts(client, owner, repo, name);
-    console.log("==> goodArtifacts:", goodArtifacts);
+        const releaseInfo = await client.repos.getReleaseByTag({
+            owner,
+            repo,
+            tag: releaseTag,
+        });
+        console.log(`==> Release info for tag ${releaseTag} = ${JSON.stringify(releaseInfo.data, null, 2)}`);
+        const releaseId = releaseInfo.data.id;
 
-    let artifactStatus = "";
-        if (goodArtifacts.length === 0) {
-        artifactStatus = "missing";
-    } else {
-        artifactStatus = "found";
+        const goodArtifacts = await getGoodArtifacts(client, owner, repo, releaseId, name);
+        console.log("==> goodArtifacts:", goodArtifacts);
+
+        const artifactStatus = goodArtifacts.length === 0 ? "missing" : "found";
+
+        console.log("==> Artifact", name, artifactStatus);
+        console.log("==> download", download);
+
+        core.setOutput("status", artifactStatus);
+
+        if (artifactStatus === "found" && download == "true") {
+            console.log("==> # artifacts:", goodArtifacts.length);
+
+            const artifact = goodArtifacts[0];
+
+            console.log("==> Artifact:", artifact.id)
+
+            const size = filesize(artifact.size, { base: 10 })
+
+            console.log("==> Downloading:", artifact.name, `(${size})`)
+
+            const dir = name ? path : pathname.join(path, artifact.name)
+            fs.mkdirSync(dir, { recursive: true })
+
+            await Download(artifact.url, dir, {
+                headers: {
+                    "Accept": "application/octet-stream",
+                },
+            });
+        }
+
+        if (artifactStatus === "missing" && download == "true") {
+            core.setFailed("Required", name, "that is missing");
+        }
+
+        return;
+    } catch (err) {
+        console.error(err.stack);
+        core.setFailed(err.message);
     }
-
-    console.log("==> Artifact", name, artifactStatus);
-    console.log("==> download", download);
-
-    core.setOutput("status", artifactStatus);
-
-    if (artifactStatus === "found" && download == "true") {
-        console.log("==> # artifacts:", goodArtifacts.length);
-
-        let artifact = goodArtifacts[0];
-
-        console.log("==> Artifact:", artifact.id)
-
-        const size = filesize(artifact.size_in_bytes, { base: 10 })
-
-        console.log("==> Downloading:", artifact.name + ".zip", `(${size})`)
-
-        const zip = await client.actions.downloadArtifact({
-            owner: owner,
-            repo: repo,
-            artifact_id: artifact.id,
-            archive_format: "zip",
-        })
-
-        const dir = name ? path : pathname.join(path, artifact.name)
-
-        fs.mkdirSync(dir, { recursive: true })
-
-        const adm = new AdmZip(Buffer.from(zip.data))
-
-        adm.getEntries().forEach((entry) => {
-            const action = entry.isDirectory ? "creating" : "inflating"
-            const filepath = pathname.join(dir, entry.entryName)
-            console.log(`  ${action}: ${filepath}`)
-        })
-
-        adm.extractAllTo(dir, true)
-    }
-
-    if (artifactStatus === "missing" && download == "true") {
-        core.setFailed("Required", name, "that is missing");
-    }
-
-    return;
 }
 
-// We have to manually wrap the main function with a try-catch here because
-// GitHub will ignore uncatched exceptions and continue running the workflow,
-// leading to harder to diagnose errors downstream from this action.
-try {
-    main();
-} catch (error) {
-    core.setFailed(error.message);
-}
+main();
