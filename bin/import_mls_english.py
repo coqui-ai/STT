@@ -6,13 +6,12 @@ from pathlib import Path
 
 import pandas
 from tqdm import tqdm
+import pyogg
 
 
 def read_ogg_opus_duration(ogg_file_path):
     error = ctypes.c_int()
-    opusfile = pyogg.opus.op_open_file(
-        ogg_file_path.encode("utf-8"), ctypes.pointer(error)
-    )
+    opusfile = pyogg.opus.op_open_file(bytes(ogg_file_path), ctypes.pointer(error))
 
     if error.value != 0:
         raise ValueError(
@@ -50,36 +49,11 @@ def main(root_dir):
                 )
                 audio_duration = read_ogg_opus_duration(audio_path)
                 # TODO: support other languages
-                transcript = (
-                    transcript.strip()
-                    .replace("-", " ")
-                    .replace("ñ", "n")
-                    .replace(".", "")
-                    .translate(
-                        {
-                            ord(ch): None
-                            for ch in (
-                                "а",
-                                "в",
-                                "е",
-                                "и",
-                                "к",
-                                "м",
-                                "н",
-                                "о",
-                                "п",
-                                "р",
-                                "т",
-                                "ы",
-                                "я",
-                            )
-                        }
-                    )
-                )
+                transcript = transcript.strip().replace("-", " ").replace(".", "")
                 subset_entries.append(
                     (
                         audio_path.relative_to(root_dir),
-                        audio_duration,
+                        str("{:.2f}".format(audio_duration)).replace(".", ""),
                         transcript.strip(),
                     )
                 )
@@ -94,6 +68,6 @@ def main(root_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("root_dir", help="Path to the mls_english_opus directory.")
+    parser.add_argument("root_dir", help="Path to the mls_*_opus directory.")
     args = parser.parse_args()
     main(args.root_dir)
