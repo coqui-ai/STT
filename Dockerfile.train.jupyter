@@ -40,7 +40,6 @@ RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/downloa
     rm temp.tar.xz
 
 
-#FROM gcr.io/kaggle-gpu-images/python:v98
 FROM nvcr.io/nvidia/tensorflow:21.05-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -98,12 +97,6 @@ RUN rm -rf ~/.local/share/stt
 ##
 #
 
-#FROM gcr.io/kaggle-gpu-images/python:v98
-
-RUN chsh -s /bin/bash
-ENV SHELL=/bin/bash
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
-
 RUN apt-get update && apt-get install -y \
     man \
     vim \
@@ -128,14 +121,6 @@ RUN pip3 install jupyterlab ipywidgets
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 RUN jupyter nbextension enable --py widgetsnbextension #enable ipywidgets
 RUN jupyter labextension install jupyterlab-plotly
-
-# #### tensorflow 1
-# # Create the environment:
-# SHELL ["/bin/bash", "-c"]
-# COPY tfenv.yml .
-# RUN conda env create -f tfenv.yml
-# SHELL ["conda", "run", "-n", "tf1", "/bin/bash", "-c"]
-# RUN python -m ipykernel install --name=tensorflow1
 
 EXPOSE 8080
 
