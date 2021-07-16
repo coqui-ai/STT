@@ -1,0 +1,16 @@
+name: tf1
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - tensorflow-gpu==1.15
+  - ipykernel
+  - google-auth
+  - tensorflow-hub
+  - pydicom
+  - pandas
+  - seaborn 
+  - matplotlib 
+  - scikit-learn 
+  - openslide
+  - keras  
