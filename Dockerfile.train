@@ -30,7 +30,9 @@ RUN cd /code/kenlm && \
 FROM ubuntu:20.04 AS wget-binaries
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends wget unzip xz-utils
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget unzip xz-utils && \
+    rm -rf /var/lib/apt/lists/*
 
 # Tool to convert output graph for inference
 RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
@@ -59,7 +61,7 @@ RUN apt-get update && \
         sox \
         libsox-fmt-mp3 && \
     apt-get purge -y python3-xdg && \
-    rm -rf /var/lib/apt/lists/
+    rm -rf /var/lib/apt/lists/*
 
 # Make sure pip and its dependencies are up-to-date
 RUN pip3 install --upgrade pip wheel setuptools
