@@ -547,9 +547,10 @@ class _SttConfig(Coqpit):
         check_argument("one_shot_infer", c, is_path=True)
 
 
-def initialize_globals():
-    c = _SttConfig()
-    c.parse_args(arg_prefix="")
+def initialize_config_globals(c):
+    """
+    input: config class object (i.e. coqpit.Coqpit)
+    """
 
     # Augmentations
     c.augmentations = parse_augmentations(c.augment)
@@ -618,7 +619,7 @@ def initialize_globals():
 
     if c.bytes_output_mode:
         c.alphabet = UTF8Alphabet()
-    else:
+    elif c.alphabet_config_path:
         c.alphabet = Alphabet(os.path.abspath(c.alphabet_config_path))
 
         if not (
@@ -696,8 +697,12 @@ def initialize_globals():
                 # File exists but is not JSON (older checkpoint), ignore error
                 pass
 
-    # Units in the sixth layer = number of characters in the target language plus one
-    c.n_hidden_6 = c.alphabet.GetSize() + 1  # +1 for CTC blank label
+    # Units in the last layer = number of characters in the alphabet plus one
+    try:
+        # +1 for CTC blank label
+        c.n_hidden_6 = c.alphabet.GetSize() + 1
+    except:
+        AttributeError
 
     # Size of audio window in samples
     if (c.feature_win_len * c.audio_sample_rate) % 1000 != 0:
