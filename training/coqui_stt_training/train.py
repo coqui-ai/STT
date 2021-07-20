@@ -44,6 +44,7 @@ from .util.checkpoints import (
 )
 from .util.config import (
     Config,
+    _SttConfig,
     create_progressbar,
     initialize_config_globals,
     log_debug,
