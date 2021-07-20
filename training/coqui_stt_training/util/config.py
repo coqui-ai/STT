@@ -472,7 +472,7 @@ class _SttConfig(Coqpit):
         ),
     )
     alphabet_config_path: str = field(
-        default="data/alphabet.txt",
+        default="",
         metadata=dict(
             help="path to the configuration file specifying the alphabet used by the network. See the comment in data/alphabet.txt for a description of the format."
         ),
@@ -539,11 +539,6 @@ class _SttConfig(Coqpit):
             help="the number of trials to run during hyperparameter optimization."
         ),
     )
-
-    def check_values(self):
-        c = asdict(self)
-        check_argument("alphabet_config_path", c, is_path=True)
-        check_argument("one_shot_infer", c, is_path=True)
 
 
 def initialize_config_globals(c):
