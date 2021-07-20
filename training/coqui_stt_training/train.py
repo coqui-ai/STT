@@ -45,7 +45,7 @@ from .util.checkpoints import (
 from .util.config import (
     Config,
     create_progressbar,
-    initialize_globals,
+    initialize_config_globals,
     log_debug,
     log_error,
     log_info,
@@ -1249,7 +1249,10 @@ def early_training_checks():
 
 
 def main():
-    initialize_globals()
+    Config = _SttConfig()
+    Config.parse_args(arg_prefix="") # parse CLI args
+    initialize_config_globals(Config)
+
     early_training_checks()
 
     if Config.train_files:
