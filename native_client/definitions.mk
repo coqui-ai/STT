@@ -20,7 +20,7 @@ endif
 
 STT_BIN       := stt$(PLATFORM_EXE_SUFFIX)
 CFLAGS_STT    := -std=c++11 -o $(STT_BIN)
-LINK_STT      := -lstt
+LINK_STT      := -lstt -lkenlm
 LINK_PATH_STT := -L${TFDIR}/bazel-bin/native_client
 
 ifeq ($(TARGET),host)

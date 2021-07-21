@@ -27,7 +27,9 @@ package_native_client()
   fi;
 
   ${TAR} --verbose -cf - \
+    --transform='flags=r;s|README.coqui|KenLM_License_Info.txt|' \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
+    -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so \
     ${win_lib} \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
     -C ${stt_dir}/ LICENSE \
