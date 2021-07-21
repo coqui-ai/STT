@@ -43,9 +43,11 @@ class _SttConfig(Coqpit):
             print(f"Parsed augmentations: {self.augmentations}")
         if self.augmentations and self.feature_cache and self.cache_for_epochs == 0:
             print(
-                "Due to current feature-cache settings the exact same sample augmentations of the first "
-                "epoch will be repeated on all following epochs. This could lead to unintended over-fitting. "
-                "You could use --cache_for_epochs <n_epochs> to invalidate the cache after a given number of epochs."
+                "Due to your feature-cache settings, augmentations of "
+                "the first epoch will be repeated on all following epochs. "
+                "This may lead to unintended over-fitting. "
+                "You can use --cache_for_epochs <n_epochs> to invalidate "
+                "the cache after a given number of epochs."
             )
 
         if self.normalize_sample_rate:
@@ -56,8 +58,9 @@ class _SttConfig(Coqpit):
         # Caching
         if self.cache_for_epochs == 1:
             print(
-                "--cache_for_epochs == 1 is (re-)creating the feature cache on every epoch but will never use it."
-                "You can either set --cache_for_epochs > 1, or not use feature caching at all."
+                "--cache_for_epochs == 1 is (re-)creating the feature cache "
+                "on every epoch but will never use it. You can either set "
+                "--cache_for_epochs > 1, or not use feature caching at all."
             )
 
         # Read-buffer
@@ -200,7 +203,7 @@ class _SttConfig(Coqpit):
     train_files: List[str] = field(
         default_factory=list,
         metadata=dict(
-            help="space-separated list of files specifying the dataset used for training. Multiple files will get merged. If empty, training will not be run."
+            help="space-separated list of files specifying the datasets used for training. Multiple files will get merged. If empty, training will not be run."
         ),
     )
     dev_files: List[str] = field(
