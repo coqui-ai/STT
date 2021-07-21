@@ -19,7 +19,8 @@ ValueRange = namedtuple("ValueRange", "start end r")
 
 
 def parse_file_size(file_size):
-    file_size = file_size.lower().strip()
+    if type(file_size) is str:
+        file_size = file_size.lower().strip()
     if len(file_size) == 0:
         return 0
     n = int(keep_only_digits(file_size))
