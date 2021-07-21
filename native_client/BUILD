@@ -72,7 +72,7 @@ LINUX_LINKOPTS = [
     "-Wl,-export-dynamic",
 ]
 
-cc_binary(
+tf_cc_shared_object(
     name = "libkenlm.so",
     srcs = glob([
         "kenlm/lm/*.hh",
@@ -86,25 +86,16 @@ cc_binary(
         "kenlm/*/*test.cc",
         "kenlm/*/*main.cc",
     ],),
-    copts = select({
-        "//tensorflow:windows": ["/std:c++14"],
-        "//conditions:default": ["-std=c++14", "-fwrapv", "-fvisibility=hidden"],
+    copts = [
+        "-std=c++11"
+    ] + select({
+        "//tensorflow:windows": [],
+        "//conditions:default": ["-fvisibility=default"],
     }),
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
-    linkshared = 1,
-    linkopts = select({
-        "//tensorflow:ios": [
-            "-Wl,-install_name,@rpath/libkenlm.so",
-        ],
-        "//tensorflow:macos": [
-            "-Wl,-install_name,@rpath/libkenlm.so",
-        ],
-        "//tensorflow:windows": [],
-        "//conditions:default": [
-            "-Wl,-soname,libkenlm.so",
-        ],
-    }),
+    framework_so = [],
+    linkopts = [],
 )
 
 cc_library(
@@ -116,42 +107,8 @@ cc_library(
     srcs = [":libkenlm.so"],
     copts = ["-std=c++14"],
     defines = ["KENLM_MAX_ORDER=6"],
-    includes = [".", "kenlm"],
-)
-
-cc_library(
-    name = "flashlight",
-    hdrs = [
-        "ctcdecode/third_party/flashlight/flashlight/lib/common/String.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/common/System.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Decoder.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconDecoder.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconFreeDecoder.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ConvLM.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/KenLM.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/LM.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ZeroLM.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Trie.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Utils.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Defines.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Dictionary.h",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Utils.h",
-    ],
-    srcs = [
-        "ctcdecode/third_party/flashlight/flashlight/lib/common/String.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/common/System.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconDecoder.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconFreeDecoder.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ConvLM.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/KenLM.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ZeroLM.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Trie.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Utils.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Dictionary.cpp",
-        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Utils.cpp",
-    ],
-    includes = ["ctcdecode/third_party/flashlight"],
-    deps = [":kenlm"],
+    includes = ["kenlm"],
+    srcs = ["libkenlm.so"],
 )
 
 cc_library(
