@@ -60,10 +60,12 @@ LINUX_LINKOPTS = [
     "-Wl,-export-dynamic",
 ]
 
-cc_library(
-    name = "kenlm",
+tf_cc_shared_object(
+    name = "libkenlm.so",
     srcs = glob([
+        "kenlm/lm/*.hh",
         "kenlm/lm/*.cc",
+        "kenlm/util/*.hh",
         "kenlm/util/*.cc",
         "kenlm/util/double-conversion/*.cc",
         "kenlm/util/double-conversion/*.h",
@@ -72,6 +74,20 @@ cc_library(
         "kenlm/*/*test.cc",
         "kenlm/*/*main.cc",
     ],),
+    copts = [
+        "-std=c++11"
+    ] + select({
+        "//tensorflow:windows": [],
+        "//conditions:default": ["-fvisibility=default"],
+    }),
+    defines = ["KENLM_MAX_ORDER=6"],
+    includes = ["kenlm"],
+    framework_so = [],
+    linkopts = [],
+)
+
+cc_library(
+    name="kenlm",
     hdrs = glob([
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
@@ -79,6 +95,7 @@ cc_library(
     copts = ["-std=c++11"],
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
+    srcs = ["libkenlm.so"],
 )
 
 cc_library(
