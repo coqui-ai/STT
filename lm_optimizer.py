@@ -10,7 +10,7 @@ import tensorflow.compat.v1 as tfv1
 from coqui_stt_ctcdecoder import Scorer
 from coqui_stt_training.evaluate import evaluate
 from coqui_stt_training.train import create_model
-from coqui_stt_training.util.config import Config, _SttConfig, initialize_config_globals
+from coqui_stt_training.util.config import Config, initialize_globals_from_cli
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
 from coqui_stt_training.util.flags import FLAGS, create_flags
 from coqui_stt_training.util.logging import log_error
@@ -52,8 +52,7 @@ def objective(trial):
 
 
 def main(_):
-    Config = _SttConfig()
-    initialize_config_globals(Config)
+    initialize_globals_from_cli()
 
     if not FLAGS.test_files:
         log_error(

@@ -17,9 +17,8 @@ from .util.augmentations import NormalizeSampleRate
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import (
     Config,
-    _SttConfig,
     create_progressbar,
-    initialize_config_globals,
+    initialize_globals_from_cli,
     log_error,
     log_progress,
 )
@@ -169,8 +168,7 @@ def evaluate(test_csvs, create_model):
 
 
 def main():
-    Config = _SttConfig()
-    initialize_config_globals(Config)
+    initialize_globals_from_cli()
 
     if not Config.test_files:
         log_error(
