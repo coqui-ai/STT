@@ -21,13 +21,17 @@ ValueRange = namedtuple("ValueRange", "start end r")
 def parse_file_size(file_size):
     if type(file_size) is str:
         file_size = file_size.lower().strip()
-    if len(file_size) == 0:
-        return 0
-    n = int(keep_only_digits(file_size))
-    if file_size[-1] == "b":
-        file_size = file_size[:-1]
-    e = file_size[-1]
-    return SIZE_PREFIX_LOOKUP[e] * n if e in SIZE_PREFIX_LOOKUP else n
+        if len(file_size) == 0:
+            return 0
+        n = int(keep_only_digits(file_size))
+        if file_size[-1] == "b":
+            file_size = file_size[:-1]
+        e = file_size[-1]
+        return SIZE_PREFIX_LOOKUP[e] * n if e in SIZE_PREFIX_LOOKUP else n
+    elif type(file_size) is int:
+        return file_size
+    else:
+        raise ValueError("file_size not of type 'int' or 'str'")
 
 
 def keep_only_digits(txt):
