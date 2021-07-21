@@ -11,13 +11,14 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 download_ldc("data/ldc93s1")
 
 initialize_globals_from_args(
+    load_train="init",
     alphabet_config_path="data/alphabet.txt",
     train_files=["data/ldc93s1/ldc93s1.csv"],
     dev_files=["data/ldc93s1/ldc93s1.csv"],
     test_files=["data/ldc93s1/ldc93s1.csv"],
     augment=["time_mask"],
     n_hidden=100,
-    epochs=100
+    epochs=200
 )
 
 early_training_checks()
