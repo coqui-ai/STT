@@ -10,13 +10,19 @@
 
 /* Configuration for ngram model.  Separate header to reduce pollution. */
 
+#if defined _MSC_VER
+    #define KENLM_EXPORT __declspec(dllexport)
+#else
+    #define KENLM_EXPORT __attribute__ ((visibility("default")))
+#endif /* _MSC_VER */
+
 namespace lm {
 
 class EnumerateVocab;
 
 namespace ngram {
 
-struct Config {
+struct KENLM_EXPORT Config {
   // EFFECTIVE FOR BOTH ARPA AND BINARY READS
 
   // (default true) print progress bar to messages

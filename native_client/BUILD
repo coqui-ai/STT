@@ -78,7 +78,7 @@ tf_cc_shared_object(
         "-std=c++11"
     ] + select({
         "//tensorflow:windows": [],
-        "//conditions:default": ["-fvisibility=default"],
+        "//conditions:default": ["-fvisibility=hidden"],
     }),
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
