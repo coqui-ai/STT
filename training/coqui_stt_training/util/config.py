@@ -105,7 +105,11 @@ class _SttConfig(Coqpit):
         if not self.available_devices:
             self.available_devices = [self.cpu_device]
 
-        if self.bytes_output_mode:
+        if self.bytes_output_mode and self.alphabet_config_path:
+            raise RuntimeError(
+                "You cannot set --alphabet_config_path *and* --bytes_output_mode"
+            )
+        elif self.bytes_output_mode:
             self.alphabet = UTF8Alphabet()
         elif self.alphabet_config_path:
             self.alphabet = Alphabet(os.path.abspath(self.alphabet_config_path))
