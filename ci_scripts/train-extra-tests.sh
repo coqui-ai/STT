@@ -66,3 +66,6 @@ time ./bin/run-ci-ldc93s1_checkpoint_sdb.sh
 
 # Bytes output mode, resuming from checkpoint
 time ./bin/run-ci-ldc93s1_checkpoint_bytes.sh
+
+# Training with args set via initialize_globals_from_args()
+time python ./bin/run-ldc93s1.py
