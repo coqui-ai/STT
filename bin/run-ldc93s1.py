@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 import os
 from import_ldc93s1 import _download_and_preprocess_data as download_ldc
-from coqui_stt_training.util.config import Config, initialize_globals_from_args
+from coqui_stt_training.util.config import initialize_globals_from_args
 from coqui_stt_training.train import train, test, early_training_checks
-from coqui_stt_ctcdecoder import Alphabet
 import tensorflow.compat.v1 as tfv1
 
 # only one GPU for only one training sample
@@ -16,8 +15,9 @@ initialize_globals_from_args(
     train_files=["data/ldc93s1/ldc93s1.csv"],
     dev_files=["data/ldc93s1/ldc93s1.csv"],
     test_files=["data/ldc93s1/ldc93s1.csv"],
+    augment=["time_mask"],
     n_hidden=100,
-    epochs=200
+    epochs=100
 )
 
 early_training_checks()
