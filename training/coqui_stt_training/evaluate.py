@@ -18,7 +18,7 @@ from .util.checkpoints import load_graph_for_evaluation
 from .util.config import (
     Config,
     create_progressbar,
-    initialize_globals,
+    initialize_globals_from_cli,
     log_error,
     log_progress,
 )
@@ -169,7 +169,7 @@ def evaluate(test_csvs, create_model):
 
 
 def main():
-    initialize_globals()
+    initialize_globals_from_cli()
 
     if not Config.test_files:
         log_error(

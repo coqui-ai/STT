@@ -23,7 +23,8 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --show_progressbar false --early_stop false \
+python -u train.py --alphabet_config_path "data/alphabet.txt" \
+  --show_progressbar false --early_stop false \
   --train_files ${ldc93s1_sdb} ${ldc93s1_csv} --train_batch_size 1 \
   --feature_cache '/tmp/ldc93s1_cache_sdb_csv' \
   --dev_files ${ldc93s1_sdb} ${ldc93s1_csv} --dev_batch_size 1 \

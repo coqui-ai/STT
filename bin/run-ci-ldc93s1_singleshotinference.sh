@@ -14,7 +14,8 @@ fi;
 # and when trying to run on multiple devices (like GPUs), this will break
 export CUDA_VISIBLE_DEVICES=0
 
-python -u train.py --show_progressbar false --early_stop false \
+python -u train.py --alphabet_config_path "data/alphabet.txt" \
+  --show_progressbar false --early_stop false \
   --train_files ${ldc93s1_csv} --train_batch_size 1 \
   --dev_files ${ldc93s1_csv} --dev_batch_size 1 \
   --test_files ${ldc93s1_csv} --test_batch_size 1 \
@@ -23,7 +24,7 @@ python -u train.py --show_progressbar false --early_stop false \
   --learning_rate 0.001 --dropout_rate 0.05 \
   --scorer_path 'data/smoke_test/pruned_lm.scorer'
 
-python -u train.py \
+python -u train.py --alphabet_config_path "data/alphabet.txt" \
   --n_hidden 100 \
   --checkpoint_dir '/tmp/ckpt' \
   --scorer_path 'data/smoke_test/pruned_lm.scorer' \

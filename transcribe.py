@@ -20,7 +20,7 @@ from multiprocessing import Process, cpu_count
 
 from coqui_stt_ctcdecoder import Scorer, ctc_beam_search_decoder_batch
 from coqui_stt_training.util.audio import AudioFile
-from coqui_stt_training.util.config import Config, initialize_globals
+from coqui_stt_training.util.config import Config, initialize_globals_from_cli
 from coqui_stt_training.util.feeding import split_audio_file
 from coqui_stt_training.util.flags import FLAGS, create_flags
 from coqui_stt_training.util.logging import (
@@ -42,7 +42,8 @@ def transcribe_file(audio_path, tlog_path):
     )
     from coqui_stt_training.util.checkpoints import load_graph_for_evaluation
 
-    initialize_globals()
+    initialize_globals_from_cli()
+
     scorer = Scorer(FLAGS.lm_alpha, FLAGS.lm_beta, FLAGS.scorer_path, Config.alphabet)
     try:
         num_processes = cpu_count()
