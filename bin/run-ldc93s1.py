@@ -6,7 +6,7 @@ from coqui_stt_training.train import train, test, early_training_checks
 import tensorflow.compat.v1 as tfv1
 
 # only one GPU for only one training sample
-os.environ['CUDA_VISIBLE_DEVICES']='0'
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 download_ldc("data/ldc93s1")
 
@@ -18,7 +18,7 @@ initialize_globals_from_args(
     test_files=["data/ldc93s1/ldc93s1.csv"],
     augment=["time_mask"],
     n_hidden=100,
-    epochs=200
+    epochs=200,
 )
 
 early_training_checks()
