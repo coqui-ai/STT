@@ -7,7 +7,7 @@ source $(dirname "$0")/package-utils.sh
 
 mkdir -p ${CI_ARTIFACTS_DIR} || true
 
-cp ${DS_DSDIR}/tensorflow/bazel*.log ${CI_ARTIFACTS_DIR}/
+cp ${DS_DSDIR}/bazel*.log ${CI_ARTIFACTS_DIR}/
 
 package_native_client "native_client.tar.xz"
 

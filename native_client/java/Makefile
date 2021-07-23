@@ -18,7 +18,7 @@ libs-clean:
 
 libstt/libs/%/libstt.so:
 	-mkdir libstt/libs/$*/
-	cp ${TFDIR}/bazel-out/$*-*/bin/native_client/libstt.so libstt/libs/$*/
+	cp ${ROOT_DIR}/bazel-out/$*-*/bin/native_client/libstt.so libstt/libs/$*/
 
 apk: apk-clean bindings $(patsubst %,libstt/libs/%/libstt.so,$(ARCHS))
 	$(GRADLE) build

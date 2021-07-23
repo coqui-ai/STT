@@ -6,7 +6,7 @@
 ### $ touch multistrap-raspbian-buster.tar && sudo tar cf multistrap-raspbian-buster.tar multistrap-raspbian-buster/ && xz multistrap-raspbian-buster.tar
 ###
 ### Then cross-build:
-### $ make -C native_client/ TARGET=rpi3 TFDIR=../../tensorflow/tensorflow/
+### $ make -C native_client/ TARGET=rpi3 ROOT_DIR=`pwd`
 ###
 
 .PHONY: clean run print-toolchain
@@ -25,14 +25,14 @@ ifeq ($(OS),Darwin)
 endif
 
 run: $(STT_BIN)
-	${META_LD_LIBRARY_PATH}=${TFDIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} ./stt ${ARGS}
+	${META_LD_LIBRARY_PATH}=${ROOT_DIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} ./stt ${ARGS}
 
 debug: $(STT_BIN)
-	${META_LD_LIBRARY_PATH}=${TFDIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} gdb --args ./stt ${ARGS}
+	${META_LD_LIBRARY_PATH}=${ROOT_DIR}/bazel-bin/native_client:${${META_LD_LIBRARY_PATH}} gdb --args ./stt ${ARGS}
 
 install: $(STT_BIN)
 	install -d ${PREFIX}/lib
-	install -m 0644 ${TFDIR}/bazel-bin/native_client/libstt.so ${PREFIX}/lib/
+	install -m 0644 ${ROOT_DIR}/bazel-bin/native_client/libstt.so ${PREFIX}/lib/
 	install -d ${PREFIX}/include
 	install -m 0644 coqui-stt.h ${PREFIX}/include
 	install -d ${PREFIX}/bin

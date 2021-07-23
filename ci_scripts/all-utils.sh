@@ -49,7 +49,7 @@ download_material()
 maybe_install_xldd()
 {
   # -s required to avoid the noisy output like "Entering / Leaving directories"
-  toolchain=$(make -s -C ${DS_DSDIR}/native_client/ TARGET=${SYSTEM_TARGET} TFDIR=${DS_TFDIR} print-toolchain)
+  toolchain=$(make -s -C ${DS_DSDIR}/native_client/ TARGET=${SYSTEM_TARGET} ROOT_DIR=${DS_DSDIR} print-toolchain)
   if [ ! -x "${toolchain}ldd" ]; then
     cp "${DS_DSDIR}/native_client/xldd" "${toolchain}ldd" && chmod +x "${toolchain}ldd"
   fi
@@ -83,7 +83,7 @@ verify_bazel_rebuild()
 
   mkdir -p ${CI_ARTIFACTS_DIR} || true
 
-  cp ${DS_DSDIR}/tensorflow/bazel*.log ${CI_ARTIFACTS_DIR}/
+  cp ${DS_DSDIR}/bazel*.log ${CI_ARTIFACTS_DIR}/
 
   spurious_rebuilds=$(grep 'Executing action' "${bazel_explain_file}" | grep 'Compiling' | grep -v -E 'no entry in the cache|[for host]|unconditional execution is requested|Executing genrule //native_client:workspace_status|Compiling native_client/workspace_status.cc|Linking native_client/libstt.so' | wc -l)
   if [ "${spurious_rebuilds}" -ne 0 ]; then

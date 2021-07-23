@@ -2,9 +2,6 @@
 	path = doc/examples
 	url = https://github.com/coqui-ai/STT-examples.git
 	branch = master
-[submodule "tensorflow"]
-	path = tensorflow
-	url = https://github.com/coqui-ai/tensorflow.git
 [submodule "kenlm"]
 	path = kenlm
 	url = https://github.com/kpu/kenlm

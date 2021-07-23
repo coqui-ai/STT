@@ -1,9 +1,9 @@
 NC_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+ROOT_DIR := $(NC_DIR)/..
 
 TARGET    ?= host
-TFDIR     ?= $(abspath $(NC_DIR)/../tensorflow)
 PREFIX    ?= /usr/local
-SO_SEARCH ?= $(TFDIR)/bazel-bin/
+SO_SEARCH ?= $(ROOT_DIR)/bazel-bin/
 
 TOOL_AS   := as
 TOOL_CC   := gcc
@@ -21,7 +21,7 @@ endif
 STT_BIN       := stt$(PLATFORM_EXE_SUFFIX)
 CFLAGS_STT    := -std=c++11 -o $(STT_BIN)
 LINK_STT      := -lstt
-LINK_PATH_STT := -L${TFDIR}/bazel-bin/native_client
+LINK_PATH_STT := -L${ROOT_DIR}/bazel-bin/native_client
 
 ifeq ($(TARGET),host)
 TOOLCHAIN       :=
@@ -61,7 +61,7 @@ TOOL_CC     := cl.exe
 TOOL_CXX    := cl.exe
 TOOL_LD     := link.exe
 TOOL_LIBEXE := lib.exe
-LINK_STT      := $(TFDIR)\bazel-bin\native_client\libstt.so.if.lib
+LINK_STT      := $(ROOT_DIR)\bazel-bin\native_client\libstt.so.if.lib
 LINK_PATH_STT :=
 CFLAGS_STT    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
@@ -70,7 +70,7 @@ PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 endif
 
 ifeq ($(TARGET),rpi3)
-TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroArmGcc72/bin
+TOOLCHAIN_DIR ?= ${ROOT_DIR}/bazel-$(shell basename "${ROOT_DIR}")/external/LinaroArmGcc72/bin
 TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/arm-linux-gnueabihf-
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian-buster)
 # -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
@@ -92,7 +92,7 @@ TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
 endif # ($(TARGET),rpi3)
 
 ifeq ($(TARGET),rpi3-armv8)
-TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroAarch64Gcc72/bin
+TOOLCHAIN_DIR ?= ${ROOT_DIR}/bazel-$(shell basename "${ROOT_DIR}")/external/LinaroAarch64Gcc72/bin
 TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/aarch64-linux-gnu-
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian64-buster)
 CFLAGS      := -march=armv8-a -mtune=cortex-a53 -D_GLIBCXX_USE_CXX11_ABI=0 --sysroot $(RASPBIAN)

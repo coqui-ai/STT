@@ -50,7 +50,6 @@ export ANDROID_TMP_DIR=/data/local/tmp
 
 mkdir -p ${CI_TMP_DIR} || true
 
-export DS_TFDIR=${DS_ROOT_TASK}/tensorflow
 export DS_DSDIR=${DS_ROOT_TASK}/
 export DS_EXAMPLEDIR=${DS_ROOT_TASK}/examples
 

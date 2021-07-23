@@ -28,49 +28,37 @@ For information on building on Windows, please refer to: :ref:`Windows Building 
 Dependencies
 ------------
 
-If you follow these instructions, you should compile your own binaries of 🐸STT (built on TensorFlow using Bazel).
-
-For more information on configuring TensorFlow, read the docs up to the end of `"Configure the Build" <https://www.tensorflow.org/install/source#configure_the_build>`_.
+If you follow these instructions, you should compile your own binaries of 🐸STT.
 
 Checkout source code
 ^^^^^^^^^^^^^^^^^^^^
 
-Clone 🐸STT source code (TensorFlow will come as a submdule):
+Clone 🐸STT source code:
 
 .. code-block::
 
    git clone https://github.com/coqui-ai/STT.git STT
    cd STT
-   git submodule sync tensorflow/
-   git submodule update --init tensorflow/
 
 Bazel: Download & Install
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 First, install Bazel 3.1.0 following the `Bazel installation documentation <https://docs.bazel.build/versions/3.1.0/install.html>`_.
 
-TensorFlow: Configure with Bazel
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compile Coqui STT
+-----------------
+
+Configure TensorFlow
+^^^^^^^^^^^^^^^^^^^^
 
 After you have installed the correct version of Bazel, configure TensorFlow:
 
 .. code-block::
 
-   cd tensorflow
-   ./configure
-
-Compile Coqui STT
------------------
+   python tf_configure.py
 
 Compile ``libstt.so``
 ^^^^^^^^^^^^^^^^^^^^^
-
-Within your TensorFlow directory, there should be a symbolic link to the 🐸STT ``native_client`` directory. If it is not present, create it with the follow command:
-
-.. code-block::
-
-   cd tensorflow
-   ln -s ../native_client
 
 You can now use Bazel to build the main 🐸STT library, ``libstt.so``. Add ``--config=cuda`` if you want a CUDA build.
 
@@ -97,41 +85,36 @@ The generated binaries will be saved to ``bazel-bin/native_client/``.
 Compile Language Bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now, ``cd`` into the ``STT/native_client`` directory and use the ``Makefile`` to build all the language bindings (C++ client, Python package, Nodejs package, etc.).
+Inside the ``STT/native_client`` directories there are different language bindings (C++ client, Python package/client, Node.JS package/client, .NET package/client, Swift package, etc.). Each one has its own build infrastructure.
+
+Build the C++ client
+^^^^^^^^^^^^^^^^^^^^
+
+The C++ client (code in ``native_client/client.cc``) can be built with the following command:
 
 .. code-block::
 
-   cd ../STT/native_client
-   make stt
+   make -C native_client stt
 
-Installing your own Binaries
-----------------------------
-
-After building, the library files and binary can optionally be installed to a system path for ease of development. This is also a required step for bindings generation.
-
-.. code-block::
-
-   PREFIX=/usr/local sudo make install
-
-It is assumed that ``$PREFIX/lib`` is a valid library path, otherwise you may need to alter your environment.
+This will generate a binary called ``stt`` inside the ``native_client`` folder.
 
 Install Python bindings
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Included are a set of generated Python bindings. After following the above build and installation instructions, these can be installed by executing the following commands (or equivalent on your system):
+Included are a set of generated Python bindings. After following the above build instructions for ``libstt.so``, these can be build and installed as follows:
 
 .. code-block::
 
    cd native_client/python
    make bindings
-   pip install dist/stt-*
+   python -m pip install dist/*.whl
 
-The API mirrors the C++ API and is demonstrated in `client.py <python/client.py>`_. Refer to `coqui-stt.h <coqui-stt.h>`_ for documentation.
+The API mirrors the C++ API and is demonstrated in `client.py <python/client.py>`_. Refer to the `documentation <https://stt.readthedocs.io/>`_ for more information.
 
 Install NodeJS / ElectronJS bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After following the above build and installation instructions, the Node.JS bindings can be built:
+After following the above build instructions for ``libstt.so``, the Node.JS bindings can be built:
 
 .. code-block::
 
@@ -146,7 +129,7 @@ This will create the package ``stt-VERSION.tgz`` in ``native_client/javascript``
 Install the CTC decoder package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To build the ``coqui_stt_ctcdecoder`` package, you'll need the general requirements listed above (in particular SWIG). The command below builds the bindings using eight (8) processes for compilation. Adjust the parameter accordingly for more or less parallelism.
+To build the ``coqui_stt_ctcdecoder`` package, you'll need the general requirements listed above (in particular SWIG). The command below builds the bindings using eight (8) processes for compilation. Adjust the parameter accordingly for more or less parallelism depending on how many CPU cores you have available.
 
 .. code-block::
 
@@ -210,7 +193,7 @@ The path of the system tree can be overridden from the default values defined in
 
 .. code-block::
 
-   cd ../STT/native_client
+   cd STT/native_client
    make TARGET=<system> stt
 
 Android devices support

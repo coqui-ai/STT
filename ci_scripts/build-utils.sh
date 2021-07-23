@@ -6,12 +6,12 @@ do_bazel_build()
 {
   local _opt_or_dbg=${1:-"opt"}
 
-  cd ${DS_TFDIR}
+  cd ${DS_DSDIR}
   eval "export ${BAZEL_ENV_FLAGS}"
 
   if [ "${_opt_or_dbg}" = "opt" ]; then
     if is_patched_bazel; then
-      find ${DS_ROOT_TASK}/tensorflow/bazel-out/ -iname "*.ckd" | tar -cf ${DS_ROOT_TASK}/bazel-ckd-tf.tar -T -
+      find ${DS_ROOT_TASK}/bazel-out/ -iname "*.ckd" | tar -cf ${DS_ROOT_TASK}/bazel-ckd-tf.tar -T -
     fi;
   fi;
 
@@ -20,15 +20,15 @@ do_bazel_build()
 
   if [ "${_opt_or_dbg}" = "opt" ]; then
     if is_patched_bazel; then
-      find ${DS_ROOT_TASK}/tensorflow/bazel-out/ -iname "*.ckd" | tar -cf ${DS_ROOT_TASK}/bazel-ckd-ds.tar -T -
+      find ${DS_ROOT_TASK}/bazel-out/ -iname "*.ckd" | tar -cf ${DS_ROOT_TASK}/bazel-ckd-ds.tar -T -
     fi;
-    verify_bazel_rebuild "${DS_ROOT_TASK}/tensorflow/bazel_monolithic.log"
+    verify_bazel_rebuild "${DS_ROOT_TASK}/bazel_monolithic.log"
   fi;
 }
 
 shutdown_bazel()
 {
-  cd ${DS_TFDIR}
+  cd ${DS_DSDIR}
   bazel ${BAZEL_OUTPUT_USER_ROOT} shutdown
 }
 
@@ -37,7 +37,7 @@ do_stt_binary_build()
   cd ${DS_DSDIR}
   make -C native_client/ \
     TARGET=${SYSTEM_TARGET} \
-    TFDIR=${DS_TFDIR} \
+    ROOT_DIR=${DS_DSDIR} \
     RASPBIAN=${SYSTEM_RASPBIAN} \
     EXTRA_CFLAGS="${EXTRA_LOCAL_CFLAGS}" \
     EXTRA_LDFLAGS="${EXTRA_LOCAL_LDFLAGS}" \
