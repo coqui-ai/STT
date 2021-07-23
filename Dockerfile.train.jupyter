@@ -1,13 +1,13 @@
 # This is a Dockerfile useful for training models with Coqui STT in Jupyter notebooks
 
-FROM ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.9
+FROM ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.10
+
+COPY notebooks /code/notebooks
+WORKDIR /code/notebooks
 
 RUN python3 -m pip install --no-cache-dir jupyter jupyter_http_over_ws
 RUN jupyter serverextension enable --py jupyter_http_over_ws
 
-RUN mv /code /home/STT
-WORKDIR /home
-
 EXPOSE 8888
 
-CMD ["bash", "-c", "jupyter notebook --notebook-dir=/home --ip 0.0.0.0 --no-browser --allow-root"]
+CMD ["bash", "-c", "jupyter notebook --notebook-dir=/code/notebooks --ip 0.0.0.0 --no-browser --allow-root"]
