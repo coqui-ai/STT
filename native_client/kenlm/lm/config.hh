@@ -1,6 +1,7 @@
 #ifndef LM_CONFIG_H
 #define LM_CONFIG_H
 
+#include "lm/build_config.hh"
 #include "lm/lm_exception.hh"
 #include "util/mmap.hh"
 
@@ -16,7 +17,7 @@ class EnumerateVocab;
 
 namespace ngram {
 
-struct Config {
+struct KENLM_EXPORT Config {
   // EFFECTIVE FOR BOTH ARPA AND BINARY READS
 
   // (default true) print progress bar to messages

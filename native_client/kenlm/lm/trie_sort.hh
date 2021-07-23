@@ -3,6 +3,7 @@
 #ifndef LM_TRIE_SORT_H
 #define LM_TRIE_SORT_H
 
+#include "lm/build_config.hh"
 #include "lm/max_order.hh"
 #include "lm/word_index.hh"
 

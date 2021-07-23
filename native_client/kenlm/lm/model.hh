@@ -3,6 +3,7 @@
 
 #include "lm/bhiksha.hh"
 #include "lm/binary_format.hh"
+#include "lm/build_config.hh"
 #include "lm/config.hh"
 #include "lm/facade.hh"
 #include "lm/quantize.hh"
@@ -149,7 +150,7 @@ typedef ProbingModel Model;
 /* Autorecognize the file type, load, and return the virtual base class.  Don't
  * use the virtual base class if you can avoid it.  Instead, use the above
  * classes as template arguments to your own virtual feature function.*/
-base::Model *LoadVirtual(const char *file_name, const Config &config = Config(), ModelType if_arpa = PROBING);
+KENLM_EXPORT base::Model *LoadVirtual(const char *file_name, const Config &config = Config(), ModelType if_arpa = PROBING);
 
 } // namespace ngram
 } // namespace lm

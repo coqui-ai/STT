@@ -1,6 +1,7 @@
 #ifndef LM_BINARY_FORMAT_H
 #define LM_BINARY_FORMAT_H
 
+#include "lm/build_config.hh"
 #include "lm/config.hh"
 #include "lm/model_type.hh"
 #include "lm/read_arpa.hh"
@@ -23,7 +24,7 @@ extern const char *kModelNames[6];
  * If so, return true and set recognized to the type.  This is the only API in
  * this header designed for use by decoder authors.
  */
-bool RecognizeBinary(const char *file, ModelType &recognized);
+KENLM_EXPORT bool RecognizeBinary(const char *file, ModelType &recognized);
 
 struct FixedWidthParameters {
   unsigned char order;

@@ -1,3 +1,4 @@
+#include "lm/build_config.hh"
 #include "lm/ngram_query.hh"
 #include "util/getopt.hh"
 

@@ -2,6 +2,7 @@
 #define LM_QUANTIZE_H
 
 #include "lm/blank.hh"
+#include "lm/build_config.hh"
 #include "lm/config.hh"
 #include "lm/max_order.hh"
 #include "lm/model_type.hh"

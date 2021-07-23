@@ -1,6 +1,7 @@
 #ifndef LM_STATE_H
 #define LM_STATE_H
 
+#include "lm/build_config.hh"
 #include "lm/max_order.hh"
 #include "lm/word_index.hh"
 #include "util/murmur_hash.hh"

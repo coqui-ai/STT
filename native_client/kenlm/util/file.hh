@@ -1,6 +1,7 @@
 #ifndef UTIL_FILE_H
 #define UTIL_FILE_H
 
+#include "lm/build_config.hh"
 #include "util/exception.hh"
 #include "util/scoped.hh"
 #include "util/string_piece.hh"
@@ -82,7 +83,7 @@ class EndOfFileException : public Exception {
 class UnsupportedOSException : public Exception {};
 
 // Open for read only.
-int OpenReadOrThrow(const char *name);
+KENLM_EXPORT int OpenReadOrThrow(const char *name);
 // Create file if it doesn't exist, truncate if it does.  Opened for write.
 int CreateOrThrow(const char *name);
 
@@ -110,7 +111,7 @@ bool OutputPathIsStdout(StringPiece path);
 
 // Return value for SizeFile when it can't size properly.
 const uint64_t kBadSize = (uint64_t)-1;
-uint64_t SizeFile(int fd);
+KENLM_EXPORT uint64_t SizeFile(int fd);
 uint64_t SizeOrThrow(int fd);
 
 void ResizeOrThrow(int fd, uint64_t to);

@@ -4,6 +4,7 @@
 #include "lm/bhiksha.hh"
 #include "lm/binary_format.hh"
 #include "lm/blank.hh"
+#include "lm/build_config.hh"
 #include "lm/lm_exception.hh"
 #include "lm/max_order.hh"
 #include "lm/quantize.hh"

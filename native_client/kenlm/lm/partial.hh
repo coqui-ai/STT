@@ -1,6 +1,7 @@
 #ifndef LM_PARTIAL_H
 #define LM_PARTIAL_H
 
+#include "lm/build_config.hh"
 #include "lm/return.hh"
 #include "lm/state.hh"
 

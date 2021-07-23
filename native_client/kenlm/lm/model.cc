@@ -1,6 +1,7 @@
 #include "lm/model.hh"
 
 #include "lm/blank.hh"
+#include "lm/build_config.hh"
 #include "lm/lm_exception.hh"
 #include "lm/search_hashed.hh"
 #include "lm/search_trie.hh"
