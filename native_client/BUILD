@@ -52,6 +52,31 @@ OPENFST_INCLUDES_PLATFORM = select({
     "//conditions:default": ["ctcdecode/third_party/openfst-1.6.7/src/include"],
 })
 
+DECODER_SOURCES = [
+    "alphabet.cc",
+    "alphabet.h",
+    "ctcdecode/ctc_beam_search_decoder.cpp",
+    "ctcdecode/ctc_beam_search_decoder.h",
+    "ctcdecode/decoder_utils.cpp",
+    "ctcdecode/decoder_utils.h",
+    "ctcdecode/path_trie.cpp",
+    "ctcdecode/path_trie.h",
+    "ctcdecode/scorer.cpp",
+    "ctcdecode/scorer.h",
+] + OPENFST_SOURCES_PLATFORM
+
+DECODER_INCLUDES = [
+    ".",
+    "ctcdecode/third_party/ThreadPool",
+    "ctcdecode/third_party/object_pool",
+] + OPENFST_INCLUDES_PLATFORM
+
+DECODER_LINKOPTS = [
+    "-lm",
+    "-ldl",
+    "-pthread",
+]
+
 LINUX_LINKOPTS = [
     "-ldl",
     "-pthread",
@@ -100,32 +125,10 @@ cc_library(
 
 cc_library(
     name = "decoder",
-    srcs = [
-        "ctcdecode/ctc_beam_search_decoder.cpp",
-        "ctcdecode/decoder_utils.cpp",
-        "ctcdecode/decoder_utils.h",
-        "ctcdecode/scorer.cpp",
-        "ctcdecode/path_trie.cpp",
-        "ctcdecode/path_trie.h",
-        "alphabet.cc",
-    ] + OPENFST_SOURCES_PLATFORM,
-    hdrs = [
-        "ctcdecode/ctc_beam_search_decoder.h",
-        "ctcdecode/scorer.h",
-        "ctcdecode/decoder_utils.h",
-        "alphabet.h",
-    ],
-    includes = [
-        ".",
-        "ctcdecode/third_party/ThreadPool",
-        "ctcdecode/third_party/object_pool",
-    ] + OPENFST_INCLUDES_PLATFORM,
+    srcs = DECODER_SOURCES,
+    includes = DECODER_INCLUDES,
     deps = [":kenlm"],
-    linkopts = [
-        "-lm",
-        "-ldl",
-        "-pthread",
-    ],
+    linkopts = DECODER_LINKOPTS,
 )
 
 cc_library(
@@ -147,7 +150,7 @@ cc_library(
             "tfmodelstate.h",
             "tfmodelstate.cc",
         ],
-    }),
+    }) + DECODER_SOURCES,
     copts = tf_copts() + select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
         "//tensorflow:windows": ["/w"],
@@ -169,7 +172,8 @@ cc_library(
         "//native_client:rpi3-armv8": LINUX_LINKOPTS,
         "//tensorflow:windows": [],
         "//conditions:default": [],
-    }) + tflite_linkopts(),
+    }) + tflite_linkopts() + DECODER_LINKOPTS,
+    includes = DECODER_INCLUDES,
     deps = select({
         "//native_client:tflite": [
             "//tensorflow/lite/kernels:builtin_ops",
@@ -218,7 +222,7 @@ cc_library(
         ],
     }) + if_cuda([
         "//tensorflow/core:core",
-    ]) + [":decoder"],
+    ]) + [":kenlm"],
 )
 
 tf_cc_shared_object(
@@ -280,9 +284,8 @@ cc_binary(
 cc_binary(
     name = "trie_load",
     srcs = [
-        "alphabet.h",
         "trie_load.cc",
-    ],
+    ] + DECODER_SOURCES,
     copts = ["-std=c++11"],
-    deps = [":decoder"],
+    linkopts = DECODER_LINKOPTS,
 )
