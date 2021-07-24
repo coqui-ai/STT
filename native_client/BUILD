@@ -117,10 +117,10 @@ cc_library(
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
     ]),
+    srcs = ["libkenlm.so"],
     copts = ["-std=c++11"],
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
-    srcs = ["libkenlm.so"],
 )
 
 cc_library(
@@ -170,7 +170,10 @@ cc_library(
         "//tensorflow:linux_x86_64": LINUX_LINKOPTS,
         "//native_client:rpi3": LINUX_LINKOPTS,
         "//native_client:rpi3-armv8": LINUX_LINKOPTS,
-        "//tensorflow:windows": [],
+        # Bazel is has too strong opinions about static linking, so it's
+        # near impossible to get it to link a DLL against another DLL on Windows.
+        # We simply force the linker option manually here as a hacky fix.
+        "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
         "//conditions:default": [],
     }) + tflite_linkopts() + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
@@ -255,6 +258,7 @@ cc_binary(
     copts = ["-std=c++11"],
     deps = [
         ":decoder",
+        ":kenlm",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/types:optional",
@@ -268,6 +272,10 @@ cc_binary(
     ] + select({
         # ARMv7: error: Android 5.0 and later only support position-independent executables (-fPIE).
         "//tensorflow:android": ["-fPIE -pie"],
+        # Bazel is has too strong opinions about static linking, so it's
+        # near impossible to get it to link a DLL against another DLL on Windows.
+        # We simply force the linker option manually here as a hacky fix.
+        "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
         "//conditions:default": [],
     }),
 )
