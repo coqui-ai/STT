@@ -104,11 +104,10 @@ cc_library(
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
     ]),
-    srcs = [":libkenlm.so"],
-    copts = ["-std=c++14"],
+    srcs = ["libkenlm.so"],
+    copts = ["-std=c++11"],
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
-    srcs = ["libkenlm.so"],
 )
 
 cc_library(
@@ -160,9 +159,7 @@ cc_library(
         # Bazel is has too strong opinions about static linking, so it's
         # near impossible to get it to link a DLL against another DLL on Windows.
         # We simply force the linker option manually here as a hacky fix.
-        "//tensorflow:windows": [
-            "bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib",
-        ],
+        "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
         "//conditions:default": [],
     }) + tflite_linkopts() + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
