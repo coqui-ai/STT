@@ -1,0 +1,12 @@
+# This is a Dockerfile useful for training models with Coqui STT in Jupyter notebooks
+
+FROM ghcr.io/coqui-ai/stt-train:latest
+
+WORKDIR /code/notebooks
+
+RUN python3 -m pip install --no-cache-dir jupyter jupyter_http_over_ws
+RUN jupyter serverextension enable --py jupyter_http_over_ws
+
+EXPOSE 8888
+
+CMD ["bash", "-c", "jupyter notebook --notebook-dir=/code/notebooks --ip 0.0.0.0 --no-browser --allow-root"]
