@@ -116,6 +116,7 @@ cc_library(
     includes = DECODER_INCLUDES,
     deps = [":kenlm"],
     linkopts = DECODER_LINKOPTS,
+    copts = ["-fexceptions"],
 )
 
 cc_library(
@@ -138,7 +139,7 @@ cc_library(
             "tfmodelstate.cc",
         ],
     }) + DECODER_SOURCES,
-    copts = tf_copts() + select({
+    copts = tf_copts(allow_exceptions=True) + select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
         "//tensorflow:windows": ["/std:c++14", "/w"],
         # -Wno-sign-compare to silent a lot of warnings from tensorflow itself,
@@ -149,6 +150,9 @@ cc_library(
             "-Wno-sign-compare",
             "-fvisibility=hidden",
         ],
+    }) + select({
+        "//native_client:tflite": ["-DUSE_TFLITE"],
+        "//conditions:default": ["-UUSE_TFLITE"],
     }),
     linkopts = lrt_if_needed() + select({
         "//tensorflow:macos": [],
@@ -255,8 +259,8 @@ cc_binary(
         "stt_errors.cc",
     ],
     copts = select({
-        "//tensorflow:windows": ["/std:c++14"],
-        "//conditions:default": ["-std=c++14"],
+        "//tensorflow:windows": [],
+        "//conditions:default": ["-std=c++11"],
     }),
     deps = [
         ":decoder",
