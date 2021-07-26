@@ -52,6 +52,31 @@ OPENFST_INCLUDES_PLATFORM = select({
     "//conditions:default": ["ctcdecode/third_party/openfst-1.6.7/src/include"],
 })
 
+DECODER_SOURCES = [
+    "alphabet.cc",
+    "alphabet.h",
+    "ctcdecode/ctc_beam_search_decoder.cpp",
+    "ctcdecode/ctc_beam_search_decoder.h",
+    "ctcdecode/decoder_utils.cpp",
+    "ctcdecode/decoder_utils.h",
+    "ctcdecode/path_trie.cpp",
+    "ctcdecode/path_trie.h",
+    "ctcdecode/scorer.cpp",
+    "ctcdecode/scorer.h",
+] + OPENFST_SOURCES_PLATFORM
+
+DECODER_INCLUDES = [
+    ".",
+    "ctcdecode/third_party/ThreadPool",
+    "ctcdecode/third_party/object_pool",
+] + OPENFST_INCLUDES_PLATFORM
+
+DECODER_LINKOPTS = [
+    "-lm",
+    "-ldl",
+    "-pthread",
+]
+
 LINUX_LINKOPTS = [
     "-ldl",
     "-pthread",
@@ -60,10 +85,12 @@ LINUX_LINKOPTS = [
     "-Wl,-export-dynamic",
 ]
 
-cc_library(
-    name = "kenlm",
+tf_cc_shared_object(
+    name = "libkenlm.so",
     srcs = glob([
+        "kenlm/lm/*.hh",
         "kenlm/lm/*.cc",
+        "kenlm/util/*.hh",
         "kenlm/util/*.cc",
         "kenlm/util/double-conversion/*.cc",
         "kenlm/util/double-conversion/*.h",
@@ -72,10 +99,25 @@ cc_library(
         "kenlm/*/*test.cc",
         "kenlm/*/*main.cc",
     ],),
+    copts = [
+        "-std=c++11"
+    ] + select({
+        "//tensorflow:windows": [],
+        "//conditions:default": ["-fvisibility=hidden"],
+    }),
+    defines = ["KENLM_MAX_ORDER=6"],
+    includes = ["kenlm"],
+    framework_so = [],
+    linkopts = [],
+)
+
+cc_library(
+    name="kenlm",
     hdrs = glob([
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
     ]),
+    srcs = ["libkenlm.so"],
     copts = ["-std=c++11"],
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
@@ -83,32 +125,11 @@ cc_library(
 
 cc_library(
     name = "decoder",
-    srcs = [
-        "ctcdecode/ctc_beam_search_decoder.cpp",
-        "ctcdecode/decoder_utils.cpp",
-        "ctcdecode/decoder_utils.h",
-        "ctcdecode/scorer.cpp",
-        "ctcdecode/path_trie.cpp",
-        "ctcdecode/path_trie.h",
-        "alphabet.cc",
-    ] + OPENFST_SOURCES_PLATFORM,
-    hdrs = [
-        "ctcdecode/ctc_beam_search_decoder.h",
-        "ctcdecode/scorer.h",
-        "ctcdecode/decoder_utils.h",
-        "alphabet.h",
-    ],
-    includes = [
-        ".",
-        "ctcdecode/third_party/ThreadPool",
-        "ctcdecode/third_party/object_pool",
-    ] + OPENFST_INCLUDES_PLATFORM,
+    srcs = DECODER_SOURCES,
+    includes = DECODER_INCLUDES,
     deps = [":kenlm"],
-    linkopts = [
-        "-lm",
-        "-ldl",
-        "-pthread",
-    ],
+    linkopts = DECODER_LINKOPTS,
+    copts = ["-fexceptions"],
 )
 
 cc_library(
@@ -130,8 +151,8 @@ cc_library(
             "tfmodelstate.h",
             "tfmodelstate.cc",
         ],
-    }),
-    copts = tf_copts() + select({
+    }) + DECODER_SOURCES,
+    copts = tf_copts(allow_exceptions=True) + select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
         "//tensorflow:windows": ["/w"],
         # -Wno-sign-compare to silent a lot of warnings from tensorflow itself,
@@ -143,16 +164,20 @@ cc_library(
     }) + select({
         "//native_client:tflite": ["-DUSE_TFLITE"],
         "//conditions:default": ["-UUSE_TFLITE"],
-    }) + tflite_copts(),
+    }),
     linkopts = lrt_if_needed() + select({
         "//tensorflow:macos": [],
         "//tensorflow:ios": ["-fembed-bitcode"],
         "//tensorflow:linux_x86_64": LINUX_LINKOPTS,
         "//native_client:rpi3": LINUX_LINKOPTS,
         "//native_client:rpi3-armv8": LINUX_LINKOPTS,
-        "//tensorflow:windows": [],
+        # Bazel is has too strong opinions about static linking, so it's
+        # near impossible to get it to link a DLL against another DLL on Windows.
+        # We simply force the linker option manually here as a hacky fix.
+        "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
         "//conditions:default": [],
-    }) + tflite_linkopts(),
+    }) + tflite_linkopts() + DECODER_LINKOPTS,
+    includes = DECODER_INCLUDES,
     deps = select({
         "//native_client:tflite": [
             "//tensorflow/lite/kernels:builtin_ops",
@@ -201,7 +226,7 @@ cc_library(
         ],
     }) + if_cuda([
         "//tensorflow/core:core",
-    ]) + [":decoder"],
+    ]) + [":kenlm"],
 )
 
 tf_cc_shared_object(
@@ -231,9 +256,13 @@ cc_binary(
         "generate_scorer_package.cpp",
         "stt_errors.cc",
     ],
-    copts = ["-std=c++11"],
+    copts = select({
+        "//tensorflow:windows": [],
+        "//conditions:default": ["-std=c++11"],
+    }),
     deps = [
         ":decoder",
+        ":kenlm",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/types:optional",
@@ -247,6 +276,10 @@ cc_binary(
     ] + select({
         # ARMv7: error: Android 5.0 and later only support position-independent executables (-fPIE).
         "//tensorflow:android": ["-fPIE -pie"],
+        # Bazel is has too strong opinions about static linking, so it's
+        # near impossible to get it to link a DLL against another DLL on Windows.
+        # We simply force the linker option manually here as a hacky fix.
+        "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
         "//conditions:default": [],
     }),
 )
@@ -263,9 +296,8 @@ cc_binary(
 cc_binary(
     name = "trie_load",
     srcs = [
-        "alphabet.h",
         "trie_load.cc",
-    ],
+    ] + DECODER_SOURCES,
     copts = ["-std=c++11"],
-    deps = [":decoder"],
+    linkopts = DECODER_LINKOPTS,
 )
