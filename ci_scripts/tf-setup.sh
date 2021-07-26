@@ -44,19 +44,15 @@ ls -hal ${DS_ROOT_TASK}/dls/
 
 # Install Bazel in ${DS_ROOT_TASK}/bin
 BAZEL_INSTALL_FILENAME=$(basename "${BAZEL_URL}")
-if [ "${OS}" = "Linux" ]; then
-    BAZEL_INSTALL_FLAGS="--user"
-elif [ "${OS}" = "Darwin" ]; then
-    BAZEL_INSTALL_FLAGS="--bin=${DS_ROOT_TASK}/bin --base=${DS_ROOT_TASK}/.bazel"
-fi;
 mkdir -p ${DS_ROOT_TASK}/bin || true
-pushd ${DS_ROOT_TASK}/bin
-    if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
-        cp ${DS_ROOT_TASK}/dls/${BAZEL_INSTALL_FILENAME} ${DS_ROOT_TASK}/bin/bazel.exe
-    else
-        /bin/bash ${DS_ROOT_TASK}/dls/${BAZEL_INSTALL_FILENAME} ${BAZEL_INSTALL_FLAGS}
-    fi
-popd
+
+SUFFIX=""
+if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
+    SUFFIX=".exe"
+fi
+
+cp ${DS_ROOT_TASK}/dls/${BAZEL_INSTALL_FILENAME} ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
+chmod +x ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 
 # For debug
 bazel version
@@ -105,8 +101,3 @@ if [ ! -z "${install_android}" ]; then
 fi
 
 mkdir -p ${CI_ARTIFACTS_DIR} || true
-
-
-# Taken from https://www.tensorflow.org/install/source
-# Only future is needed for our builds, as we don't build the Python package
-python -m pip install -U --user future==0.17.1 || true

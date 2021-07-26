@@ -6,15 +6,8 @@ export OS=$(uname)
 if [ "${OS}" = "Linux" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
 
-    BAZEL_URL=https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-installer-linux-x86_64.sh
-    BAZEL_SHA256=7ba815cbac712d061fe728fef958651512ff394b2708e89f79586ec93d1185ed
-
-    CUDA_URL=http://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run
-    CUDA_SHA256=e7c22dc21278eb1b82f34a60ad7640b41ad3943d929bebda3008b72536855d31
-
-    # From https://gitlab.com/nvidia/cuda/blob/centos7/10.1/devel/cudnn7/Dockerfile
-    CUDNN_URL=http://developer.download.nvidia.com/compute/redist/cudnn/v7.6.0/cudnn-10.1-linux-x64-v7.6.0.64.tgz
-    CUDNN_SHA256=e956c6f9222fcb867a10449cfc76dee5cfd7c7531021d95fe9586d7e043b57d7
+    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64
+    BAZEL_SHA256=4cb534c52cdd47a6223d4596d530e7c9c785438ab3b0a49ff347e991c210b2cd
 
     ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r18b-linux-x86_64.zip
     ANDROID_NDK_SHA256=4f61cbe4bbf6406aa5ef2ae871def78010eed6271af72de83f8bd0b07a9fd3fd
@@ -45,10 +38,8 @@ elif [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     export TEMP=${CI_TASK_DIR}/tmp/
     export TMP=${CI_TASK_DIR}/tmp/
 
-    BAZEL_URL=https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-windows-x86_64.exe
-    BAZEL_SHA256=776db1f4986dacc3eda143932f00f7529f9ee65c7c1c004414c44aaa6419d0e9
-
-    CUDA_INSTALL_DIRECTORY=$(cygpath 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1')
+    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-windows-amd64.exe
+    BAZEL_SHA256=9a89e6a8cc0a3aea37affcf8c146d8925ffbda1d2290c0c6a845ea81e05de62c
 
     TAR=/usr/bin/tar.exe
 elif [ "${OS}" = "Darwin" ]; then
@@ -61,8 +52,8 @@ elif [ "${OS}" = "Darwin" ]; then
 
     export DS_ROOT_TASK=${CI_TASK_DIR}
 
-    BAZEL_URL=https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-installer-darwin-x86_64.sh
-    BAZEL_SHA256=5cfa97031b43432b3c742c80e2e01c41c0acdca7ba1052fc8cf1e291271bc9cd
+    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
+    BAZEL_SHA256=e485bbf84532d02a60b0eb23c702610b5408df3a199087a4f2b5e0995bbf2d5a
 
     SHA_SUM="shasum -a 256 -c"
     TAR=gtar
@@ -89,7 +80,6 @@ fi;
 export PATH
 
 if [ "${OS}" = "Linux" ]; then
-    export LD_LIBRARY_PATH=${DS_ROOT_TASK}/STT/CUDA/lib64/:${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/:$LD_LIBRARY_PATH
     export ANDROID_SDK_HOME=${DS_ROOT_TASK}/STT/Android/SDK/
     export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r18b/
 fi;
@@ -120,7 +110,7 @@ export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
 
 if [ "${OS}" = "Linux" ]; then
     source /etc/os-release
-    if [ "${ID}" = "ubuntu" -a "${VERSION_ID}" = "20.04" ]; then
+    if [ "${ID}" = "ubuntu" -a "${VERSION_ID}" = "14.04" ]; then
         export PYTHON_BIN_PATH=/usr/bin/python3
     fi
 elif [ "${OS}" != "${TC_MSYS_VERSION}" ]; then
@@ -160,27 +150,15 @@ export BAZEL_OUTPUT_USER_ROOT
 
 NVCC_COMPUTE="3.5"
 
-### Define build parameters/env variables that we will re-ues in sourcing scripts.
-if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
-    TF_CUDA_FLAGS="TF_CUDA_CLANG=0 TF_CUDA_VERSION=10.1 TF_CUDNN_VERSION=7.6.0 CUDNN_INSTALL_PATH=\"${CUDA_INSTALL_DIRECTORY}\" TF_CUDA_PATHS=\"${CUDA_INSTALL_DIRECTORY}\" TF_CUDA_COMPUTE_CAPABILITIES=\"${NVCC_COMPUTE}\""
-else
-    TF_CUDA_FLAGS="TF_CUDA_CLANG=0 TF_CUDA_VERSION=10.1 TF_CUDNN_VERSION=7.6.0 CUDNN_INSTALL_PATH=\"${DS_ROOT_TASK}/STT/CUDA\" TF_CUDA_PATHS=\"${DS_ROOT_TASK}/STT/CUDA\" TF_CUDA_COMPUTE_CAPABILITIES=\"${NVCC_COMPUTE}\""
-fi
 BAZEL_ARM_FLAGS="--config=rpi3 --config=rpi3_opt --copt=-DTFLITE_WITH_RUY_GEMV"
 BAZEL_ARM64_FLAGS="--config=rpi3-armv8 --config=rpi3-armv8_opt --copt=-DTFLITE_WITH_RUY_GEMV"
 BAZEL_ANDROID_ARM_FLAGS="--config=android --config=android_arm --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 --copt=-DTFLITE_WITH_RUY_GEMV"
 BAZEL_ANDROID_ARM64_FLAGS="--config=android --config=android_arm64 --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 --copt=-DTFLITE_WITH_RUY_GEMV"
-BAZEL_CUDA_FLAGS="--config=cuda"
-if [ "${OS}" = "Linux" ]; then
-    # constexpr usage in tensorflow's absl dep fails badly because of gcc-5
-    # so let's skip that
-    BAZEL_CUDA_FLAGS="${BAZEL_CUDA_FLAGS} --copt=-DNO_CONSTEXPR_FOR_YOU=1"
-fi
 BAZEL_IOS_ARM64_FLAGS="--config=ios_arm64 --define=runtime=tflite --copt=-DTFLITE_WITH_RUY_GEMV"
 BAZEL_IOS_X86_64_FLAGS="--config=ios_x86_64 --define=runtime=tflite --copt=-DTFLITE_WITH_RUY_GEMV"
 
 if [ "${OS}" != "${CI_MSYS_VERSION}" ]; then
-    BAZEL_EXTRA_FLAGS="--config=noaws --config=nogcp --config=nohdfs --config=nonccl --copt=-fvisibility=hidden"
+    BAZEL_EXTRA_FLAGS="--config=noaws --config=nogcp --config=nohdfs --config=nonccl"
 fi
 
 if [ "${OS}" = "Darwin" ]; then
@@ -189,11 +167,5 @@ fi
 
 ### Define build targets that we will re-ues in sourcing scripts.
 BUILD_TARGET_LIB_CPP_API="//tensorflow:tensorflow_cc"
-BUILD_TARGET_GRAPH_TRANSFORMS="//tensorflow/tools/graph_transforms:transform_graph"
-BUILD_TARGET_GRAPH_SUMMARIZE="//tensorflow/tools/graph_transforms:summarize_graph"
-BUILD_TARGET_GRAPH_BENCHMARK="//tensorflow/tools/benchmark:benchmark_model"
-#BUILD_TARGET_CONVERT_MMAP="//tensorflow/contrib/util:convert_graphdef_memmapped_format"
-BUILD_TARGET_TOCO="//tensorflow/lite/toco:toco"
-BUILD_TARGET_LITE_BENCHMARK="//tensorflow/lite/tools/benchmark:benchmark_model"
-BUILD_TARGET_LITE_LIB="//tensorflow/lite/c:libtensorflowlite_c.so"
+BUILD_TARGET_LITE_LIB="//tensorflow/lite:libtensorflowlite.so"
 BUILD_TARGET_LIBSTT="//native_client:libstt.so"

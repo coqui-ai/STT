@@ -5,3 +5,5 @@ runs:
   steps:
     - run: ./ci_scripts/tf-setup.sh
       shell: bash
+    - run: echo "${DS_ROOT_TASK}/bin" >> $GITHUB_PATH
+      shell: bash
