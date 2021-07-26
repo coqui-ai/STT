@@ -26,6 +26,10 @@ package_native_client()
     win_lib="-C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so.if.lib"
   fi;
 
+  if [ -f "${tensorflow_dir}/bazel-bin/native_client/libkenlm.so.if.lib" ]; then
+    win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so.if.lib"
+  fi;
+
   ${TAR} --verbose -cf - \
     --transform='flags=r;s|README.coqui|KenLM_License_Info.txt|' \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
