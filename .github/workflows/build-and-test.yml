@@ -212,10 +212,6 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-model.tf-${{ matrix.bitrate }}.zip"
-          path: ${{ github.workspace }}/tmp/output_graph.pb*
-      - uses: actions/upload-artifact@v2
-        with:
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
@@ -235,7 +231,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "2"
+          extras: "3"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -272,9 +268,6 @@ jobs:
     name: "Lin|Build libstt+client"
     runs-on: ubuntu-20.04
     needs: [ build-tensorflow-Linux, tensorflow_opt-Linux ]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -285,23 +278,21 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linux.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
       - run: |
           sudo apt-get install -y --no-install-recommends make build-essential gfortran git libblas-dev liblapack-dev libsox-dev libmagic-dev libgsm1-dev libltdl-dev libpng-dev python python-dev zlib1g-dev
       - run: |
           git status
       - uses: ./.github/actions/host-build
-        with:
-          flavor: ${{ matrix.build-flavor }}
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Linux.tar.xz"
+          name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.${{ matrix.build-flavor }}.zip"
+          name: "libstt.tflite.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-Linux:
     name: "Lin|Build Python bindings"
@@ -309,7 +300,6 @@ jobs:
     needs: [ build-lib_Linux, swig_Linux ]
     strategy:
       matrix:
-        build-flavor: ["tf", "tflite"]
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
@@ -317,12 +307,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Linux.tar.xz"
+          name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -342,32 +334,30 @@ jobs:
           pyver: ${{ matrix.python-version }}
       - uses: ./.github/actions/python-build
         with:
-          build_flavor: ${{ matrix.build-flavor }}
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-Linux.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
           path: ${{ github.workspace }}/wheels/*.whl
   build-nodejs-Linux:
     name: "Lin|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
     needs: [ build-lib_Linux, swig_Linux ]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Linux.tar.xz"
+          name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -397,11 +387,11 @@ jobs:
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
       - uses: actions/upload-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Linux_amd64.tar.gz"
+          name: "nodewrapper-tflite-Linux_amd64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-Linux.tgz"
+          name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
@@ -410,7 +400,6 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -425,14 +414,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Linux.tar.xz"
+          name: "native_client.tflite.Linux.tar.xz"
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           cd ${{ env.CI_TMP_DIR }}
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -441,7 +430,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cpp"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-py-Linux:
@@ -452,7 +440,6 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -472,11 +459,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-Linux.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -488,7 +475,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-Linux:
@@ -500,7 +486,6 @@ jobs:
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [10, 12, 14, 16]
-        build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -520,11 +505,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-Linux.tgz"
+          name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -534,7 +519,7 @@ jobs:
         id: node-modules-cache
         with:
           path: ~/.npm/
-          key: node-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: node-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -544,7 +529,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-Linux:
@@ -555,7 +539,6 @@ jobs:
     strategy:
       matrix:
         electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
-        build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -575,11 +558,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-Linux.tgz"
+          name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -589,7 +572,7 @@ jobs:
         id: electron-modules-cache
         with:
           path: ~/.npm/
-          key: electron-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: electron-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -599,7 +582,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -710,64 +692,6 @@ jobs:
           python -m pip install -U twine
       - uses: actions/download-artifact@v2
         with:
-          name: stt-tf-3.6.8-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.7.9-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.8.9-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.9.4-macOS.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.6.8-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.7.9-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.8.8-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.9.4-Windows.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.6-Linux.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.7-Linux.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.8-Linux.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tf-3.9-Linux.whl
-      - name: Setup PyPI config
-        run: |
-          cat << EOF > ~/.pypirc
-          [pypi]
-          username=__token__
-          password=${{ secrets.PYPI_STT_TOKEN }}
-          EOF
-      - run: |
-          twine upload --repository pypi *.whl
-  twine-upload-tflite:
-    name: "Upload STT-tflite packages to PyPI"
-    runs-on: ubuntu-20.04
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
-    steps:
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Update pip and install twine
-        run: |
-          python -m pip install -U pip
-          python -m pip install -U twine
-      - uses: actions/download-artifact@v2
-        with:
           name: stt-tflite-3.6.8-macOS.whl
       - uses: actions/download-artifact@v2
         with:
@@ -815,7 +739,7 @@ jobs:
           cat << EOF > ~/.pypirc
           [pypi]
           username=__token__
-          password=${{ secrets.PYPI_TFLITE_TOKEN }}
+          password=${{ secrets.PYPI_STT_TOKEN }}
           EOF
       - run: |
           twine upload --repository pypi *.whl
@@ -1013,10 +937,6 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-model.tf-${{ matrix.bitrate }}.zip"
-          path: ${{ github.workspace }}/tmp/output_graph.pb*
-      - uses: actions/upload-artifact@v2
-        with:
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
@@ -1036,7 +956,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "2"
+          extras: "3"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -1074,9 +994,6 @@ jobs:
     name: "Mac|Build libstt+client"
     runs-on: macos-10.15
     needs: [ build-tensorflow-macOS, tensorflow_opt-macOS ]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1094,17 +1011,19 @@ jobs:
       - uses: ./.github/actions/select-xcode
         with:
           version: "12.1.1"
+      - run: |
+          # Taken from https://www.tensorflow.org/install/source
+          # Only future is needed for our builds, as we don't build the Python package
+          python -m pip install -U --user future==0.17.1 || true
       - uses: ./.github/actions/host-build
-        with:
-          flavor: ${{ matrix.build-flavor }}
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.macOS.tar.xz"
+          name: "native_client.tflite.macOS.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.${{ matrix.build-flavor }}.zip"
+          name: "libstt.tflite.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-macOS:
     name: "Mac|Build Python bindings"
@@ -1112,7 +1031,6 @@ jobs:
     needs: [ build-lib_macOS, swig_macOS ]
     strategy:
       matrix:
-        build-flavor: ["tf", "tflite"]
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
     steps:
       - uses: actions/checkout@v2
@@ -1120,12 +1038,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.macOS.tar.xz"
+          name: "native_client.tflite.macOS.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -1149,32 +1069,30 @@ jobs:
           pyver: ${{ matrix.python-version }}
       - uses: ./.github/actions/python-build
         with:
-          build_flavor: ${{ matrix.build-flavor }}
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-macOS.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-macOS.whl"
           path: ${{ github.workspace }}/wheels/*.whl
   build-nodejs-macOS:
     name: "Mac|Build NodeJS and ElectronJS"
     runs-on: macos-10.15
     needs: [ build-lib_macOS, swig_macOS ]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.macOS.tar.xz"
+          name: "native_client.tflite.macOS.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -1204,11 +1122,11 @@ jobs:
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
       - uses: actions/upload-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-macOS_amd64.tar.gz"
+          name: "nodewrapper-tflite-macOS_amd64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-macOS.tgz"
+          name: "stt_intermediate-tflite-macOS.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
@@ -1217,7 +1135,6 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -1232,14 +1149,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.macOS.tar.xz"
+          name: "native_client.tflite.macOS.tar.xz"
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           cd ${{ env.CI_TMP_DIR }}
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1248,7 +1165,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cpp"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-py-macOS:
@@ -1259,7 +1175,6 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -1277,11 +1192,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-macOS.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-macOS.whl"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1293,7 +1208,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-macOS:
@@ -1305,7 +1219,6 @@ jobs:
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [10, 12, 14, 16]
-        build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -1323,11 +1236,11 @@ jobs:
           node-version: ${{ matrix.nodejs-version }}
       - uses: actions/download-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-macOS.tgz"
+          name: "stt_intermediate-tflite-macOS.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1337,7 +1250,7 @@ jobs:
         id: node-modules-cache
         with:
           path: ~/.npm/
-          key: node-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: node-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -1347,7 +1260,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-macOS:
@@ -1358,7 +1270,6 @@ jobs:
     strategy:
       matrix:
         electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
-        build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -1376,11 +1287,11 @@ jobs:
           node-version: 12
       - uses: actions/download-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-macOS.tgz"
+          name: "stt_intermediate-tflite-macOS.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1390,7 +1301,7 @@ jobs:
         id: electron-modules-cache
         with:
           path: ~/.npm/
-          key: electron-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: electron-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -1400,7 +1311,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -1466,7 +1376,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "7"
+          extras: "8"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -1522,9 +1432,6 @@ jobs:
     name: "Win|Build libstt+client"
     runs-on: windows-2019
     needs: [build-tensorflow-Windows, tensorflow_opt-Windows]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1554,15 +1461,15 @@ jobs:
           rm ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
       - run: |
           git status
-      - run: ./ci_scripts/host-build.sh ${{ matrix.build-flavor }}
+      - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Windows.tar.xz"
+          name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.${{ matrix.build-flavor }}.zip"
+          name: "libstt.tflite.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-Windows:
     name: "Win|Build Python bindings"
@@ -1570,7 +1477,6 @@ jobs:
     needs: [build-lib_Windows, swig_Windows_crosscompiled]
     strategy:
       matrix:
-        build-flavor: ["tf", "tflite"]
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4]
@@ -1590,12 +1496,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Windows.tar.xz"
+          name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           pushd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so* ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           popd
       - uses: actions/download-artifact@v2
         with:
@@ -1619,20 +1527,16 @@ jobs:
           pyver: ${{ matrix.python-version }}
       - uses: ./.github/actions/python-build
         with:
-          build_flavor: ${{ matrix.build-flavor }}
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-Windows.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
           path: ${{ github.workspace }}/wheels/*.whl
   build-nodejs-Windows:
     name: "Win|Build NodeJS/ElectronJS"
     runs-on: windows-2019
     needs: [build-lib_Windows, swig_Windows_crosscompiled]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -1650,12 +1554,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Windows.tar.xz"
+          name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           pushd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so* ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           popd
       - uses: actions/download-artifact@v2
         with:
@@ -1686,20 +1592,17 @@ jobs:
           electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
       - uses: actions/upload-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Windows_amd64.tar.gz"
+          name: "nodewrapper-tflite-Windows_amd64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
       - uses: actions/upload-artifact@v2
         with:
-          name: "STT_intermediate-${{ matrix.build-flavor }}-Windows.tgz"
+          name: "STT_intermediate-tflite-Windows.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   test-cpp-Windows:
     name: "Win|Test C++ binary"
     runs-on: windows-2019
     needs: [build-lib_Windows, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.pb
@@ -1719,7 +1622,7 @@ jobs:
       - name: Download native_client.tar.xz
         uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.Windows.tar.xz"
+          name: "native_client.tflite.Windows.tar.xz"
           path: ${{ env.CI_TMP_DIR }}
       - name: Extract native_client.tar.xz
         run: |
@@ -1731,14 +1634,13 @@ jobs:
       - name: Download trained test model
         uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-16k.zip"
+          name: "test-model.tflite-16k.zip"
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cppwin"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: "16k"
           model-kind: ""
   test-py-Windows:
@@ -1751,7 +1653,6 @@ jobs:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -1779,11 +1680,11 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-Windows.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1795,7 +1696,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-Windows:
@@ -1806,7 +1706,6 @@ jobs:
     strategy:
       matrix:
         nodejs-version: [10, 12, 14, 16]
-        build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -1834,11 +1733,11 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "STT_intermediate-${{ matrix.build-flavor }}-Windows.tgz"
+          name: "STT_intermediate-tflite-Windows.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - name: Get npm cache directory
@@ -1849,7 +1748,7 @@ jobs:
         id: node-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: node-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: node-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
@@ -1860,7 +1759,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-Windows:
@@ -1871,7 +1769,6 @@ jobs:
     strategy:
       matrix:
         electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
-        build-flavor: ["tf", "tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -1899,11 +1796,11 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "STT_intermediate-${{ matrix.build-flavor }}-Windows.tgz"
+          name: "STT_intermediate-tflite-Windows.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1917,7 +1814,7 @@ jobs:
         id: electron-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: electron-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: electron-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -1927,7 +1824,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -1936,57 +1832,45 @@ jobs:
     name: "Repackage NodeJS / ElectronJS for multiplatforms"
     runs-on: ubuntu-20.04
     needs: [build-nodejs-macOS, build-nodejs-Windows, build-nodejs-Linux, build-nodejs-LinuxArmv7, build-nodejs-LinuxAarch64]
-    strategy:
-      matrix:
-        build-flavor: ["tf", "tflite"]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
       - run: |
-          mkdir -p /tmp/nodewrapper-${{ matrix.build-flavor }}-macOS_amd64/
-          mkdir -p /tmp/nodewrapper-${{ matrix.build-flavor }}-Windows_amd64/
+          mkdir -p /tmp/nodewrapper-tflite-macOS_amd64/
+          mkdir -p /tmp/nodewrapper-tflite-Windows_amd64/
       - uses: actions/download-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-macOS_amd64.tar.gz"
+          name: "nodewrapper-tflite-macOS_amd64.tar.gz"
           path: /tmp/nodewrapper-macOS_amd64/
       - uses: actions/download-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Windows_amd64.tar.gz"
+          name: "nodewrapper-tflite-Windows_amd64.tar.gz"
           path: /tmp/nodewrapper-Windows_amd64/
       - uses: actions/download-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Linux_amd64.tar.gz"
+          name: "nodewrapper-tflite-Linux_amd64.tar.gz"
           path: /tmp/nodewrapper-Linux_amd64/
       - uses: actions/download-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Linux_armv7.tar.gz"
+          name: "nodewrapper-tflite-Linux_armv7.tar.gz"
           path: /tmp/nodewrapper-Linux_armv7/
-        if: matrix.build-flavor == 'tflite'
       - uses: actions/download-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Linux_aarch64.tar.gz"
+          name: "nodewrapper-tflite-Linux_aarch64.tar.gz"
           path: /tmp/nodewrapper-Linux_aarch64/
-        if: matrix.build-flavor == 'tflite'
       - name: Extract nodewrapper archives
         run: |
           tar -C ${{ github.workspace }}/native_client/javascript -xzvf /tmp/nodewrapper-macOS_amd64/wrapper.tar.gz
           tar -C ${{ github.workspace }}/native_client/javascript -xzvf /tmp/nodewrapper-Windows_amd64/wrapper.tar.gz
           tar -C ${{ github.workspace }}/native_client/javascript -xzvf /tmp/nodewrapper-Linux_amd64/wrapper.tar.gz
-      - name: Extract nodewrapper tflite-only archives
-        run: |
           tar -C ${{ github.workspace }}/native_client/javascript -xzvf /tmp/nodewrapper-Linux_armv7/wrapper.tar.gz
           tar -C ${{ github.workspace }}/native_client/javascript -xzvf /tmp/nodewrapper-Linux_aarch64/wrapper.tar.gz
-        if: matrix.build-flavor == 'tflite'
       - run: |
-          PROJECT_NAME="stt"
-          if [ "${{ matrix.build-flavor }}" = "tflite" ]; then
-            PROJECT_NAME="stt-tflite"
-          fi
-          make -C native_client/javascript clean npm-pack PROJECT_NAME=$PROJECT_NAME
+          make -C native_client/javascript clean npm-pack PROJECT_NAME=stt
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   test-nodejs_all-Linux:
     name: "Lin|Test MultiArchPlatform NodeJS bindings"
@@ -1997,7 +1881,6 @@ jobs:
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [10, 16]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2017,18 +1900,18 @@ jobs:
           sudo apt-get install -y --no-install-recommends sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - uses: actions/cache@v2
         id: node-modules-cache
         with:
           path: ~/.npm/
-          key: node-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: node-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
@@ -2041,7 +1924,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs_all-Linux:
@@ -2052,7 +1934,6 @@ jobs:
     strategy:
       matrix:
         electronjs-version: [5.0.13, 12.0.0]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2072,11 +1953,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2086,7 +1967,7 @@ jobs:
         id: electron-modules-cache
         with:
           path: ~/.npm/
-          key: electron-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: electron-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -2096,7 +1977,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -2109,7 +1989,6 @@ jobs:
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [10, 16]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2127,18 +2006,18 @@ jobs:
           node-version: ${{ matrix.nodejs-version }}
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - uses: actions/cache@v2
         id: node-modules-cache
         with:
           path: ~/.npm/
-          key: node-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: node-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
@@ -2151,7 +2030,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs_all-macOS:
@@ -2162,7 +2040,6 @@ jobs:
     strategy:
       matrix:
         electronjs-version: [5.0.13, 12.0.0]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2180,11 +2057,11 @@ jobs:
           node-version: 12
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2194,7 +2071,7 @@ jobs:
         id: electron-modules-cache
         with:
           path: ~/.npm/
-          key: electron-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: electron-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -2204,7 +2081,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -2217,7 +2093,6 @@ jobs:
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [10, 16]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2245,11 +2120,11 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - name: Get npm cache directory
@@ -2260,7 +2135,7 @@ jobs:
         id: node-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: node-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: node-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
@@ -2271,7 +2146,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs_all-Windows:
@@ -2282,7 +2156,6 @@ jobs:
     strategy:
       matrix:
         electronjs-version: [5.0.13, 12.0.0]
-        build-flavor: ["tf", "tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2310,11 +2183,11 @@ jobs:
       - uses: ./.github/actions/win-install-sox
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}.tgz"
+          name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2328,7 +2201,7 @@ jobs:
         id: electron-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
-          key: electron-modules-${{ matrix.build-flavor }}-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
+          key: electron-modules-tflite-${{ runner.os }}-${{ env.CI_NODE_MODULES_NTH }}
       - name: Install STT package
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
@@ -2338,7 +2211,6 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -2359,7 +2231,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "0"
+          extras: "1"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -2380,7 +2252,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "0"
+          extras: "1"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -2389,9 +2261,6 @@ jobs:
     name: "LinArmv7|Build TensorFlow (opt)"
     needs: tensorflow_opt-LinuxArmv7
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        arch: [ "armv7" ]
     steps:
       - run: true
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'found'
@@ -2404,7 +2273,7 @@ jobs:
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/build-tensorflow
         with:
-          flavor: "--linux-${{ matrix.arch }}"
+          flavor: "--linux-armv7"
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
@@ -2417,9 +2286,6 @@ jobs:
     name: "LinAarch64|Build TensorFlow (opt)"
     needs: tensorflow_opt-LinuxAarch64
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        arch: [ "aarch64" ]
     steps:
       - run: true
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'found'
@@ -2432,7 +2298,7 @@ jobs:
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/build-tensorflow
         with:
-          flavor: "--linux-${{ matrix.arch }}"
+          flavor: "--linux-aarch64"
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
@@ -2444,10 +2310,6 @@ jobs:
   build-lib_LinuxArmv7:
     name: "LinArmv7|Build libstt+client"
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        build-flavor: ["tflite"]
-        arch: [ "armv7" ]
     needs: [ build-tensorflow-LinuxArmv7, tensorflow_opt-LinuxArmv7 ]
     env:
       SYSTEM_TARGET: rpi3
@@ -2462,34 +2324,29 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar -xf ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz --skip-old-files
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
       - run: |
           git status
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: ${{ matrix.arch }}
+          arch: armv7
       - uses: ./.github/actions/host-build
         with:
-          arch: ${{ matrix.arch }}
-          flavor: ${{ matrix.build-flavor }}
+          arch: armv7
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.zip"
+          name: "libstt.tflite.linux.armv7.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-lib_LinuxAarch64:
     name: "LinAarch64|Build libstt+client"
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        build-flavor: ["tflite"]
-        arch: [ "aarch64" ]
     needs: [ build-tensorflow-LinuxAarch64, tensorflow_opt-LinuxAarch64 ]
     env:
       SYSTEM_TARGET: rpi3-armv8
@@ -2504,26 +2361,25 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar -xf ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz --skip-old-files
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
       - run: |
           git status
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: ${{ matrix.arch }}
+          arch: aarch64
       - uses: ./.github/actions/host-build
         with:
-          arch: ${{ matrix.arch }}
-          flavor: ${{ matrix.build-flavor }}
+          arch: aarch64
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.aarch64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.zip"
+          name: "libstt.tflite.linux.aarch64.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-LinuxArmv7:
     name: "LinArmv7|Build python bindings"
@@ -2531,9 +2387,7 @@ jobs:
     needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
     strategy:
       matrix:
-        build-flavor: ["tflite"]
         python-version: [3.7]
-        arch: [ "armv7" ]
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3
@@ -2544,12 +2398,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.armv7.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -2566,7 +2422,7 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar -xf ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz --skip-old-files
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
       - uses: actions/setup-python@v2
         with:
@@ -2577,30 +2433,25 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: ${{ matrix.arch }}
+          arch: armv7
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
           pyver: ${{ matrix.python-version }}
       - uses: ./.github/actions/python-build
         with:
-          build_flavor: ${{ matrix.build-flavor }}
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-${{ matrix.arch }}.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-armv7.whl"
           path: ${{ github.workspace }}/wheels/*.whl
   build-nodejs-LinuxArmv7:
     name: "LinArmv7|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
     needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
-    strategy:
-      matrix:
-        build-flavor: ["tflite"]
-        arch: [ "armv7" ]
     env:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
@@ -2610,12 +2461,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.armv7.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -2632,7 +2485,7 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar -xf ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz --skip-old-files
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
@@ -2640,7 +2493,7 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: ${{ matrix.arch }}
+          arch: armv7
       - uses: actions/setup-node@v2
         with:
           node-version: 12
@@ -2662,11 +2515,11 @@ jobs:
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Linux_${{ matrix.arch }}.tar.gz"
+          name: "nodewrapper-tflite-Linux_armv7.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-${{ matrix.arch }}.tgz"
+          name: "stt_intermediate-tflite-armv7.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   build-python-LinuxAarch64:
     name: "LinAarch64|Build python bindings"
@@ -2674,9 +2527,7 @@ jobs:
     needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
     strategy:
       matrix:
-        build-flavor: ["tflite"]
         python-version: [3.7]
-        arch: [ "aarch64" ]
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3-armv8
@@ -2689,12 +2540,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.aarch64.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -2711,7 +2564,7 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar -xf ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz --skip-old-files
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
       - uses: actions/setup-python@v2
         with:
@@ -2722,30 +2575,25 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: ${{ matrix.arch }}
+          arch: aarch64
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
           pyver: ${{ matrix.python-version }}
       - uses: ./.github/actions/python-build
         with:
-          build_flavor: ${{ matrix.build-flavor }}
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-${{ matrix.arch }}.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-aarch64.whl"
           path: ${{ github.workspace }}/wheels/*.whl
   build-nodejs-LinuxAarch64:
     name: "LinAarch64|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
     needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
-    strategy:
-      matrix:
-        build-flavor: ["tflite"]
-        arch: [ "aarch64" ]
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
@@ -2755,12 +2603,14 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.aarch64.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          ls -hal
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
@@ -2777,7 +2627,7 @@ jobs:
           path: ${{ github.workspace }}/
           download: true
       - run: |
-          tar -xf ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz --skip-old-files
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
@@ -2785,7 +2635,7 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: ${{ matrix.arch }}
+          arch: aarch64
       - uses: actions/setup-node@v2
         with:
           node-version: 12
@@ -2807,11 +2657,11 @@ jobs:
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
         with:
-          name: "nodewrapper-${{ matrix.build-flavor }}-Linux_${{ matrix.arch }}.tar.gz"
+          name: "nodewrapper-tflite-Linux_aarch64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
       - uses: actions/upload-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-${{ matrix.arch }}.tgz"
+          name: "stt_intermediate-tflite-aarch64.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   build-test-chroot:
     name: "Lin|Build test chroot"
@@ -2848,7 +2698,6 @@ jobs:
     strategy:
       matrix:
         arch: [ "armv7", "aarch64" ]
-        build-flavor: ["tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2877,14 +2726,14 @@ jobs:
           rm ${{ env.CI_TMP_DIR }}/chroot.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "native_client.${{ matrix.build-flavor }}.linux.${{ matrix.arch }}.tar.xz"
+          name: "native_client.tflite.linux.${{ matrix.arch }}.tar.xz"
           path: ${{ env.CI_TMP_DIR }}/
       - run: |
           cd ${{ env.CI_TMP_DIR }}/
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -2900,7 +2749,6 @@ jobs:
         with:
           runtime: "cpp"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-py-LinuxArm:
@@ -2912,7 +2760,6 @@ jobs:
       matrix:
         arch: [ "armv7", "aarch64" ]
         python-version: [3.7]
-        build-flavor: ["tflite"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -2942,11 +2789,11 @@ jobs:
           rm ${{ env.CI_TMP_DIR }}/chroot.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-${{ matrix.build-flavor }}-${{ matrix.python-version }}-${{ matrix.arch }}.whl"
+          name: "stt-tflite-${{ matrix.python-version }}-${{ matrix.arch }}.whl"
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -2964,7 +2811,6 @@ jobs:
         with:
           runtime: "python"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-LinuxArm:
@@ -2977,7 +2823,6 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         # https://nodejs.org/en/about/releases/
         nodejs-version: [10, 12, 14, 16]
-        build-flavor: ["tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -3010,11 +2855,11 @@ jobs:
           node: ${{ matrix.nodejs-version }}
       - uses: actions/download-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-${{ matrix.arch }}.tgz"
+          name: "stt_intermediate-tflite-${{ matrix.arch }}.tgz"
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3030,7 +2875,6 @@ jobs:
         with:
           runtime: "node"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-LinuxArm:
@@ -3043,7 +2887,6 @@ jobs:
       matrix:
         arch: [ "armv7", "aarch64" ]
         electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
-        build-flavor: ["tflite"]
         models: ["test"]
         bitrate: ["16k"]
     env:
@@ -3077,11 +2920,11 @@ jobs:
           node: 12
       - uses: actions/download-artifact@v2
         with:
-          name: "stt_intermediate-${{ matrix.build-flavor }}-${{ matrix.arch }}.tgz"
+          name: "stt_intermediate-tflite-${{ matrix.arch }}.tgz"
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.${{ matrix.build-flavor }}-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3109,7 +2952,6 @@ jobs:
         with:
           runtime: "electronjs"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          build-flavor: ${{ matrix.build-flavor }}
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5

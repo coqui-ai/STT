@@ -4,9 +4,6 @@ inputs:
   runtime:
     description: "Runtime to use for running test"
     required: true
-  build-flavor:
-    description: "Running against TF or TFLite"
-    required: true
   model-kind:
     description: "Running against CI baked or production model"
     required: true
@@ -22,10 +19,7 @@ runs:
     - run: |
         set -xe
 
-        build=""
-        if [ "${{ inputs.build-flavor }}" = "tflite" ]; then
-          build="_tflite"
-        fi
+        build="_tflite"
 
         model_kind=""
         if [ "${{ inputs.model-kind }}" = "prod" ]; then
