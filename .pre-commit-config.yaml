@@ -1,4 +1,4 @@
-exclude: '^(taskcluster|.github|native_client/kenlm|native_client/ctcdecode/third_party|tensorflow|kenlm|doc/examples|data/alphabet.txt)'
+exclude: '^(taskcluster|.github|native_client/kenlm|native_client/ctcdecode/third_party|tensorflow|kenlm|doc/examples|data/alphabet.txt|data/smoke_test)'
 repos:
   - repo: 'https://github.com/pre-commit/pre-commit-hooks'
     rev: v2.3.0
