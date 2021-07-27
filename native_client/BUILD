@@ -1,22 +1,9 @@
 # Description: Coqui STT native client library.
 
-load("@org_tensorflow//tensorflow:tensorflow.bzl", "tf_cc_shared_object", "tf_copts", "lrt_if_needed")
-load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
+load("@org_tensorflow//tensorflow:tensorflow.bzl", "lrt_if_needed")
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_static_framework")
 
-load(
-    "@org_tensorflow//tensorflow/lite:build_def.bzl",
-    "tflite_copts",
-    "tflite_linkopts",
-)
-
-config_setting(
-    name = "tflite",
-    define_values = {
-        "runtime": "tflite",
-    },
-)
 
 config_setting(
     name = "rpi3",
@@ -85,7 +72,7 @@ LINUX_LINKOPTS = [
     "-Wl,-export-dynamic",
 ]
 
-tf_cc_shared_object(
+cc_binary(
     name = "libkenlm.so",
     srcs = glob([
         "kenlm/lm/*.hh",
@@ -107,8 +94,19 @@ tf_cc_shared_object(
     }),
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
-    framework_so = [],
-    linkopts = [],
+    linkshared = 1,
+    linkopts = select({
+        "//tensorflow:ios": [
+            "-Wl,-install_name,@rpath/libkenlm.so",
+        ],
+        "//tensorflow:macos": [
+            "-Wl,-install_name,@rpath/libkenlm.so",
+        ],
+        "//tensorflow:windows": [],
+        "//conditions:default": [
+            "-Wl,-soname,libkenlm.so",
+        ],
+    }),
 )
 
 cc_library(
@@ -133,6 +131,20 @@ cc_library(
 )
 
 cc_library(
+    name="tflite",
+    hdrs = [
+        "//tensorflow/lite:model.h",
+        "//tensorflow/lite/kernels:register.h",
+        "//tensorflow/lite/tools/evaluation:utils.h",
+    ],
+    srcs = [
+        "//tensorflow/lite:libtensorflowlite.so",
+    ],
+    includes = ["tensorflow"],
+    deps = ["//tensorflow/lite:libtensorflowlite.so"],
+)
+
+cc_library(
     name = "coqui_stt_bundle",
     srcs = [
         "stt.cc",
@@ -142,17 +154,10 @@ cc_library(
         "modelstate.h",
         "workspace_status.cc",
         "workspace_status.h",
-    ] + select({
-        "//native_client:tflite": [
-            "tflitemodelstate.h",
-            "tflitemodelstate.cc",
-        ],
-        "//conditions:default": [
-            "tfmodelstate.h",
-            "tfmodelstate.cc",
-        ],
-    }) + DECODER_SOURCES,
-    copts = tf_copts(allow_exceptions=True) + select({
+        "tflitemodelstate.h",
+        "tflitemodelstate.cc",
+    ] + DECODER_SOURCES,
+    copts = select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
         "//tensorflow:windows": ["/w"],
         # -Wno-sign-compare to silent a lot of warnings from tensorflow itself,
@@ -161,9 +166,6 @@ cc_library(
             "-Wno-sign-compare",
             "-fvisibility=hidden",
         ],
-    }) + select({
-        "//native_client:tflite": ["-DUSE_TFLITE"],
-        "//conditions:default": ["-UUSE_TFLITE"],
     }),
     linkopts = lrt_if_needed() + select({
         "//tensorflow:macos": [],
@@ -174,64 +176,32 @@ cc_library(
         # Bazel is has too strong opinions about static linking, so it's
         # near impossible to get it to link a DLL against another DLL on Windows.
         # We simply force the linker option manually here as a hacky fix.
-        "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
+        "//tensorflow:windows": [
+            "bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib",
+            "bazel-out/x64_windows-opt/bin/tensorflow/lite/libtensorflowlite.so.if.lib",
+        ],
         "//conditions:default": [],
-    }) + tflite_linkopts() + DECODER_LINKOPTS,
+    }) + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
-    deps = select({
-        "//native_client:tflite": [
-            "//tensorflow/lite/kernels:builtin_ops",
-            "//tensorflow/lite/tools/evaluation:utils",
-        ],
-        "//conditions:default": [
-            "//tensorflow/core:core_cpu",
-            "//tensorflow/core:direct_session",
-            "//third_party/eigen3",
-            #"//tensorflow/core:all_kernels",
-            ### => Trying to be more fine-grained
-            ### Use bin/ops_in_graph.py to list all the ops used by a frozen graph.
-            ### CPU only build, libstt.so file size reduced by ~50%
-            "//tensorflow/core/kernels:spectrogram_op",  # AudioSpectrogram
-            "//tensorflow/core/kernels:bias_op",  # BiasAdd
-            "//tensorflow/core/kernels:cast_op",  # Cast
-            "//tensorflow/core/kernels:concat_op",  # ConcatV2
-            "//tensorflow/core/kernels:constant_op",  # Const, Placeholder
-            "//tensorflow/core/kernels:shape_ops",  # ExpandDims, Shape
-            "//tensorflow/core/kernels:gather_nd_op",  # GatherNd
-            "//tensorflow/core/kernels:identity_op",  # Identity
-            "//tensorflow/core/kernels:immutable_constant_op",  # ImmutableConst (used in memmapped models)
-            "//tensorflow/core/kernels:deepspeech_cwise_ops",  # Less, Minimum, Mul
-            "//tensorflow/core/kernels:matmul_op",  # MatMul
-            "//tensorflow/core/kernels:reduction_ops",  # Max
-            "//tensorflow/core/kernels:mfcc_op",  # Mfcc
-            "//tensorflow/core/kernels:no_op",  # NoOp
-            "//tensorflow/core/kernels:pack_op",  # Pack
-            "//tensorflow/core/kernels:sequence_ops",  # Range
-            "//tensorflow/core/kernels:relu_op",  # Relu
-            "//tensorflow/core/kernels:reshape_op",  # Reshape
-            "//tensorflow/core/kernels:softmax_op",  # Softmax
-            "//tensorflow/core/kernels:tile_ops",  # Tile
-            "//tensorflow/core/kernels:transpose_op",  # Transpose
-            "//tensorflow/core/kernels:rnn_ops",  # BlockLSTM
-            # And we also need the op libs for these ops used in the model:
-            "//tensorflow/core:audio_ops_op_lib",  # AudioSpectrogram, Mfcc
-            "//tensorflow/core:rnn_ops_op_lib",  # BlockLSTM
-            "//tensorflow/core:math_ops_op_lib",  # Cast, Less, Max, MatMul, Minimum, Range
-            "//tensorflow/core:array_ops_op_lib",  # ConcatV2, Const, ExpandDims, Fill, GatherNd, Identity, Pack, Placeholder, Reshape, Tile, Transpose
-            "//tensorflow/core:no_op_op_lib",  # NoOp
-            "//tensorflow/core:nn_ops_op_lib",  # Relu, Softmax, BiasAdd
-            # And op libs for these ops brought in by dependencies of dependencies to silence unknown OpKernel warnings:
-            "//tensorflow/core:dataset_ops_op_lib",  # UnwrapDatasetVariant, WrapDatasetVariant
-            "//tensorflow/core:sendrecv_ops_op_lib",  # _HostRecv, _HostSend, _Recv, _Send
-        ],
-    }) + if_cuda([
-        "//tensorflow/core:core",
-    ]) + [":kenlm"],
+    deps = [":kenlm", ":tflite"],
 )
 
-tf_cc_shared_object(
+cc_binary(
     name = "libstt.so",
     deps = [":coqui_stt_bundle"],
+    linkshared = 1,
+    linkopts = select({
+        "//tensorflow:ios": [
+            "-Wl,-install_name,@rpath/libstt.so",
+        ],
+        "//tensorflow:macos": [
+            "-Wl,-install_name,@rpath/libstt.so",
+        ],
+        "//tensorflow:windows": [],
+        "//conditions:default": [
+            "-Wl,-soname,libstt.so",
+        ],
+    }),
 )
 
 ios_static_framework(

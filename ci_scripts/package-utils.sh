@@ -30,10 +30,15 @@ package_native_client()
     win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so.if.lib"
   fi;
 
+  if [ -f "${tensorflow_dir}/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib" ]; then
+    win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/tensorflow/lite/ libtensorflowlite.so.if.lib"
+  fi;
+
   ${TAR} --verbose -cf - \
     --transform='flags=r;s|README.coqui|KenLM_License_Info.txt|' \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so \
+    -C ${tensorflow_dir}/bazel-bin/tensorflow/lite/ libtensorflowlite.so \
     ${win_lib} \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
     -C ${stt_dir}/ LICENSE \
@@ -94,5 +99,8 @@ package_libstt_as_zip()
     echo "Please specify artifact name."
   fi;
 
-  ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" ${tensorflow_dir}/bazel-bin/native_client/libstt.so
+  ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" \
+    ${tensorflow_dir}/bazel-bin/native_client/libstt.so \
+    ${tensorflow_dir}/bazel-bin/native_client/libkenlm.so \
+    ${tensorflow_dir}/bazel-bin/tensorflow/lite/libtensorflowlite.so
 }

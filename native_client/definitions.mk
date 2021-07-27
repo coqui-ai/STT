@@ -20,8 +20,8 @@ endif
 
 STT_BIN       := stt$(PLATFORM_EXE_SUFFIX)
 CFLAGS_STT    := -std=c++11 -o $(STT_BIN)
-LINK_STT      := -lstt -lkenlm
-LINK_PATH_STT := -L${TFDIR}/bazel-bin/native_client
+LINK_STT      := -lstt -lkenlm -ltensorflowlite
+LINK_PATH_STT := -L${TFDIR}/bazel-bin/native_client -L${TFDIR}/bazel-bin/tensorflow/lite
 
 ifeq ($(TARGET),host)
 TOOLCHAIN       :=
@@ -61,7 +61,7 @@ TOOL_CC     := cl.exe
 TOOL_CXX    := cl.exe
 TOOL_LD     := link.exe
 TOOL_LIBEXE := lib.exe
-LINK_STT      := $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libstt.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libkenlm.so.if.lib")
+LINK_STT      := $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libstt.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libkenlm.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib")
 LINK_PATH_STT :=
 CFLAGS_STT    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
@@ -185,7 +185,7 @@ define copy_missing_libs
             new_missing="$$( (for f in $$(otool -L $$lib 2>/dev/null | tail -n +2 | awk '{ print $$1 }' | grep -v '$$lib'); do ls -hal $$f; done;) 2>&1 | grep 'No such' | cut -d':' -f2 | xargs basename -a)"; \
             missing_libs="$$missing_libs $$new_missing"; \
     elif [ "$(OS)" = "${CI_MSYS_VERSION}" ]; then \
-            missing_libs="libstt.so libkenlm.so"; \
+            missing_libs="libstt.so libkenlm.so libtensorflowlite.so"; \
         else \
             missing_libs="$$missing_libs $$($(LDD) $$lib | grep 'not found' | awk '{ print $$1 }')"; \
         fi; \
