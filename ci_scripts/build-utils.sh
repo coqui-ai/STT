@@ -9,21 +9,15 @@ do_bazel_build()
   cd ${DS_TFDIR}
   eval "export ${BAZEL_ENV_FLAGS}"
 
-  if [ "${_opt_or_dbg}" = "opt" ]; then
-    if is_patched_bazel; then
-      find ${DS_ROOT_TASK}/tensorflow/bazel-out/ -iname "*.ckd" | tar -cf ${DS_ROOT_TASK}/bazel-ckd-tf.tar -T -
-    fi;
-  fi;
-
   bazel ${BAZEL_OUTPUT_USER_ROOT} build \
-    -s --explain bazel_monolithic.log --verbose_explanations --experimental_strict_action_env --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
+    -s --explain bazel_explain.log --verbose_explanations \
+    --experimental_strict_action_env \
+    --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
+    -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
 
   if [ "${_opt_or_dbg}" = "opt" ]; then
-    if is_patched_bazel; then
-      find ${DS_ROOT_TASK}/tensorflow/bazel-out/ -iname "*.ckd" | tar -cf ${DS_ROOT_TASK}/bazel-ckd-ds.tar -T -
-    fi;
-    verify_bazel_rebuild "${DS_ROOT_TASK}/tensorflow/bazel_monolithic.log"
-  fi;
+    verify_bazel_rebuild "${DS_ROOT_TASK}/tensorflow/bazel_explain.log"
+  fi
 }
 
 shutdown_bazel()

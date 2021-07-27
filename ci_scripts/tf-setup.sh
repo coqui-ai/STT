@@ -5,12 +5,7 @@ set -ex
 source $(dirname $0)/tf-vars.sh
 
 install_android=
-install_cuda=
 case "$1" in
-    "--linux-cuda"|"--windows-cuda")
-    install_cuda=yes
-    ;;
-
     "--android-armv7"|"--android-arm64")
     install_android=yes
     ;;
@@ -28,11 +23,6 @@ download()
 # Download stuff
 mkdir -p ${DS_ROOT_TASK}/dls || true
 download $BAZEL_URL $BAZEL_SHA256
-
-if [ ! -z "${install_cuda}" ]; then
-    download $CUDA_URL $CUDA_SHA256
-    download $CUDNN_URL $CUDNN_SHA256
-fi;
 
 if [ ! -z "${install_android}" ]; then
     download $ANDROID_NDK_URL $ANDROID_NDK_SHA256
@@ -62,30 +52,6 @@ popd
 bazel version
 
 bazel shutdown
-
-if [ ! -z "${install_cuda}" ]; then
-    # Install CUDA and CuDNN
-    mkdir -p ${DS_ROOT_TASK}/STT/CUDA/ || true
-    pushd ${DS_ROOT_TASK}
-        CUDA_FILE=`basename ${CUDA_URL}`
-        PERL5LIB=. sh ${DS_ROOT_TASK}/dls/${CUDA_FILE} --silent --override --toolkit --toolkitpath=${DS_ROOT_TASK}/STT/CUDA/ --defaultroot=${DS_ROOT_TASK}/STT/CUDA/
-
-        CUDNN_FILE=`basename ${CUDNN_URL}`
-        tar xvf ${DS_ROOT_TASK}/dls/${CUDNN_FILE} --strip-components=1 -C ${DS_ROOT_TASK}/STT/CUDA/
-    popd
-
-    LD_LIBRARY_PATH=${DS_ROOT_TASK}/STT/CUDA/lib64/:${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH
-
-    # We might lack libcuda.so.1 symlink, let's fix as upstream does:
-    # https://github.com/tensorflow/tensorflow/pull/13811/files?diff=split#diff-2352449eb75e66016e97a591d3f0f43dR96
-    if [ ! -h "${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/libcuda.so.1" ]; then
-        ln -s "${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/libcuda.so" "${DS_ROOT_TASK}/STT/CUDA/lib64/stubs/libcuda.so.1"
-    fi;
-
-else
-    echo "No CUDA/CuDNN to install"
-fi
 
 if [ ! -z "${install_android}" ]; then
     mkdir -p ${DS_ROOT_TASK}/STT/Android/SDK || true

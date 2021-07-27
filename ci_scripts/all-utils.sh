@@ -55,23 +55,6 @@ maybe_install_xldd()
   fi
 }
 
-# Checks whether we run a patched version of bazel.
-# Patching is required to dump computeKey() parameters to .ckd files
-# See bazel.patch
-# Return 0 (success exit code) on patched version, 1 on release version
-is_patched_bazel()
-{
-  bazel_version=$(bazel version | grep 'Build label:' | cut -d':' -f2)
-
-  bazel shutdown
-
-  if [ -z "${bazel_version}" ]; then
-    return 0;
-  else
-    return 1;
-  fi;
-}
-
 verify_bazel_rebuild()
 {
   bazel_explain_file="$1"

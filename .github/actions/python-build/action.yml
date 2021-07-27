@@ -1,9 +1,6 @@
 name: "Python binding"
 description: "Binding a python binding"
 inputs:
-  build_flavor:
-    description: "Python package name"
-    required: true
   numpy_build:
     description: "NumPy build dependecy"
     required: true
@@ -46,9 +43,6 @@ runs:
         set -xe
 
         PROJECT_NAME="stt"
-        if [ "${{ inputs.build_flavor }}" = "tflite" ]; then
-          PROJECT_NAME="stt-tflite"
-        fi
 
         OS=$(uname)
         if [ "${OS}" = "Linux" ]; then
