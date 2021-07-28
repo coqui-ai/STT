@@ -37,6 +37,7 @@ async function getGoodArtifacts(client, owner, repo, releaseId, name) {
 
 async function main() {
     try {
+        const token = core.getInput("github_token", { required: true });
         const [owner, repo] = core.getInput("repo", { required: true }).split("/");
         const path = core.getInput("path", { required: true });
         const name = core.getInput("name");
@@ -44,6 +45,7 @@ async function main() {
         const releaseTag = core.getInput("release-tag");
         const OctokitWithThrottling = GitHub.plugin(throttling);
         const client = new OctokitWithThrottling({
+            auth: token,
             throttle: {
                 onRateLimit: (retryAfter, options) => {
                     console.log(
@@ -54,6 +56,9 @@ async function main() {
                     if (options.request.retryCount <= 2) {
                         console.log(`Retrying after ${retryAfter} seconds!`);
                         return true;
+                    } else {
+                        console.log("Exhausted 2 retries");
+                        core.setFailed("Exhausted 2 retries");
                     }
                 },
                 onAbuseLimit: (retryAfter, options) => {
@@ -61,6 +66,7 @@ async function main() {
                     console.log(
                         `Abuse detected for request ${options.method} ${options.url}`
                     );
+                    core.setFailed(`GitHub REST API Abuse detected for request ${options.method} ${options.url}`)
                 },
             },
         });
@@ -101,6 +107,7 @@ async function main() {
             await Download(artifact.url, dir, {
                 headers: {
                     "Accept": "application/octet-stream",
+                    "Authorization": `token ${token}`,
                 },
             });
         }
