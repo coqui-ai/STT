@@ -71,6 +71,10 @@ jobs:
   swig_Linux:
     name: "Lin|Build SWIG"
     runs-on: ubuntu-20.04
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
     env:
       swig_hash: "90cdbee6a69d13b39d734083b9f91069533b0d7b"
     steps:
@@ -84,10 +88,7 @@ jobs:
         id: swig-build-cache
         with:
           path: build-static/
-          key: swig-2-${{ runner.os }}-${{ env.swig_hash }}
-      - run: |
-          sudo apt-get install -y --no-install-recommends autoconf automake bison build-essential
-        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+          key: swig-4-${{ runner.os }}-${{ env.swig_hash }}
       - run: |
           curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
@@ -114,6 +115,10 @@ jobs:
     name: "Lin|Build CTC decoder Python package"
     needs: [ swig_Linux ]
     runs-on: ubuntu-20.04
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
@@ -121,12 +126,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - run: |
-          python --version
-          pip --version
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -142,17 +141,27 @@ jobs:
           pyver: ${{ matrix.python-version }}
       - name: Make decoder package
         run: |
+          # Setup venv
+          /opt/_internal/cpython-${{ matrix.python-version }}*/bin/python -m venv /tmp/venv-${{ matrix.python-version }}
+          source /tmp/venv-${{ matrix.python-version }}/bin/activate
+
+          # Check versions
+          python --version
+          pip --version
+
+          # Build decoder package
           NUMPY_BUILD_VERSION="${{ steps.get_numpy.outputs.build_version }}" \
           NUMPY_DEP_VERSION="${{ steps.get_numpy.outputs.dep_version }}" \
           make -C native_client/ctcdecode/ \
             NUM_PROCESSES=$(nproc) \
             bindings
+      - name: Auditwheel repair
+        run: |
+          auditwheel repair native_client/ctcdecode/dist/*.whl
       - uses: actions/upload-artifact@v2
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.python-version }}.whl"
-          path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
-      - run: |
-          make -C native_client/ctcdecode clean-keep-third-party
+          path: ${{ github.workspace }}/wheelhouse/*.whl
   train-test-model-Linux:
     name: "Lin|Train a test model"
     needs: [ "build-ctc-decoder-Linux" ]
@@ -175,7 +184,7 @@ jobs:
           python --version
           pip --version
       - run: |
-          pip install --upgrade pip==19.3.1 setuptools==45.0.0 wheel==0.33.6
+          pip install --upgrade pip setuptools wheel
       - run: |
           pip install coqui_stt_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
           DS_NODECODER=y pip install --upgrade .
