@@ -50,9 +50,6 @@ else
 SOX_LDFLAGS     := `pkg-config --libs sox`
 endif # OS others
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
-ifeq ($(OS),Linux)
-PYTHON_PLATFORM_NAME ?= --plat-name manylinux1_x86_64
-endif
 endif
 
 ifeq ($(findstring _NT,$(OS)),_NT)
@@ -237,7 +234,7 @@ DS_SWIG_ENV := SWIG_LIB="$(SWIG_LIB)" PATH="$(DS_SWIG_BIN_PATH):${PATH}"
 
 $(DS_SWIG_BIN_PATH)/swig:
 	mkdir -p $(SWIG_ROOT)
-	wget -O - "$(SWIG_DIST_URL)" | tar -C $(SWIG_ROOT) -zxf -
+	curl -sSL "$(SWIG_DIST_URL)" | tar -C $(SWIG_ROOT) -zxf -
 	ln -s $(DS_SWIG_BIN) $(DS_SWIG_BIN_PATH)/$(SWIG_BIN)
 
 ds-swig: $(DS_SWIG_BIN_PATH)/swig
