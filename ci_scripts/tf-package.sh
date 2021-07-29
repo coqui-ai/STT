@@ -6,26 +6,17 @@ source $(dirname $0)/tf-vars.sh
 
 mkdir -p ${CI_ARTIFACTS_DIR} || true
 
-cp ${DS_ROOT_TASK}/tensorflow/bazel_*.log ${CI_ARTIFACTS_DIR} || true
-
 OUTPUT_ROOT="${DS_ROOT_TASK}/tensorflow/bazel-bin"
 
-for output_bin in                                                            \
-    tensorflow/lite/experimental/c/libtensorflowlite_c.so                    \
-    tensorflow/tools/graph_transforms/transform_graph                        \
-    tensorflow/tools/graph_transforms/summarize_graph                        \
-    tensorflow/tools/benchmark/benchmark_model                               \
-    tensorflow/contrib/util/convert_graphdef_memmapped_format                \
-    tensorflow/lite/toco/toco;
+for output_bin in                           \
+    tensorflow/lite/libtensorflow.so        \
+    tensorflow/lite/libtensorflow.so.if.lib \
+    ;
 do
     if [ -f "${OUTPUT_ROOT}/${output_bin}" ]; then
         cp ${OUTPUT_ROOT}/${output_bin} ${CI_ARTIFACTS_DIR}/
     fi;
-done;
-
-if [ -f "${OUTPUT_ROOT}/tensorflow/lite/tools/benchmark/benchmark_model" ]; then
-    cp ${OUTPUT_ROOT}/tensorflow/lite/tools/benchmark/benchmark_model ${CI_ARTIFACTS_DIR}/lite_benchmark_model
-fi
+done
 
 # It seems that bsdtar and gnutar are behaving a bit differently on the way
 # they deal with --exclude="./public/*" ; this caused ./STT/tensorflow/core/public/

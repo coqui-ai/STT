@@ -14,13 +14,7 @@
 #include "modelstate.h"
 
 #include "workspace_status.h"
-
-#ifndef USE_TFLITE
-#include "tfmodelstate.h"
-#else
 #include "tflitemodelstate.h"
-#endif // USE_TFLITE
-
 #include "ctcdecode/ctc_beam_search_decoder.h"
 
 #ifdef __ANDROID__
@@ -282,13 +276,7 @@ STT_CreateModel(const char* aModelPath,
     return STT_ERR_NO_MODEL;
   }
 
-  std::unique_ptr<ModelState> model(
-#ifndef USE_TFLITE
-    new TFModelState()
-#else
-    new TFLiteModelState()
-#endif
-  );
+  std::unique_ptr<ModelState> model(new TFLiteModelState());
 
   if (!model) {
     std::cerr << "Could not allocate model state." << std::endl;
