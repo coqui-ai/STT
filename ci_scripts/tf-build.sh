@@ -8,13 +8,6 @@ source $(dirname $0)/tf-vars.sh
 pushd ${DS_ROOT_TASK}/tensorflow/
     BAZEL_BUILD="bazel ${BAZEL_OUTPUT_USER_ROOT} build -s"
 
-    # Start a bazel process to ensure reliability on Windows and avoid:
-    # FATAL: corrupt installation: file 'c:\builds\tc-workdir\.bazel_cache/install/6b1660721930e9d5f231f7d2a626209b/_embedded_binaries/build-runfiles.exe' missing.
-    bazel ${BAZEL_OUTPUT_USER_ROOT} info
-
-    # Force toolchain sync (useful on macOS ?)
-    bazel ${BAZEL_OUTPUT_USER_ROOT} sync --configure
-
     MAYBE_DEBUG=$2
     OPT_OR_DBG="-c opt"
     if [ "${MAYBE_DEBUG}" = "dbg" ]; then
@@ -47,6 +40,4 @@ pushd ${DS_ROOT_TASK}/tensorflow/
         echo "" | TF_NEED_CUDA=0 TF_CONFIGURE_IOS=1 ./configure && ${BAZEL_BUILD} ${OPT_OR_DBG} ${BAZEL_IOS_X86_64_FLAGS} ${BUILD_TARGET_LITE_LIB}
         ;;
     esac
-
-    bazel ${BAZEL_OUTPUT_USER_ROOT} shutdown
 popd

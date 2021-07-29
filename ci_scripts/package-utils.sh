@@ -34,12 +34,18 @@ package_native_client()
     win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/tensorflow/lite/ libtensorflowlite.so.if.lib"
   fi;
 
+  libsox_lib=""
+  if [ -f "${stt_dir}/sox-build/lib/libsox.so.3" ]; then
+    libsox_lib="-C ${stt_dir}/sox-build/lib libsox.so.3"
+  fi
+
   ${TAR} --verbose -cf - \
     --transform='flags=r;s|README.coqui|KenLM_License_Info.txt|' \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so \
     -C ${tensorflow_dir}/bazel-bin/tensorflow/lite/ libtensorflowlite.so \
     ${win_lib} \
+    ${libsox_lib} \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
     -C ${stt_dir}/ LICENSE \
     -C ${stt_dir}/native_client/ stt${PLATFORM_EXE_SUFFIX} \
@@ -85,6 +91,7 @@ package_native_client_ndk()
 package_libstt_as_zip()
 {
   tensorflow_dir=${DS_TFDIR}
+  stt_dir=${DS_DSDIR}
   artifacts_dir=${CI_ARTIFACTS_DIR}
   artifact_name=$1
 
@@ -99,8 +106,14 @@ package_libstt_as_zip()
     echo "Please specify artifact name."
   fi;
 
+  libsox_lib=""
+  if [ -f "${stt_dir}/sox-build/lib/libsox.so.3" ]; then
+    libsox_lib="${stt_dir}/sox-build/lib/libsox.so.3"
+  fi
+
   ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" \
     ${tensorflow_dir}/bazel-bin/native_client/libstt.so \
     ${tensorflow_dir}/bazel-bin/native_client/libkenlm.so \
+    ${libsox_lib} \
     ${tensorflow_dir}/bazel-bin/tensorflow/lite/libtensorflowlite.so
 }

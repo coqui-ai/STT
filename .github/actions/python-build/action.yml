@@ -33,11 +33,6 @@ runs:
     - run: |
         python3 --version
         pip3 --version
-        python3 -m pip install virtualenv
-        python3 -m virtualenv stt-build
-      shell: bash
-    - run: |
-        mkdir -p wheels
       shell: bash
     - run: |
         set -xe
@@ -45,7 +40,8 @@ runs:
         PROJECT_NAME="stt"
 
         OS=$(uname)
-        if [ "${OS}" = "Linux" ]; then
+        if [ "${OS}" = "Linux" -a "${{ inputs.target }}" != "host" ]; then
+          python3 -m venv stt-build
           source stt-build/bin/activate
         fi
 
@@ -59,14 +55,4 @@ runs:
             RASPBIAN=${{ inputs.chroot }} \
             SETUP_FLAGS="--project_name ${PROJECT_NAME}" \
             bindings-clean bindings
-
-        if [ "${OS}" = "Linux" ]; then
-          deactivate
-        fi
-      shell: bash
-    - run: |
-        cp native_client/python/dist/*.whl wheels
-      shell: bash
-    - run: |
-        make -C native_client/python/ bindings-clean
       shell: bash
