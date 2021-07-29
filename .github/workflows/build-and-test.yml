@@ -111,6 +111,48 @@ jobs:
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/build-static/
+  libsox3_Linux:
+    name: "Lin|Build libsox3"
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
+    steps:
+      - run: |
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/sox-14.4.2.tar.bz2 | tar xjf -
+      - run: |
+          mkdir -p sox-build/
+      - uses: actions/cache@v2
+        id: sox-build-cache
+        with:
+          path: sox-build/
+          key: sox-1-${{ runner.os }}-${{ env.sox_hash }}
+      - name: Configure
+        run: |
+          cd sox-14.4.2
+          ./configure \
+            --with-dyn-default --enable-dl-sndfile --enable-dl-amrnb \
+            --without-magic --without-png --without-ladspa --without-mad \
+            --without-id3tag --without-lame --without-twolame \
+            --without-libltdl --disable-openmp --disable-dependency-tracking \
+            --with-gsm=no --with-lpc10=no --with-oss=no \
+            --prefix=${{ github.workspace }}/sox-build/
+        if: steps.sox-build-cache.outputs.cache-hit != 'true'
+      - name: Make
+        run: |
+          cd sox-14.4.2
+          make -j
+        if: steps.sox-build-cache.outputs.cache-hit != 'true'
+      - name: Make install
+        run: |
+          cd sox-14.4.2
+          make install
+        if: steps.sox-build-cache.outputs.cache-hit != 'true'
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/sox-build/
   build-ctc-decoder-Linux:
     name: "Lin|Build CTC decoder Python package"
     needs: [ swig_Linux ]
@@ -240,7 +282,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "3"
+          extras: "4"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -249,6 +291,10 @@ jobs:
     name: "Lin|Build TensorFlow (opt)"
     needs: tensorflow_opt-Linux
     runs-on: ubuntu-20.04
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
     steps:
       - run: true
         if: needs.tensorflow_opt-Linux.outputs.status == 'found'
@@ -257,11 +303,17 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - run: |
-          sudo apt-get install -y --no-install-recommends pixz
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends xz-utils
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - uses: ./.github/actions/setup-tensorflow
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
+      - name: Setup venv
+        run: |
+          /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
+          echo "/tmp/venv/bin" >> $GITHUB_PATH
       - uses: ./.github/actions/build-tensorflow
         with:
           flavor: "--linux-cpu"
@@ -276,7 +328,11 @@ jobs:
   build-lib_Linux:
     name: "Lin|Build libstt+client"
     runs-on: ubuntu-20.04
-    needs: [ build-tensorflow-Linux, tensorflow_opt-Linux ]
+    needs: [build-tensorflow-Linux, tensorflow_opt-Linux, libsox3_Linux]
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -286,13 +342,21 @@ jobs:
           name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/
           download: true
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends xz-utils zip
       - run: |
           tar --skip-old-files -xf ${{ needs.tensorflow_opt-linux.outputs.cache_key }}.tar.xz
           rm ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
-      - run: |
-          sudo apt-get install -y --no-install-recommends make build-essential gfortran git libblas-dev liblapack-dev libsox-dev libmagic-dev libgsm1-dev libltdl-dev libpng-dev python python-dev zlib1g-dev
-      - run: |
-          git status
+      - name: Setup venv
+        run: |
+          /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
+          echo "/tmp/venv/bin" >> $GITHUB_PATH
+      - uses: actions/download-artifact@v2
+        with:
+          name: "libsox3_Linux"
+          path: ${{ github.workspace }}/sox-build/
       - uses: ./.github/actions/host-build
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
@@ -306,10 +370,14 @@ jobs:
   build-python-Linux:
     name: "Lin|Build Python bindings"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_Linux, swig_Linux ]
+    needs: [build-lib_Linux, swig_Linux]
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -318,7 +386,12 @@ jobs:
         with:
           name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
-      - run: |
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends xz-utils
+      - name: Extract native_client.tar.xz
+        run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
           mkdir -p ../tensorflow/lite
@@ -334,9 +407,10 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Setup venv
+        run: |
+          /opt/_internal/cpython-${{ matrix.python-version }}*/bin/python -m venv /tmp/venv-${{ matrix.python-version }}
+          echo "/tmp/venv-${{ matrix.python-version }}/bin" >> $GITHUB_PATH
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
@@ -345,10 +419,13 @@ jobs:
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
+      - name: Auditwheel repair
+        run: |
+          auditwheel repair native_client/python/dist/*.whl
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
-          path: ${{ github.workspace }}/wheels/*.whl
+          path: ${{ github.workspace }}/wheelhouse/*.whl
   build-nodejs-Linux:
     name: "Lin|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
@@ -497,6 +574,7 @@ jobs:
         nodejs-version: [10, 12, 14, 16]
         models: ["test"]
         bitrate: ["16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -550,6 +628,7 @@ jobs:
         electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
         models: ["test"]
         bitrate: ["16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -1083,7 +1162,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-macOS.whl"
-          path: ${{ github.workspace }}/wheels/*.whl
+          path: ${{ github.workspace }}/native_client/python/dist/*.whl
   build-nodejs-macOS:
     name: "Mac|Build NodeJS and ElectronJS"
     runs-on: macos-10.15
@@ -1230,6 +1309,7 @@ jobs:
         nodejs-version: [10, 12, 14, 16]
         models: ["test"]
         bitrate: ["16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -1541,7 +1621,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
-          path: ${{ github.workspace }}/wheels/*.whl
+          path: ${{ github.workspace }}/native_client/python/dist/*.whl
   build-nodejs-Windows:
     name: "Win|Build NodeJS/ElectronJS"
     runs-on: windows-2019
@@ -1717,6 +1797,7 @@ jobs:
         nodejs-version: [10, 12, 14, 16]
         models: ["test"]
         bitrate: ["16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -1892,6 +1973,7 @@ jobs:
         nodejs-version: [10, 16]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -1945,6 +2027,7 @@ jobs:
         electronjs-version: [5.0.13, 12.0.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -2000,6 +2083,7 @@ jobs:
         nodejs-version: [10, 16]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -2051,6 +2135,7 @@ jobs:
         electronjs-version: [5.0.13, 12.0.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -2104,6 +2189,7 @@ jobs:
         nodejs-version: [10, 16]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -2167,6 +2253,7 @@ jobs:
         electronjs-version: [5.0.13, 12.0.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: tmp/
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
@@ -2391,7 +2478,7 @@ jobs:
           name: "libstt.tflite.linux.aarch64.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-LinuxArmv7:
-    name: "LinArmv7|Build python bindings"
+    name: "LinArmv7|Build Python bindings"
     runs-on: ubuntu-20.04
     needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
     strategy:
@@ -2447,6 +2534,9 @@ jobs:
         uses: ./.github/actions/numpy_vers
         with:
           pyver: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install -U pip setuptools wheel
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -2456,7 +2546,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-armv7.whl"
-          path: ${{ github.workspace }}/wheels/*.whl
+          path: ${{ github.workspace }}/native_client/python/dist/*.whl
   build-nodejs-LinuxArmv7:
     name: "LinArmv7|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
@@ -2531,7 +2621,7 @@ jobs:
           name: "stt_intermediate-tflite-armv7.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   build-python-LinuxAarch64:
-    name: "LinAarch64|Build python bindings"
+    name: "LinAarch64|Build Python bindings"
     runs-on: ubuntu-20.04
     needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
     strategy:
@@ -2589,6 +2679,9 @@ jobs:
         uses: ./.github/actions/numpy_vers
         with:
           pyver: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install -U pip setuptools wheel
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -2598,7 +2691,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-aarch64.whl"
-          path: ${{ github.workspace }}/wheels/*.whl
+          path: ${{ github.workspace }}/native_client/python/dist/*.whl
   build-nodejs-LinuxAarch64:
     name: "LinAarch64|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
@@ -2834,6 +2927,7 @@ jobs:
         nodejs-version: [10, 12, 14, 16]
         models: ["test"]
         bitrate: ["16k"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
