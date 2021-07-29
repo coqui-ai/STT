@@ -11,7 +11,6 @@ do_bazel_build()
 
   bazel ${BAZEL_OUTPUT_USER_ROOT} build \
     -s --explain bazel_explain.log --verbose_explanations \
-    --experimental_strict_action_env \
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
 
