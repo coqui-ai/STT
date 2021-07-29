@@ -19,6 +19,7 @@ Linux / AMD64
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
 <<<<<<< HEAD
+<<<<<<< HEAD
 * glibc >= 2.24, libstdc++6 >= 6.3
 * TensorFlow Lite runtime
 =======
@@ -34,6 +35,10 @@ Linux / AMD64 with GPU
 * Full TensorFlow runtime (``stt`` packages)
 * TensorFlow Lite runtime (``stt-tflite`` packages)
 >>>>>>> 2d0a907e (Docs welcome page and Development / Inference page overhaul (#1793))
+=======
+* glibc >= 2.24, libstdc++6 >= 6.3
+* TensorFlow Lite runtime
+>>>>>>> 9bc8d2e2 (Update supported architectures doc)
 
 Linux / ARMv7
 ^^^^^^^^^^^^^
@@ -72,6 +77,7 @@ Windows / AMD64
 * x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
 * Windows Server >= 2012 R2 ; Windows >= 8.1
 <<<<<<< HEAD
+<<<<<<< HEAD
 * TensorFlow Lite runtime
 =======
 * Full TensorFlow runtime (``stt`` packages)
@@ -85,3 +91,6 @@ Windows / AMD64 with GPU
 * Full TensorFlow runtime (``stt`` packages)
 * TensorFlow Lite runtime (``stt-tflite`` packages)
 >>>>>>> 2d0a907e (Docs welcome page and Development / Inference page overhaul (#1793))
+=======
+* TensorFlow Lite runtime
+>>>>>>> 9bc8d2e2 (Update supported architectures doc)
