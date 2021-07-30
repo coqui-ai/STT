@@ -1,17 +1,9 @@
 from os import makedirs, path
 
-import progressbar
+from tqdm import tqdm
 import requests
 
 from .io import is_remote_path, open_remote, path_exists_remote
-
-SIMPLE_BAR = [
-    "Progress ",
-    progressbar.Bar(),
-    " ",
-    progressbar.Percentage(),
-    " completed",
-]
 
 
 def maybe_download(archive_name, target_dir, archive_url):
@@ -26,17 +18,11 @@ def maybe_download(archive_name, target_dir, archive_url):
         print('No archive "%s" - downloading...' % archive_path)
         req = requests.get(archive_url, stream=True)
         total_size = int(req.headers.get("content-length", 0))
-        done = 0
         with open_remote(archive_path, "wb") as f:
-            bar = progressbar.ProgressBar(
-                max_value=total_size if total_size > 0 else progressbar.UnknownLength,
-                widgets=SIMPLE_BAR,
-            )
-
-            for data in req.iter_content(1024 * 1024):
-                done += len(data)
-                f.write(data)
-                bar.update(done)
+            with tqdm(total=total_size) as bar:
+                for data in req.iter_content(1024 * 1024):
+                    f.write(data)
+                    bar.update(len(data))
     else:
         print('Found archive "%s" - not downloading.' % archive_path)
     return archive_path
