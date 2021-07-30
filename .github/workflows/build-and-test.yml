@@ -419,13 +419,10 @@ jobs:
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
-      - name: Auditwheel repair
-        run: |
-          auditwheel repair native_client/python/dist/*.whl
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
-          path: ${{ github.workspace }}/wheelhouse/*.whl
+          path: ${{ github.workspace }}/native_client/python/dist/*.whl
   build-nodejs-Linux:
     name: "Lin|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
