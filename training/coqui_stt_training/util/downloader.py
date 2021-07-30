@@ -1,9 +1,18 @@
 from os import makedirs, path
 
 from tqdm import tqdm
+import progressbar
 import requests
 
 from .io import is_remote_path, open_remote, path_exists_remote
+
+SIMPLE_BAR = [
+    "Progress ",
+    progressbar.Bar(),
+    " ",
+    progressbar.Percentage(),
+    " completed",
+]
 
 
 def maybe_download(archive_name, target_dir, archive_url):
