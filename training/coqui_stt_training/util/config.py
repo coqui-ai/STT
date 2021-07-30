@@ -76,10 +76,9 @@ class _SttConfig(Coqpit):
 
         # Checkpoint dir logic #
         if self.checkpoint_dir:
-            if not self.save_checkpoint_dir:
-                self.save_checkpoint_dir = self.checkpoint_dir
-            if not self.load_checkpoint_dir:
-                self.load_checkpoint_dir = self.checkpoint_dir
+            # checkpoint_dir always overrides {save,load}_checkpoint_dir
+            self.save_checkpoint_dir = self.checkpoint_dir
+            self.load_checkpoint_dir = self.checkpoint_dir
         else:
             if not self.save_checkpoint_dir:
                 self.save_checkpoint_dir = xdg.save_data_path(
