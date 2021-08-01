@@ -63,3 +63,6 @@ npm-pack: clean package.json index.ts npm-dev
 
 stt_wrap.cxx: stt.i ds-swig
 	$(DS_SWIG_ENV) swig -c++ -javascript -node stt.i
+	# Hack: disable wrapping of constructors to avoid NodeJS 16.6 ABI compat break
+	sed -i.bak '/SetCallHandler/d' stt_wrap.cxx
+	rm stt_wrap.cxx.bak
