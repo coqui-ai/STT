@@ -6,8 +6,8 @@ export OS=$(uname)
 if [ "${OS}" = "Linux" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
 
-    BAZEL_URL=https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-installer-linux-x86_64.sh
-    BAZEL_SHA256=7ba815cbac712d061fe728fef958651512ff394b2708e89f79586ec93d1185ed
+    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64
+    BAZEL_SHA256=4cb534c52cdd47a6223d4596d530e7c9c785438ab3b0a49ff347e991c210b2cd
 
     ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r18b-linux-x86_64.zip
     ANDROID_NDK_SHA256=4f61cbe4bbf6406aa5ef2ae871def78010eed6271af72de83f8bd0b07a9fd3fd
@@ -38,8 +38,8 @@ elif [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     export TEMP=${CI_TASK_DIR}/tmp/
     export TMP=${CI_TASK_DIR}/tmp/
 
-    BAZEL_URL=https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-windows-x86_64.exe
-    BAZEL_SHA256=776db1f4986dacc3eda143932f00f7529f9ee65c7c1c004414c44aaa6419d0e9
+    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-windows-amd64.exe
+    BAZEL_SHA256=9a89e6a8cc0a3aea37affcf8c146d8925ffbda1d2290c0c6a845ea81e05de62c
 
     TAR=/usr/bin/tar.exe
 elif [ "${OS}" = "Darwin" ]; then
@@ -52,14 +52,15 @@ elif [ "${OS}" = "Darwin" ]; then
 
     export DS_ROOT_TASK=${CI_TASK_DIR}
 
-    BAZEL_URL=https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-installer-darwin-x86_64.sh
-    BAZEL_SHA256=5cfa97031b43432b3c742c80e2e01c41c0acdca7ba1052fc8cf1e291271bc9cd
+    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
+    BAZEL_SHA256=e485bbf84532d02a60b0eb23c702610b5408df3a199087a4f2b5e0995bbf2d5a
 
     SHA_SUM="shasum -a 256 -c"
     TAR=gtar
 fi;
 
 WGET=${WGET:-"wget"}
+CURL=${CURL:-"curl"}
 TAR=${TAR:-"tar"}
 XZ=${XZ:-"xz -9 -T0"}
 ZIP=${ZIP:-"zip"}
@@ -110,8 +111,8 @@ export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
 
 if [ "${OS}" = "Linux" ]; then
     source /etc/os-release
-    if [ "${ID}" = "ubuntu" -a "${VERSION_ID}" = "20.04" ]; then
-        export PYTHON_BIN_PATH=/usr/bin/python3
+    if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
+        export PYTHON_BIN_PATH=/opt/python/cp37-cp37m/bin/python
     fi
 elif [ "${OS}" != "${TC_MSYS_VERSION}" ]; then
     export PYTHON_BIN_PATH=python

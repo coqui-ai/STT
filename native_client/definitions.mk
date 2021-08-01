@@ -1,6 +1,7 @@
 NC_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 TARGET    ?= host
+ROOT_DIR  ?= $(abspath $(NC_DIR)/..)
 TFDIR     ?= $(abspath $(NC_DIR)/../tensorflow)
 PREFIX    ?= /usr/local
 SO_SEARCH ?= $(TFDIR)/bazel-bin/
@@ -28,7 +29,7 @@ TOOLCHAIN       :=
 CFLAGS          :=
 CXXFLAGS        :=
 LDFLAGS         :=
-SOX_CFLAGS      := `pkg-config --cflags sox`
+SOX_CFLAGS      := -I$(ROOT_DIR)/sox-build/include
 ifeq ($(OS),Linux)
 MAGIC_LINK_LZMA := $(shell objdump -tTC /usr/lib/`uname -m`-linux-gnu/libmagic.so | grep lzma | grep '*UND*' | wc -l)
 ifneq ($(MAGIC_LINK_LZMA),0)
@@ -38,8 +39,7 @@ MAGIC_LINK_BZ2  := $(shell objdump -tTC /usr/lib/`uname -m`-linux-gnu/libmagic.s
 ifneq ($(MAGIC_LINK_BZ2),0)
 MAYBE_LINK_BZ2  := -lbz2
 endif # MAGIC_LINK_BZ2
-SOX_CFLAGS      += -fopenmp
-SOX_LDFLAGS     := -Wl,-Bstatic `pkg-config --static --libs sox` -lgsm `pkg-config --static --libs libpng | cut -d' ' -f1` -lz -lmagic $(MAYBE_LINK_LZMA) $(MAYBE_LINK_BZ2) -lltdl -Wl,-Bdynamic -ldl
+SOX_LDFLAGS     := -L$(ROOT_DIR)/sox-build/lib -lsox
 else ifeq ($(OS),Darwin)
 LIBSOX_PATH             := $(shell echo `pkg-config --libs-only-L sox | sed -e 's/^-L//'`/lib`pkg-config --libs-only-l sox | sed -e 's/^-l//'`.dylib)
 LIBOPUSFILE_PATH        := $(shell echo `pkg-config --libs-only-L opusfile | sed -e 's/^-L//'`/lib`pkg-config --libs-only-l opusfile | sed -e 's/^-l//'`.dylib)
@@ -50,6 +50,9 @@ else
 SOX_LDFLAGS     := `pkg-config --libs sox`
 endif # OS others
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
+ifeq ($(OS),Linux)
+PYTHON_PLATFORM_NAME ?= --plat-name manylinux_2_24_x86_64
+endif
 endif
 
 ifeq ($(findstring _NT,$(OS)),_NT)
@@ -172,7 +175,7 @@ define copy_missing_libs
     SRC_FILE=$(1); \
     TARGET_LIB_DIR=$(2); \
     MANIFEST_IN=$(3); \
-    echo "Analyzing $$SRC_FILE copying missing libs to $$SRC_FILE"; \
+    echo "Analyzing $$SRC_FILE copying missing libs to $$TARGET_LIB_DIR"; \
     echo "Maybe outputting to $$MANIFEST_IN"; \
     \
     (mkdir $$TARGET_LIB_DIR || true); \
@@ -188,6 +191,7 @@ define copy_missing_libs
         fi; \
     done; \
     \
+    echo "Missing libs = $$missing_libs"; \
     for missing in $$missing_libs; do \
         find $(SO_SEARCH) -type f -name "$$missing" -exec cp {} $$TARGET_LIB_DIR \; ; \
         chmod +w $$TARGET_LIB_DIR/*.so ; \
