@@ -880,7 +880,7 @@ jobs:
   npmjs-publish:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [repackage-nodejs-allplatforms]
     steps:
       - uses: actions/setup-node@v2
@@ -894,7 +894,7 @@ jobs:
         id: compute-npm-tag
         run: |
           pip install semver
-          cat <<EOF | python - "${{ github.ref }}"
+          cat <<EOF | python - "refs/tags/v0.10.0-alpha.12"
           import sys
           import semver
           ref = sys.argv[1]
