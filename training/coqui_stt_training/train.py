@@ -1116,7 +1116,10 @@ def export():
                 input_tensors=inputs.values(),
                 output_tensors=outputs.values(),
             )
-            converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+            if Config.export_quantize:
+                converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
             # AudioSpectrogram and Mfcc ops are custom but have built-in kernels in TFLite
             converter.allow_custom_ops = True
             tflite_model = converter.convert()
