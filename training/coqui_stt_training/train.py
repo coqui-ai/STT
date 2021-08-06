@@ -1259,6 +1259,10 @@ def early_training_checks():
             "for loading and saving."
         )
 
+    if not Config.alphabet_config_path and not Config.bytes_output_mode:
+        log_error("Missing --alphabet_config_path flag, can't continue")
+        sys.exit(1)
+
 
 def main():
     initialize_globals_from_cli()
