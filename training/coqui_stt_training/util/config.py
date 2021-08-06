@@ -22,7 +22,7 @@ class _ConfigSingleton:
     _config = None
 
     def __getattr__(self, name):
-        if not _ConfigSingleton._config:
+        if _ConfigSingleton._config is None:
             raise RuntimeError("Global configuration not yet initialized.")
         if not hasattr(_ConfigSingleton._config, name):
             raise RuntimeError(
@@ -477,6 +477,10 @@ class _SttConfig(Coqpit):
     )
     export_tflite: bool = field(
         default=False, metadata=dict(help="export a graph ready for TF Lite engine")
+    )
+    export_quantize: bool = field(
+        default=True,
+        metadata=dict(help="export a quantized model (optimized for size)"),
     )
     n_steps: int = field(
         default=16,
