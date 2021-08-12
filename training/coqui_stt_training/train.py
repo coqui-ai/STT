@@ -1116,7 +1116,10 @@ def export():
                 input_tensors=inputs.values(),
                 output_tensors=outputs.values(),
             )
-            converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+            if Config.export_quantize:
+                converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
             # AudioSpectrogram and Mfcc ops are custom but have built-in kernels in TFLite
             converter.allow_custom_ops = True
             tflite_model = converter.convert()
@@ -1255,6 +1258,10 @@ def early_training_checks():
             "--load_checkpoint_dir in both cases, or use the same location "
             "for loading and saving."
         )
+
+    if not Config.alphabet_config_path and not Config.bytes_output_mode:
+        log_error("Missing --alphabet_config_path flag, can't continue")
+        sys.exit(1)
 
 
 def main():
