@@ -1526,7 +1526,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "8"
+          extras: "9"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
