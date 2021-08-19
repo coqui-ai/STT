@@ -19,6 +19,8 @@ Coqui STT
 
    TRAINING_INTRO
 
+   TRAINING_ADVANCED
+
    BUILDING
 
 Quickstart: Deployment
