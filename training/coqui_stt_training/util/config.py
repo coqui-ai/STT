@@ -216,6 +216,7 @@ class _SttConfig(Coqpit):
             )
             sys.exit(1)
 
+    # sphinx-doc: training_ref_flags_start
     train_files: List[str] = field(
         default_factory=list,
         metadata=dict(
@@ -723,6 +724,7 @@ class _SttConfig(Coqpit):
             help="the number of trials to run during hyperparameter optimization."
         ),
     )
+    # sphinx-doc: training_ref_flags_end
 
 
 def initialize_globals_from_cli():
