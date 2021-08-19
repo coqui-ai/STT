@@ -522,6 +522,8 @@ def log_grads_and_vars(grads_and_vars):
 
 
 def train():
+    early_training_checks()
+
     tfv1.reset_default_graph()
     tfv1.set_random_seed(Config.random_seed)
 
@@ -1266,7 +1268,6 @@ def early_training_checks():
 
 def main():
     initialize_globals_from_cli()
-    early_training_checks()
 
     if Config.train_files:
         train()
