@@ -39,7 +39,7 @@ Numbers should be written in full (ie as a [cardinal](https://en.wikipedia.org/w
 
 ### Data from Common Voice
 
-If you are using data from Common Voice for training a model, you will need to prepare it as [outlined in the 🐸STT documentation](https://stt.readthedocs.io/en/latest/TRAINING.html#common-voice-training-data).
+If you are using data from Common Voice for training a model, you will need to prepare it as [outlined in the 🐸STT documentation](https://stt.readthedocs.io/en/latest/COMMON_VOICE_DATA.html#common-voice-data).
 
 In this example we will prepare the Indonesian dataset for training, but you can use any language from Common Voice that you prefer. We've chosen Indonesian as it has the same [orthographic alphabet](ALPHABET.md) as English, which means we don't have to use a different `alphabet.txt` file for training; we can use the default.
 
