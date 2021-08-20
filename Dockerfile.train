@@ -39,7 +39,7 @@ RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/downloa
     unzip temp.zip && \
     rm temp.zip
 
-RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/native_client.tf.Linux.tar.xz -O temp.tar.xz && \
+RUN wget --no-check-certificate https://github.com/reuben/STT/releases/download/v0.10.0-alpha.1/native_client.tar.xz -O temp.tar.xz && \
     tar -xf temp.tar.xz && \
     rm temp.tar.xz
 
