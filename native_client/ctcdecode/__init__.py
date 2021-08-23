@@ -45,13 +45,17 @@ class Scorer(swigwrapper.Scorer):
 class Alphabet(swigwrapper.Alphabet):
     """Convenience wrapper for Alphabet which calls init in the constructor"""
 
-    def __init__(self, config_path):
+    def __init__(self, config_path=None):
         super(Alphabet, self).__init__()
-        err = self.init(config_path.encode("utf-8"))
-        if err != 0:
-            raise ValueError(
-                "Alphabet initialization failed with error code 0x{:X}".format(err)
-            )
+        if config_path:
+            err = self.init(config_path.encode("utf-8"))
+            if err != 0:
+                raise ValueError(
+                    "Alphabet initialization failed with error code 0x{:X}".format(err)
+                )
+
+    def InitFromLabels(self, data):
+        return super(Alphabet, self).InitFromLabels([c.encode("utf-8") for c in data])
 
     def CanEncodeSingle(self, input):
         """
