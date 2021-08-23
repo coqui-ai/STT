@@ -11,11 +11,13 @@ from attrdict import AttrDict
 from coqpit import MISSING, Coqpit, check_argument
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
 from xdg import BaseDirectory as xdg
+from tqdm import tqdm
 
 from .augmentations import NormalizeSampleRate, parse_augmentations
 from .gpu import get_available_gpus
 from .helpers import parse_file_size
 from .io import path_exists_remote
+from .sample_collections import samples_from_sources
 
 
 class _ConfigSingleton:
@@ -120,8 +122,11 @@ class _SttConfig(Coqpit):
 
         # If neither `--alphabet_config_path` nor `--bytes_output_mode` were specified,
         # look for alphabet file alongside loaded checkpoint.
-        checkpoint_alphabet_file = os.path.join(
+        loaded_checkpoint_alphabet_file = os.path.join(
             self.load_checkpoint_dir, "alphabet.txt"
+        )
+        saved_checkpoint_alphabet_file = os.path.join(
+            self.save_checkpoint_dir, "alphabet.txt"
         )
 
         if self.bytes_output_mode and self.alphabet_config_path:
@@ -132,15 +137,42 @@ class _SttConfig(Coqpit):
             self.alphabet = UTF8Alphabet()
         elif self.alphabet_config_path:
             self.alphabet = Alphabet(os.path.abspath(self.alphabet_config_path))
-        elif os.path.exists(checkpoint_alphabet_file):
+        elif os.path.exists(loaded_checkpoint_alphabet_file):
             print(
                 "I --alphabet_config_path not specified, but found an alphabet file "
-                f"alongside specified checkpoint ({checkpoint_alphabet_file}).\n"
-                "I Will use this alphabet file for this run."
+                f"alongside specified checkpoint ({loaded_checkpoint_alphabet_file}). "
+                "Will use this alphabet file for this run."
             )
-            self.alphabet = Alphabet(checkpoint_alphabet_file)
+            self.alphabet = Alphabet(loaded_checkpoint_alphabet_file)
+        elif self.train_files and self.dev_files and self.test_files:
+            # Generate alphabet automatically from input dataset, but only if
+            # fully specified, to avoid confusion in case a missing set has extra
+            # characters.
+            print(
+                "I --alphabet_config_path not specified, but all input datasets are "
+                "present (--train_files, --dev_files, --test_files). An alphabet "
+                "will be generated automatically from the data and placed alongside "
+                f"the checkpoint ({saved_checkpoint_alphabet_file})."
+            )
+            characters = set()
+            for sample in tqdm(
+                samples_from_sources(
+                    self.train_files + self.dev_files + self.test_files
+                )
+            ):
+                characters |= set(sample.transcript)
+            characters = list(sorted(characters))
+            print(f"I Generated alphabet characters: {characters}.")
+            self.alphabet = Alphabet()
+            self.alphabet.InitFromLabels(characters)
         else:
-            raise RuntimeError("Missing --alphabet_config_path flag, can't continue")
+            raise RuntimeError(
+                "Missing --alphabet_config_path flag. Couldn't find an alphabet file\n"
+                "alongside checkpoint, and input datasets are not fully specified\n"
+                "(--train_files, --dev_files, --test_files), so can't generate an alphabet.\n"
+                "Either specify an alphabet file or fully specify the dataset, so one will\n"
+                "be generated automatically."
+            )
 
         # Geometric Constants
         # ===================

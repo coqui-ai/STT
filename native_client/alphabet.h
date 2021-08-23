@@ -19,6 +19,9 @@ public:
 
   virtual int init(const char *config_file);
 
+  // Initialize directly from sequence of labels.
+  void InitFromLabels(const std::vector<std::string>& labels);
+
   // Serialize alphabet into a binary buffer.
   std::string Serialize();
 

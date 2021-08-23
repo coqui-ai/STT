@@ -69,6 +69,21 @@ Alphabet::init(const char *config_file)
   return 0;
 }
 
+void
+Alphabet::InitFromLabels(const std::vector<std::string>& labels)
+{
+  space_label_ = -2;
+  size_ = labels.size();
+  for (int i = 0; i < size_; ++i) {
+    const std::string& label = labels[i];
+    if (label == " ") {
+      space_label_ = i;
+    }
+    label_to_str_[i] = label;
+    str_to_label_[label] = i;
+  }
+}
+
 std::string
 Alphabet::SerializeText()
 {
