@@ -99,6 +99,24 @@ Alphabet::SerializeText()
 }
 
 std::string
+Alphabet::SerializeText()
+{
+  std::stringstream out;
+
+  out << "# Each line in this file represents the Unicode codepoint (UTF-8 encoded)\n"
+      << "# associated with a numeric label.\n"
+      << "# A line that starts with # is a comment. You can escape it with \\# if you wish\n"
+      << "# to use '#' as a label.\n";
+
+  for (int label = 0; label < size_; ++label) {
+    out << label_to_str_[label] << "\n";
+  }
+
+  out << "# The last (non-comment) line needs to end with a newline.\n";
+  return out.str();
+}
+
+std::string
 Alphabet::Serialize()
 {
   // Should always be true in our usage, but this method will crash if for some
