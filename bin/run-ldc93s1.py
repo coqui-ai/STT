@@ -2,8 +2,7 @@
 import os
 from import_ldc93s1 import _download_and_preprocess_data as download_ldc
 from coqui_stt_training.util.config import initialize_globals_from_args
-from coqui_stt_training.train import train, test, early_training_checks
-import tensorflow.compat.v1 as tfv1
+from coqui_stt_training.train import train, test
 
 # only one GPU for only one training sample
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -21,8 +20,6 @@ initialize_globals_from_args(
     epochs=200,
 )
 
-early_training_checks()
-
 train()
-tfv1.reset_default_graph()
+
 test()
