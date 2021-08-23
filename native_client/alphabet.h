@@ -22,6 +22,9 @@ public:
   // Serialize alphabet into a binary buffer.
   std::string Serialize();
 
+  // Serialize alphabet into a text representation (ie. config file read by `init`)
+  std::string SerializeText();
+
   // Deserialize alphabet from a binary buffer.
   int Deserialize(const char* buffer, const int buffer_size);
 
