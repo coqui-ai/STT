@@ -429,6 +429,11 @@ def train():
     with open_remote(flags_file, "w") as fout:
         json.dump(Config.serialize(), fout, indent=2)
 
+    # Serialize alphabet alongside checkpoint
+    preserved_alphabet_file = os.path.join(Config.save_checkpoint_dir, "alphabet.txt")
+    with open_remote(preserved_alphabet_file, "wb") as fout:
+        fout.write(Config.alphabet.SerializeText())
+
     with tfv1.Session(config=Config.session_config) as session:
         log_debug("Session opened.")
 
@@ -682,9 +687,6 @@ def early_training_checks():
             "--load_checkpoint_dir in both cases, or use the same location "
             "for loading and saving."
         )
-
-    if not Config.alphabet_config_path and not Config.bytes_output_mode:
-        raise RuntimeError("Missing --alphabet_config_path flag, can't continue")
 
 
 def main():
