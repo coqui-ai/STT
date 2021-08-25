@@ -477,7 +477,7 @@ class _SttConfig(Coqpit):
         default=False, metadata=dict(help="whether to remove old exported models")
     )
     export_tflite: bool = field(
-        default=False, metadata=dict(help="export a graph ready for TF Lite engine")
+        default=True, metadata=dict(help="export a graph ready for TF Lite engine")
     )
     export_quantize: bool = field(
         default=True,

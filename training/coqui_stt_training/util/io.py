@@ -90,3 +90,10 @@ def remove_remote(filename):
     """
     # Conditional import
     return gfile.remove(filename)
+
+
+def rmtree_remote(foldername):
+    """
+    Wrapper that can remove local and remote directories like `gs://...`
+    """
+    return gfile.rmtree(foldername)

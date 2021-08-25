@@ -2,7 +2,8 @@
 import os
 from import_ldc93s1 import _download_and_preprocess_data as download_ldc
 from coqui_stt_training.util.config import initialize_globals_from_args
-from coqui_stt_training.train import train, test
+from coqui_stt_training.train import train
+from coqui_stt_training.evaluate import test
 
 # only one GPU for only one training sample
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -21,5 +22,4 @@ initialize_globals_from_args(
 )
 
 train()
-
 test()
