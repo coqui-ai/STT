@@ -27,4 +27,5 @@ python -u train.py --alphabet_config_path "data/alphabet.txt" \
   --max_to_keep 1 --checkpoint_dir '/tmp/ckpt' \
   --learning_rate 0.001 --dropout_rate 0.05  --export_dir '/tmp/train' \
   --scorer_path 'data/smoke_test/pruned_lm.scorer' \
-  --audio_sample_rate ${audio_sample_rate}
+  --audio_sample_rate ${audio_sample_rate} \
+  --export_tflite false
