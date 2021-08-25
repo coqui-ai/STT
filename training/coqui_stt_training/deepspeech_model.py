@@ -387,7 +387,7 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         "input_samples": input_samples,
     }
 
-    if not tflite:
+    if not Config.export_tflite:
         inputs["input_lengths"] = seq_length
 
     outputs = {

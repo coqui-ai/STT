@@ -9,15 +9,13 @@ DESIRED_LOG_LEVEL = (
 )
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = DESIRED_LOG_LEVEL
 
-import numpy as np
 import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 import shutil
 
-from .deepspeech_model import create_inference_graph, create_model
+from .deepspeech_model import create_inference_graph
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import Config, initialize_globals_from_cli, log_error, log_info
-from .util.feeding import wavfile_bytes_to_features
 from .util.io import (
     open_remote,
     rmtree_remote,
@@ -36,9 +34,6 @@ def export():
     Restores the trained variables into a simpler graph that will be exported for serving.
     """
     log_info("Exporting the model...")
-
-    if Config.export_savedmodel:
-        return export_savedmodel()
 
     tfv1.reset_default_graph()
 
@@ -177,102 +172,6 @@ def export():
     )
 
 
-def export_savedmodel():
-    tfv1.reset_default_graph()
-
-    with tfv1.Session(config=Config.session_config) as session:
-        input_wavfile_contents = tf.placeholder(
-            tf.string, [], name="input_wavfile_contents"
-        )
-        features, features_len = wavfile_bytes_to_features(input_wavfile_contents)
-
-        features_in = tf.placeholder(
-            tf.float32, [None, None, Config.n_input], name="features_in"
-        )
-        feature_lens_in = tf.placeholder(tf.int32, [None], name="feature_lens_in")
-        batch_size = tf.shape(features_in)[0]
-
-        previous_state_c = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
-        previous_state_h = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
-
-        previous_state = tf.nn.rnn_cell.LSTMStateTuple(
-            previous_state_c, previous_state_h
-        )
-
-        # One rate per layer
-        no_dropout = [None] * 6
-
-        logits, layers = create_model(
-            batch_x=features_in,
-            seq_length=feature_lens_in,
-            dropout=no_dropout,
-            previous_state=previous_state,
-        )
-        # Transpose to batch major and softmax for decoder
-        probs = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
-
-        # Restore variables from training checkpoint
-        load_graph_for_evaluation(session)
-
-        builder = tfv1.saved_model.builder.SavedModelBuilder(Config.export_dir)
-
-        input_file_tinfo = tfv1.saved_model.utils.build_tensor_info(
-            input_wavfile_contents
-        )
-        input_feat_tinfo = tfv1.saved_model.utils.build_tensor_info(features_in)
-        input_feat_lens_tinfo = tfv1.saved_model.utils.build_tensor_info(
-            feature_lens_in
-        )
-        output_feats_tinfo = tfv1.saved_model.utils.build_tensor_info(features)
-        output_feat_lens_tinfo = tfv1.saved_model.utils.build_tensor_info(features_len)
-        output_probs_tinfo = tfv1.saved_model.utils.build_tensor_info(probs)
-
-        compute_feats_sig = tfv1.saved_model.signature_def_utils.build_signature_def(
-            inputs={
-                "input_wavfile": input_file_tinfo,
-            },
-            outputs={
-                "features": output_feats_tinfo,
-                "features_len": output_feat_lens_tinfo,
-            },
-            method_name="compute_features",
-        )
-
-        from_feats_sig = tfv1.saved_model.signature_def_utils.build_signature_def(
-            inputs={
-                "features": input_feat_tinfo,
-                "features_len": input_feat_lens_tinfo,
-            },
-            outputs={
-                "probs": output_probs_tinfo,
-            },
-            method_name="forward_from_features",
-        )
-
-        builder.add_meta_graph_and_variables(
-            session,
-            [tfv1.saved_model.tag_constants.SERVING],
-            signature_def_map={
-                "compute_features": compute_feats_sig,
-                "forward_from_features": from_feats_sig,
-            },
-        )
-
-        builder.save()
-
-        # Copy scorer and alphabet alongside SavedModel
-        if Config.scorer_path:
-            shutil.copy(
-                Config.scorer_path, os.path.join(Config.export_dir, "exported.scorer")
-            )
-        shutil.copy(
-            Config.effective_alphabet_path,
-            os.path.join(Config.export_dir, "alphabet.txt"),
-        )
-
-        log_info(f"Exported SavedModel to {Config.export_dir}")
-
-
 def package_zip():
     # --export_dir path/to/export/LANG_CODE/ => path/to/export/LANG_CODE.zip
     export_dir = os.path.join(
@@ -292,7 +191,7 @@ def package_zip():
     log_info("Exported packaged model {}".format(archive))
 
 
-def main():
+def main(_):
     initialize_globals_from_cli()
 
     if not Config.export_dir:
