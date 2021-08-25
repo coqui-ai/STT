@@ -13,6 +13,7 @@ from six.moves import zip
 
 import tensorflow as tf
 
+from .deepspeech_model import create_model
 from .util.augmentations import NormalizeSampleRate
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import (
@@ -168,24 +169,24 @@ def evaluate(test_csvs, create_model):
         return samples
 
 
+def test():
+    tfv1.reset_default_graph()
+
+    samples = evaluate(Config.test_files, create_model)
+    if Config.test_output_file:
+        save_samples_json(samples, Config.test_output_file)
+
+
 def main():
     initialize_globals_from_cli()
 
     if not Config.test_files:
-        log_error(
+        raise RuntimeError(
             "You need to specify what files to use for evaluation via "
             "the --test_files flag."
         )
-        sys.exit(1)
 
-    from .train import (  # pylint: disable=cyclic-import,import-outside-toplevel
-        create_model,
-    )
-
-    samples = evaluate(Config.test_files, create_model)
-
-    if Config.test_output_file:
-        save_samples_json(samples, Config.test_output_file)
+    test()
 
 
 if __name__ == "__main__":
