@@ -163,35 +163,6 @@ class LimitingPool:
         self.pool.close()
 
 
-class ExceptionBox:
-    """Helper class for passing-back and re-raising an exception from inside a TensorFlow dataset generator.
-    Used in conjunction with `remember_exception`."""
-
-    def __init__(self):
-        self.exception = None
-
-    def raise_if_set(self):
-        if self.exception is not None:
-            exception = self.exception
-            self.exception = None
-            raise exception  # pylint: disable = raising-bad-type
-
-
-def remember_exception(iterable, exception_box=None):
-    """Wraps a TensorFlow dataset generator for catching its actual exceptions
-    that would otherwise just interrupt iteration w/o bubbling up."""
-
-    def do_iterate():
-        try:
-            yield from iterable()
-        except StopIteration:
-            return
-        except Exception as ex:  # pylint: disable = broad-except
-            exception_box.exception = ex
-
-    return iterable if exception_box is None else do_iterate
-
-
 def get_value_range(value, target_type):
     """
     This function converts all possible supplied values for augmentation
