@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import List
 
 import progressbar
@@ -11,13 +12,12 @@ from attrdict import AttrDict
 from coqpit import MISSING, Coqpit, check_argument
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
 from xdg import BaseDirectory as xdg
-from tqdm import tqdm
 
 from .augmentations import NormalizeSampleRate, parse_augmentations
+from .auto_input import create_alphabet_from_sources, create_datasets_from_auto_input
 from .gpu import get_available_gpus
 from .helpers import parse_file_size
 from .io import path_exists_remote
-from .sample_collections import samples_from_sources
 
 
 class _ConfigSingleton:
@@ -129,6 +129,30 @@ class _SttConfig(Coqpit):
             self.save_checkpoint_dir, "alphabet.txt"
         )
 
+        if not (
+            bool(self.auto_input_dataset)
+            != (self.train_files or self.dev_files or self.test_files)
+        ):
+            raise RuntimeError(
+                "When using --auto_input_dataset, do not specify --train_files, "
+                "--dev_files, or --test_files."
+            )
+
+        if self.auto_input_dataset:
+            (
+                gen_train,
+                gen_dev,
+                gen_test,
+                gen_alphabet,
+            ) = create_datasets_from_auto_input(
+                Path(self.auto_input_dataset),
+                Path(self.alphabet_config_path) if self.alphabet_config_path else None,
+            )
+            self.train_files = [str(gen_train)]
+            self.dev_files = [str(gen_dev)]
+            self.test_files = [str(gen_test)]
+            self.alphabet_config_path = str(gen_alphabet)
+
         if self.bytes_output_mode and self.alphabet_config_path:
             raise RuntimeError(
                 "You cannot set --alphabet_config_path *and* --bytes_output_mode"
@@ -136,7 +160,7 @@ class _SttConfig(Coqpit):
         elif self.bytes_output_mode:
             self.alphabet = UTF8Alphabet()
         elif self.alphabet_config_path:
-            self.alphabet = Alphabet(os.path.abspath(self.alphabet_config_path))
+            self.alphabet = Alphabet(self.alphabet_config_path)
         elif os.path.exists(loaded_checkpoint_alphabet_file):
             print(
                 "I --alphabet_config_path not specified, but found an alphabet file "
@@ -145,26 +169,36 @@ class _SttConfig(Coqpit):
             )
             self.alphabet = Alphabet(loaded_checkpoint_alphabet_file)
         elif self.train_files and self.dev_files and self.test_files:
-            # Generate alphabet automatically from input dataset, but only if
-            # fully specified, to avoid confusion in case a missing set has extra
-            # characters.
-            print(
-                "I --alphabet_config_path not specified, but all input datasets are "
-                "present (--train_files, --dev_files, --test_files). An alphabet "
-                "will be generated automatically from the data and placed alongside "
-                f"the checkpoint ({saved_checkpoint_alphabet_file})."
-            )
-            characters = set()
-            for sample in tqdm(
-                samples_from_sources(
-                    self.train_files + self.dev_files + self.test_files
+            # If all subsets are in the same folder and there's an alphabet file
+            # alongside them, use it.
+            self.alphabet = None
+            sources = self.train_files + self.dev_files + self.test_files
+            parents = set(Path(p).parent for p in sources)
+            if len(parents) == 1:
+                possible_alphabet = list(parents)[0] / "alphabet.txt"
+                if possible_alphabet.exists():
+                    print(
+                        "I --alphabet_config_path not specified, but all input "
+                        "datasets are present and in the same folder (--train_files, "
+                        "--dev_files and --test_files), and an alphabet.txt file "
+                        f"was found alongside the sets ({possible_alphabet}). "
+                        "Will use this alphabet file for this run."
+                    )
+                    self.alphabet = Alphabet(str(possible_alphabet))
+
+            if not self.alphabet:
+                # Generate alphabet automatically from input dataset, but only if
+                # fully specified, to avoid confusion in case a missing set has extra
+                # characters.
+                print(
+                    "I --alphabet_config_path not specified, but all input datasets are "
+                    "present (--train_files, --dev_files, --test_files). An alphabet "
+                    "will be generated automatically from the data and placed alongside "
+                    f"the checkpoint ({saved_checkpoint_alphabet_file})."
                 )
-            ):
-                characters |= set(sample.transcript)
-            characters = list(sorted(characters))
-            print(f"I Generated alphabet characters: {characters}.")
-            self.alphabet = Alphabet()
-            self.alphabet.InitFromLabels(characters)
+                characters, alphabet = create_alphabet_from_sources(sources)
+                print(f"I Generated alphabet characters: {characters}.")
+                self.alphabet = alphabet
         else:
             raise RuntimeError(
                 "Missing --alphabet_config_path flag. Couldn't find an alphabet file\n"
@@ -279,6 +313,12 @@ class _SttConfig(Coqpit):
         default_factory=list,
         metadata=dict(
             help="space-separated list of files specifying the datasets used for tracking of metrics (after validation step). Currently the only metric is the CTC loss but without affecting the tracking of best validation loss. Multiple files will get reported separately. If empty, metrics will not be computed."
+        ),
+    )
+    auto_input_dataset: str = field(
+        default="",
+        metadata=dict(
+            help="path to a single CSV file to use for training. Cannot be specified alongside --train_files, --dev_files, --test_files. Training/validation/testing subsets will be automatically generated from the input, alongside with an alphabet file, if not already present.",
         ),
     )
 
