@@ -15,6 +15,7 @@ import json
 import shutil
 import time
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import progressbar
@@ -64,7 +65,6 @@ from .util.io import (
     remove_remote,
 )
 
-check_ctcdecoder_version()
 
 # Accuracy and Loss
 # =================
@@ -240,55 +240,40 @@ def average_gradients(tower_gradients):
     return average_grads
 
 
-# Logging
-# =======
+def early_training_checks():
+    check_ctcdecoder_version()
+
+    # Check for proper scorer early
+    if Config.scorer_path:
+        scorer = Scorer(
+            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
+        )
+        del scorer
+
+    if (
+        Config.train_files
+        and Config.test_files
+        and Config.load_checkpoint_dir != Config.save_checkpoint_dir
+    ):
+        log_warn(
+            "WARNING: You specified different values for --load_checkpoint_dir "
+            "and --save_checkpoint_dir, but you are running training and testing "
+            "in a single invocation. The testing step will respect --load_checkpoint_dir, "
+            "and thus WILL NOT TEST THE CHECKPOINT CREATED BY THE TRAINING STEP. "
+            "Train and test in two separate invocations, specifying the correct "
+            "--load_checkpoint_dir in both cases, or use the same location "
+            "for loading and saving."
+        )
 
 
-def log_variable(variable, gradient=None):
-    r"""
-    We introduce a function for logging a tensor variable's current state.
-    It logs scalar values for the mean, standard deviation, minimum and maximum.
-    Furthermore it logs a histogram of its state and (if given) of an optimization gradient.
+def create_training_datasets(
+    exception_box,
+) -> (tf.data.Dataset, [tf.data.Dataset], [tf.data.Dataset],):
+    """Creates training datasets from input flags.
+
+    Returns a single training dataset and two lists of datasets for validation
+    and metrics tracking.
     """
-    name = variable.name.replace(":", "_")
-    mean = tf.reduce_mean(input_tensor=variable)
-    tfv1.summary.scalar(name="%s/mean" % name, tensor=mean)
-    tfv1.summary.scalar(
-        name="%s/sttdev" % name,
-        tensor=tf.sqrt(tf.reduce_mean(input_tensor=tf.square(variable - mean))),
-    )
-    tfv1.summary.scalar(
-        name="%s/max" % name, tensor=tf.reduce_max(input_tensor=variable)
-    )
-    tfv1.summary.scalar(
-        name="%s/min" % name, tensor=tf.reduce_min(input_tensor=variable)
-    )
-    tfv1.summary.histogram(name=name, values=variable)
-    if gradient is not None:
-        if isinstance(gradient, tf.IndexedSlices):
-            grad_values = gradient.values
-        else:
-            grad_values = gradient
-        if grad_values is not None:
-            tfv1.summary.histogram(name="%s/gradients" % name, values=grad_values)
-
-
-def log_grads_and_vars(grads_and_vars):
-    r"""
-    Let's also introduce a helper function for logging collections of gradient/variable tuples.
-    """
-    for gradient, variable in grads_and_vars:
-        log_variable(variable, gradient=gradient)
-
-
-def train():
-    early_training_checks()
-
-    tfv1.reset_default_graph()
-    tfv1.set_random_seed(Config.random_seed)
-
-    exception_box = ExceptionBox()
-
     # Create training and validation datasets
     train_set = create_dataset(
         Config.train_files,
@@ -304,17 +289,8 @@ def train():
         buffering=Config.read_buffer,
     )
 
-    iterator = tfv1.data.Iterator.from_structure(
-        tfv1.data.get_output_types(train_set),
-        tfv1.data.get_output_shapes(train_set),
-        output_classes=tfv1.data.get_output_classes(train_set),
-    )
-
-    # Make initialization ops for switching between the two sets
-    train_init_op = iterator.make_initializer(train_set)
-
+    dev_sets = []
     if Config.dev_files:
-        dev_sources = Config.dev_files
         dev_sets = [
             create_dataset(
                 [source],
@@ -327,12 +303,11 @@ def train():
                 limit=Config.limit_dev,
                 buffering=Config.read_buffer,
             )
-            for source in dev_sources
+            for source in Config.dev_files
         ]
-        dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
 
+    metrics_sets = []
     if Config.metrics_files:
-        metrics_sources = Config.metrics_files
         metrics_sets = [
             create_dataset(
                 [source],
@@ -345,11 +320,34 @@ def train():
                 limit=Config.limit_dev,
                 buffering=Config.read_buffer,
             )
-            for source in metrics_sources
+            for source in Config.metrics_files
         ]
-        metrics_init_ops = [
-            iterator.make_initializer(metrics_set) for metrics_set in metrics_sets
-        ]
+
+    return train_set, dev_sets, metrics_sets
+
+
+def train():
+    early_training_checks()
+
+    tfv1.reset_default_graph()
+    tfv1.set_random_seed(Config.random_seed)
+
+    exception_box = ExceptionBox()
+
+    train_set, dev_sets, metrics_sets = create_training_datasets(exception_box)
+
+    iterator = tfv1.data.Iterator.from_structure(
+        tfv1.data.get_output_types(train_set),
+        tfv1.data.get_output_shapes(train_set),
+        output_classes=tfv1.data.get_output_classes(train_set),
+    )
+
+    # Make initialization ops for switching between the two sets
+    train_init_op = iterator.make_initializer(train_set)
+    dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
+    metrics_init_ops = [
+        iterator.make_initializer(metrics_set) for metrics_set in metrics_sets
+    ]
 
     # Dropout
     dropout_rates = [
@@ -387,7 +385,6 @@ def train():
 
     # Average tower gradients across GPUs
     avg_tower_gradients = average_gradients(gradients)
-    log_grads_and_vars(avg_tower_gradients)
 
     # global_step is automagically incremented by the optimizer
     global_step = tfv1.train.get_or_create_global_step()
@@ -567,7 +564,7 @@ def train():
                     # Validation
                     dev_loss = 0.0
                     total_steps = 0
-                    for source, init_op in zip(dev_sources, dev_init_ops):
+                    for source, init_op in zip(Config.dev_files, dev_init_ops):
                         log_progress("Validating epoch %d on %s..." % (epoch, source))
                         set_loss, steps = run_set("dev", epoch, init_op, dataset=source)
                         dev_loss += set_loss * steps
@@ -647,7 +644,7 @@ def train():
 
                 if Config.metrics_files:
                     # Read only metrics, not affecting best validation loss tracking
-                    for source, init_op in zip(metrics_sources, metrics_init_ops):
+                    for source, init_op in zip(Config.metrics_files, metrics_init_ops):
                         log_progress("Metrics for epoch %d on %s..." % (epoch, source))
                         set_loss, _ = run_set("metrics", epoch, init_op, dataset=source)
                         log_progress(
@@ -663,30 +660,6 @@ def train():
             "FINISHED optimization in {}".format(datetime.utcnow() - train_start_time)
         )
     log_debug("Session closed.")
-
-
-def early_training_checks():
-    # Check for proper scorer early
-    if Config.scorer_path:
-        scorer = Scorer(
-            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
-        )
-        del scorer
-
-    if (
-        Config.train_files
-        and Config.test_files
-        and Config.load_checkpoint_dir != Config.save_checkpoint_dir
-    ):
-        log_warn(
-            "WARNING: You specified different values for --load_checkpoint_dir "
-            "and --save_checkpoint_dir, but you are running training and testing "
-            "in a single invocation. The testing step will respect --load_checkpoint_dir, "
-            "and thus WILL NOT TEST THE CHECKPOINT CREATED BY THE TRAINING STEP. "
-            "Train and test in two separate invocations, specifying the correct "
-            "--load_checkpoint_dir in both cases, or use the same location "
-            "for loading and saving."
-        )
 
 
 def main():
