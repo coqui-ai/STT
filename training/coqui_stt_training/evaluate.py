@@ -27,8 +27,6 @@ from .util.evaluate_tools import calculate_and_print_report, save_samples_json
 from .util.feeding import create_dataset
 from .util.helpers import check_ctcdecoder_version
 
-check_ctcdecoder_version()
-
 
 def sparse_tensor_value_to_texts(value, alphabet):
     r"""
@@ -179,6 +177,7 @@ def test():
 
 def main():
     initialize_globals_from_cli()
+    check_ctcdecoder_version()
 
     if not Config.test_files:
         raise RuntimeError(
