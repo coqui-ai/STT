@@ -15,6 +15,7 @@ import json
 import shutil
 import time
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import progressbar
@@ -265,14 +266,14 @@ def early_training_checks():
         )
 
 
-def train():
-    early_training_checks()
+def create_training_datasets(
+    exception_box,
+) -> (tf.data.Dataset, [tf.data.Dataset], [tf.data.Dataset],):
+    """Creates training datasets from input flags.
 
-    tfv1.reset_default_graph()
-    tfv1.set_random_seed(Config.random_seed)
-
-    exception_box = ExceptionBox()
-
+    Returns a single training dataset and two lists of datasets for validation
+    and metrics tracking.
+    """
     # Create training and validation datasets
     train_set = create_dataset(
         Config.train_files,
@@ -288,17 +289,8 @@ def train():
         buffering=Config.read_buffer,
     )
 
-    iterator = tfv1.data.Iterator.from_structure(
-        tfv1.data.get_output_types(train_set),
-        tfv1.data.get_output_shapes(train_set),
-        output_classes=tfv1.data.get_output_classes(train_set),
-    )
-
-    # Make initialization ops for switching between the two sets
-    train_init_op = iterator.make_initializer(train_set)
-
+    dev_sets = []
     if Config.dev_files:
-        dev_sources = Config.dev_files
         dev_sets = [
             create_dataset(
                 [source],
@@ -311,12 +303,11 @@ def train():
                 limit=Config.limit_dev,
                 buffering=Config.read_buffer,
             )
-            for source in dev_sources
+            for source in Config.dev_files
         ]
-        dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
 
+    metrics_sets = []
     if Config.metrics_files:
-        metrics_sources = Config.metrics_files
         metrics_sets = [
             create_dataset(
                 [source],
@@ -329,11 +320,34 @@ def train():
                 limit=Config.limit_dev,
                 buffering=Config.read_buffer,
             )
-            for source in metrics_sources
+            for source in Config.metrics_files
         ]
-        metrics_init_ops = [
-            iterator.make_initializer(metrics_set) for metrics_set in metrics_sets
-        ]
+
+    return train_set, dev_sets, metrics_sets
+
+
+def train():
+    early_training_checks()
+
+    tfv1.reset_default_graph()
+    tfv1.set_random_seed(Config.random_seed)
+
+    exception_box = ExceptionBox()
+
+    train_set, dev_sets, metrics_sets = create_training_datasets(exception_box)
+
+    iterator = tfv1.data.Iterator.from_structure(
+        tfv1.data.get_output_types(train_set),
+        tfv1.data.get_output_shapes(train_set),
+        output_classes=tfv1.data.get_output_classes(train_set),
+    )
+
+    # Make initialization ops for switching between the two sets
+    train_init_op = iterator.make_initializer(train_set)
+    dev_init_ops = [iterator.make_initializer(dev_set) for dev_set in dev_sets]
+    metrics_init_ops = [
+        iterator.make_initializer(metrics_set) for metrics_set in metrics_sets
+    ]
 
     # Dropout
     dropout_rates = [
@@ -551,7 +565,7 @@ def train():
                     # Validation
                     dev_loss = 0.0
                     total_steps = 0
-                    for source, init_op in zip(dev_sources, dev_init_ops):
+                    for source, init_op in zip(Config.dev_files, dev_init_ops):
                         log_progress("Validating epoch %d on %s..." % (epoch, source))
                         set_loss, steps = run_set("dev", epoch, init_op, dataset=source)
                         dev_loss += set_loss * steps
@@ -631,7 +645,7 @@ def train():
 
                 if Config.metrics_files:
                     # Read only metrics, not affecting best validation loss tracking
-                    for source, init_op in zip(metrics_sources, metrics_init_ops):
+                    for source, init_op in zip(Config.metrics_files, metrics_init_ops):
                         log_progress("Metrics for epoch %d on %s..." % (epoch, source))
                         set_loss, _ = run_set("metrics", epoch, init_op, dataset=source)
                         log_progress(
