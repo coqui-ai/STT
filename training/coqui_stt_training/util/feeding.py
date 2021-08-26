@@ -12,7 +12,7 @@ import tensorflow as tf
 from .audio import DEFAULT_FORMAT, pcm_to_np, read_frames_from_file, vad_split
 from .augmentations import apply_graph_augmentations, apply_sample_augmentations
 from .config import Config
-from .helpers import MEGABYTE, remember_exception
+from .helpers import MEGABYTE
 from .sample_collections import samples_from_sources
 from .text import text_to_char_array
 
@@ -146,7 +146,6 @@ def create_dataset(
     train_phase=False,
     reverse=False,
     limit=0,
-    exception_box=None,
     process_ahead=None,
     buffering=1 * MEGABYTE,
 ):
@@ -205,7 +204,7 @@ def create_dataset(
     )
 
     dataset = tf.data.Dataset.from_generator(
-        remember_exception(generate_values, exception_box),
+        generate_values,
         output_types=(
             tf.string,
             tf.float32,
@@ -231,7 +230,6 @@ def split_audio_file(
     aggressiveness=3,
     outlier_duration_ms=10000,
     outlier_batch_size=1,
-    exception_box=None,
 ):
     def generate_values():
         frames = read_frames_from_file(audio_path)
@@ -248,7 +246,7 @@ def split_audio_file(
     def create_batch_set(bs, criteria):
         return (
             tf.data.Dataset.from_generator(
-                remember_exception(generate_values, exception_box),
+                generate_values,
                 output_types=(tf.int32, tf.int32, tf.float32),
             )
             .map(to_mfccs, num_parallel_calls=tf.data.experimental.AUTOTUNE)
