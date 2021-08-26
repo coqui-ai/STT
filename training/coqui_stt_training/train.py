@@ -240,45 +240,28 @@ def average_gradients(tower_gradients):
     return average_grads
 
 
-# Logging
-# =======
+def early_training_checks():
+    # Check for proper scorer early
+    if Config.scorer_path:
+        scorer = Scorer(
+            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
+        )
+        del scorer
 
-
-def log_variable(variable, gradient=None):
-    r"""
-    We introduce a function for logging a tensor variable's current state.
-    It logs scalar values for the mean, standard deviation, minimum and maximum.
-    Furthermore it logs a histogram of its state and (if given) of an optimization gradient.
-    """
-    name = variable.name.replace(":", "_")
-    mean = tf.reduce_mean(input_tensor=variable)
-    tfv1.summary.scalar(name="%s/mean" % name, tensor=mean)
-    tfv1.summary.scalar(
-        name="%s/sttdev" % name,
-        tensor=tf.sqrt(tf.reduce_mean(input_tensor=tf.square(variable - mean))),
-    )
-    tfv1.summary.scalar(
-        name="%s/max" % name, tensor=tf.reduce_max(input_tensor=variable)
-    )
-    tfv1.summary.scalar(
-        name="%s/min" % name, tensor=tf.reduce_min(input_tensor=variable)
-    )
-    tfv1.summary.histogram(name=name, values=variable)
-    if gradient is not None:
-        if isinstance(gradient, tf.IndexedSlices):
-            grad_values = gradient.values
-        else:
-            grad_values = gradient
-        if grad_values is not None:
-            tfv1.summary.histogram(name="%s/gradients" % name, values=grad_values)
-
-
-def log_grads_and_vars(grads_and_vars):
-    r"""
-    Let's also introduce a helper function for logging collections of gradient/variable tuples.
-    """
-    for gradient, variable in grads_and_vars:
-        log_variable(variable, gradient=gradient)
+    if (
+        Config.train_files
+        and Config.test_files
+        and Config.load_checkpoint_dir != Config.save_checkpoint_dir
+    ):
+        log_warn(
+            "WARNING: You specified different values for --load_checkpoint_dir "
+            "and --save_checkpoint_dir, but you are running training and testing "
+            "in a single invocation. The testing step will respect --load_checkpoint_dir, "
+            "and thus WILL NOT TEST THE CHECKPOINT CREATED BY THE TRAINING STEP. "
+            "Train and test in two separate invocations, specifying the correct "
+            "--load_checkpoint_dir in both cases, or use the same location "
+            "for loading and saving."
+        )
 
 
 def train():
@@ -663,30 +646,6 @@ def train():
             "FINISHED optimization in {}".format(datetime.utcnow() - train_start_time)
         )
     log_debug("Session closed.")
-
-
-def early_training_checks():
-    # Check for proper scorer early
-    if Config.scorer_path:
-        scorer = Scorer(
-            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
-        )
-        del scorer
-
-    if (
-        Config.train_files
-        and Config.test_files
-        and Config.load_checkpoint_dir != Config.save_checkpoint_dir
-    ):
-        log_warn(
-            "WARNING: You specified different values for --load_checkpoint_dir "
-            "and --save_checkpoint_dir, but you are running training and testing "
-            "in a single invocation. The testing step will respect --load_checkpoint_dir, "
-            "and thus WILL NOT TEST THE CHECKPOINT CREATED BY THE TRAINING STEP. "
-            "Train and test in two separate invocations, specifying the correct "
-            "--load_checkpoint_dir in both cases, or use the same location "
-            "for loading and saving."
-        )
 
 
 def main():
