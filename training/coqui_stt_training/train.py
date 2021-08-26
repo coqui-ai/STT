@@ -58,7 +58,7 @@ from .util.config import (
     log_warn,
 )
 from .util.feeding import create_dataset
-from .util.helpers import ExceptionBox, check_ctcdecoder_version
+from .util.helpers import check_ctcdecoder_version
 from .util.io import (
     is_remote_path,
     open_remote,
@@ -266,9 +266,11 @@ def early_training_checks():
         )
 
 
-def create_training_datasets(
-    exception_box,
-) -> (tf.data.Dataset, [tf.data.Dataset], [tf.data.Dataset],):
+def create_training_datasets() -> (
+    tf.data.Dataset,
+    [tf.data.Dataset],
+    [tf.data.Dataset],
+):
     """Creates training datasets from input flags.
 
     Returns a single training dataset and two lists of datasets for validation
@@ -282,7 +284,6 @@ def create_training_datasets(
         augmentations=Config.augmentations,
         cache_path=Config.feature_cache,
         train_phase=True,
-        exception_box=exception_box,
         process_ahead=len(Config.available_devices) * Config.train_batch_size * 2,
         reverse=Config.reverse_train,
         limit=Config.limit_train,
@@ -297,7 +298,6 @@ def create_training_datasets(
                 batch_size=Config.dev_batch_size,
                 train_phase=False,
                 augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
-                exception_box=exception_box,
                 process_ahead=len(Config.available_devices) * Config.dev_batch_size * 2,
                 reverse=Config.reverse_dev,
                 limit=Config.limit_dev,
@@ -314,7 +314,6 @@ def create_training_datasets(
                 batch_size=Config.dev_batch_size,
                 train_phase=False,
                 augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
-                exception_box=exception_box,
                 process_ahead=len(Config.available_devices) * Config.dev_batch_size * 2,
                 reverse=Config.reverse_dev,
                 limit=Config.limit_dev,
@@ -332,9 +331,7 @@ def train():
     tfv1.reset_default_graph()
     tfv1.set_random_seed(Config.random_seed)
 
-    exception_box = ExceptionBox()
-
-    train_set, dev_sets, metrics_sets = create_training_datasets(exception_box)
+    train_set, dev_sets, metrics_sets = create_training_datasets()
 
     iterator = tfv1.data.Iterator.from_structure(
         tfv1.data.get_output_types(train_set),
@@ -512,9 +509,7 @@ def train():
                         ],
                         feed_dict=feed_dict,
                     )
-                    exception_box.raise_if_set()
                 except tf.errors.OutOfRangeError:
-                    exception_box.raise_if_set()
                     break
 
                 if problem_files.size > 0:
