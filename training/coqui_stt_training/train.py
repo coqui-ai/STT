@@ -64,7 +64,6 @@ from .util.io import (
     remove_remote,
 )
 
-check_ctcdecoder_version()
 
 # Accuracy and Loss
 # =================
@@ -241,6 +240,8 @@ def average_gradients(tower_gradients):
 
 
 def early_training_checks():
+    check_ctcdecoder_version()
+
     # Check for proper scorer early
     if Config.scorer_path:
         scorer = Scorer(

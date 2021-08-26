@@ -28,7 +28,6 @@ from .util.feeding import create_dataset
 from .util.helpers import check_ctcdecoder_version
 
 
-
 def sparse_tensor_value_to_texts(value, alphabet):
     r"""
     Given a :class:`tf.SparseTensor` ``value``, return an array of Python strings
@@ -178,6 +177,7 @@ def test():
 
 def main():
     initialize_globals_from_cli()
+    check_ctcdecoder_version()
 
     if not Config.test_files:
         raise RuntimeError(
