@@ -202,10 +202,10 @@ class _SttConfig(Coqpit):
                 self.alphabet = alphabet
         else:
             raise RuntimeError(
-                "Missing --alphabet_config_path flag. Couldn't find an alphabet file\n"
-                "alongside checkpoint, and input datasets are not fully specified\n"
-                "(--train_files, --dev_files, --test_files), so can't generate an alphabet.\n"
-                "Either specify an alphabet file or fully specify the dataset, so one will\n"
+                "Missing --alphabet_config_path flag. Couldn't find an alphabet file "
+                "alongside checkpoint, and input datasets are not fully specified "
+                "(--train_files, --dev_files, --test_files), so can't generate an alphabet. "
+                "Either specify an alphabet file or fully specify the dataset, so one will "
                 "be generated automatically."
             )
 

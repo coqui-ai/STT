@@ -41,18 +41,18 @@ If you don't want to use our Dockerfile template, you will need to manually inst
 Prerequisites
 ^^^^^^^^^^^^^
 
-* `Python 3.6 <https://www.python.org/>`_
+* `Python 3.6, 3.7 or 3.8 <https://www.python.org/>`_
 * Mac or Linux environment (training on Windows is *not* currently supported)
 * CUDA 10.0 and CuDNN v7.6
 
 Download
 ^^^^^^^^
 
-We recommened that you clone the STT repo from the latest stable release branch on Github (e.g. ``v0.9.3``). You can find all 🐸STT releases `here <https://github.com/coqui-ai/STT/releases>`_).
+Clone the STT repo from GitHub:
 
 .. code-block:: bash
 
-   $ git clone --branch v0.9.3 --depth 1 https://github.com/coqui-ai/STT
+   $ git clone https://github.com/coqui-ai/STT
 
 Installation
 ^^^^^^^^^^^^
@@ -86,23 +86,17 @@ Now that we have cloned the STT repo from Github and setup a virtual environment
 .. code-block:: bash
 
    $ cd STT
-   $ python3 -m pip install --upgrade pip wheel setuptools
-   $ python3 -m pip install --upgrade -e .
-
-The ``webrtcvad`` package may additionally require ``python3-dev``:
-
-.. code-block:: bash
-
-   $ sudo apt-get install python3-dev
+   $ python -m pip install --upgrade pip wheel setuptools
+   $ python -m pip install --upgrade -e .
 
 If you have an NVIDIA GPU, it is highly recommended to install TensorFlow with GPU support. Training will be significantly faster than using the CPU.
 
 .. code-block:: bash
 
-   $ python3 -m pip uninstall tensorflow
-   $ python3 -m pip install 'tensorflow-gpu==1.15.4'
+   $ python -m pip uninstall tensorflow
+   $ python -m pip install 'tensorflow-gpu==1.15.4'
 
-Please ensure you have the required `CUDA dependency <https://www.tensorflow.org/install/source#gpu>`_ and :ref:`prerequisites <training-deps>`.
+Please ensure you have the required :ref:`prerequisites <training-deps>` and a working CUDA installation with the versions listed above.
 
 Verify Install
 """"""""""""""
@@ -118,12 +112,12 @@ This script will train a model on a single audio file. If the script exits succe
 Training on your own Data
 -------------------------
 
-Whether you used our Dockerfile template or you set up your own environment, the central STT training script is ``train.py``. For a list of command line options, use the ``--helpfull`` flag:
+Whether you used our Dockerfile template or you set up your own environment, the central STT training module is ``python -m coqui_stt_training.train``. For a list of command line options, use the ``--help`` flag:
 
 .. code-block:: bash
 
    $ cd STT
-   $ python3 train.py --helpfull
+   $ python -m coqui_stt_training.train --help
 
 Training Data
 ^^^^^^^^^^^^^
@@ -143,11 +137,17 @@ Text transcripts should be formatted exactly as the transcripts you expect your 
 CSV file format
 """""""""""""""
 
-The audio and transcripts used in training are passed to ``train.py`` via CSV files. You should supply CSV files for training (``train.csv``), development (``dev.csv``), and testing (``test.csv``). The CSV files should contain three columns:
+The audio and transcripts used in training are specified via CSV files. You should supply CSV files for training (``train.csv``), validation (``dev.csv``), and testing (``test.csv``). The CSV files should contain three columns:
 
 1. ``wav_filename`` - the path to a WAV file on your machine
 2. ``wav_filesize`` - the number of bytes in the WAV file
 3. ``transcript`` - the text transcript of the WAV file
+
+Alternatively, if you don't have pre-defined splits for training, validation and testing, you can use the ``--auto_input_dataset`` flag to automatically split a single CSV into subsets and generate an alphabet automatically:
+
+.. code-block:: bash
+
+   $ python -m coqui_stt_training.train --auto_input_dataset samples.csv
 
 Start Training
 ^^^^^^^^^^^^^^
@@ -157,11 +157,11 @@ After you've successfully installed STT and have access to data, you can start a
 .. code-block:: bash
 
    $ cd STT
-   $ python3 train.py --train_files train.csv --dev_files dev.csv --test_files test.csv
+   $ python -m coqui_stt_training.train --train_files train.csv --dev_files dev.csv --test_files test.csv
 
 Next Steps
 ----------
 
-You will want to customize the settings of ``train.py`` to work better with your data and your hardware. You should review the :ref:`command-line training flags <training-flags>`, and experiment with different settings.
+You will want to customize the training settings to work better with your data and your hardware. You should review the :ref:`command-line training flags <training-flags>`, and experiment with different settings.
 
 For more in-depth training documentation, you should refer to the :ref:`Advanced Training Topics <advanced-training-docs>` section.

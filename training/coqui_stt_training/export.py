@@ -191,7 +191,7 @@ def package_zip():
     log_info("Exported packaged model {}".format(archive))
 
 
-def main(_):
+def main():
     initialize_globals_from_cli()
 
     if not Config.export_dir:
