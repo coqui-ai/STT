@@ -35,8 +35,8 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
    $ source venv-stt/bin/activate
 
    # Install 🐸STT
-   $ python3 -m pip install -U pip
-   $ python3 -m pip install stt
+   $ python -m pip install -U pip
+   $ python -m pip install stt
 
    # Download 🐸's pre-trained English models
    $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.pbmm

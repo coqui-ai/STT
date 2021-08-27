@@ -10,31 +10,26 @@ Introduction
 
 Deployment is the process of feeding audio (speech) into a trained 🐸STT model and receiving text (transcription) as output. In practice you probably want to use two models for deployment: an audio model and a text model. The audio model (a.k.a. the acoustic model) is a deep neural network which converts audio into text. The text model (a.k.a. the language model / scorer) returns the likelihood of a string of text. If the acoustic model makes spelling or grammatical mistakes, the language model can help correct them.
 
-You can deploy 🐸STT models either via a command-line client or a language binding. 🐸 provides three language bindings and one command line client. There also exist several community-maintained clients and language bindings, which are listed `further down in this README <#third-party-bindings>`_.
-
-*Note that 🐸STT currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
+You can deploy 🐸STT models either via a command-line client or a language binding.
 
 * :ref:`The Python package + language binding <py-usage>`
+* :ref:`The Node.JS package + language binding <nodejs-usage>`
 * :ref:`The command-line client <cli-usage>`
 * :ref:`The native C API <c-usage>`
-* :ref:`The Node.JS package + language binding <nodejs-usage>`
-* :ref:`The .NET client + language binding <build-native-client-dotnet>`
 
 .. _download-models:
 
 Download trained Coqui STT models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can find pre-trained models ready for deployment on the 🐸STT `releases page <https://github.com/coqui-ai/STT/releases>`_. You can also download the latest acoustic model (``.pbmm``) and language model (``.scorer``) from the command line as such:
+You can find pre-trained models ready for deployment on the 🐸STT `releases page <https://github.com/coqui-ai/STT/releases>`_. You can also download the latest acoustic model (``.tflite``) and language model (``.scorer``) from the command line as such:
 
 .. code-block:: bash
 
-   wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.pbmm
+   wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.tflite
    wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.scorer
 
-In every 🐸STT official release, there are several kinds of model files provided. For the acoustic model there are two file extensions: ``.pbmm`` and ``.tflite``. Files ending in ``.pbmm`` are compatible with clients and language bindings built against the standard TensorFlow runtime. ``.pbmm`` files are also compatible with CUDA enabled clients and language bindings. Files ending in ``.tflite``, on the other hand, are only compatible with clients and language bindings built against the `TensorFlow Lite runtime <https://www.tensorflow.org/lite/>`_. TFLite models are optimized for size and performance on low-power devices. You can find a full list of supported platforms and TensorFlow runtimes at :ref:`supported-platforms-deployment`.
-
-For language models, there is only only file extension: ``.scorer``. Language models can run on any supported device, regardless of Tensorflow runtime. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <language-model>`.
+In every 🐸STT official release, there are different model files provided. The acoustic model uses the ``.tflite`` extension. Language models use the extension ``.scorer``. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <language-model>`.
 
 .. _model-data-match:
 
@@ -51,7 +46,7 @@ How well a 🐸STT model transcribes your audio will depend on a lot of things. 
 
 If you take a 🐸STT model trained on English, and pass Spanish into it, you should expect the model to perform horribly. Imagine you have a friend who only speaks English, and you ask her to make Spanish subtitles for a Spanish film, you wouldn't expect to get good subtitles. This is an extreme example, but it helps to form an intuition for what to expect from 🐸STT models. Imagine that the 🐸STT models are like people who speak a certain language with a certain accent, and then think about what would happen if you asked that person to transcribe your audio.
 
-An acoustic model (i.e. ``.pbmm`` or ``.tflite``) has "learned" how to transcribe a certain language, and the model probably understands some accents better than others. In addition to languages and accents, acoustic models are sensitive to the style of speech, the topic of speech, and the demographics of the person speaking. The language model (``.scorer``) has been trained on text alone. As such, the language model is sensitive to how well the topic and style of speech matches that of the text used in training. The 🐸STT `release notes <https://github.com/coqui-ai/STT/releases/tag/v0.9.3>`_ include detailed information on the data used to train the models. If the data used for training the off-the-shelf models does not align with your intended use case, it may be necessary to adapt or train new models in order to improve transcription on your data.
+An acoustic model (i.e. ``.tflite`` file) has "learned" how to transcribe a certain language, and the model probably understands some accents better than others. In addition to languages and accents, acoustic models are sensitive to the style of speech, the topic of speech, and the demographics of the person speaking. The language model (``.scorer``) has been trained on text alone. As such, the language model is sensitive to how well the topic and style of speech matches that of the text used in training. The 🐸STT `release notes <https://github.com/coqui-ai/STT/releases/tag/v0.9.3>`_ include detailed information on the data used to train the models. If the data used for training the off-the-shelf models does not align with your intended use case, it may be necessary to adapt or train new models in order to improve transcription on your data.
 
 Training your own language model is often a good way to improve transcription on your audio. The process and tools used to generate a language model are described in :ref:`language-model` and general information can be found in :ref:`decoder-docs`. Generating a scorer from a constrained topic dataset is a quick process and can bring significant accuracy improvements if your audio is from a specific topic.
 
@@ -67,7 +62,7 @@ Model compatibility
 Using the Python package
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pre-built binaries for deploying a trained model can be installed with ``pip``. It is highly recommended that you use Python 3.5 or higher in a virtual environment. Both `pip <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-pip>`_ and `venv <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment>`_ are included in normal Python 3 installations.
+Pre-built binaries for deploying a trained model can be installed with ``pip``. It is highly recommended that you use Python 3.6 or higher in a virtual environment. Both `pip <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-pip>`_ and `venv <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment>`_ are included in normal Python 3 installations.
 
 When you create a new Python virtual environment, you create a directory containing a ``python`` binary and everything needed to run 🐸STT. For the purpose of this documentation, we will use on ``$HOME/coqui-stt-venv``, but you can use whatever directory you like.
 
@@ -87,7 +82,7 @@ After your environment has been activated, you can use ``pip`` to install ``stt`
 
 .. code-block::
 
-   (coqui-stt-venv)$ python3 -m pip install -U pip && python3 -m pip install stt
+   (coqui-stt-venv)$ python -m pip install -U pip && python -m pip install stt
 
 After installation has finished, you can call ``stt`` from the command-line.
 
@@ -95,7 +90,7 @@ The following command assumes you :ref:`downloaded the pre-trained models <downl
 
 .. code-block:: bash
 
-   (coqui-stt-venv)$ stt --model stt-0.9.3-models.pbmm --scorer stt-0.9.3-models.scorer --audio my_audio_file.wav
+   (coqui-stt-venv)$ stt --model stt-0.9.3-models.tflite --scorer stt-0.9.3-models.scorer --audio my_audio_file.wav
 
 See :ref:`the Python client <py-api-example>` for an example of how to use the package programatically.
 
@@ -103,44 +98,9 @@ See :ref:`the Python client <py-api-example>` for an example of how to use the p
 
 .. code-block::
 
-   (coqui-stt-venv)$ python3 -m pip install -U pip && python3 -m pip install stt-gpu
+   (coqui-stt-venv)$ python -m pip install -U pip && python -m pip install stt-gpu
 
 See the `release notes <https://github.com/coqui-ai/STT/releases>`_ to find which GPUs are supported. Please ensure you have the required `CUDA dependency <#cuda-dependency>`_.
-
-.. _cli-usage:
-
-Using the command-line client
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To download the pre-built binaries for the ``stt`` command-line (compiled C++) client, use ``util/taskcluster.py``\ :
-
-.. code-block:: bash
-
-   python3 util/taskcluster.py --target .
-
-or if you're on macOS:
-
-.. code-block:: bash
-
-   python3 util/taskcluster.py --arch osx --target .
-
-also, if you need some binaries different than current main branch, like ``v0.2.0-alpha.6``\ , you can use ``--branch``\ :
-
-.. code-block:: bash
-
-   python3 util/taskcluster.py --branch "v0.2.0-alpha.6" --target "."
-
-The script ``taskcluster.py`` will download ``native_client.tar.xz`` (which includes the ``stt`` binary and associated libraries) and extract it into the current folder. ``taskcluster.py`` will download binaries for Linux/x86_64 by default, but you can override that behavior with the ``--arch`` parameter. See the help info with ``python3 util/taskcluster.py -h`` for more details. Specific branches of 🐸STT or TensorFlow can be specified as well.
-
-Alternatively you may manually download the ``native_client.tar.xz`` from the `releases page <https://github.com/coqui-ai/STT/releases>`_.
-
-Assuming you have :ref:`downloaded the pre-trained models <download-models>`, you can use the client as such:
-
-.. code-block:: bash
-
-   ./stt --model coqui-stt-0.9.3-models.pbmm --scorer coqui-stt-0.9.3-models.scorer --audio audio_input.wav
-
-See the help output with ``./stt -h`` for more details.
 
 .. _nodejs-usage:
 
@@ -173,6 +133,20 @@ See the `release notes <https://github.com/coqui-ai/STT/releases>`_ to find whic
 
 See the :ref:`TypeScript client <js-api-example>` for an example of how to use the bindings programatically.
 
+.. _cli-usage:
+
+Using the command-line client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The pre-built binaries for the ``stt`` command-line (compiled C++) client are available in the ``native_client.tar.xz`` archive for your desired platform. You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
+
+Assuming you have :ref:`downloaded the pre-trained models <download-models>`, you can use the client as such:
+
+.. code-block:: bash
+
+   ./stt --model coqui-stt-0.9.3-models.tflite --scorer coqui-stt-0.9.3-models.scorer --audio audio_input.wav
+
+See the help output with ``./stt -h`` for more details.
 
 Installing bindings from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -209,11 +183,8 @@ CUDA Dependency
 
 The GPU capable builds (Python, NodeJS, C++, etc) depend on CUDA 10.1 and CuDNN v7.6.
 
-.. _cuda-inference-deps:
-
 .. toctree::
    :maxdepth: 1
-   :caption: Supported Platforms
 
    SUPPORTED_PLATFORMS
 

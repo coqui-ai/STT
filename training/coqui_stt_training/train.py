@@ -662,20 +662,24 @@ def main():
 
     def deprecated_msg(prefix):
         return (
-            f"{prefix} Using the training script as a generic driver for all training "
+            f"{prefix} Using the training module as a generic driver for all training "
             "related functionality is deprecated and will be removed soon. Use "
-            "the specific scripts: train.py/evaluate.py/export.py/training_graph_inference.py."
+            "the specific modules: \n"
+            "    python -m coqui_stt_training.train\n"
+            "    python -m coqui_stt_training.evaluate\n"
+            "    python -m coqui_stt_training.export\n"
+            "    python -m coqui_stt_training.training_graph_inference"
         )
 
     if Config.train_files:
         train()
     else:
-        log_warn(deprecated_msg("Calling training script without --train_files."))
+        log_warn(deprecated_msg("Calling training module without --train_files."))
 
     if Config.test_files:
         log_warn(
             deprecated_msg(
-                "Specifying --test_files when calling train.py script. Use evaluate.py."
+                "Specifying --test_files when calling train module. Use python -m coqui_stt_training.evaluate"
             )
         )
         evaluate.test()
@@ -683,7 +687,7 @@ def main():
     if Config.export_dir:
         log_warn(
             deprecated_msg(
-                "Specifying --export_dir when calling train.py script. Use export.py."
+                "Specifying --export_dir when calling train module. Use python -m coqui_stt_training.export"
             )
         )
         export.export()
@@ -691,7 +695,7 @@ def main():
     if Config.one_shot_infer:
         log_warn(
             deprecated_msg(
-                "Specifying --one_shot_infer when calling train.py script. Use training_graph_inference.py."
+                "Specifying --one_shot_infer when calling train module. Use python -m coqui_stt_training.training_graph_inference"
             )
         )
         traning_graph_inference.do_single_file_inference(Config.one_shot_infer)
