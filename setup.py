@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 
 
 def main():
-    version_file = Path(__file__).parent / "VERSION"
+    version_file = Path(__file__).parent / "training" / "coqui_stt_training" / "VERSION"
     with open(str(version_file)) as fin:
         version = fin.read().strip()
 
@@ -68,14 +68,7 @@ def main():
         packages=find_packages(where="training"),
         python_requires=">=3.5, <4",
         install_requires=install_requires,
-        # If there are data files included in your packages that need to be
-        # installed, specify them here.
-        package_data={
-            "coqui_stt_training": [
-                "VERSION",
-                "GRAPH_VERSION",
-            ],
-        },
+        include_package_data=True,
     )
 
 
