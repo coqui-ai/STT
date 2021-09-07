@@ -49,7 +49,7 @@ For more custom use cases, you might familiarize yourself with the `KenLM toolki
 
 .. code-block:: bash
 
-    python3 generate_lm.py \
+    python generate_lm.py \
       --input_txt librispeech-lm-norm.txt.gz \
       --output_dir . \
       --top_k 500000 \
