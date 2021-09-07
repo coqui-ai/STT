@@ -20,9 +20,12 @@ import_array();
 
 namespace std {
     %template(StringVector) vector<string>;
+    %template(FloatVector) vector<float>;
     %template(UnsignedIntVector) vector<unsigned int>;
     %template(OutputVector) vector<Output>;
     %template(OutputVectorVector) vector<vector<Output>>;
+    %template(FlashlightOutputVector) vector<FlashlightOutput>;
+    %template(FlashlightOutputVectorVector) vector<vector<FlashlightOutput>>;
     %template(Map) unordered_map<string, float>;
 }
 
@@ -36,6 +39,7 @@ namespace std {
 
 %ignore Scorer::dictionary;
 
+%include "third_party/flashlight/flashlight/lib/text/dictionary/Dictionary.h"
 %include "../alphabet.h"
 %include "output.h"
 %include "scorer.h"
@@ -45,13 +49,5 @@ namespace std {
 %constant const char* __git_version__ = ds_git_version();
 
 // Import only the error code enum definitions from coqui-stt.h
-// We can't just do |%ignore "";| here because it affects this file globally (even
-// files %include'd above). That causes SWIG to lose destructor information and
-// leads to leaks of the wrapper objects.
-// Instead we ignore functions and classes (structs), which are the only other
-// things in coqui-stt.h. If we add some new construct to coqui-stt.h we need
-// to update the ignore rules here to avoid exposing unwanted APIs in the decoder
-// package.
-%rename("$ignore", %$isfunction) "";
-%rename("$ignore", %$isclass) "";
+#define SWIG_ERRORS_ONLY
 %include "../coqui-stt.h"

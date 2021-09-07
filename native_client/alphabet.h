@@ -5,12 +5,15 @@
 #include <unordered_map>
 #include <vector>
 
+#include "flashlight/lib/text/dictionary/Dictionary.h"
+
 /*
  * Loads a text file describing a mapping of labels to strings, one string per
  * line. This is used by the decoder, client and Python scripts to convert the
  * output of the decoder to a human-readable string and vice-versa.
  */
-class Alphabet {
+class Alphabet : public fl::lib::text::Dictionary
+{
 public:
   Alphabet() = default;
   Alphabet(const Alphabet&) = default;
@@ -31,16 +34,14 @@ public:
   // Deserialize alphabet from a binary buffer.
   int Deserialize(const char* buffer, const int buffer_size);
 
-  size_t GetSize() const {
-    return size_;
-  }
+  size_t GetSize() const;
 
   bool IsSpace(unsigned int label) const {
-    return label == space_label_;
+    return label == space_index_;
   }
 
   unsigned int GetSpaceLabel() const {
-    return space_label_;
+    return space_index_;
   }
 
   // Returns true if the single character/output class has a corresponding label
@@ -72,23 +73,20 @@ public:
   virtual std::vector<unsigned int> Encode(const std::string& input) const;
 
 protected:
-  size_t size_;
-  unsigned int space_label_;
-  std::unordered_map<unsigned int, std::string> label_to_str_;
-  std::unordered_map<std::string, unsigned int> str_to_label_;
+  unsigned int space_index_;
 };
 
 class UTF8Alphabet : public Alphabet
 {
 public:
   UTF8Alphabet() {
-    size_ = 255;
-    space_label_ = ' ' - 1;
-    for (size_t i = 0; i < size_; ++i) {
-      std::string val(1, i+1);
-      label_to_str_[i] = val;
-      str_to_label_[val] = i;
+    // 255 byte values, index n -> byte value n+1
+    // because NUL is never used, we don't use up an index in the maps for it
+    for (int idx = 0; idx < 255; ++idx) {
+      std::string val(1, idx+1);
+      addEntry(val, idx);
     }
+    space_index_ = ' ' - 1;
   }
 
   int init(const char*) override {

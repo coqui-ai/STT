@@ -7,9 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "lm/virtual_interface.hh"
-#include "lm/word_index.hh"
-#include "util/string_piece.hh"
+#include "flashlight/lib/text/decoder/lm/KenLM.h"
 
 #include "path_trie.h"
 #include "alphabet.h"
@@ -27,12 +25,12 @@ const std::string END_TOKEN = "</s>";
  *     Scorer scorer(alpha, beta, "path_of_language_model");
  *     scorer.get_log_cond_prob({ "WORD1", "WORD2", "WORD3" });
  */
-class Scorer {
+class Scorer : public fl::lib::text::LM {
 public:
   using FstType = PathTrie::FstType;
 
-  Scorer() = default;
-  ~Scorer() = default;
+  Scorer();
+  ~Scorer();
 
   // disallow copying
   Scorer(const Scorer&) = delete;
@@ -93,6 +91,29 @@ public:
 
   // pointer to the dictionary of FST
   std::unique_ptr<FstType> dictionary;
+
+  // ---------------
+  // fl::lib::text::LM methods
+
+  /* Initialize or reset language model state */
+  fl::lib::text::LMStatePtr start(bool startWithNothing);
+
+  /**
+   * Query the language model given input state and a specific token, return a
+   * new language model state and score.
+   */
+  std::pair<fl::lib::text::LMStatePtr, float> score(
+      const fl::lib::text::LMStatePtr& state,
+      const int usrTokenIdx);
+
+  /* Query the language model and finish decoding. */
+  std::pair<fl::lib::text::LMStatePtr, float> finish(const fl::lib::text::LMStatePtr& state);
+
+  // ---------------
+  // fl::lib::text helper
+
+  // Must be called before use of this Scorer with Flashlight APIs.
+  void load_words(const fl::lib::text::Dictionary& word_dict);
 
 protected:
   // necessary setup after setting alphabet

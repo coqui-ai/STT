@@ -13,6 +13,10 @@ for symbol in dir(swigwrapper):
         globals()[symbol] = getattr(swigwrapper, symbol)
 
 
+class FlashlightDecoderState(swigwrapper.FlashlightDecoderState):
+    pass
+
+
 class Scorer(swigwrapper.Scorer):
     """Wrapper for Scorer.
 
@@ -265,3 +269,75 @@ def ctc_beam_search_decoder_batch(
         for beam_results in batch_beam_results
     ]
     return batch_beam_results
+
+
+def flashlight_beam_search_decoder(
+    probs_seq,
+    alphabet,
+    beam_size,
+    decoder_type,
+    token_type,
+    lm_tokens,
+    scorer=None,
+    beam_threshold=25.0,
+    cutoff_top_n=40,
+    silence_score=0.0,
+    merge_with_log_add=False,
+    criterion_type=swigwrapper.FlashlightDecoderState.CTC,
+    transitions=[],
+    num_results=1,
+):
+    return swigwrapper.flashlight_beam_search_decoder(
+        probs_seq,
+        alphabet,
+        beam_size,
+        beam_threshold,
+        cutoff_top_n,
+        scorer,
+        token_type,
+        lm_tokens,
+        decoder_type,
+        silence_score,
+        merge_with_log_add,
+        criterion_type,
+        transitions,
+        num_results,
+    )
+
+
+def flashlight_beam_search_decoder_batch(
+    probs_seq,
+    seq_lengths,
+    alphabet,
+    beam_size,
+    decoder_type,
+    token_type,
+    lm_tokens,
+    num_processes,
+    scorer=None,
+    beam_threshold=25.0,
+    cutoff_top_n=40,
+    silence_score=0.0,
+    merge_with_log_add=False,
+    criterion_type=swigwrapper.FlashlightDecoderState.CTC,
+    transitions=[],
+    num_results=1,
+):
+    return swigwrapper.flashlight_beam_search_decoder_batch(
+        probs_seq,
+        seq_lengths,
+        alphabet,
+        beam_size,
+        beam_threshold,
+        cutoff_top_n,
+        scorer,
+        token_type,
+        lm_tokens,
+        decoder_type,
+        silence_score,
+        merge_with_log_add,
+        criterion_type,
+        transitions,
+        num_results,
+        num_processes,
+    )

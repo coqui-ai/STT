@@ -322,6 +322,13 @@ class _SttConfig(Coqpit):
         ),
     )
 
+    vocab_file: str = field(
+        default="",
+        metadata=dict(
+            help="For use with evaluate_flashlight - text file containing vocabulary of scorer, one word per line."
+        ),
+    )
+
     read_buffer: str = field(
         default="1MB",
         metadata=dict(
