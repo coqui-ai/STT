@@ -70,7 +70,7 @@ third_party_build = "third_party.{}".format(archive_ext)
 ctc_decoder_build = "first_party.{}".format(archive_ext)
 
 
-maybe_rebuild(KENLM_FILES, third_party_build, build_dir)
+maybe_rebuild(THIRD_PARTY_FILES, third_party_build, build_dir)
 maybe_rebuild(CTC_DECODER_FILES, ctc_decoder_build, build_dir)
 
 decoder_module = Extension(

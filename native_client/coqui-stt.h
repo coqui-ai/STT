@@ -15,6 +15,10 @@ extern "C" {
     #define STT_EXPORT
 #endif
 
+// For the decoder package we include this header but should only expose
+// the error info, so guard all the other definitions out.
+#ifndef SWIG_ERRORS_ONLY
+
 typedef struct ModelState ModelState;
 
 typedef struct StreamingState StreamingState;
@@ -59,6 +63,8 @@ typedef struct Metadata {
   const unsigned int num_transcripts;
 } Metadata;
 
+#endif /* SWIG_ERRORS_ONLY */
+
 // sphinx-doc: error_code_listing_start
 
 #define STT_FOR_EACH_ERROR(APPLY) \
@@ -95,6 +101,8 @@ STT_FOR_EACH_ERROR(DEFINE)
 #undef DEFINE
 };
 
+#ifndef SWIG_ERRORS_ONLY
+
 /**
  * @brief An object providing an interface to a trained Coqui STT model.
  *
@@ -105,7 +113,7 @@ STT_FOR_EACH_ERROR(DEFINE)
  */
 STT_EXPORT
 int STT_CreateModel(const char* aModelPath,
-                   ModelState** retval);
+                    ModelState** retval);
 
 /**
  * @brief Get beam width value used by the model. If {@link STT_SetModelBeamWidth}
@@ -130,7 +138,7 @@ unsigned int STT_GetModelBeamWidth(const ModelState* aCtx);
  */
 STT_EXPORT
 int STT_SetModelBeamWidth(ModelState* aCtx,
-                         unsigned int aBeamWidth);
+                          unsigned int aBeamWidth);
 
 /**
  * @brief Return the sample rate expected by a model.
@@ -158,7 +166,7 @@ void STT_FreeModel(ModelState* ctx);
  */
 STT_EXPORT
 int STT_EnableExternalScorer(ModelState* aCtx,
-                            const char* aScorerPath);
+                             const char* aScorerPath);
 
 /**
  * @brief Add a hot-word and its boost.
@@ -173,8 +181,8 @@ int STT_EnableExternalScorer(ModelState* aCtx,
  */
 STT_EXPORT
 int STT_AddHotWord(ModelState* aCtx,
-                  const char* word,
-                  float boost);
+                   const char* word,
+                   float boost);
 
 /**
  * @brief Remove entry for a hot-word from the hot-words map.
@@ -186,7 +194,7 @@ int STT_AddHotWord(ModelState* aCtx,
  */
 STT_EXPORT
 int STT_EraseHotWord(ModelState* aCtx,
-                    const char* word);
+                     const char* word);
 
 /**
  * @brief Removes all elements from the hot-words map.
@@ -219,8 +227,8 @@ int STT_DisableExternalScorer(ModelState* aCtx);
  */
 STT_EXPORT
 int STT_SetScorerAlphaBeta(ModelState* aCtx,
-                          float aAlpha,
-                          float aBeta);
+                           float aAlpha,
+                           float aBeta);
 
 /**
  * @brief Use the Coqui STT model to convert speech to text.
@@ -235,8 +243,8 @@ int STT_SetScorerAlphaBeta(ModelState* aCtx,
  */
 STT_EXPORT
 char* STT_SpeechToText(ModelState* aCtx,
-                      const short* aBuffer,
-                      unsigned int aBufferSize);
+                       const short* aBuffer,
+                       unsigned int aBufferSize);
 
 /**
  * @brief Use the Coqui STT model to convert speech to text and output results
@@ -255,9 +263,9 @@ char* STT_SpeechToText(ModelState* aCtx,
  */
 STT_EXPORT
 Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
-                                      const short* aBuffer,
-                                      unsigned int aBufferSize,
-                                      unsigned int aNumResults);
+                                       const short* aBuffer,
+                                       unsigned int aBufferSize,
+                                       unsigned int aNumResults);
 
 /**
  * @brief Create a new streaming inference state. The streaming state returned
@@ -284,8 +292,8 @@ int STT_CreateStream(ModelState* aCtx,
  */
 STT_EXPORT
 void STT_FeedAudioContent(StreamingState* aSctx,
-                         const short* aBuffer,
-                         unsigned int aBufferSize);
+                          const short* aBuffer,
+                          unsigned int aBufferSize);
 
 /**
  * @brief Compute the intermediate decoding of an ongoing streaming inference.
@@ -312,7 +320,7 @@ char* STT_IntermediateDecode(const StreamingState* aSctx);
  */
 STT_EXPORT
 Metadata* STT_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
-                                            unsigned int aNumResults);
+                                             unsigned int aNumResults);
 
 /**
  * @brief Compute the final decoding of an ongoing streaming inference and return
@@ -345,7 +353,7 @@ char* STT_FinishStream(StreamingState* aSctx);
  */
 STT_EXPORT
 Metadata* STT_FinishStreamWithMetadata(StreamingState* aSctx,
-                                      unsigned int aNumResults);
+                                       unsigned int aNumResults);
 
 /**
  * @brief Destroy a streaming state without decoding the computed logits. This
@@ -389,6 +397,7 @@ char* STT_Version();
 STT_EXPORT
 char* STT_ErrorCodeToErrorMessage(int aErrorCode);
 
+#endif /* SWIG_ERRORS_ONLY */
 #undef STT_EXPORT
 
 #ifdef __cplusplus
