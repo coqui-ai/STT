@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <limits>
-#include <string>
 
 #include "flashlight/lib/text/decoder/Trie.h"
 

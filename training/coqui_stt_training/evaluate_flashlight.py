@@ -142,8 +142,8 @@ def evaluate(test_csvs, create_model):
                     batch_lengths,
                     Config.alphabet,
                     beam_size=Config.export_beam_width,
-                    decoder_type=FlashlightDecoderState.DecoderType.LexiconBased,
-                    token_type=FlashlightDecoderState.TokenType.Aggregate,
+                    decoder_type=FlashlightDecoderState.LexiconBased,
+                    token_type=FlashlightDecoderState.Aggregate,
                     lm_tokens=vocab,
                     num_processes=num_processes,
                     scorer=scorer,
@@ -165,13 +165,7 @@ def evaluate(test_csvs, create_model):
 
             # Print test summary
             test_samples = calculate_and_print_report(
-                wav_filenames,
-                ground_truths,
-                predictions,
-                losses,
-                dataset,
-                "cer" if Config.bytes_output_mode else "wer",
-                Config.report_count,
+                wav_filenames, ground_truths, predictions, losses, dataset
             )
             return test_samples
 

@@ -17,7 +17,7 @@ else:
     ARGS = [
         "-fPIC",
         "-DKENLM_MAX_ORDER=6",
-        "-std=c++11",
+        "-std=c++14",
         "-Wno-unused-local-typedefs",
         "-Wno-sign-compare",
     ]
@@ -32,6 +32,7 @@ INCLUDES = [
     OPENFST_DIR + "/src/include",
     "third_party/ThreadPool",
     "third_party/object_pool",
+    "third_party/flashlight",
 ]
 
 KENLM_FILES = (
@@ -40,7 +41,7 @@ KENLM_FILES = (
     + glob.glob("../kenlm/util/double-conversion/*.cc")
 )
 
-KENLM_FILES += glob.glob(OPENFST_DIR + "/src/lib/*.cc")
+OPENFST_FILES = glob.glob(OPENFST_DIR + "/src/lib/*.cc")
 
 KENLM_FILES = [
     fn

@@ -70,15 +70,13 @@ Alphabet::init(const char *config_file)
 void
 Alphabet::InitFromLabels(const std::vector<std::string>& labels)
 {
-  space_label_ = -2;
-  size_ = labels.size();
-  for (int i = 0; i < size_; ++i) {
-    const std::string& label = labels[i];
+  space_index_ = -2;
+  for (int idx = 0; idx < labels.size(); ++idx) {
+    const std::string& label = labels[idx];
     if (label == " ") {
-      space_label_ = i;
+      space_index_ = idx;
     }
-    label_to_str_[i] = label;
-    str_to_label_[label] = i;
+    addEntry(label, idx);
   }
 }
 
@@ -88,12 +86,12 @@ Alphabet::SerializeText()
   std::stringstream out;
 
   out << "# Each line in this file represents the Unicode codepoint (UTF-8 encoded)\n"
-      << "# associated with a numeric label.\n"
+      << "# associated with a numeric index.\n"
       << "# A line that starts with # is a comment. You can escape it with \\# if you wish\n"
-      << "# to use '#' as a label.\n";
+      << "# to use '#' in the Alphabet.\n";
 
-  for (int label = 0; label < size_; ++label) {
-    out << label_to_str_[label] << "\n";
+  for (int idx = 0; idx < entrySize(); ++idx) {
+    out << getEntry(idx) << "\n";
   }
 
   out << "# The last (non-comment) line needs to end with a newline.\n";

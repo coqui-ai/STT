@@ -7,6 +7,7 @@
 
 #include "flashlight/lib/common/System.h"
 
+#include <glob.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <array>
@@ -118,6 +119,45 @@ bool dirExists(const std::string& path) {
   }
 }
 
+void dirCreate(const std::string& path) {
+  if (dirExists(path)) {
+    return;
+  }
+  mode_t nMode = 0755;
+  int nError = 0;
+#ifdef _WIN32
+  nError = _mkdir(path.c_str());
+#else
+  nError = mkdir(path.c_str(), nMode);
+#endif
+  if (nError != 0) {
+    throw std::runtime_error(
+        std::string() + "Unable to create directory - " + path);
+  }
+}
+
+void dirCreateRecursive(const std::string& path) {
+  if (dirExists(path)) {
+    return;
+  }
+  std::vector<std::string> dirsOnPath = getDirsOnPath(path);
+  std::string pathFromStart;
+  if (path[0] == pathSeperator()[0]) {
+    pathFromStart = pathSeperator();
+  }
+  for (std::string& dir : dirsOnPath) {
+    if (pathFromStart.empty()) {
+      pathFromStart = dir;
+    } else {
+      pathFromStart = pathsConcat(pathFromStart, dir);
+    }
+
+    if (!dirExists(pathFromStart)) {
+      dirCreate(pathFromStart);
+    }
+  }
+}
+
 bool fileExists(const std::string& path) {
   std::ifstream fs(path, std::ifstream::in);
   return fs.good();
@@ -128,6 +168,28 @@ std::string getEnvVar(
     const std::string& dflt /*= "" */) {
   char* val = getenv(key.c_str());
   return val ? std::string(val) : dflt;
+}
+
+std::string getCurrentDate() {
+  time_t now = time(nullptr);
+  struct tm tmbuf;
+  struct tm* tstruct;
+  tstruct = localtime_r(&now, &tmbuf);
+
+  std::array<char, 80> buf;
+  strftime(buf.data(), buf.size(), "%Y-%m-%d", tstruct);
+  return std::string(buf.data());
+}
+
+std::string getCurrentTime() {
+  time_t now = time(nullptr);
+  struct tm tmbuf;
+  struct tm* tstruct;
+  tstruct = localtime_r(&now, &tmbuf);
+
+  std::array<char, 80> buf;
+  strftime(buf.data(), buf.size(), "%X", tstruct);
+  return std::string(buf.data());
 }
 
 std::string getTmpPath(const std::string& filename) {
@@ -153,6 +215,17 @@ std::vector<std::string> getFileContent(const std::string& file) {
   }
   in.close();
   return data;
+}
+
+std::vector<std::string> fileGlob(const std::string& pat) {
+  glob_t result;
+  glob(pat.c_str(), GLOB_TILDE, nullptr, &result);
+  std::vector<std::string> ret;
+  for (unsigned int i = 0; i < result.gl_pathc; ++i) {
+    ret.push_back(std::string(result.gl_pathv[i]));
+  }
+  globfree(&result);
+  return ret;
 }
 
 std::ifstream createInputStream(const std::string& filename) {
