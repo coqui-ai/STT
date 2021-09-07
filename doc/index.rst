@@ -3,8 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Coqui STT
-=========
+.. image:: https://raw.githubusercontent.com/coqui-ai/STT/main/images/coqui-STT-logo-green.png
+  :alt: Coqui STT logo and wordmark
+  :height: 155
 
 **Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models.
 
