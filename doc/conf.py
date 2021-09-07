@@ -136,6 +136,12 @@ add_module_names = False
 #
 html_theme = "furo"
 
+html_theme_options = {
+    "light_logo": "coqui-STT-circle.png",
+    "dark_logo": "coqui-STT-circle.png",
+    "sidebar_hide_name": True,
+}
+
 html_css_files = [
     "custom.css",
 ]
