@@ -125,13 +125,11 @@ RUN ./configure
 # passing LD_LIBRARY_PATH is required cause Bazel doesn't pickup it from environment
 
 # Build STT
+
 RUN bazel build \
+	--verbose_failures \
 	--workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
-	--config=monolithic \
-	--config=cuda \
 	-c opt \
-	--copt=-O3 \
-	--copt="-D_GLIBCXX_USE_CXX11_ABI=0" \
 	--copt=-mtune=generic \
 	--copt=-march=x86-64 \
 	--copt=-msse \
@@ -140,10 +138,11 @@ RUN bazel build \
 	--copt=-msse4.1 \
 	--copt=-msse4.2 \
 	--copt=-mavx \
-	--copt=-fvisibility=hidden \
-	//native_client:libstt.so \
-	--verbose_failures \
-	--action_env=LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+	--config=noaws \
+	--config=nogcp \
+	--config=nohdfs \
+	--config=nonccl \
+	//native_client:libstt.so
 
 # Copy built libs to /STT/native_client
 RUN cp bazel-bin/native_client/libstt.so /STT/native_client/
@@ -158,6 +157,7 @@ RUN make NUM_PROCESSES=$(nproc) stt
 
 WORKDIR /STT
 RUN cd native_client/python && make NUM_PROCESSES=$(nproc) bindings
+RUN pip3 install -U pip setuptools wheel
 RUN pip3 install --upgrade native_client/python/dist/*.whl
 
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
