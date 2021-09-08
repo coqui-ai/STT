@@ -184,13 +184,24 @@ Dockerfile for building from source
 
 We provide ``Dockerfile.build`` to automatically build ``libstt.so``, the C++ native client, Python bindings, and KenLM.
 
-If you want to specify a different repository or branch, you can specify the ``STT_REPO`` or ``STT_SHA`` arguments:
+Before building, make sure that git submodules have been initialised:
 
 .. code-block:: bash
 
-   docker build . -f Dockerfile.build --build-arg STT_REPO=git://your/fork --build-arg STT_SHA=origin/your-branch
+   git submodule sync
+   git submodule update --init
+   
+Then build with:
 
-.. _runtime-deps:
+.. code-block:: bash
+
+   docker build . -f Dockerfile.build -t stt-image
+   
+You can then use stt inside the Docker container:
+
+.. code-block:: bash
+
+   docker run -it stt-image bash
 
 
 Runtime Dependencies
