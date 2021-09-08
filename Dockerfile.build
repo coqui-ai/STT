@@ -3,9 +3,6 @@
 # Need devel version cause we need /usr/include/cudnn.h
 FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
-ARG STT_REPO=https://github.com/coqui-ai/STT.git
-ARG STT_SHA=origin/main
-
 # >> START Install base software
 
 # Get basic packages
@@ -112,12 +109,7 @@ RUN echo "build --spawn_strategy=standalone --genrule_strategy=standalone" \
 # << END Configure Bazel
 
 WORKDIR /
-
-RUN git clone --recursive $STT_REPO STT
-WORKDIR /STT
-RUN git checkout $STT_SHA
-RUN git submodule sync tensorflow/
-RUN git submodule update --init tensorflow/
+COPY . /STT/
 
 # >> START Build and bind
 
