@@ -164,13 +164,13 @@ Before building, make sure that git submodules have been initialised:
 
    git submodule sync
    git submodule update --init
-   
+
 Then build with:
 
 .. code-block:: bash
 
    docker build . -f Dockerfile.build -t stt-image
-   
+
 You can then use stt inside the Docker container:
 
 .. code-block:: bash

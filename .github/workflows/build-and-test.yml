@@ -851,10 +851,35 @@ jobs:
           EOF
       - run: |
           twine upload --repository pypi *.whl
+  docker-build:
+    name: "Build Dockerfile.build image"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - name: Check VERSION matches Git tag and compute Docker tag
+        id: compute-tag
+        run: |
+          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
+            # PR build
+            echo "::set-output name=tag::dev"
+          else
+            VERSION="v$(cat VERSION)"
+            if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
+              echo "Pushed tag does not match VERSION file. Aborting push."
+              exit 1
+            fi
+            echo "::set-output name=tag::${VERSION}"
+          fi
+      - name: Build
+        run: |
+          DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
+          docker build -f Dockerfile.build . -t ghcr.io/coqui-ai/stt-build:latest -t "ghcr.io/coqui-ai/stt-build:${DOCKER_TAG}"
   docker-publish:
     name: "Build and publish Docker training image to GHCR"
     runs-on: ubuntu-20.04
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v2
         with:
@@ -869,18 +894,27 @@ jobs:
       - name: Check VERSION matches Git tag and compute Docker tag
         id: compute-tag
         run: |
-          VERSION="v$(cat VERSION)"
-          if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
-            echo "Pushed tag does not match VERSION file. Aborting push."
-            exit 1
+          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
+            # PR build
+            echo "::set-output name=tag::dev"
+          else
+            VERSION="v$(cat VERSION)"
+            if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
+              echo "Pushed tag does not match VERSION file. Aborting push."
+              exit 1
+            fi
+            echo "::set-output name=tag::${VERSION}"
           fi
-          echo "::set-output name=tag::${VERSION}"
-      - name: Build and push
+      - name: Build
         run: |
           DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
           docker build -f Dockerfile.train . -t ghcr.io/coqui-ai/stt-train:latest -t "ghcr.io/coqui-ai/stt-train:${DOCKER_TAG}"
+      - name: Push
+        run: |
+          DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
           docker push "ghcr.io/coqui-ai/stt-train:${DOCKER_TAG}"
           docker push ghcr.io/coqui-ai/stt-train:latest
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
   twine-upload-decoder:
     name: "Upload coqui_stt_ctcdecoder packages to PyPI"
     runs-on: ubuntu-20.04
