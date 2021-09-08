@@ -1,0 +1,5 @@
+.git/lfs
+native_client/ds-swig
+native_client/python/dist/*.whl
+native_client/ctcdecode/*.a
+native_client/javascript/build/
