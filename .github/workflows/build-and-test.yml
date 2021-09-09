@@ -320,7 +320,7 @@ jobs:
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-cache-asset
+      - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
@@ -365,7 +365,7 @@ jobs:
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.zip"
+          name: "libstt.tflite.Linux.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-Linux:
     name: "Lin|Build Python bindings"
@@ -834,14 +834,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.9-Linux.whl
-      # We need proper manylinux2014 builds before we can publish these wheels.
-      # https://github.com/coqui-ai/STT/issues/1904
-      # - uses: actions/download-artifact@v2
-      #   with:
-      #     name: stt-tflite-3.7-armv7.whl
-      # - uses: actions/download-artifact@v2
-      #   with:
-      #     name: stt-tflite-3.7-aarch64.whl
       - name: Setup PyPI config
         run: |
           cat << EOF > ~/.pypirc
@@ -851,6 +843,68 @@ jobs:
           EOF
       - run: |
           twine upload --repository pypi *.whl
+      # PyPI only supports ARM wheels built on manylinux images, but those aren't
+      # ready for use yet, so we upload our wheels to the corresponding release
+      # for this tag.
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7-armv7.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.7-aarch64.whl
+      - name: Get tag name
+        id: get-tag
+        run: |
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||)'
+          echo "::set-output name=tag::$tag"
+      - name: Upload artifacts to GitHub release
+        uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.whl"
+          release-tag: ${{ steps.get-tag.outputs.tag }}
+          should-create-release: true
+  upload-nc-release-assets:
+    name: "Upload native client artifacts to release assets"
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: [build-lib_Windows, build-lib_Linux, build-lib_macOS, build-lib_LinuxAarch64, build-lib_LinuxArmv7]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: libstt.tflite.Linux.zip
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.Linux.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: libstt.tflite.macOS.zip
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.macOS.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: libstt.tflite.Windows.zip
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.Windows.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.linux.armv7.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.linux.aarch64.tar.xz
+      - name: Get tag name
+        id: get-tag
+        run: |
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||)'
+          echo "::set-output name=tag::$tag"
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.{tar.gz,zip}"
+          release-tag: ${{ steps.get-tag.outputs.tag }}
+          should-create-release: true
   docker-build:
     name: "Build Dockerfile.build image"
     runs-on: ubuntu-20.04
@@ -964,6 +1018,18 @@ jobs:
           EOF
       - run: |
           twine upload --repository pypi *.whl
+      - name: Get tag name
+        id: get-tag
+        run: |
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||)'
+          echo "::set-output name=tag::$tag"
+      - name: Upload artifacts to GitHub release
+        uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.whl"
+          release-tag: ${{ steps.get-tag.outputs.tag }}
+          should-create-release: true
   npmjs-publish:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
@@ -998,6 +1064,18 @@ jobs:
           npm publish --access=public --verbose ${{ github.workspace }}/stt-*.tgz --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Get tag name
+        id: get-tag
+        run: |
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||)'
+          echo "::set-output name=tag::$tag"
+      - name: Upload artifacts to GitHub release
+        uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.tgz"
+          release-tag: ${{ steps.get-tag.outputs.tag }}
+          should-create-release: true
   # macOS jobs
   swig_macOS:
     name: "Mac|Build SWIG"
@@ -1191,7 +1269,7 @@ jobs:
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-cache-asset
+      - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
@@ -1229,7 +1307,7 @@ jobs:
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.zip"
+          name: "libstt.tflite.macOS.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-macOS:
     name: "Mac|Build Python bindings"
@@ -1630,7 +1708,7 @@ jobs:
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - run: ./ci_scripts/tf-package.sh
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-cache-asset
+      - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
@@ -1676,7 +1754,7 @@ jobs:
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.zip"
+          name: "libstt.tflite.Windows.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
   build-python-Windows:
     name: "Win|Build Python bindings"
@@ -2491,7 +2569,7 @@ jobs:
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-cache-asset
+      - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
@@ -2516,7 +2594,7 @@ jobs:
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/package-tensorflow
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-cache-asset
+      - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz

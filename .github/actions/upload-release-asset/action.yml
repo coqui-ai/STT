@@ -19,6 +19,10 @@ inputs:
     description: "Tag of release to check artifacts under"
     required: false
     default: "v0.10.0-alpha.7"
+  should-create-release:
+    description: "Whether this action should automatically create a release for the given tag if one doesn't already exist"
+    required: false
+    default: false
 runs:
   using: "composite"
   steps:
@@ -42,11 +46,15 @@ runs:
           fi
         done
 
+        # If no asset name is specified, use filename
+        [ "$asset_name" ] || asset_name=$(basename "$filename")
+
         AUTH="Authorization: token ${{ inputs.token }}"
 
         owner=$(echo "${{inputs.repo}}" | cut -f1 -d/)
         repo=$(echo "${{inputs.repo}}" | cut -f2 -d/)
         tag="${{ inputs.release-tag }}"
+        should_create="${{ inputs.should-create-release }}"
 
         GH_REPO="https://api.github.com/repos/${owner}/${repo}"
 
@@ -70,20 +78,30 @@ runs:
         response=$(curl -sH "$AUTH" $GH_TAGS)
         eval $(echo "$response" | grep -m 1 "id.:" | grep -w id | tr : = | tr -cd '[[:alnum:]]=')
         [ "$id" ] || {
-          echo "Error: Could not find release for tag: $tag"
-          echo "$response" | awk 'length($0)<100' >&2
-          exit 1
+          # If release does not exist, create it
+          if [[ "$should_create" == "true" ]]; then
+            echo "Tag does not have corresponding release, creating release for tag: $tag..."
+            response=$(curl -X POST -sH "$AUTH" -H "Content-Type: application/json" "${GH_REPO}/releases" -d '{"tag_name":"$tag","name":"Coqui STT $tag","prerelease":true}')
+            eval $(echo "$response" | grep -m 1 "id.:" | grep -w id | tr : = | tr -cd '[[:alnum:]]=')
+            [ "$id" ] || {
+              echo "Error: Could not create release for tag: $tag"
+              echo "$response" | awk 'length($0)<100' >&2
+              exit 1
+            }
+          else
+            echo "Error: Could not find release for tag: $tag"
+            echo "$response" | awk 'length($0)<100' >&2
+            exit 1
+          fi
         }
 
         # Upload assets
-        for file in $filenames; do
+        for $file in $filenames; do
           if [ -z $asset_name ]; then
-            asset=$(basename $file)
-          else
-            asset=$asset_name
+            asset_name=$(basename $file)
           fi
-          echo "Uploading asset with name: $asset from file: $file"
-          GH_ASSET="https://uploads.github.com/repos/${owner}/${repo}/releases/${id}/assets?name=${asset}"
-          curl -T $file -X POST -H "${AUTH}" -H "Content-Type: application/octet-stream" $GH_ASSET
+          echo "Uploading asset with name: $asset_name from file: $file"
+          GH_ASSET="https://uploads.github.com/repos/${owner}/${repo}/releases/${id}/assets?name=${asset_name}"
+          curl -T $filename -X POST -H "${AUTH}" -H "Content-Type: application/octet-stream" $GH_ASSET
         done
       shell: bash
