@@ -1,0 +1,107 @@
+name: "Upload cache asset to release"
+description: "Upload a build cache asset to a release"
+inputs:
+  name:
+    description: "Artifact name"
+    required: true
+  path:
+    description: "Path of file to upload"
+    required: true
+  token:
+    description: "GitHub token"
+    required: false
+    default: ${{ github.token }}
+  repo:
+    description: "Repository name with owner (like actions/checkout)"
+    required: false
+    default: ${{ github.repository }}
+  release-tag:
+    description: "Tag of release to check artifacts under"
+    required: false
+    default: "v0.10.0-alpha.7"
+  should-create-release:
+    description: "Whether this action should automatically create a release for the given tag if one doesn't already exist"
+    required: false
+    default: false
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        set -xe
+
+        asset_name="${{ inputs.name }}"
+        filenames="${{ inputs.path }}"
+
+        if [ $(compgen -G "$filenames" | wc -l) -gt 1 -a -n "$asset_name" ]; then
+          echo "Error: multiple input files specified, but also specified an asset_name."
+          echo "When uploading multiple files leave asset_name empty to use the file names as asset names."
+          exit 1
+        fi
+
+        # Check input
+        for file in $filenames; do
+          if [[ ! -f $file ]]; then
+            echo "Error: Input file (${filename}) missing"
+            exit 1;
+          fi
+        done
+
+        # If no asset name is specified, use filename
+        [ "$asset_name" ] || asset_name=$(basename "$filename")
+
+        AUTH="Authorization: token ${{ inputs.token }}"
+
+        owner=$(echo "${{inputs.repo}}" | cut -f1 -d/)
+        repo=$(echo "${{inputs.repo}}" | cut -f2 -d/)
+        tag="${{ inputs.release-tag }}"
+        should_create="${{ inputs.should-create-release }}"
+
+        GH_REPO="https://api.github.com/repos/${owner}/${repo}"
+
+        # Check token
+        curl -o /dev/null -sH "$AUTH" $GH_REPO || {
+          echo "Error: Invalid repo, token or network issue!"
+          exit 1
+        }
+
+        # Check if tag exists
+        response=$(curl -sH "$AUTH" "${GH_REPO}/git/refs/tags/${tag}")
+        eval $(echo "$response" | grep -m 1 "sha.:" | grep -w sha | tr : = | tr -cd '[[:alnum:]]=')
+        [ "$sha" ] || {
+          echo "Error: Tag does not exist: $tag"
+          echo "$response" | awk 'length($0)<100' >&2
+          exit 1
+        }
+
+        # Get ID of the release based on given tag name
+        GH_TAGS="${GH_REPO}/releases/tags/${tag}"
+        response=$(curl -sH "$AUTH" $GH_TAGS)
+        eval $(echo "$response" | grep -m 1 "id.:" | grep -w id | tr : = | tr -cd '[[:alnum:]]=')
+        [ "$id" ] || {
+          # If release does not exist, create it
+          if [[ "$should_create" == "true" ]]; then
+            echo "Tag does not have corresponding release, creating release for tag: $tag..."
+            response=$(curl -X POST -sH "$AUTH" -H "Content-Type: application/json" "${GH_REPO}/releases" -d '{"tag_name":"$tag","name":"Coqui STT $tag","prerelease":true}')
+            eval $(echo "$response" | grep -m 1 "id.:" | grep -w id | tr : = | tr -cd '[[:alnum:]]=')
+            [ "$id" ] || {
+              echo "Error: Could not create release for tag: $tag"
+              echo "$response" | awk 'length($0)<100' >&2
+              exit 1
+            }
+          else
+            echo "Error: Could not find release for tag: $tag"
+            echo "$response" | awk 'length($0)<100' >&2
+            exit 1
+          fi
+        }
+
+        # Upload assets
+        for $file in $filenames; do
+          if [ -z $asset_name ]; then
+            asset_name=$(basename $file)
+          fi
+          echo "Uploading asset with name: $asset_name from file: $file"
+          GH_ASSET="https://uploads.github.com/repos/${owner}/${repo}/releases/${id}/assets?name=${asset_name}"
+          curl -T $filename -X POST -H "${AUTH}" -H "Content-Type: application/octet-stream" $GH_ASSET
+        done
+      shell: bash
