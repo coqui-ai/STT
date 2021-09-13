@@ -26,7 +26,7 @@
 Quickstart: Deployment
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 3.5 or higher (*Note - only Linux supported at this time. We are working to get our normally supported packages back up and running.*):
+The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 3.6, 3.7, 3.8 or 3.9:
 
 .. code-block:: bash
 
@@ -39,7 +39,7 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
    $ python -m pip install stt
 
    # Download 🐸's pre-trained English models
-   $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.pbmm
+   $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.tflite
    $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.scorer
 
    # Download some example audio files
@@ -47,7 +47,7 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
    $ tar -xvf audio-0.9.3.tar.gz
 
    # Transcribe an audio file
-   $ stt --model coqui-stt-0.9.3-models.pbmm --scorer coqui-stt-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
+   $ stt --model coqui-stt-0.9.3-models.tflite --scorer coqui-stt-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
 
 .. toctree::
    :maxdepth: 1
