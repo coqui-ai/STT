@@ -897,7 +897,7 @@ jobs:
       - name: Get tag name
         id: get-tag
         run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||)'
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
           echo "::set-output name=tag::$tag"
       - uses: ./.github/actions/upload-release-asset
         with:
