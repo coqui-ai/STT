@@ -794,7 +794,7 @@ jobs:
         uses: ./.github/actions/upload-release-asset
         with:
           name: '' # use filename
-          path: "*.whl"
+          path: "dist/*.whl"
           release-tag: ${{ steps.get-tag.outputs.tag }}
           should-create-release: true
   twine-upload-stt:
