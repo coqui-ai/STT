@@ -46,9 +46,6 @@ runs:
           fi
         done
 
-        # If no asset name is specified, use filename
-        [ "$asset_name" ] || asset_name=$(basename "$filename")
-
         AUTH="Authorization: token ${{ inputs.token }}"
 
         owner=$(echo "${{inputs.repo}}" | cut -f1 -d/)
