@@ -785,6 +785,18 @@ jobs:
           EOF
       - run: |
           twine upload --repository pypi dist/*
+      - name: Get tag name
+        id: get-tag
+        run: |
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
+          echo "::set-output name=tag::$tag"
+      - name: Upload artifacts to GitHub release
+        uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.whl"
+          release-tag: ${{ steps.get-tag.outputs.tag }}
+          should-create-release: true
   twine-upload-stt:
     name: "Upload STT packages to PyPI"
     runs-on: ubuntu-20.04
