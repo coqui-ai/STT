@@ -96,12 +96,12 @@ runs:
         }
 
         # Upload assets
-        for $file in $filenames; do
+        for file in $filenames; do
           if [ -z $asset_name ]; then
             asset_name=$(basename $file)
           fi
           echo "Uploading asset with name: $asset_name from file: $file"
           GH_ASSET="https://uploads.github.com/repos/${owner}/${repo}/releases/${id}/assets?name=${asset_name}"
-          curl -T $filename -X POST -H "${AUTH}" -H "Content-Type: application/octet-stream" $GH_ASSET
+          curl -T $file -X POST -H "${AUTH}" -H "Content-Type: application/octet-stream" $GH_ASSET
         done
       shell: bash
