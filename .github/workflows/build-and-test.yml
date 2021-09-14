@@ -916,7 +916,13 @@ jobs:
       - uses: ./.github/actions/upload-release-asset
         with:
           name: '' # use filename
-          path: "*.{tar.gz,zip}"
+          path: "*.tar.xz"
+          release-tag: ${{ steps.get-tag.outputs.tag }}
+          should-create-release: true
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.zip"
           release-tag: ${{ steps.get-tag.outputs.tag }}
           should-create-release: true
   docker-build:
