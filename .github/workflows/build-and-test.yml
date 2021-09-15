@@ -887,27 +887,36 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: libstt.tflite.Linux.zip
+      - run: mv libstt.zip libstt.tflite.Linux.zip
       - uses: actions/download-artifact@v2
         with:
           name: native_client.tflite.Linux.tar.xz
+      - run: mv native_client.tar.xz native_client.tflite.Linux.tar.xz
       - uses: actions/download-artifact@v2
         with:
           name: libstt.tflite.macOS.zip
+      - run: mv libstt.zip libstt.tflite.macOS.zip
       - uses: actions/download-artifact@v2
         with:
           name: native_client.tflite.macOS.tar.xz
+      - run: mv native_client.tar.xz native_client.tflite.macOS.tar.xz
       - uses: actions/download-artifact@v2
         with:
           name: libstt.tflite.Windows.zip
+      - run: mv libstt.zip libstt.tflite.Windows.zip
       - uses: actions/download-artifact@v2
         with:
           name: native_client.tflite.Windows.tar.xz
+      - run: mv native_client.tar.xz native_client.tflite.Windows.tar.xz
       - uses: actions/download-artifact@v2
         with:
           name: native_client.tflite.linux.armv7.tar.xz
+      - run: mv native_client.tar.xz native_client.tflite.linux.armv7.tar.xz
       - uses: actions/download-artifact@v2
         with:
           name: native_client.tflite.linux.aarch64.tar.xz
+      - run: mv native_client.tar.xz native_client.tflite.linux.aarch64.tar.xz
+      - run: ls -lh
       - name: Get tag name
         id: get-tag
         run: |
