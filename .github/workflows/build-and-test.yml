@@ -697,7 +697,7 @@ jobs:
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - name: Run python notebooks
         run: |
-          apt-get install libopusfile0 libopus-dev libopusfile-dev
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
           python -m pip install jupyter
           ./ci_scripts/notebook-tests.sh
       - name: Run basic training tests
