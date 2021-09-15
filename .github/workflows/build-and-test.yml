@@ -697,6 +697,7 @@ jobs:
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - name: Run python notebooks
         run: |
+          python -m pip install jupyter
           ./ci_scripts/notebook-tests.sh
       - name: Run basic training tests
         run: |
