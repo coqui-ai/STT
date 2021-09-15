@@ -695,6 +695,9 @@ jobs:
           mv convert_graphdef_memmapped_format /tmp
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - name: Run python notebooks
+        run: |
+          ./ci_scripts/notebook-tests.sh
       - name: Run basic training tests
         run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl
