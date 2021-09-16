@@ -266,11 +266,9 @@ def early_training_checks():
         )
 
 
-def create_training_datasets() -> (
-    tf.data.Dataset,
-    [tf.data.Dataset],
-    [tf.data.Dataset],
-):
+def create_training_datasets(
+    epoch_ph: tf.Tensor = None,
+) -> (tf.data.Dataset, [tf.data.Dataset], [tf.data.Dataset],):
     """Creates training datasets from input flags.
 
     Returns a single training dataset and two lists of datasets for validation
@@ -288,6 +286,7 @@ def create_training_datasets() -> (
         reverse=Config.reverse_train,
         limit=Config.limit_train,
         buffering=Config.read_buffer,
+        epoch_ph=epoch_ph,
     )
 
     dev_sets = []
@@ -331,7 +330,8 @@ def train():
     tfv1.reset_default_graph()
     tfv1.set_random_seed(Config.random_seed)
 
-    train_set, dev_sets, metrics_sets = create_training_datasets()
+    epoch_ph = tf.placeholder(tf.int64, name="epoch_ph")
+    train_set, dev_sets, metrics_sets = create_training_datasets(epoch_ph)
 
     iterator = tfv1.data.Iterator.from_structure(
         tfv1.data.get_output_types(train_set),
@@ -506,7 +506,7 @@ def train():
                             non_finite_files,
                             step_summaries_op,
                         ],
-                        feed_dict=feed_dict,
+                        feed_dict={**feed_dict, **{epoch_ph: epoch}},
                     )
                 except tf.errors.OutOfRangeError:
                     break
