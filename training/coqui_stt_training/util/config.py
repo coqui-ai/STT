@@ -340,6 +340,22 @@ class _SttConfig(Coqpit):
             help='after how many epochs the feature cache is invalidated again - 0 for "never"'
         ),
     )
+    shuffle_batches: bool = field(
+        default=False,
+        metadata=dict(
+            help="reshuffle batches every epoch, starting after N epochs, where N is set by the shuffle_start flag."
+        ),
+    )
+    shuffle_start: int = field(
+        default=1,
+        metadata=dict(help="epoch to start shuffling batches from (zero-based)."),
+    )
+    shuffle_buffer: int = field(
+        default=1000,
+        metadata=dict(
+            help="how many batches to keep in shuffle buffer when shuffling batches."
+        ),
+    )
 
     feature_win_len: int = field(
         default=32,
