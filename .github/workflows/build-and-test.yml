@@ -670,6 +670,22 @@ jobs:
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
+  python-notebooks-tests:
+    name: "Lin|Python notebook tests"
+    runs-on: ubuntu-20.04
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Run python notebooks
+        run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+          python -m pip install jupyter
+          ./ci_scripts/notebook-tests.sh
   training-basic-tests:
     name: "Lin|Basic training tests"
     runs-on: ubuntu-20.04
