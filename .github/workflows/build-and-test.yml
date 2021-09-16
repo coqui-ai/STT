@@ -680,7 +680,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.7
       - name: Run python notebooks
         run: |
           sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
