@@ -670,6 +670,22 @@ jobs:
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
+  python-notebooks-tests:
+    name: "Lin|Python notebook tests"
+    runs-on: ubuntu-20.04
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - name: Run python notebooks
+        run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+          python -m pip install jupyter
+          ./ci_scripts/notebook-tests.sh
   training-basic-tests:
     name: "Lin|Basic training tests"
     runs-on: ubuntu-20.04
@@ -695,11 +711,6 @@ jobs:
           mv convert_graphdef_memmapped_format /tmp
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
-      - name: Run python notebooks
-        run: |
-          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
-          python -m pip install jupyter
-          ./ci_scripts/notebook-tests.sh
       - name: Run basic training tests
         run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl
