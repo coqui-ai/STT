@@ -140,6 +140,7 @@ def create_dataset(
     limit=0,
     process_ahead=None,
     buffering=1 * MEGABYTE,
+    epoch_ph=None,
 ):
     epoch_counter = Counter()  # survives restarts of the dataset and its generator
 
@@ -207,11 +208,18 @@ def create_dataset(
     ).map(process_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     if cache_path:
         dataset = dataset.cache(cache_path)
-    dataset = (
-        dataset.window(batch_size, drop_remainder=train_phase)
-        .flat_map(batch_fn)
-        .prefetch(len(Config.available_devices))
-    )
+    dataset = dataset.window(batch_size, drop_remainder=train_phase).flat_map(batch_fn)
+
+    if Config.shuffle_batches and epoch_ph is not None:
+        with tf.control_dependencies([tf.print("epoch:", epoch_ph)]):
+            epoch_buffer_size = tf.cond(
+                tf.less(epoch_ph, Config.shuffle_start),
+                lambda: tf.constant(1, tf.int64),
+                lambda: tf.constant(Config.shuffle_buffer, tf.int64),
+            )
+        dataset = dataset.shuffle(epoch_buffer_size, seed=epoch_ph)
+
+    dataset = dataset.prefetch(len(Config.available_devices))
     return dataset
 
 
