@@ -76,7 +76,7 @@ You can now use Bazel to build the main 🐸STT library, ``libstt.so``. Add ``--
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c opt --copt=-O3 --copt="-D_GLIBCXX_USE_CXX11_ABI=0" --copt=-fvisibility=hidden //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --copt="-D_GLIBCXX_USE_CXX11_ABI=0" //native_client:libstt.so
 
 The generated binaries will be saved to ``bazel-bin/native_client/``.
 
@@ -90,7 +90,7 @@ Using the example from above you can build the library and that binary at the sa
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic -c opt --copt=-O3 --copt="-D_GLIBCXX_USE_CXX11_ABI=0" --copt=-fvisibility=hidden //native_client:libstt.so //native_client:generate_scorer_package
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --copt="-D_GLIBCXX_USE_CXX11_ABI=0" //native_client:libstt.so //native_client:generate_scorer_package
 
 The generated binaries will be saved to ``bazel-bin/native_client/``.
 
@@ -188,20 +188,20 @@ RPi3 ARMv7 and LePotato ARM64
 
 We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
 
-* ``--config=rpi3`` and ``--config=rpi3_opt`` for Raspbian / ARMv7
-* ``--config=rpi3-armv8`` and ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
+* ``--config=rpi3_opt`` for Raspbian / ARMv7
+* ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic --config=rpi3 --config=rpi3_opt -c opt --copt=-O3 --copt=-fvisibility=hidden //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=rpi3_opt //native_client:libstt.so
 
 And your command line for ``LePotato`` and ``ARM64`` should look like:
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic --config=rpi3-armv8 --config=rpi3-armv8_opt -c opt --copt=-O3 --copt=-fvisibility=hidden //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=rpi3-armv8_opt //native_client:libstt.so
 
 While we test only on RPi3 Raspbian Buster and LePotato ARMBian Buster, anything compatible with ``armv7-a cortex-a53`` or ``armv8-a cortex-a53`` should be fine.
 
@@ -215,10 +215,6 @@ The path of the system tree can be overridden from the default values defined in
 
 Android devices support
 -----------------------
-
-We have support for Android relying on TensorFlow Lite, with Java and JNI bindinds. For more details on how to experiment with those, please refer to the section below.
-
-Please refer to TensorFlow documentation on how to setup the environment to build for Android (SDK and NDK required).
 
 Using the library from Android project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -240,36 +236,37 @@ Due to the discontinuation of Bintray JCenter we do not have pre-built Android p
 Building ``libstt.so`` for Android
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can build the ``libstt.so`` using (ARMv7):
+Prerequisites
+^^^^^^^^^^^^^
+
+Beyond the general prerequisites listed above, you'll also need the Android-specific dependencies for TensorFlow, namely you'll need to install the `Android SDK <https://developer.android.com>`_ and the `Android NDK version r18b <https://github.com/android/ndk/wiki/Unsupported-Downloads#r18b>`_. After that's done, export the environment variables ``ANDROID_SDK_HOME`` and ``ANDROID_NDK_HOME`` to the corresponding folders where the SDK and NDK were installed. Finally, configure the TensorFlow build and make sure you answer yes when the script asks if you want to set-up an Android build.
+
+Then, you can build the ``libstt.so`` using (ARMv7):
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic --config=android --config=android_arm --define=runtime=tflite --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=android_arm --action_env ANDROID_NDK_API_LEVEL=21 //native_client:libstt.so
 
 Or (ARM64):
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=monolithic --config=android --config=android_arm64 --define=runtime=tflite --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" --config=android_arm64 --action_env ANDROID_NDK_API_LEVEL=21 //native_client:libstt.so
 
 Building ``libstt.aar``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-In the unlikely event you have to rebuild the JNI bindings, source code is
-available under the ``libstt`` subdirectory.  Building depends on shared
-object: please ensure to place ``libstt.so`` into the
-``libstt/libs/{arm64-v8a,armeabi-v7a,x86_64}/`` matching subdirectories.
+In order to build the JNI bindings, source code is available under the ``native_client/java/libstt`` directory. Building the AAR package requires having previously built ``libstt.so`` for all desired architectures and placed the corresponding binaries into the ``native_client/java/libstt/libs/{arm64-v8a,armeabi-v7a,x86_64}/`` subdirectories. If you don't want to build the AAR package for all of ARM64, ARMv7 and x86_64, you can edit the ``native_client/java/libstt/gradle.properties`` file to remove unneeded architectures.
 
-Building the bindings is managed by ``gradle`` and should be limited to issuing
-``./gradlew libstt:build``, producing an ``AAR`` package in
-``./libstt/build/outputs/aar/``.
+Building the bindings is managed by ``gradle`` and can be done by calling ``./gradlew libstt:build`` inside the ``native_client/java`` folder, producing an ``AAR`` package in
+``native_client/java/libstt/build/outputs/aar/``.
 
 Please note that you might have to copy the file to a local Maven repository
 and adapt file naming (when missing, the error message should states what
 filename it expects and where).
 
-Building C++ ``stt`` binary
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building C++ ``stt`` binary for Android
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Building the ``stt`` binary will happen through ``ndk-build`` (ARMv7):
 
