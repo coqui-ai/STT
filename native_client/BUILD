@@ -136,7 +136,13 @@ cc_library(
         "//tensorflow/lite:model.h",
         "//tensorflow/lite/kernels:register.h",
         "//tensorflow/lite/tools/evaluation:utils.h",
-    ],
+    ] + select({
+        "//tensorflow:android": [
+            "//tensorflow/lite/delegates/gpu:delegate.h",
+            "//tensorflow/lite/delegates/hexagon:hexagon_delegate.h",
+        ],
+        "//conditions:default": [],
+    }),
     srcs = [
         "//tensorflow/lite:libtensorflowlite.so",
     ],
