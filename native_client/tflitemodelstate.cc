@@ -1,6 +1,8 @@
 #include "tflitemodelstate.h"
-#include "tensorflow/lite/string_util.h"
 #include "workspace_status.h"
+
+#include "tensorflow/lite/string_util.h"
+#include "tensorflow/lite/tools/evaluation/utils.h"
 
 #ifdef __ANDROID__
 #include <android/log.h>

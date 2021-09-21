@@ -30,6 +30,10 @@ package_native_client()
     win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so.if.lib"
   fi;
 
+  if [ -f "${tensorflow_dir}/bazel-bin/native_client/libtflitedelegates.so.if.lib" ]; then
+    win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/native_client/ libtflitedelegates.so.if.lib"
+  fi;
+
   if [ -f "${tensorflow_dir}/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib" ]; then
     win_lib="$win_lib -C ${tensorflow_dir}/bazel-bin/tensorflow/lite/ libtensorflowlite.so.if.lib"
   fi;
@@ -43,6 +47,7 @@ package_native_client()
     --transform='flags=r;s|README.coqui|KenLM_License_Info.txt|' \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libstt.so \
     -C ${tensorflow_dir}/bazel-bin/native_client/ libkenlm.so \
+    -C ${tensorflow_dir}/bazel-bin/native_client/ libtflitedelegates.so \
     -C ${tensorflow_dir}/bazel-bin/tensorflow/lite/ libtensorflowlite.so \
     ${win_lib} \
     ${libsox_lib} \
@@ -80,6 +85,9 @@ package_native_client_ndk()
   ${TAR} --verbose -cf - \
     -C ${stt_dir}/native_client/libs/${arch_abi}/ stt \
     -C ${stt_dir}/native_client/libs/${arch_abi}/ libstt.so \
+    -C ${stt_dir}/native_client/libs/${arch_abi}/ libkenlm.so \
+    -C ${stt_dir}/native_client/libs/${arch_abi}/ libtflitedelegates.so \
+    -C ${stt_dir}/native_client/libs/${arch_abi}/ libtensorflowlite.so \
     -C ${tensorflow_dir}/bazel-bin/native_client/ generate_scorer_package \
     -C ${stt_dir}/native_client/libs/${arch_abi}/ libc++_shared.so \
     -C ${stt_dir}/native_client/ coqui-stt.h \
@@ -114,6 +122,7 @@ package_libstt_as_zip()
   ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" \
     ${tensorflow_dir}/bazel-bin/native_client/libstt.so \
     ${tensorflow_dir}/bazel-bin/native_client/libkenlm.so \
+    ${tensorflow_dir}/bazel-bin/native_client/libtflitedelegates.so \
     ${libsox_lib} \
     ${tensorflow_dir}/bazel-bin/tensorflow/lite/libtensorflowlite.so
 }

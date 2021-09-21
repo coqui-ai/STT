@@ -16,6 +16,7 @@ runs:
   steps:
     - id: compute_cache_key
       run: |
+        set -xe
         JOB=${{ github.job }}
         SUBMODULE=$(echo $JOB | cut -d'-' -f1 | cut -d'_' -f1)
         FLAVOR=$(echo $JOB | cut -d'-' -f1 | cut -d'_' -f2)
