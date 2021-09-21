@@ -151,12 +151,13 @@ export BAZEL_OUTPUT_USER_ROOT
 
 NVCC_COMPUTE="3.5"
 
-BAZEL_ARM_FLAGS="--config=rpi3 --config=rpi3_opt --copt=-DTFLITE_WITH_RUY_GEMV"
-BAZEL_ARM64_FLAGS="--config=rpi3-armv8 --config=rpi3-armv8_opt --copt=-DTFLITE_WITH_RUY_GEMV"
-BAZEL_ANDROID_ARM_FLAGS="--config=android --config=android_arm --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 --copt=-DTFLITE_WITH_RUY_GEMV"
-BAZEL_ANDROID_ARM64_FLAGS="--config=android --config=android_arm64 --action_env ANDROID_NDK_API_LEVEL=21 --cxxopt=-std=c++14 --copt=-D_GLIBCXX_USE_C99 --copt=-DTFLITE_WITH_RUY_GEMV"
-BAZEL_IOS_ARM64_FLAGS="--config=ios_arm64 --define=runtime=tflite --copt=-DTFLITE_WITH_RUY_GEMV"
-BAZEL_IOS_X86_64_FLAGS="--config=ios_x86_64 --define=runtime=tflite --copt=-DTFLITE_WITH_RUY_GEMV"
+BAZEL_ARM_FLAGS="--config=rpi3_opt"
+BAZEL_ARM64_FLAGS="--config=rpi3-armv8_opt"
+BAZEL_ANDROID_ARM_FLAGS="--config=android_arm"
+BAZEL_ANDROID_ARM64_FLAGS="--config=android_arm64"
+BAZEL_ANDROID_X86_64_FLAGS="--config=android_x86_64"
+BAZEL_IOS_ARM64_FLAGS="--config=ios_arm64"
+BAZEL_IOS_X86_64_FLAGS="--config=ios_x86_64"
 
 if [ "${OS}" != "${CI_MSYS_VERSION}" ]; then
     BAZEL_EXTRA_FLAGS="--config=noaws --config=nogcp --config=nohdfs --config=nonccl"

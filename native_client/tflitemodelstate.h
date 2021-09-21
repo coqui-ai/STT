@@ -6,7 +6,6 @@
 
 #include "tensorflow/lite/model.h"
 #include "tensorflow/lite/kernels/register.h"
-#include "tensorflow/lite/tools/evaluation/utils.h"
 
 #include "modelstate.h"
 

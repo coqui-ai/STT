@@ -10,6 +10,7 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-14-g4bdd3955115"
 
   # macOS specific
   MACOSX_DEPLOYMENT_TARGET: "10.10"
@@ -490,7 +491,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -502,6 +502,7 @@ jobs:
       - run: |
           cd ${{ env.CI_TMP_DIR }}
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
+          ls -lh
       - uses: actions/download-artifact@v2
         with:
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
@@ -530,7 +531,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -577,7 +577,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -631,7 +630,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1294,6 +1292,11 @@ jobs:
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/setup-tensorflow
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
+      - run: |
+          # Taken from https://www.tensorflow.org/install/source
+          # Only future is needed for our builds, as we don't build the Python package
+          python -m pip install -U --user future==0.17.1 || true
+        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/build-tensorflow
         with:
           flavor: "--darwin-cpu"
@@ -1457,7 +1460,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1497,7 +1499,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1542,7 +1543,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1593,7 +1593,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1777,7 +1776,7 @@ jobs:
           rm ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
       - run: |
           git status
-      - run: ./ci_scripts/libstt-build.sh
+      - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
         with:
@@ -1922,7 +1921,6 @@ jobs:
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -1976,7 +1974,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -2030,7 +2027,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -2093,7 +2089,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -2206,7 +2201,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2260,7 +2254,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2316,7 +2309,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2368,7 +2360,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2422,7 +2413,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -2486,7 +2476,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
     steps:
       - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
         run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
@@ -3035,7 +3024,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
     steps:
       - name: "Install QEMU"
@@ -3097,7 +3085,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
       PIP_EXTRA_INDEX_URL: "https://www.piwheels.org/simple https://lissyx.github.io/deepspeech-python-wheels/"
     steps:
@@ -3161,7 +3148,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
     steps:
       - name: "Install QEMU"
@@ -3225,7 +3211,6 @@ jobs:
       STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
       STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
-      EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-6-g23ad988"
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
       DISPLAY: ":99.0"
     steps:
@@ -3289,3 +3274,156 @@ jobs:
         run: |
           cat ${{ env.CI_TMP_DIR }}/xvfb.pid
           sudo kill -9 $(cat ${{ env.CI_TMP_DIR }}/xvfb.pid)
+  # Android jobs
+  tensorflow_opt-AndroidArmv7:
+    name: "AndroidArmv7|Check TensorFlow cache"
+    runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.check_artifact_exists.outputs.status }}
+      cache_key: ${{ steps.get_cache_key.outputs.key }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          extras: "1"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+  build-tensorflow-AndroidArmv7:
+    name: "AndroidArmv7|Build TensorFlow (opt)"
+    needs: tensorflow_opt-AndroidArmv7
+    runs-on: ubuntu-20.04
+    steps:
+      - run: true
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'found'
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-armv7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/build-tensorflow
+        with:
+          flavor: "--android-armv7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/package-tensorflow
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+  build-lib_AndroidArmv7:
+    name: "AndroidArmv7|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArmv7, tensorflow_opt-AndroidArmv7 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/
+          download: true
+      - run: |
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          rm ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-armv7
+      - run: ./ci_scripts/android-package.sh armeabi-v7a
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "native_client.tflite.android.armv7.tar.xz"
+          path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.android.armv7.zip"
+          path: ${{ github.workspace }}/artifacts/libstt.zip
+  tensorflow_opt-AndroidArm64:
+    name: "AndroidArm64|Check TensorFlow cache"
+    runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.check_artifact_exists.outputs.status }}
+      cache_key: ${{ steps.get_cache_key.outputs.key }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          extras: "1"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+  build-tensorflow-AndroidArm64:
+    name: "AndroidArm64|Build TensorFlow (opt)"
+    needs: tensorflow_opt-AndroidArm64
+    runs-on: ubuntu-20.04
+    steps:
+      - run: true
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'found'
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-arm64"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/build-tensorflow
+        with:
+          flavor: "--android-arm64"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/package-tensorflow
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+  build-lib_AndroidArm64:
+    name: "AndroidArm64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/
+          download: true
+      - run: |
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          rm ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-arm64
+      - run: ./ci_scripts/android-package.sh arm64-v8a
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "native_client.tflite.android.arm64.tar.xz"
+          path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.android.arm64.zip"
+          path: ${{ github.workspace }}/artifacts/libstt.zip
