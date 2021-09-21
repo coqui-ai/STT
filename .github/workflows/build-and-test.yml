@@ -357,7 +357,7 @@ jobs:
         with:
           name: "libsox3_Linux"
           path: ${{ github.workspace }}/sox-build/
-      - uses: ./.github/actions/host-build
+      - uses: ./.github/actions/libstt-build
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
         with:
@@ -1346,7 +1346,7 @@ jobs:
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
-      - uses: ./.github/actions/host-build
+      - uses: ./.github/actions/libstt-build
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
         with:
@@ -1793,7 +1793,7 @@ jobs:
           rm ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
       - run: |
           git status
-      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/libstt-build.sh
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
         with:
@@ -2671,7 +2671,7 @@ jobs:
         uses: ./.github/actions/multistrap
         with:
           arch: armv7
-      - uses: ./.github/actions/host-build
+      - uses: ./.github/actions/libstt-build
         with:
           arch: armv7
       - uses: ./.github/actions/package
@@ -2708,7 +2708,7 @@ jobs:
         uses: ./.github/actions/multistrap
         with:
           arch: aarch64
-      - uses: ./.github/actions/host-build
+      - uses: ./.github/actions/libstt-build
         with:
           arch: aarch64
       - uses: ./.github/actions/package
