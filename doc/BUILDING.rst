@@ -188,8 +188,8 @@ RPi3 ARMv7 and LePotato ARM64
 
 We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
 
-* ``--config=rpi3`` and ``--config=rpi3_opt`` for Raspbian / ARMv7
-* ``--config=rpi3-armv8`` and ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
+* ``--config=rpi3_opt`` for Raspbian / ARMv7
+* ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
@@ -215,10 +215,6 @@ The path of the system tree can be overridden from the default values defined in
 
 Android devices support
 -----------------------
-
-We have support for Android relying on TensorFlow Lite, with Java and JNI bindinds. For more details on how to experiment with those, please refer to the section below.
-
-Please refer to TensorFlow documentation on how to setup the environment to build for Android (SDK and NDK required).
 
 Using the library from Android project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
