@@ -1,5 +1,5 @@
-name: "Run build lib"
-description: "Run build of lib"
+name: "Build libstt.so"
+description: "Build libstt.so"
 inputs:
   arch:
     description: "Target arch for loading script (host/armv7/aarch64)"

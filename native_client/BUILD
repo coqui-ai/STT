@@ -110,12 +110,12 @@ cc_binary(
 )
 
 cc_library(
-    name="kenlm",
+    name = "kenlm",
     hdrs = glob([
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
     ]),
-    srcs = ["libkenlm.so"],
+    srcs = [":libkenlm.so"],
     copts = ["-std=c++11"],
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
@@ -131,17 +131,53 @@ cc_library(
 )
 
 cc_library(
-    name="tflite",
+    name = "tflite",
     hdrs = [
         "//tensorflow/lite:model.h",
         "//tensorflow/lite/kernels:register.h",
-        "//tensorflow/lite/tools/evaluation:utils.h",
-    ],
+    ] + select({
+        "//tensorflow:android": [
+            "//tensorflow/lite/delegates/gpu:delegate.h",
+            "//tensorflow/lite/delegates/hexagon:hexagon_delegate.h",
+        ],
+        "//conditions:default": [],
+    }),
     srcs = [
         "//tensorflow/lite:libtensorflowlite.so",
     ],
     includes = ["tensorflow"],
     deps = ["//tensorflow/lite:libtensorflowlite.so"],
+)
+
+cc_binary(
+    name = "libtflitedelegates.so",
+    deps = [
+        "//tensorflow/lite/tools/evaluation:utils",
+    ],
+    linkshared = 1,
+    linkopts = select({
+        "//tensorflow:ios": [
+            "-Wl,-install_name,@rpath/libtflitedelegates.so",
+        ],
+        "//tensorflow:macos": [
+            "-Wl,-install_name,@rpath/libtflitedelegates.so",
+        ],
+        "//tensorflow:windows": [],
+        "//conditions:default": [
+            "-Wl,-soname,libtflitedelegates.so",
+        ],
+    }),
+)
+
+cc_library(
+    name = "tflitedelegates",
+    hdrs = [
+        "//tensorflow/lite/tools/evaluation:utils.h",
+    ],
+    deps = [
+        "//tensorflow/lite/tools/evaluation:utils",
+    ],
+    srcs = [":libtflitedelegates.so"],
 )
 
 cc_library(
@@ -178,12 +214,13 @@ cc_library(
         # We simply force the linker option manually here as a hacky fix.
         "//tensorflow:windows": [
             "bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib",
+            "bazel-out/x64_windows-opt/bin/native_client/libtflitedelegates.so.if.lib",
             "bazel-out/x64_windows-opt/bin/tensorflow/lite/libtensorflowlite.so.if.lib",
         ],
         "//conditions:default": [],
     }) + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
-    deps = [":kenlm", ":tflite"],
+    deps = [":kenlm", ":tflite", ":tflitedelegates"],
 )
 
 cc_binary(
