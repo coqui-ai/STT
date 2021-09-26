@@ -283,7 +283,10 @@ public class STTStream {
         precondition(streamCtx != nil, "calling method on invalidated Stream")
 
         let result = STT_FinishStreamWithMetadata(streamCtx, UInt32(numResults))!
-        defer { STT_FreeMetadata(result) }
+        defer {
+            STT_FreeMetadata(result)
+            streamCtx = nil
+        }
         return STTMetadata(fromInternal: result)
     }
 }
