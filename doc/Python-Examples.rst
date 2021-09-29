@@ -15,8 +15,8 @@ Creating a model instance and loading model
    :start-after: sphinx-doc: python_ref_model_start
    :end-before: sphinx-doc: python_ref_model_stop
 
-Deploying trained model
------------------------
+Transcribing audio with the loaded model
+----------------------------------------
 
 .. literalinclude:: ../native_client/python/client.py
    :language: python

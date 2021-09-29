@@ -186,7 +186,7 @@ Cross-building
 RPi3 ARMv7 and LePotato ARM64
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We do support cross-compilation. Please refer to our ``coqui-ai/tensorflow`` fork, where we define the following ``--config`` flags:
+We support cross-compilation from Linux hosts. The following ``--config`` flags can be specified when building with bazel:
 
 * ``--config=rpi3_opt`` for Raspbian / ARMv7
 * ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
@@ -212,26 +212,6 @@ The path of the system tree can be overridden from the default values defined in
 
    cd ../STT/native_client
    make TARGET=<system> stt
-
-Android devices support
------------------------
-
-Using the library from Android project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Due to the discontinuation of Bintray JCenter we do not have pre-built Android packages published for now. We are working to move to Maven Central and will update this section when it's available.
-
-.. We provide uptodate and tested ``libstt`` usable as an ``AAR`` package,
-  for Android versions starting with 7.0 to 11.0. The package is published on
-  `JCenter <https://bintray.com/coqui/ai.coqui.stt/libstt>`_,
-  and the ``JCenter`` repository should be available by default in any Android
-  project.  Please make sure your project is setup to pull from this repository.
-  You can then include the library by just adding this line to your
-  ``gradle.build``, adjusting ``VERSION`` to  the version you need:
-
-  .. code-block::
-
-     implementation 'stt.coqui.ai:libstt:VERSION@aar'
 
 Building ``libstt.so`` for Android
 ----------------------------------
