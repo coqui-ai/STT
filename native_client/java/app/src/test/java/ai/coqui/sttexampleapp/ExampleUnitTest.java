@@ -1,4 +1,4 @@
-package ai.coqui.sttexampleapp
+package ai.coqui.sttexampleapp;
 
 import org.junit.Test;
 
