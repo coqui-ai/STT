@@ -13,8 +13,8 @@ Creating a model instance and loading model
    :start-after: sphinx-doc: java_ref_model_start
    :end-before: sphinx-doc: java_ref_model_stop
 
-Deploying trained model
------------------------
+Transcribing audio with the loaded model
+----------------------------------------
 
 .. literalinclude:: ../native_client/java/app/src/main/java/ai/coqui/sttexampleapp/STTActivity.java
    :language: java

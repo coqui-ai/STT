@@ -23,6 +23,57 @@ defaults:
   run:
     shell: bash
 jobs:
+  create-release:
+    name: "Create release for tag"
+    runs-on: ubuntu-20.04
+    outputs:
+      release-tag: ${{ steps.check-version.outputs.release-tag }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Check VERSION file matches pushed Git tag and check if prerelease
+        id: check-version
+        run: |
+          set -xe
+          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
+            echo "Should never happen (this job only runs on tag pushes)"
+            exit 1
+          fi
+
+          VERSION="v$(cat VERSION)"
+          if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
+            echo "Pushed tag does not match VERSION file. Aborting release."
+            exit 1
+          fi
+
+          # Tag for this release (version with leading v)
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
+          echo ::set-output name=release-tag::${tag}
+
+          # Version without leading v
+          version=$(cat VERSION)
+          echo ::set-output name=version::${version}
+
+          # Is this a prerelease or not?
+          cat <<EOF | python - "${{ github.ref }}"
+          import sys
+          import semver
+          ref = sys.argv[1]
+          prefix = "refs/tags/v"
+          assert ref.startswith(prefix)
+          parsed = semver.parse_version_info(ref[len(prefix):])
+          print("::set-output name=is-prerelease::{}".format("true" if parsed.prerelease else "false"))
+          EOF
+      - uses: softprops/action-gh-release@v1
+        with:
+          body_path: RELEASE_NOTES.md
+          prerelease: ${{ steps.check-version.outputs.prerelease }}
+          name: ${{ format('Coqui STT {0}', steps.check-version.outputs.version) }}
   # Linux jobs
   swig_Windows_crosscompiled:
     name: "Lin|Build SWIG for Windows"
@@ -779,6 +830,7 @@ jobs:
   twine-upload-training:
     name: "Upload STT training packages to PyPI"
     runs-on: ubuntu-20.04
+    needs: [create-release]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v2
@@ -809,13 +861,12 @@ jobs:
         with:
           name: '' # use filename
           path: "dist/*.whl"
-          release-tag: ${{ steps.get-tag.outputs.tag }}
-          should-create-release: true
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
   twine-upload-stt:
     name: "Upload STT packages to PyPI"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
+    needs: [create-release, build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -889,13 +940,12 @@ jobs:
         with:
           name: '' # use filename
           path: "*.whl"
-          release-tag: ${{ steps.get-tag.outputs.tag }}
-          should-create-release: true
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
   upload-nc-release-assets:
     name: "Upload native client artifacts to release assets"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [build-lib_Windows, build-lib_Linux, build-lib_macOS, build-lib_LinuxAarch64, build-lib_LinuxArmv7]
+    needs: [create-release, build-lib_Windows, build-lib_Linux, build-lib_macOS, build-lib_LinuxAarch64, build-lib_LinuxArmv7]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -940,14 +990,12 @@ jobs:
         with:
           name: '' # use filename
           path: "*.tar.xz"
-          release-tag: ${{ steps.get-tag.outputs.tag }}
-          should-create-release: true
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
       - uses: ./.github/actions/upload-release-asset
         with:
           name: '' # use filename
           path: "*.zip"
-          release-tag: ${{ steps.get-tag.outputs.tag }}
-          should-create-release: true
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
   docker-build:
     name: "Build Dockerfile.build image"
     runs-on: ubuntu-20.04
@@ -1016,7 +1064,7 @@ jobs:
     name: "Upload coqui_stt_ctcdecoder packages to PyPI"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [build-ctc-decoder-Linux, build-ctc-decoder-macos, build-ctc-decoder-windows]
+    needs: [create-release, build-ctc-decoder-Linux, build-ctc-decoder-macos, build-ctc-decoder-windows]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -1072,13 +1120,12 @@ jobs:
         with:
           name: '' # use filename
           path: "*.whl"
-          release-tag: ${{ steps.get-tag.outputs.tag }}
-          should-create-release: true
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
   npmjs-publish:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [repackage-nodejs-allplatforms]
+    needs: [create-release, repackage-nodejs-allplatforms]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -1119,8 +1166,7 @@ jobs:
         with:
           name: '' # use filename
           path: "*.tgz"
-          release-tag: ${{ steps.get-tag.outputs.tag }}
-          should-create-release: true
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
   # macOS jobs
   swig_macOS:
     name: "Mac|Build SWIG"
@@ -3363,10 +3409,6 @@ jobs:
         with:
           name: "native_client.tflite.android.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "libstt.tflite.android.armv7.zip"
-          path: ${{ github.workspace }}/artifacts/libstt.zip
   tensorflow_opt-AndroidArm64:
     name: "AndroidArm64|Check TensorFlow cache"
     runs-on: ubuntu-20.04
@@ -3439,7 +3481,114 @@ jobs:
         with:
           name: "native_client.tflite.android.arm64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+  build-lib_Androidx86_64:
+    name: "Androidx86_64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/
+          download: true
+      - run: |
+          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          rm ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-x86_64
+      - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.android.arm64.zip"
-          path: ${{ github.workspace }}/artifacts/libstt.zip
+          name: "native_client.tflite.android.x86_64.tar.xz"
+          path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+  build-android-apk-aar:
+    name: "Android|Build AAR+APK"
+    runs-on: ubuntu-20.04
+    needs: [build-lib_AndroidArmv7, build-lib_AndroidArm64, build-lib_Androidx86_64]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.android.armv7.tar.xz
+          path: /tmp/nc
+      - run: |
+          mkdir -p native_client/java/libstt/libs/armeabi-v7a
+          cd /tmp/nc
+          tar xvf native_client.tar.xz
+          mv libstt.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/libstt.so
+          rm -f *
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.android.arm64.tar.xz
+          path: /tmp/nc
+      - run: |
+          mkdir -p native_client/java/libstt/libs/arm64-v8a
+          cd /tmp/nc
+          tar xvf native_client.tar.xz
+          mv libstt.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/libstt.so
+          rm -f *
+      - uses: actions/download-artifact@v2
+        with:
+          name: native_client.tflite.android.x86_64.tar.xz
+          path: /tmp/nc
+      - run: |
+          mkdir -p native_client/java/libstt/libs/x86_64
+          cd /tmp/nc
+          tar xvf native_client.tar.xz
+          mv libstt.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/libstt.so
+          rm -f *
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      # This particular version of CMake confuses Gradle by not being semver.
+      # We're fine with 3.10.2 which is also installed. Keep an eye on the
+      # virtual environments though:
+      # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#android
+      - name: Remove CMake 3.18.1-g262b901
+        run: |
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall 'cmake;3.18.1'
+      - run: |
+          make GRADLE="./gradlew " -C native_client/java
+      - run: |
+          make GRADLE="./gradlew " -C native_client/java maven-bundle
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "app.apk"
+          path: ${{ github.workspace }}/native_client/java/app/build/outputs/apk/release/app*.apk
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.aar"
+          path: ${{ github.workspace }}/native_client/java/libstt/build/outputs/aar/libstt*.aar
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.maven.zip"
+          path: ${{ github.workspace }}/native_client/java/libstt/build/libstt-*.maven.zip
+  publish-android-aar:
+    name: "Android|Publish AAR"
+    runs-on: ubuntu-20.04
+    needs: [create-release, build-android-apk-aar]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v2
+        with:
+          name: "libstt.aar"
+          path: ${{ github.workspace }}/
+      - run: ls -lh
+      - name: Get tag name
+        id: get-tag
+        run: |
+          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
+          echo "::set-output name=tag::$tag"
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.aar"
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
