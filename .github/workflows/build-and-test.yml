@@ -74,7 +74,7 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           body_path: RELEASE_NOTES.md
-          prerelease: ${{ steps.check-version.outputs.prerelease }}
+          prerelease: ${{ steps.check-version.outputs.is-prerelease }}
           name: ${{ format('Coqui STT {0}', steps.check-version.outputs.version) }}
   # Linux jobs
   swig_Windows_crosscompiled:
