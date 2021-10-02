@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       release-tag: ${{ steps.check-version.outputs.release-tag }}
+      is-prerelease: ${{ steps.check-version.outputs.is-prerelease }}
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v2
@@ -60,6 +61,7 @@ jobs:
           echo ::set-output name=version::${version}
 
           # Is this a prerelease or not?
+          pip install semver
           cat <<EOF | python - "${{ github.ref }}"
           import sys
           import semver
@@ -851,11 +853,6 @@ jobs:
           EOF
       - run: |
           twine upload --repository pypi dist/*
-      - name: Get tag name
-        id: get-tag
-        run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo "::set-output name=tag::$tag"
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -930,11 +927,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.7-aarch64.whl
-      - name: Get tag name
-        id: get-tag
-        run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo "::set-output name=tag::$tag"
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -981,11 +973,6 @@ jobs:
           name: native_client.tflite.linux.aarch64.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.linux.aarch64.tar.xz
       - run: ls -lh
-      - name: Get tag name
-        id: get-tag
-        run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo "::set-output name=tag::$tag"
       - uses: ./.github/actions/upload-release-asset
         with:
           name: '' # use filename
@@ -1110,11 +1097,6 @@ jobs:
           EOF
       - run: |
           twine upload --repository pypi *.whl
-      - name: Get tag name
-        id: get-tag
-        run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo "::set-output name=tag::$tag"
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -1138,16 +1120,11 @@ jobs:
       - name: Compute tag for npm from git tag
         id: compute-npm-tag
         run: |
-          pip install semver
-          cat <<EOF | python - "${{ github.ref }}"
-          import sys
-          import semver
-          ref = sys.argv[1]
-          prefix = "refs/tags/v"
-          assert ref.startswith(prefix)
-          parsed = semver.parse_version_info(ref[len(prefix):])
-          print("::set-output name=npm-tag::{}".format("prerelease" if parsed.prerelease else "latest"))
-          EOF
+          if [ "${{ needs.create-release.outputs.is-prerelease }}" = "true" ]; then
+            echo ::set-output name=npm-tag::prerelease
+          else
+            echo ::set-output name=npm-tag::latest
+          fi
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite.tgz
@@ -1156,11 +1133,6 @@ jobs:
           npm publish --access=public --verbose ${{ github.workspace }}/stt-*.tgz --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Get tag name
-        id: get-tag
-        run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo "::set-output name=tag::$tag"
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -3582,11 +3554,6 @@ jobs:
           name: "libstt.aar"
           path: ${{ github.workspace }}/
       - run: ls -lh
-      - name: Get tag name
-        id: get-tag
-        run: |
-          tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo "::set-output name=tag::$tag"
       - uses: ./.github/actions/upload-release-asset
         with:
           name: '' # use filename
