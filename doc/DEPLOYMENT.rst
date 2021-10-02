@@ -14,6 +14,7 @@ You can deploy 🐸STT models either via a command-line client or a language bin
 
 * :ref:`The Python package + language binding <py-usage>`
 * :ref:`The Node.JS package + language binding <nodejs-usage>`
+* :ref:`The Android libstt AAR package <android-usage>`
 * :ref:`The command-line client <cli-usage>`
 * :ref:`The native C API <c-usage>`
 
@@ -132,6 +133,31 @@ If you're using Linux and have a supported NVIDIA GPU, you can install the GPU s
 See the `release notes <https://github.com/coqui-ai/STT/releases>`_ to find which GPUs are supported. Please ensure you have the required `CUDA dependency <#cuda-dependency>`_.
 
 See the :ref:`TypeScript client <js-api-example>` for an example of how to use the bindings programatically.
+
+.. _android-usage:
+
+Using the Android AAR libstt package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A pre-built ``libstt`` Android AAR package can be downloaded from GitHub Releases, for Android versions 7.0+. In order to use it in your Android application, first modify your app's ``build.gradle`` file to add a local dir as a repository. In the ``repository`` section, add the following definition:
+
+.. code-block:: groovy
+
+   repositories {
+       flatDir {
+           dirs 'libs'
+       }
+   }
+
+Then, create a libs directory inside your app's folder, and place the libstt AAR file there. Finally, add the following dependency declaration in your app's ``build.gradle`` file:
+
+.. code-block:: groovy
+
+   dependencies {
+       implementation fileTree(dir: 'libs', include: ['*.aar'])
+   }
+
+This will link all .aar files in the ``libs`` directory you just created, including libstt.
 
 .. _cli-usage:
 
