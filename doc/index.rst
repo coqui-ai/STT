@@ -23,10 +23,10 @@
 
    BUILDING
 
-Quickstart: Deployment
-^^^^^^^^^^^^^^^^^^^^^^
+Quickstart
+^^^^^^^^^^
 
-The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 3.6, 3.7, 3.8 or 3.9:
+The fastest way to use a pre-trained 🐸STT model is with the 🐸STT model manager, a tool that lets you quickly test and demo models locally. You'll need Python 3.6, 3.7, 3.8 or 3.9:
 
 .. code-block:: bash
 
@@ -34,20 +34,12 @@ The fastest way to deploy a pre-trained 🐸STT model is with `pip` with Python 
    $ python3 -m venv venv-stt
    $ source venv-stt/bin/activate
 
-   # Install 🐸STT
+   # Install 🐸STT model manager
    $ python -m pip install -U pip
-   $ python -m pip install stt
+   $ python -m pip install coqui-stt-model-manager
 
-   # Download 🐸's pre-trained English models
-   $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.tflite
-   $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.scorer
-
-   # Download some example audio files
-   $ curl -LO https://github.com/coqui-ai/STT/releases/download/v0.9.3/audio-0.9.3.tar.gz
-   $ tar -xvf audio-0.9.3.tar.gz
-
-   # Transcribe an audio file
-   $ stt --model coqui-stt-0.9.3-models.tflite --scorer coqui-stt-0.9.3-models.scorer --audio audio/2830-3980-0043.wav
+   # Run the model manager. A browser tab will open and you can then download and test models from the Model Zoo.
+   $ stt-model-manager
 
 .. toctree::
    :maxdepth: 1
