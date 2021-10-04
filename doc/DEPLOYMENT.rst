@@ -23,12 +23,20 @@ You can deploy 🐸STT models either via a command-line client or a language bin
 Download trained Coqui STT models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can find pre-trained models ready for deployment on the 🐸STT `releases page <https://github.com/coqui-ai/STT/releases>`_. You can also download the latest acoustic model (``.tflite``) and language model (``.scorer``) from the command line as such:
+You can find pre-trained models ready for deployment on the `Coqui Model Zoo <https://coqui.ai/models>`_. You can also use the 🐸STT Model Manager to download and try out the latest models:
 
 .. code-block:: bash
 
-   wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.tflite
-   wget https://github.com/coqui-ai/STT/releases/download/v0.9.3/coqui-stt-0.9.3-models.scorer
+   # Create a virtual environment
+   $ python3 -m venv venv-stt
+   $ source venv-stt/bin/activate
+
+   # Install 🐸STT model manager
+   $ python -m pip install -U pip
+   $ python -m pip install coqui-stt-model-manager
+
+   # Run the model manager. A browser tab will open and you can then download and test models from the Model Zoo.
+   $ stt-model-manager
 
 In every 🐸STT official release, there are different model files provided. The acoustic model uses the ``.tflite`` extension. Language models use the extension ``.scorer``. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <language-model>`.
 
@@ -47,7 +55,7 @@ How well a 🐸STT model transcribes your audio will depend on a lot of things. 
 
 If you take a 🐸STT model trained on English, and pass Spanish into it, you should expect the model to perform horribly. Imagine you have a friend who only speaks English, and you ask her to make Spanish subtitles for a Spanish film, you wouldn't expect to get good subtitles. This is an extreme example, but it helps to form an intuition for what to expect from 🐸STT models. Imagine that the 🐸STT models are like people who speak a certain language with a certain accent, and then think about what would happen if you asked that person to transcribe your audio.
 
-An acoustic model (i.e. ``.tflite`` file) has "learned" how to transcribe a certain language, and the model probably understands some accents better than others. In addition to languages and accents, acoustic models are sensitive to the style of speech, the topic of speech, and the demographics of the person speaking. The language model (``.scorer``) has been trained on text alone. As such, the language model is sensitive to how well the topic and style of speech matches that of the text used in training. The 🐸STT `release notes <https://github.com/coqui-ai/STT/releases/tag/v0.9.3>`_ include detailed information on the data used to train the models. If the data used for training the off-the-shelf models does not align with your intended use case, it may be necessary to adapt or train new models in order to improve transcription on your data.
+An acoustic model (i.e. ``.tflite`` file) has "learned" how to transcribe a certain language, and the model probably understands some accents better than others. In addition to languages and accents, acoustic models are sensitive to the style of speech, the topic of speech, and the demographics of the person speaking. The language model (``.scorer``) has been trained on text alone. As such, the language model is sensitive to how well the topic and style of speech matches that of the text used in training. The 🐸STT `release notes <https://github.com/coqui-ai/STT/releases/latest>`_ include detailed information on the data used to train the models. If the data used for training the off-the-shelf models does not align with your intended use case, it may be necessary to adapt or train new models in order to improve transcription on your data.
 
 Training your own language model is often a good way to improve transcription on your audio. The process and tools used to generate a language model are described in :ref:`language-model` and general information can be found in :ref:`decoder-docs`. Generating a scorer from a constrained topic dataset is a quick process and can bring significant accuracy improvements if your audio is from a specific topic.
 
@@ -91,7 +99,7 @@ The following command assumes you :ref:`downloaded the pre-trained models <downl
 
 .. code-block:: bash
 
-   (coqui-stt-venv)$ stt --model stt-0.9.3-models.tflite --scorer stt-0.9.3-models.scorer --audio my_audio_file.wav
+   (coqui-stt-venv)$ stt --model model.tflite --scorer huge-vocabulary.scorer --audio my_audio_file.wav
 
 See :ref:`the Python client <py-api-example>` for an example of how to use the package programatically.
 
@@ -170,7 +178,7 @@ Assuming you have :ref:`downloaded the pre-trained models <download-models>`, yo
 
 .. code-block:: bash
 
-   ./stt --model coqui-stt-0.9.3-models.tflite --scorer coqui-stt-0.9.3-models.scorer --audio audio_input.wav
+   ./stt --model model.tflite --scorer huge-vocabulary.scorer --audio audio_input.wav
 
 See the help output with ``./stt -h`` for more details.
 

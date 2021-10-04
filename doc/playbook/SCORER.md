@@ -219,12 +219,12 @@ Next, we need to install the `native_client` package, which contains the `genera
 
 The `generate_scorer_package`, once installed via the `native client` package, is usable on _all platforms_ supported by 🐸STT. This is so that developers can generate scorers _on-device_, such as on an Android device, or Raspberry Pi 3.
 
-To install `generate_scorer_package`, first download the relevant `native client` package from the [🐸STT GitHub releases page](https://github.com/coqui-ai/STT/releases/tag/v0.9.3) into the `data/lm` directory.  The Docker image uses Ubuntu Linux, so you should use either the `native_client.amd64.cuda.linux.tar.xz` package if you are using `cuda` or the `native_client.amd64.cpu.linux.tar.xz` package if not.
+To install `generate_scorer_package`, first download the relevant `native client` package from the [🐸STT GitHub releases page](https://github.com/coqui-ai/STT/releases/latest) into the `data/lm` directory.  The Docker image uses Ubuntu Linux, so you should use either the `native_client.amd64.cuda.linux.tar.xz` package if you are using `cuda` or the `native_client.amd64.cpu.linux.tar.xz` package if not.
 
-The easiest way to download the package and extract it is using `curl [URL] | tar -Jxvf [FILENAME]`:
+The easiest way to download the package and extract it is using `curl -L [URL] | tar -Jxvf [FILENAME]`:
 
 ```
-root@dcb62aada58b:/STT/data/lm# curl https://github.com/coqui-ai/STT/releases/download/v0.9.3/native_client.amd64.cuda.linux.tar.xz | tar -Jxvf native_client.amd64.cuda.linux.tar.xz
+root@dcb62aada58b:/STT/data/lm# curl -L https://github.com/coqui-ai/STT/releases/download/v1.0.0/native_client.tflite.Linux.tar.xz | tar -Jxvf -
 libstt.so
 generate_scorer_package
 LICENSE
@@ -233,7 +233,7 @@ coqui-stt.h
 README.coqui
 ```
 
-You can now generate a `ken.lm` scorer file.
+You can now generate a KenLM scorer file.
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \

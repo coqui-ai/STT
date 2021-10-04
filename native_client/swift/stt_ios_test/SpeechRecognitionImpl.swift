@@ -26,8 +26,8 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
     private var audioData = Data()
 
     override init() {
-        let modelPath = Bundle.main.path(forResource: "coqui-stt-0.9.3-models", ofType: "tflite")!
-        let scorerPath = Bundle.main.path(forResource: "coqui-stt-0.9.3-models", ofType: "scorer")!
+        let modelPath = Bundle.main.path(forResource: "model", ofType: "tflite")!
+        let scorerPath = Bundle.main.path(forResource: "huge-vocab", ofType: "scorer")!
 
         model = try! STTModel(modelPath: modelPath)
         try! model.enableExternalScorer(scorerPath: scorerPath)
