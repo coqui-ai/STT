@@ -10,10 +10,9 @@ import wave
 from functools import partial
 from multiprocessing import JoinableQueue, Manager, Process, cpu_count
 
-import absl.app
 import numpy as np
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
-from coqui_stt_training.util.flags import create_flags
+from coqui_stt_training.util.config import Config, initialize_globals_from_args
 from six.moves import range, zip
 from stt import Model
 
@@ -61,6 +60,7 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
 
 
 def main(args):
+    initialize_globals_from_args()
     manager = Manager()
     work_todo = JoinableQueue()  # this is where we are going to store input data
     work_done = manager.Queue()  # this where we are gonna push them out
