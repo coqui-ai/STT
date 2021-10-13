@@ -134,7 +134,7 @@ def evaluate(test_csvs, create_model):
                     batch_logits,
                     batch_lengths,
                     Config.alphabet,
-                    Config.beam_width,
+                    Config.export_beam_width,
                     num_processes=num_processes,
                     scorer=scorer,
                     cutoff_prob=Config.cutoff_prob,
