@@ -98,7 +98,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends autoconf automake bison build-essential mingw-w64
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
-          curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
           ./Tools/pcre-build.sh --host=x86_64-w64-mingw32
@@ -144,7 +144,7 @@ jobs:
           path: build-static/
           key: swig-4-${{ runner.os }}-${{ env.swig_hash }}
       - run: |
-          curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
           ./Tools/pcre-build.sh
@@ -1161,7 +1161,7 @@ jobs:
           brew install automake
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
-          curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
           ./Tools/pcre-build.sh
