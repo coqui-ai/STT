@@ -17,9 +17,11 @@ class SpeechRecognitionImpl {
     private var stream: STTStream?
 
     private let modelFeedInterval = 0.1
+    private let decodeInterval = 0.5
 
     private var audioData = Data()
-    private var timer: Timer? = nil
+    private var feedTimer: Timer? = nil
+    private var decodeTimer: Timer? = nil
     private var audioInput: AudioInput? = nil
     private var bufferQueue: [[Int16]] = [[Int16]]()
 
@@ -48,7 +50,7 @@ class SpeechRecognitionImpl {
         print("Started listening...")
         audioInput!.start()
 
-        timer = Timer.scheduledTimer(
+        feedTimer = Timer.scheduledTimer(
             withTimeInterval: modelFeedInterval,
             repeats: true
         ) { _ in
@@ -56,23 +58,32 @@ class SpeechRecognitionImpl {
                 let shorts = self.bufferQueue.removeFirst()
                 self.stream!.feedAudioContent(buffer: shorts)
 
-                // (optional) get partial result
-                let partialResult = self.stream!.intermediateDecode()
-                self.onPartialResult(partialResult)
-
                 // (optional) collect audio data for writing to file
                 shorts.withUnsafeBufferPointer { buffPtr in
                     self.audioData.append(buffPtr)
                 }
             }
         }
+
+        decodeTimer = Timer.scheduledTimer(
+            withTimeInterval: decodeInterval,
+            repeats: true
+        ) { _ in
+            // (optional) get partial result
+            let partialResult = self.stream!.intermediateDecode()
+            self.onPartialResult(partialResult)
+        }
     }
 
     public func stopMicrophoneRecognition() {
         audioInput!.stop()
 
-        timer!.invalidate()
-        timer = nil
+        feedTimer!.invalidate()
+        feedTimer = nil
+
+        decodeTimer!.invalidate()
+        decodeTimer = nil
+
         bufferQueue.removeAll()
 
         let result = stream?.finishStream() ?? ""
