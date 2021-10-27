@@ -7,8 +7,8 @@ inputs:
   model-kind:
     description: "Running against CI baked or production model"
     required: true
-  samplerate:
-    description: "Sample rate for testing"
+  bitrate:
+    description: "Bitrate for testing"
     required: true
   chroot:
     description: "Run using a chroot"
@@ -31,5 +31,5 @@ runs:
           prefix="${{ inputs.chroot }}"
         fi
 
-        ${prefix}/ci_scripts/${{ inputs.runtime }}${build}-tests${model_kind}.sh ${{ inputs.samplerate }}
+        ${prefix}/ci_scripts/${{ inputs.runtime }}${build}-tests${model_kind}.sh ${{ inputs.bitrate }}
       shell: msys2 {0}
