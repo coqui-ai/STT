@@ -1732,7 +1732,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "9"
+          extras: "10"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
