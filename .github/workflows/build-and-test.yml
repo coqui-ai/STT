@@ -69,10 +69,11 @@ jobs:
           assert ref.startswith(prefix)
           parsed = semver.parse_version_info(ref[len(prefix):])
           print("::set-output name=is-prerelease::{}".format("true" if parsed.prerelease else "false"))
+          print("::set-output name=release-notes-file::{}".format("" if parsed.prerelease else "RELEASE_NOTES.md"))
           EOF
       - uses: softprops/action-gh-release@v1
         with:
-          body_path: RELEASE_NOTES.md
+          body_path: ${{ steps.check-version.outputs.release-notes-file }}
           prerelease: ${{ steps.check-version.outputs.is-prerelease }}
           name: ${{ format('Coqui STT {0}', steps.check-version.outputs.version) }}
   # Linux jobs
