@@ -12,4 +12,12 @@ struct Output {
     std::vector<unsigned int> timesteps;
 };
 
+struct FlashlightOutput {
+    double aggregate_score;
+    double acoustic_model_score;
+    double language_model_score;
+    std::vector<std::string> words;
+    std::vector<int> tokens;
+};
+
 #endif  // OUTPUT_H_

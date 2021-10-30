@@ -17,7 +17,7 @@ else:
     ARGS = [
         "-fPIC",
         "-DKENLM_MAX_ORDER=6",
-        "-std=c++11",
+        "-std=c++14",
         "-Wno-unused-local-typedefs",
         "-Wno-sign-compare",
     ]
@@ -32,6 +32,7 @@ INCLUDES = [
     OPENFST_DIR + "/src/include",
     "third_party/ThreadPool",
     "third_party/object_pool",
+    "third_party/flashlight",
 ]
 
 KENLM_FILES = (
@@ -40,7 +41,7 @@ KENLM_FILES = (
     + glob.glob("../kenlm/util/double-conversion/*.cc")
 )
 
-KENLM_FILES += glob.glob(OPENFST_DIR + "/src/lib/*.cc")
+OPENFST_FILES = glob.glob(OPENFST_DIR + "/src/lib/*.cc")
 
 KENLM_FILES = [
     fn
@@ -49,6 +50,22 @@ KENLM_FILES = [
         fn.endswith("main.cc") or fn.endswith("test.cc") or fn.endswith("unittest.cc")
     )
 ]
+
+FLASHLIGHT_FILES = [
+    "third_party/flashlight/flashlight/lib/common/String.cpp",
+    "third_party/flashlight/flashlight/lib/common/System.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/LexiconDecoder.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/LexiconFreeDecoder.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/lm/ConvLM.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/lm/KenLM.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/lm/ZeroLM.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/Trie.cpp",
+    "third_party/flashlight/flashlight/lib/text/decoder/Utils.cpp",
+    "third_party/flashlight/flashlight/lib/text/dictionary/Dictionary.cpp",
+    "third_party/flashlight/flashlight/lib/text/dictionary/Utils.cpp",
+]
+
+THIRD_PARTY_FILES = KENLM_FILES + OPENFST_FILES + FLASHLIGHT_FILES
 
 CTC_DECODER_FILES = [
     "ctc_beam_search_decoder.cpp",

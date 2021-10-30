@@ -86,11 +86,9 @@ cc_binary(
         "kenlm/*/*test.cc",
         "kenlm/*/*main.cc",
     ],),
-    copts = [
-        "-std=c++11"
-    ] + select({
-        "//tensorflow:windows": [],
-        "//conditions:default": ["-fvisibility=hidden"],
+    copts = select({
+        "//tensorflow:windows": ["/std:c++14"],
+        "//conditions:default": ["-std=c++14", "-fwrapv", "-fvisibility=hidden"],
     }),
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
@@ -110,24 +108,62 @@ cc_binary(
 )
 
 cc_library(
-    name = "kenlm",
+    name="kenlm",
     hdrs = glob([
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
     ]),
     srcs = [":libkenlm.so"],
-    copts = ["-std=c++11"],
+    copts = ["-std=c++14"],
     defines = ["KENLM_MAX_ORDER=6"],
-    includes = ["kenlm"],
+    includes = [".", "kenlm"],
+)
+
+cc_library(
+    name = "flashlight",
+    hdrs = [
+        "ctcdecode/third_party/flashlight/flashlight/lib/common/String.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/common/System.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Decoder.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconDecoder.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconFreeDecoder.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ConvLM.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/KenLM.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/LM.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ZeroLM.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Trie.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Utils.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Defines.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Dictionary.h",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Utils.h",
+    ],
+    srcs = [
+        "ctcdecode/third_party/flashlight/flashlight/lib/common/String.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/common/System.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconDecoder.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/LexiconFreeDecoder.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ConvLM.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/KenLM.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/lm/ZeroLM.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Trie.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/decoder/Utils.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Dictionary.cpp",
+        "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Utils.cpp",
+    ],
+    includes = ["ctcdecode/third_party/flashlight"],
+    deps = [":kenlm"],
 )
 
 cc_library(
     name = "decoder",
     srcs = DECODER_SOURCES,
     includes = DECODER_INCLUDES,
-    deps = [":kenlm"],
+    deps = [":kenlm", ":flashlight"],
     linkopts = DECODER_LINKOPTS,
-    copts = ["-fexceptions"],
+    copts = select({
+        "//tensorflow:windows": ["/std:c++14"],
+        "//conditions:default": ["-std=c++14", "-fexceptions", "-fwrapv"],
+    }),
 )
 
 cc_library(
@@ -195,10 +231,12 @@ cc_library(
     ] + DECODER_SOURCES,
     copts = select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
-        "//tensorflow:windows": ["/w"],
+        "//tensorflow:windows": ["/std:c++14", "/w"],
         # -Wno-sign-compare to silent a lot of warnings from tensorflow itself,
         # which makes it harder to see our own warnings
         "//conditions:default": [
+            "-std=c++14",
+            "-fwrapv",
             "-Wno-sign-compare",
             "-fvisibility=hidden",
         ],
@@ -220,7 +258,7 @@ cc_library(
         "//conditions:default": [],
     }) + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
-    deps = [":kenlm", ":tflite", ":tflitedelegates"],
+    deps = [":kenlm", ":tflite", ":tflitedelegates", ":flashlight"],
 )
 
 cc_binary(
@@ -264,8 +302,8 @@ cc_binary(
         "stt_errors.cc",
     ],
     copts = select({
-        "//tensorflow:windows": [],
-        "//conditions:default": ["-std=c++11"],
+        "//tensorflow:windows": ["/std:c++14"],
+        "//conditions:default": ["-std=c++14"],
     }),
     deps = [
         ":decoder",
@@ -297,7 +335,10 @@ cc_binary(
         "enumerate_kenlm_vocabulary.cpp",
     ],
     deps = [":kenlm"],
-    copts = ["-std=c++11"],
+    copts = select({
+        "//tensorflow:windows": ["/std:c++14"],
+        "//conditions:default": ["-std=c++14"],
+    }),
 )
 
 cc_binary(
@@ -305,6 +346,9 @@ cc_binary(
     srcs = [
         "trie_load.cc",
     ] + DECODER_SOURCES,
-    copts = ["-std=c++11"],
+    copts = select({
+        "//tensorflow:windows": ["/std:c++14"],
+        "//conditions:default": ["-std=c++14"],
+    }),
     linkopts = DECODER_LINKOPTS,
 )
