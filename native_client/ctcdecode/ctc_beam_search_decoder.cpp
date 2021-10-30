@@ -407,13 +407,12 @@ FlashlightDecoderState::intermediate(bool prune)
       valid_words.push_back(w);
     }
   }
-  FlashlightOutput ret {
-    .aggregate_score = result.score,
-    .acoustic_model_score = result.amScore,
-    .language_model_score = result.lmScore,
-    .words = lm_tokens_.mapIndicesToEntries(valid_words), // how does this interact with token-based decoding?
-    .tokens = result.tokens
-  };
+  FlashlightOutput ret;
+  ret.aggregate_score = result.score;
+  ret.acoustic_model_score = result.amScore;
+  ret.language_model_score = result.lmScore;
+  ret.words = lm_tokens_.mapIndicesToEntries(valid_words); // how does this interact with token-based decoding
+  ret.tokens = result.tokens;
   if (prune) {
     decoder_impl_->prune();
   }
@@ -433,13 +432,13 @@ FlashlightDecoderState::decode(size_t num_results)
         valid_words.push_back(w);
       }
     }
-    ret.push_back({
-      .aggregate_score = result.score,
-      .acoustic_model_score = result.amScore,
-      .language_model_score = result.lmScore,
-      .words = lm_tokens_.mapIndicesToEntries(valid_words), // how does this interact with token-based decoding?
-      .tokens = result.tokens
-    });
+    FlashlightOutput out;
+    out.aggregate_score = result.score;
+    out.acoustic_model_score = result.amScore;
+    out.language_model_score = result.lmScore;
+    out.words = lm_tokens_.mapIndicesToEntries(valid_words); // how does this interact with token-based decoding
+    out.tokens = result.tokens;
+    ret.push_back(out);
   }
   decoder_impl_.reset(nullptr);
   return ret;
