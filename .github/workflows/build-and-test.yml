@@ -1713,6 +1713,9 @@ jobs:
           make -C native_client/ctcdecode/ \
             NUM_PROCESSES=$(nproc) \
             bindings
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
       - uses: actions/upload-artifact@v2
         with:
           name: "coqui_stt_ctcdecoder-windows-test.whl"
