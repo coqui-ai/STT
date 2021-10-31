@@ -24,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../"))
 
-autodoc_mock_imports = ["stt"]
+autodoc_mock_imports = ["stt", "native_client.ctcdecode.swigwrapper"]
+autodoc_member_order = "bysource"
 
 # This is in fact only relevant on ReadTheDocs, but we want to run the same way
 # on our CI as in RTD to avoid regressions on RTD that we would not catch on CI
@@ -127,7 +128,6 @@ pygments_style = "sphinx"
 todo_include_todos = False
 
 add_module_names = False
-
 
 # -- Options for HTML output ----------------------------------------------
 
