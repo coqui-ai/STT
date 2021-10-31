@@ -96,7 +96,9 @@ class BuildExtFirst(build):
 setup(
     name="coqui_stt_ctcdecoder",
     version=project_version,
-    description="""DS CTC decoder""",
+    description="Coqui STT Python decoder package.",
+    long_description="Documentation available at `stt.readthedocs.io <https://stt.readthedocs.io/en/latest/Decoder-API.html>`_",
+    long_description_content_type="text/x-rst; charset=UTF-8",
     cmdclass={"build": BuildExtFirst},
     ext_modules=[decoder_module],
     package_dir={"coqui_stt_ctcdecoder": "."},
