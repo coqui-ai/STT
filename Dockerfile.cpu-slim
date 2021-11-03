@@ -1,0 +1,42 @@
+# This is a "slim" Dockerfile useful for working with Coqui STT checkpoints on a CPU
+
+FROM python:3.6-slim
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential cmake libboost-system-dev \
+	git curl \
+        libopus0 \
+        libopusfile0 \
+        libsndfile1 \
+        sox \
+        libsox-fmt-mp3 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Make sure pip and its dependencies are up-to-date
+RUN pip3 install --upgrade pip wheel setuptools
+
+WORKDIR /code
+
+COPY native_client /code/native_client
+COPY .git /code/.git
+COPY training/coqui_stt_training/VERSION /code/training/coqui_stt_training/VERSION
+COPY training/coqui_stt_training/GRAPH_VERSION /code/training/coqui_stt_training/GRAPH_VERSION
+
+# Build CTC decoder first, to avoid clashes on incompatible versions upgrades
+RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
+RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
+
+COPY setup.py /code/setup.py
+COPY VERSION /code/VERSION
+COPY training /code/training
+
+# Install STT
+# No need for the decoder since we did it earlier
+RUN DS_NODECODER=y pip3 install --upgrade -e .
+
+# Copy rest of the code and test training
+COPY . /code
+RUN rm -rf /code/.git
+RUN ./bin/run-ldc93s1.sh && rm -rf ~/.local/share/stt
