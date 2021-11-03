@@ -1,0 +1,285 @@
+I Loading best validating checkpoint from /home/ubuntu/oct-3-english-stt-checkpoints/acoustic_model/checkpoints/best_dev-3663881
+I Loading variable from checkpoint: cudnn_lstm/rnn/multi_rnn_cell/cell_0/cudnn_compatible_lstm_cell/bias
+I Loading variable from checkpoint: cudnn_lstm/rnn/multi_rnn_cell/cell_0/cudnn_compatible_lstm_cell/kernel
+I Loading variable from checkpoint: global_step
+I Loading variable from checkpoint: layer_1/bias
+I Loading variable from checkpoint: layer_1/weights
+I Loading variable from checkpoint: layer_2/bias
+I Loading variable from checkpoint: layer_2/weights
+I Loading variable from checkpoint: layer_3/bias
+I Loading variable from checkpoint: layer_3/weights
+I Loading variable from checkpoint: layer_5/bias
+I Loading variable from checkpoint: layer_5/weights
+I Loading variable from checkpoint: layer_6/bias
+I Loading variable from checkpoint: layer_6/weights
+Testing model on /home/ubuntu/en-data/test.csv
+Test epoch | Steps: 0 | Elapsed Time: 0:00:00
+Test epoch | Steps: 1 | Elapsed Time: 0:00:29
+Test epoch | Steps: 2 | Elapsed Time: 0:00:55
+Test epoch | Steps: 3 | Elapsed Time: 0:01:22
+Test epoch | Steps: 4 | Elapsed Time: 0:01:39
+Test epoch | Steps: 5 | Elapsed Time: 0:02:00
+Test epoch | Steps: 6 | Elapsed Time: 0:02:34
+Test epoch | Steps: 7 | Elapsed Time: 0:02:44
+Test epoch | Steps: 7 | Elapsed Time: 0:02:44
+Test on /home/ubuntu/en-data/test.csv - WER: 0.443992, CER: 0.248600, loss: 51.432274
+--------------------------------------------------------------------------------
+Best WER: 
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 35.819138
+ - wav: file:///home/ubuntu/en-data/common_voice_en_20305877.opus
+ - src: "he is a member of the national rally for democracy"
+ - res: "he is a member of the national rally for democracy"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 35.702061
+ - wav: file:///home/ubuntu/en-data/common_voice_en_20242298.opus
+ - src: "but in the middle of the negotiations he decided not to go through"
+ - res: "but in the middle of the negotiations he decided not to go through"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 30.634878
+ - wav: file:///home/ubuntu/en-data/common_voice_en_20881181.opus
+ - src: "it is written from the viewpoint of the ship's chief engineer montgomery scott"
+ - res: "it is written from the viewpoint of the ship's chief engineer montgomery scott"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 30.399607
+ - wav: file:///home/ubuntu/en-data/common_voice_en_26267987.opus
+ - src: "the frequency of the electromagnetic radiation is related to the reference of the observers"
+ - res: "the frequency of the electromagnetic radiation is related to the reference of the observers"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 28.879627
+ - wav: file:///home/ubuntu/en-data/common_voice_en_26970287.opus
+ - src: "the government of alberta is organized as a parliamentary democracy with a unicameral legislature"
+ - res: "the government of alberta is organized as a parliamentary democracy with a unicameral legislature"
+--------------------------------------------------------------------------------
+Median WER: 
+--------------------------------------------------------------------------------
+WER: 0.428571, CER: 0.259259, loss: 73.611267
+ - wav: file:///home/ubuntu/en-data/common_voice_en_25193717.opus
+ - src: "slavery was legal and practiced in each of the thirteen colonies at various times"
+ - res: "clever he was legal and brett and each of the thirteen colonies a fore times"
+--------------------------------------------------------------------------------
+WER: 0.428571, CER: 0.208791, loss: 73.538918
+ - wav: file:///home/ubuntu/en-data/common_voice_en_19999354.opus
+ - src: "his papers are now held at manuscripts and special collections the university of nottingham"
+ - res: "i propose now held at ministration special collections the university of notingham"
+--------------------------------------------------------------------------------
+WER: 0.428571, CER: 0.315217, loss: 72.908447
+ - wav: file:///home/ubuntu/en-data/common_voice_en_25568014.opus
+ - src: "lafayette secured the agreement of louis philippe who accepted the throne to various reforms"
+ - res: "the fated secured the agreement of voice vitae the throne to various reforms"
+--------------------------------------------------------------------------------
+WER: 0.428571, CER: 0.235294, loss: 72.391060
+ - wav: file:///home/ubuntu/en-data/common_voice_en_25183003.opus
+ - src: "brian mcconnell a nearby tabloid journalist also intervened and was shot in the chest"
+ - res: "brian went cool and herbie that boy journalist also intervened and was shot in the chest"
+--------------------------------------------------------------------------------
+WER: 0.428571, CER: 0.198020, loss: 70.961609
+ - wav: file:///home/ubuntu/en-data/common_voice_en_19601265.opus
+ - src: "its primary use is for surveillance and observation in battlefield environments with downlinked video"
+ - res: "his primary use is perseverance and observation and battlefield environments with the dowling video"
+--------------------------------------------------------------------------------
+Worst WER: 
+--------------------------------------------------------------------------------
+WER: 1.400000, CER: 0.666667, loss: 66.314156
+ - wav: file:///home/ubuntu/en-data/common_voice_en_24771140.opus
+ - src: "it is opposing soft systems"
+ - res: "is of closing to the tree comes"
+--------------------------------------------------------------------------------
+WER: 1.500000, CER: 0.558824, loss: 65.613472
+ - wav: file:///home/ubuntu/en-data/common_voice_en_27095220.opus
+ - src: "center for sustainable development"
+ - res: "send a forest in in wonderment"
+--------------------------------------------------------------------------------
+WER: 1.600000, CER: 1.076923, loss: 135.049271
+ - wav: file:///home/ubuntu/en-data/common_voice_en_19287970.opus
+ - src: "it is available on youtube"
+ - res: "its available on you tube it's available on you to"
+--------------------------------------------------------------------------------
+WER: 2.000000, CER: 0.882353, loss: 175.302841
+ - wav: file:///home/ubuntu/en-data/common_voice_en_18778827.opus
+ - src: "these extra cards were inserted randomly into packs"
+ - res: "oh but that is is extra care worn as your to the run to win is agusan"
+--------------------------------------------------------------------------------
+WER: 2.000000, CER: 0.720000, loss: 54.325821
+ - wav: file:///home/ubuntu/en-data/common_voice_en_25648391.opus
+ - src: "offended isabel flies off"
+ - res: "i think it is a ten light of"
+--------------------------------------------------------------------------------
+Testing model on /home/ubuntu/librispeech/librivox-test-clean.csv
+Test epoch | Steps: 0 | Elapsed Time: 0:00:00
+Test epoch | Steps: 1 | Elapsed Time: 0:00:38
+Test epoch | Steps: 2 | Elapsed Time: 0:01:41
+Test epoch | Steps: 3 | Elapsed Time: 0:03:10
+Test epoch | Steps: 3 | Elapsed Time: 0:03:10
+Test on /home/ubuntu/librispeech/librivox-test-clean.csv - WER: 0.052248, CER: 0.018900, loss: 8.554506
+--------------------------------------------------------------------------------
+Best WER: 
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 20.654106
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/5142-36377-0014.wav
+ - src: "a pretty girl and so far as i could judge by appearances a good girl too describing her generally i may say that she had a small head well carried and well set on her shoulders bright gray eyes that looked at you honestly and meant what they looked a trim slight little figure too slight for our english notions of beauty a strong american accent and a rare thing in america a pleasantly toned voice which made the accent agreeable to english ears"
+ - res: "a pretty girl and so far as i could judge by appearances a good girl too describing her generally i may say that she had a small head well carried and well set on her shoulders bright gray eyes that looked at you honestly and meant what they looked a trim slight little figure too slight for our english notions of beauty a strong american accent and a rare thing in america a pleasantly toned voice which made the accent agreeable to english ears"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 20.471767
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/1580-141083-0001.wav
+ - src: "i had always known him to be restless in his manner but on this particular occasion he was in such a state of uncontrollable agitation that it was clear something very unusual had occurred"
+ - res: "i had always known him to be restless in his manner but on this particular occasion he was in such a state of uncontrollable agitation that it was clear something very unusual had occurred"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 18.640211
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/4507-16021-0047.wav
+ - src: "yesterday you were trembling for a health that is dear to you to day you fear for your own to morrow it will be anxiety about money the day after to morrow the diatribe of a slanderer the day after that the misfortune of some friend then the prevailing weather then something that has been broken or lost then a pleasure with which your conscience and your vertebral column reproach you again the course of public affairs"
+ - res: "yesterday you were trembling for a health that is dear to you to day you fear for your own to morrow it will be anxiety about money the day after to morrow the diatribe of a slanderer the day after that the misfortune of some friend then the prevailing weather then something that has been broken or lost then a pleasure with which your conscience and your vertebral column reproach you again the course of public affairs"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 17.031771
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/3570-5694-0006.wav
+ - src: "drunkenness and the other pathological consequences of the free use of stimulants therefore tend in their turn to become honorific as being a mark at the second remove of the superior status of those who are able to afford the indulgence"
+ - res: "drunkenness and the other pathological consequences of the free use of stimulants therefore tend in their turn to become honorific as being a mark at the second remove of the superior status of those who are able to afford the indulgence"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 16.966490
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/237-126133-0022.wav
+ - src: "i didn't have any fears if i worked it rightly said the old gentleman complacently"
+ - res: "i didn't have any fears if i worked it rightly said the old gentleman complacently"
+--------------------------------------------------------------------------------
+Median WER: 
+--------------------------------------------------------------------------------
+WER: 0.015385, CER: 0.002882, loss: 5.821908
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/4507-16021-0026.wav
+ - src: "to keep afloat and to rescue from oblivion to hold above the gulf were it but a fragment of some language which man has spoken and which would otherwise be lost that is to say one of the elements good or bad of which civilization is composed or by which it is complicated to extend the records of social observation is to serve civilization itself"
+ - res: "to keep afloat and to rescue from oblivion to hold above the gulf where it but a fragment of some language which man has spoken and which would otherwise be lost that is to say one of the elements good or bad of which civilization is composed or by which it is complicated to extend the records of social observation is to serve civilization itself"
+--------------------------------------------------------------------------------
+WER: 0.015625, CER: 0.011236, loss: 32.164326
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/4077-13751-0018.wav
+ - src: "american school boys read with emotions of horror of the albigenses driven beaten and killed with a papal legate directing the butchery and of the vaudois hunted and hounded like beasts as the effect of a royal decree and they yet shall read in the history of their own country of scenes as terrible as these in the exhibition of injustice and inhuman hate"
+ - res: "american school boys read with emotions of horror of the albigenses driven beaten and killed with a papal legate directing the butchery and of the todos hunted and hounded like beasts as the effect of a royal decree and they yet shall read in the history of their own country of scenes as terrible as these in the exhibition of injustice and inhuman hate"
+--------------------------------------------------------------------------------
+WER: 0.015625, CER: 0.008499, loss: 20.004030
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/6930-75918-0003.wav
+ - src: "from the respect paid her on all sides she seemed like a queen and from the adoration with which she was treated by two or three she appeared an object of worship the queen mother gave the french the most affectionate reception france was her native country and she had suffered too much unhappiness in england for england to have made her forget france"
+ - res: "from the respect paid her on all sides she seemed like a clean and from the adoration with which she was treated by two or three she appeared an object of worship the queen mother gave the french the most affectionate reception france was her native country and she had suffered too much unhappiness in england for england to have made her forget france"
+--------------------------------------------------------------------------------
+WER: 0.016129, CER: 0.002747, loss: 8.017584
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/3729-6852-0006.wav
+ - src: "silvia did not think that her good conduct was a merit for she knew that she was virtuous only because her self love compelled her to be so and she never exhibited any pride or assumed any superiority towards her theatrical sisters although satisfied to shine by their talent or their beauty they cared little about rendering themselves conspicuous by their virtue"
+ - res: "sylvia did not think that her good conduct was a merit for she knew that she was virtuous only because her self love compelled her to be so and she never exhibited any pride or assumed any superiority towards her theatrical sisters although satisfied to shine by their talent or their beauty they cared little about rendering themselves conspicuous by their virtue"
+--------------------------------------------------------------------------------
+WER: 0.016949, CER: 0.005479, loss: 7.095662
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/2300-131720-0035.wav
+ - src: "in this connection it should be mentioned that the association of edison illuminating companies in the same year adopted resolutions unanimously to the effect that the edison meter was accurate and that its use was not expensive for stations above one thousand lights and that the best financial results were invariably secured in a station selling current by meter"
+ - res: "in this connection it should be mentioned that the association of addison illuminating companies in the same year adopted resolutions unanimously to the effect that the edison meter was accurate and that its use was not expensive for stations above one thousand lights and that the best financial results were invariably secured in a station selling current by meter"
+--------------------------------------------------------------------------------
+Worst WER: 
+--------------------------------------------------------------------------------
+WER: 0.750000, CER: 0.200000, loss: 20.187176
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/8463-294828-0005.wav
+ - src: "conseil was my manservant"
+ - res: "cause was my man servant"
+--------------------------------------------------------------------------------
+WER: 0.777778, CER: 0.404762, loss: 56.192341
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/3729-6852-0043.wav
+ - src: "i reside in the marais rue de douze portes"
+ - res: "iris eyed in the mare rude duport"
+--------------------------------------------------------------------------------
+WER: 1.000000, CER: 0.444444, loss: 32.090935
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/2830-3980-0026.wav
+ - src: "verse two"
+ - res: "first to"
+--------------------------------------------------------------------------------
+WER: 1.000000, CER: 0.294118, loss: 14.372181
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/1089-134691-0024.wav
+ - src: "stephanos dedalos"
+ - res: "stefano delos"
+--------------------------------------------------------------------------------
+WER: 1.000000, CER: 0.214286, loss: 3.630816
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-clean-wav/61-70968-0038.wav
+ - src: "robin fitzooth"
+ - res: "robin fitz routh"
+--------------------------------------------------------------------------------
+Testing model on /home/ubuntu/librispeech/librivox-test-other.csv
+Test epoch | Steps: 0 | Elapsed Time: 0:00:00
+Test epoch | Steps: 1 | Elapsed Time: 0:00:41
+Test epoch | Steps: 2 | Elapsed Time: 0:01:18
+Test epoch | Steps: 3 | Elapsed Time: 0:02:49
+Test epoch | Steps: 3 | Elapsed Time: 0:02:49
+Test on /home/ubuntu/librispeech/librivox-test-other.csv - WER: 0.150316, CER: 0.072548, loss: 26.010748
+--------------------------------------------------------------------------------
+Best WER: 
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 41.159855
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/3331-159609-0000.wav
+ - src: "never mind what the business was it suffices to say that it was a good beginning for a young man like tom who having been born and bred in the most conservative class of the most conceited city in new england needed just the healthy hearty social influences of the west to widen his views and make a man of him"
+ - res: "never mind what the business was it suffices to say that it was a good beginning for a young man like tom who having been born and bred in the most conservative class of the most conceited city in new england needed just the healthy hearty social influences of the west to widen his views and make a man of him"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 32.022297
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/2033-164914-0020.wav
+ - src: "o my lord continued the eunuch and shahrazad perceived the dawn of day and ceased to say her permitted say"
+ - res: "o my lord continued the eunuch and shahrazad perceived the dawn of day and ceased to say her permitted say"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 26.933062
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/8188-269290-0048.wav
+ - src: "after the address the girls themselves were encouraged to speak and a very animated discussion followed"
+ - res: "after the address the girls themselves were encouraged to speak and a very animated discussion followed"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 25.881916
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/7902-96594-0001.wav
+ - src: "yes sir but he may turn up on the cliff at any moment"
+ - res: "yes sir but he may turn up on the cliff at any moment"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 24.124416
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/2414-128291-0004.wav
+ - src: "answered he the same that thou seekest thou mischief maker that is to say happiness upon earth"
+ - res: "answered he the same that thou seekest thou mischief maker that is to say happiness upon earth"
+--------------------------------------------------------------------------------
+Median WER: 
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.056962, loss: 41.689541
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/367-293981-0011.wav
+ - src: "to be brief he took the materials of which he made a compound mixing them all and boiling them a good while until it seemed to him they had come to perfection"
+ - res: "to be brief he took the materials of which he made a compound mixing the wall boiling them a good willet until it seemed to him they had come to perfection"
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.075949, loss: 39.316055
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/1688-142285-0052.wav
+ - src: "as they turned up into a small court opening out of a squalid street bessy said"
+ - res: "as they turned up into a small court opening out into a squalid street betty said"
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.039548, loss: 38.868198
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/6128-63241-0001.wav
+ - src: "the women he had hitherto known had been mainly of his own soft clime and it was not often they exhibited the tendency he detected and cursorily deplored in missus luna's sister"
+ - res: "the women he had hitherto known had been mainly or his own soft climb and it was not often be exhibited the tendency he detected and cursorily deplored in missus lunes sister"
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.040359, loss: 37.354950
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/4294-14317-0004.wav
+ - src: "but beware of letting bandinello quit you rather bestow upon him always more than he demands for if he goes into foreign parts his ignorance is so presumptuous that he is just the man to disgrace our most illustrious school"
+ - res: "but beware of letting bend nello quit you rather bestow upon him always more than he demands for he goes into foreign parts his ignorance is so presumptuous that is just the man to disgrace or most illustrious school"
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.061069, loss: 36.567032
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/7105-2340-0001.wav
+ - src: "well the failing still exists doesn't it said her husband or do you suppose a reform of character is entailed along with the estate"
+ - res: "well the failing still exists thus in it said the husband or do you suppose a reform of character is entailed along with the estate"
+--------------------------------------------------------------------------------
+Worst WER: 
+--------------------------------------------------------------------------------
+WER: 1.100000, CER: 0.589286, loss: 123.546707
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/2414-128292-0023.wav
+ - src: "o eternal everywhere o eternal nowhere o eternal in vain"
+ - res: "o i don't know everywhere or i done the nowhere who had turned that in vain"
+--------------------------------------------------------------------------------
+WER: 1.125000, CER: 0.375000, loss: 71.525642
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/2609-156975-0016.wav
+ - src: "was moses justified in resisting the egyptian taskmaster"
+ - res: "his moves its just finding resist in de gibson taskmaster"
+--------------------------------------------------------------------------------
+WER: 1.333333, CER: 0.400000, loss: 19.822819
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/7105-2340-0009.wav
+ - src: "signed wilfrid pigeoncote"
+ - res: "sign wilfred pecan coat"
+--------------------------------------------------------------------------------
+WER: 1.500000, CER: 0.187500, loss: 13.895748
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/533-131564-0022.wav
+ - src: "where's milicent"
+ - res: "where is millicent"
+--------------------------------------------------------------------------------
+WER: 2.000000, CER: 0.720000, loss: 69.510612
+ - wav: file:///home/ubuntu/librispeech/LibriSpeech/test-other-wav/5442-41168-0014.wav
+ - src: "sergey ivanovitch frowned"
+ - res: "so that he even abich round"
+--------------------------------------------------------------------------------
