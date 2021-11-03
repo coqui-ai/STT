@@ -40,3 +40,4 @@ native_client/swift/deepspeech_ios.framework/deepspeech_ios
 .github/actions/check_artifact_exists/node_modules/
 .idea
 moira/wavs
+moira/moira_quote_index.csv
