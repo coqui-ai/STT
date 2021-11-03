@@ -1,0 +1,8 @@
+requests~=2.25.1
+numpy~=1.19.4
+jiwer~=2.2.1
+stt~=1.0.0
+setuptools~=58.0.4
+coqpit~=0.0.9
+pyxdg~=0.27
+six~=1.16.0
