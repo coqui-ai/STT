@@ -32,9 +32,11 @@ COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
 COPY training /code/training
 
-# Install STT
+# Install STT Training
 # No need for the decoder since we did it earlier
 RUN DS_NODECODER=y pip3 install --upgrade -e .
+# Install STT Inference
+RUN pip3 install --upgrade stt
 
 # Copy rest of the code and test training
 COPY . /code
