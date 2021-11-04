@@ -6,7 +6,10 @@ class AudioInput {
     private let onData: (_ shorts: [Int16]) -> Void
 
     private let bus: Int = 0
-    private let processingInterval = 0.2
+
+    // Interval to determine the buffer size
+    // regarding the input device's sample rate.
+    private let processingIntervalInMillis = 200
 
     private var audioData: Data = Data()
 
@@ -25,7 +28,7 @@ class AudioInput {
 
         engine.inputNode.installTap(
             onBus: bus,
-            bufferSize: UInt32(processingInterval * inputFormat.sampleRate),
+            bufferSize: UInt32(Double(processingIntervalInMillis / 1000) * inputFormat.sampleRate),
             format: inputFormat,
             block: handleInput
         )

@@ -16,8 +16,14 @@ class SpeechRecognitionImpl {
     private var model: STTModel
     private var stream: STTStream?
 
-    private let modelFeedInterval = 0.1
-    private let decodeInterval = 0.5
+    // The interval in which audio data is read from
+    // the buffer queue and fed into the model.
+    // Should be slightly higher than [AudioInput.processingIntervalInMillis].
+    private let modelFeedIntervalInMillis = 100
+
+    // The interval in which the model passes data through the decoder.
+    // Should be slightly above timestep length (20 ms) * number of timestamps in a block (default is 16).
+    private let decodeIntervalInMillis = 350
 
     private var audioData = Data()
     private var feedTimer: Timer? = nil
@@ -51,7 +57,7 @@ class SpeechRecognitionImpl {
         audioInput!.start()
 
         feedTimer = Timer.scheduledTimer(
-            withTimeInterval: modelFeedInterval,
+            withTimeInterval: Double(modelFeedIntervalInMillis) / 1000.0,
             repeats: true
         ) { _ in
             if (!self.bufferQueue.isEmpty) {
@@ -66,7 +72,7 @@ class SpeechRecognitionImpl {
         }
 
         decodeTimer = Timer.scheduledTimer(
-            withTimeInterval: decodeInterval,
+            withTimeInterval: Double(decodeIntervalInMillis) / 1000.0,
             repeats: true
         ) { _ in
             // (optional) get partial result
