@@ -1,4 +1,4 @@
-## Evaluation of Coqui STT on New Voice Data
+## Validation of Coqui STT on Gaming Voice Lines (Moira from Overwatch)
 
 In this directory we are running and evaluating the Coqui STT system on a set of English voice data. 
 
@@ -18,7 +18,7 @@ To run the evaluation first install the requirements:
 pip install -r moira/requirements.txt
 ```
 Then get from https://drive.google.com/drive/folders/1nqQyZBaVbXDly6lntzY-Z0WkRyaZESlH?usp=sharing 
-the wav files and place them in a directory /moira/wavs. From the same link take also the file "moira_quote_index.csv" and place it in /moira.
+the wav files and place them in your local directory /moira/wavs. From the same link take also the file "moira_quote_index.csv" and place it in /moira.
 
 Then go to the directory /moira and execute the evaluation script:
 
