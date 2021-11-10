@@ -99,7 +99,7 @@ def wavfile_bytes_to_features(
         clock=clock,
         train_phase=train_phase,
         augmentations=augmentations,
-        sample_id=wav_filename,
+        sample_id=sample_id,
     )
 
 
