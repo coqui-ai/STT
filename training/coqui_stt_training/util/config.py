@@ -587,6 +587,10 @@ class _SttConfig(Coqpit):
         default=True,
         metadata=dict(help="export a quantized model (optimized for size)"),
     )
+    export_savedmodel: bool = field(
+        default=False,
+        metadata=dict(help="export model in TF SavedModel format"),
+    )
     n_steps: int = field(
         default=16,
         metadata=dict(
