@@ -7,6 +7,10 @@ const fs = require('fs');
 const { throttling } = require('@octokit/plugin-throttling');
 const { GitHub } = require('@actions/github/lib/utils');
 const Download = require('download');
+const Util = require('util');
+const Stream = require('stream');
+
+const Pipeline = Util.promisify(Stream.pipeline);
 
 async function getGoodArtifacts(client, owner, repo, releaseId, name) {
     console.log(`==> GET /repos/${owner}/${repo}/releases/${releaseId}/assets`);
@@ -94,22 +98,24 @@ async function main() {
             console.log("==> # artifacts:", goodArtifacts.length);
 
             const artifact = goodArtifacts[0];
-
             console.log("==> Artifact:", artifact.id)
 
             const size = filesize(artifact.size, { base: 10 })
+            console.log(`==> Downloading: ${artifact.name} (${size}) to path: ${path}`)
 
-            console.log("==> Downloading:", artifact.name, `(${size})`)
-
-            const dir = name ? path : pathname.join(path, artifact.name)
+            const dir = pathname.dirname(path)
+            console.log(`==> Creating containing dir if needed: ${dir}`)
             fs.mkdirSync(dir, { recursive: true })
 
-            await Download(artifact.url, dir, {
-                headers: {
-                    "Accept": "application/octet-stream",
-                    "Authorization": `token ${token}`,
-                },
-            });
+            await Pipeline(
+                Download(artifact.url, {
+                    headers: {
+                        "Accept": "application/octet-stream",
+                        "Authorization": `token ${token}`,
+                    },
+                }),
+                fs.createWriteStream(path)
+            )
         }
 
         if (artifactStatus === "missing" && download == "true") {

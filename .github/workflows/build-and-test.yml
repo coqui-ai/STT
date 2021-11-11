@@ -394,15 +394,15 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - name: Install dependencies
         run: |
           apt-get update
           apt-get install -y --no-install-recommends xz-utils zip
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linux.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
@@ -1353,11 +1353,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar xkf ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
+          tar xkf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - run: |
           git status
       - uses: ./.github/actions/select-xcode
@@ -1818,11 +1818,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          "C:/Program Files/7-Zip/7z.exe" x ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -ttar -o`pwd`
-          rm ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
+          "C:/Program Files/7-Zip/7z.exe" x tf-cache.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -ttar -o`pwd`
+          rm tf-cache.tar.xz
       - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
         run: |
           rm -f /c/msys64/mingw64/clang-cl*
@@ -2696,11 +2696,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - run: |
           git status
       - name: "Install chroot"
@@ -2733,11 +2733,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - run: |
           git status
       - name: "Install chroot"
@@ -2794,11 +2794,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -2860,11 +2860,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -2939,11 +2939,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -3005,11 +3005,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -3397,11 +3397,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-armv7
@@ -3469,11 +3469,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-arm64
@@ -3493,11 +3493,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-x86_64

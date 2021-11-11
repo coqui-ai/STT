@@ -64,7 +64,7 @@ def get_importers_parser(description):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
         "--validate_label_locale",
-        help="Path to a Python file defining a |validate_label| function for your locale. WARNING: THIS WILL ADD THIS FILE's DIRECTORY INTO PYTHONPATH.",
+        help="Path to a Python file defining a |validate_label| function for your locale.",
     )
     return parser
 
@@ -81,15 +81,15 @@ def get_validate_label(args):
     :return: The user-supplied validate_label function
     :type: function
     """
-    # Python 3.5 does not support passing a pathlib.Path to os.path.* methods
     if "validate_label_locale" not in args or (args.validate_label_locale is None):
         print(
-            "WARNING: No --validate_label_locale specified, your might end with inconsistent dataset."
+            "WARNING: No --validate_label_locale specified, you might end with inconsistent dataset."
         )
         return validate_label_eng
+    # Python 3.5 does not support passing a pathlib.Path to os.path.* methods
     validate_label_locale = str(args.validate_label_locale)
     if not os.path.exists(os.path.abspath(validate_label_locale)):
-        print("ERROR: Inexistent --validate_label_locale specified. Please check.")
+        print("ERROR: Path specified in --validate_label_locale is not a file.")
         return None
     module_dir = os.path.abspath(os.path.dirname(validate_label_locale))
     sys.path.insert(1, module_dir)
