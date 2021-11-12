@@ -5,8 +5,6 @@ Supported platforms
 
 Here we maintain the list of supported platforms for deployment.
 
-*Note that 🐸STT currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
-
 Linux / AMD64
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
