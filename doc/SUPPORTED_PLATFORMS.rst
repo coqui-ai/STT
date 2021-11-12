@@ -12,9 +12,12 @@ Here we maintain the list of supported platforms for running inference. Note tha
 =======
 Here we maintain the list of supported platforms for deployment.
 
+<<<<<<< HEAD
 *Note that 🐸STT currently only provides packages for CPU deployment with Python 3.5 or higher on Linux. We're working to get the rest of our usually supported packages back up and running as soon as possible.*
 >>>>>>> 2d0a907e (Docs welcome page and Development / Inference page overhaul (#1793))
 
+=======
+>>>>>>> 6dcadde5 (Remove outdated comment in supported platforms doc [skip ci])
 Linux / AMD64
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * x86-64 CPU with AVX/FMA (one can rebuild without AVX/FMA, but it might slow down performance)
