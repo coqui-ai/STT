@@ -14,6 +14,10 @@ const fs = __nccwpck_require__(5747);
 const { throttling } = __nccwpck_require__(9968);
 const { GitHub } = __nccwpck_require__(3030);
 const Download = __nccwpck_require__(7490);
+const Util = __nccwpck_require__(1669);
+const Stream = __nccwpck_require__(2413);
+
+const Pipeline = Util.promisify(Stream.pipeline);
 
 async function getGoodArtifacts(client, owner, repo, releaseId, name) {
     console.log(`==> GET /repos/${owner}/${repo}/releases/${releaseId}/assets`);
@@ -101,22 +105,24 @@ async function main() {
             console.log("==> # artifacts:", goodArtifacts.length);
 
             const artifact = goodArtifacts[0];
-
             console.log("==> Artifact:", artifact.id)
 
             const size = filesize(artifact.size, { base: 10 })
+            console.log(`==> Downloading: ${artifact.name} (${size}) to path: ${path}`)
 
-            console.log("==> Downloading:", artifact.name, `(${size})`)
-
-            const dir = name ? path : pathname.join(path, artifact.name)
+            const dir = pathname.dirname(path)
+            console.log(`==> Creating containing dir if needed: ${dir}`)
             fs.mkdirSync(dir, { recursive: true })
 
-            await Download(artifact.url, dir, {
-                headers: {
-                    "Accept": "application/octet-stream",
-                    "Authorization": `token ${token}`,
-                },
-            });
+            await Pipeline(
+                Download(artifact.url, {
+                    headers: {
+                        "Accept": "application/octet-stream",
+                        "Authorization": `token ${token}`,
+                    },
+                }),
+                fs.createWriteStream(path)
+            )
         }
 
         if (artifactStatus === "missing" && download == "true") {
@@ -30667,7 +30673,7 @@ module.exports = eval("require")("original-fs");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse("{\"_from\":\"got@^8.3.1\",\"_id\":\"got@8.3.2\",\"_inBundle\":false,\"_integrity\":\"sha512-qjUJ5U/hawxosMryILofZCkm3C84PLJS/0grRIpjAwu+Lkxxj5cxeCU25BG0/3mDSpXKTyZr8oh8wIgLaH0QCw==\",\"_location\":\"/got\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"range\",\"registry\":true,\"raw\":\"got@^8.3.1\",\"name\":\"got\",\"escapedName\":\"got\",\"rawSpec\":\"^8.3.1\",\"saveSpec\":null,\"fetchSpec\":\"^8.3.1\"},\"_requiredBy\":[\"/download\"],\"_resolved\":\"https://registry.npmjs.org/got/-/got-8.3.2.tgz\",\"_shasum\":\"1d23f64390e97f776cac52e5b936e5f514d2e937\",\"_spec\":\"got@^8.3.1\",\"_where\":\"/Users/reubenmorais/Development/STT/.github/actions/check_artifact_exists/node_modules/download\",\"ava\":{\"concurrency\":4},\"browser\":{\"decompress-response\":false,\"electron\":false},\"bugs\":{\"url\":\"https://github.com/sindresorhus/got/issues\"},\"bundleDependencies\":false,\"dependencies\":{\"@sindresorhus/is\":\"^0.7.0\",\"cacheable-request\":\"^2.1.1\",\"decompress-response\":\"^3.3.0\",\"duplexer3\":\"^0.1.4\",\"get-stream\":\"^3.0.0\",\"into-stream\":\"^3.1.0\",\"is-retry-allowed\":\"^1.1.0\",\"isurl\":\"^1.0.0-alpha5\",\"lowercase-keys\":\"^1.0.0\",\"mimic-response\":\"^1.0.0\",\"p-cancelable\":\"^0.4.0\",\"p-timeout\":\"^2.0.1\",\"pify\":\"^3.0.0\",\"safe-buffer\":\"^5.1.1\",\"timed-out\":\"^4.0.1\",\"url-parse-lax\":\"^3.0.0\",\"url-to-options\":\"^1.0.1\"},\"deprecated\":false,\"description\":\"Simplified HTTP requests\",\"devDependencies\":{\"ava\":\"^0.25.0\",\"coveralls\":\"^3.0.0\",\"form-data\":\"^2.1.1\",\"get-port\":\"^3.0.0\",\"nyc\":\"^11.0.2\",\"p-event\":\"^1.3.0\",\"pem\":\"^1.4.4\",\"proxyquire\":\"^1.8.0\",\"sinon\":\"^4.0.0\",\"slow-stream\":\"0.0.4\",\"tempfile\":\"^2.0.0\",\"tempy\":\"^0.2.1\",\"universal-url\":\"1.0.0-alpha\",\"xo\":\"^0.20.0\"},\"engines\":{\"node\":\">=4\"},\"files\":[\"index.js\",\"errors.js\"],\"homepage\":\"https://github.com/sindresorhus/got#readme\",\"keywords\":[\"http\",\"https\",\"get\",\"got\",\"url\",\"uri\",\"request\",\"util\",\"utility\",\"simple\",\"curl\",\"wget\",\"fetch\",\"net\",\"network\",\"electron\"],\"license\":\"MIT\",\"maintainers\":[{\"name\":\"Sindre Sorhus\",\"email\":\"sindresorhus@gmail.com\",\"url\":\"sindresorhus.com\"},{\"name\":\"Vsevolod Strukchinsky\",\"email\":\"floatdrop@gmail.com\",\"url\":\"github.com/floatdrop\"},{\"name\":\"Alexander Tesfamichael\",\"email\":\"alex.tesfamichael@gmail.com\",\"url\":\"alextes.me\"}],\"name\":\"got\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/sindresorhus/got.git\"},\"scripts\":{\"coveralls\":\"nyc report --reporter=text-lcov | coveralls\",\"test\":\"xo && nyc ava\"},\"version\":\"8.3.2\"}");
+module.exports = JSON.parse("{\"_args\":[[\"got@8.3.2\",\"/Users/reubenmorais/Development/STT/.github/actions/check_artifact_exists\"]],\"_development\":true,\"_from\":\"got@8.3.2\",\"_id\":\"got@8.3.2\",\"_inBundle\":false,\"_integrity\":\"sha512-qjUJ5U/hawxosMryILofZCkm3C84PLJS/0grRIpjAwu+Lkxxj5cxeCU25BG0/3mDSpXKTyZr8oh8wIgLaH0QCw==\",\"_location\":\"/got\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"got@8.3.2\",\"name\":\"got\",\"escapedName\":\"got\",\"rawSpec\":\"8.3.2\",\"saveSpec\":null,\"fetchSpec\":\"8.3.2\"},\"_requiredBy\":[\"/download\"],\"_resolved\":\"https://registry.npmjs.org/got/-/got-8.3.2.tgz\",\"_spec\":\"8.3.2\",\"_where\":\"/Users/reubenmorais/Development/STT/.github/actions/check_artifact_exists\",\"ava\":{\"concurrency\":4},\"browser\":{\"decompress-response\":false,\"electron\":false},\"bugs\":{\"url\":\"https://github.com/sindresorhus/got/issues\"},\"dependencies\":{\"@sindresorhus/is\":\"^0.7.0\",\"cacheable-request\":\"^2.1.1\",\"decompress-response\":\"^3.3.0\",\"duplexer3\":\"^0.1.4\",\"get-stream\":\"^3.0.0\",\"into-stream\":\"^3.1.0\",\"is-retry-allowed\":\"^1.1.0\",\"isurl\":\"^1.0.0-alpha5\",\"lowercase-keys\":\"^1.0.0\",\"mimic-response\":\"^1.0.0\",\"p-cancelable\":\"^0.4.0\",\"p-timeout\":\"^2.0.1\",\"pify\":\"^3.0.0\",\"safe-buffer\":\"^5.1.1\",\"timed-out\":\"^4.0.1\",\"url-parse-lax\":\"^3.0.0\",\"url-to-options\":\"^1.0.1\"},\"description\":\"Simplified HTTP requests\",\"devDependencies\":{\"ava\":\"^0.25.0\",\"coveralls\":\"^3.0.0\",\"form-data\":\"^2.1.1\",\"get-port\":\"^3.0.0\",\"nyc\":\"^11.0.2\",\"p-event\":\"^1.3.0\",\"pem\":\"^1.4.4\",\"proxyquire\":\"^1.8.0\",\"sinon\":\"^4.0.0\",\"slow-stream\":\"0.0.4\",\"tempfile\":\"^2.0.0\",\"tempy\":\"^0.2.1\",\"universal-url\":\"1.0.0-alpha\",\"xo\":\"^0.20.0\"},\"engines\":{\"node\":\">=4\"},\"files\":[\"index.js\",\"errors.js\"],\"homepage\":\"https://github.com/sindresorhus/got#readme\",\"keywords\":[\"http\",\"https\",\"get\",\"got\",\"url\",\"uri\",\"request\",\"util\",\"utility\",\"simple\",\"curl\",\"wget\",\"fetch\",\"net\",\"network\",\"electron\"],\"license\":\"MIT\",\"maintainers\":[{\"name\":\"Sindre Sorhus\",\"email\":\"sindresorhus@gmail.com\",\"url\":\"sindresorhus.com\"},{\"name\":\"Vsevolod Strukchinsky\",\"email\":\"floatdrop@gmail.com\",\"url\":\"github.com/floatdrop\"},{\"name\":\"Alexander Tesfamichael\",\"email\":\"alex.tesfamichael@gmail.com\",\"url\":\"alextes.me\"}],\"name\":\"got\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/sindresorhus/got.git\"},\"scripts\":{\"coveralls\":\"nyc report --reporter=text-lcov | coveralls\",\"test\":\"xo && nyc ava\"},\"version\":\"8.3.2\"}");
 
 /***/ }),
 
@@ -30683,7 +30689,7 @@ module.exports = JSON.parse("{\"application/1d-interleaved-parityfec\":{\"source
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse("{\"_from\":\"seek-bzip@^1.0.5\",\"_id\":\"seek-bzip@1.0.6\",\"_inBundle\":false,\"_integrity\":\"sha512-e1QtP3YL5tWww8uKaOCQ18UxIT2laNBXHjV/S2WYCiK4udiv8lkG89KRIoCjUagnAmCBurjF4zEVX2ByBbnCjQ==\",\"_location\":\"/seek-bzip\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"range\",\"registry\":true,\"raw\":\"seek-bzip@^1.0.5\",\"name\":\"seek-bzip\",\"escapedName\":\"seek-bzip\",\"rawSpec\":\"^1.0.5\",\"saveSpec\":null,\"fetchSpec\":\"^1.0.5\"},\"_requiredBy\":[\"/decompress-tarbz2\"],\"_resolved\":\"https://registry.npmjs.org/seek-bzip/-/seek-bzip-1.0.6.tgz\",\"_shasum\":\"35c4171f55a680916b52a07859ecf3b5857f21c4\",\"_spec\":\"seek-bzip@^1.0.5\",\"_where\":\"/Users/reubenmorais/Development/STT/.github/actions/check_artifact_exists/node_modules/decompress-tarbz2\",\"bin\":{\"seek-bunzip\":\"bin/seek-bunzip\",\"seek-table\":\"bin/seek-bzip-table\"},\"bugs\":{\"url\":\"https://github.com/cscott/seek-bzip/issues\"},\"bundleDependencies\":false,\"contributors\":[{\"name\":\"C. Scott Ananian\",\"url\":\"http://cscott.net\"},{\"name\":\"Eli Skeggs\"},{\"name\":\"Kevin Kwok\"},{\"name\":\"Rob Landley\",\"url\":\"http://landley.net\"}],\"dependencies\":{\"commander\":\"^2.8.1\"},\"deprecated\":false,\"description\":\"a pure-JavaScript Node.JS module for random-access decoding bzip2 data\",\"devDependencies\":{\"fibers\":\"~1.0.6\",\"mocha\":\"~2.2.5\"},\"directories\":{\"test\":\"test\"},\"homepage\":\"https://github.com/cscott/seek-bzip#readme\",\"license\":\"MIT\",\"main\":\"./lib/index.js\",\"name\":\"seek-bzip\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/cscott/seek-bzip.git\"},\"scripts\":{\"test\":\"mocha\"},\"version\":\"1.0.6\"}");
+module.exports = JSON.parse("{\"_args\":[[\"seek-bzip@1.0.6\",\"/Users/reubenmorais/Development/STT/.github/actions/check_artifact_exists\"]],\"_development\":true,\"_from\":\"seek-bzip@1.0.6\",\"_id\":\"seek-bzip@1.0.6\",\"_inBundle\":false,\"_integrity\":\"sha512-e1QtP3YL5tWww8uKaOCQ18UxIT2laNBXHjV/S2WYCiK4udiv8lkG89KRIoCjUagnAmCBurjF4zEVX2ByBbnCjQ==\",\"_location\":\"/seek-bzip\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"seek-bzip@1.0.6\",\"name\":\"seek-bzip\",\"escapedName\":\"seek-bzip\",\"rawSpec\":\"1.0.6\",\"saveSpec\":null,\"fetchSpec\":\"1.0.6\"},\"_requiredBy\":[\"/decompress-tarbz2\"],\"_resolved\":\"https://registry.npmjs.org/seek-bzip/-/seek-bzip-1.0.6.tgz\",\"_spec\":\"1.0.6\",\"_where\":\"/Users/reubenmorais/Development/STT/.github/actions/check_artifact_exists\",\"bin\":{\"seek-bunzip\":\"bin/seek-bunzip\",\"seek-table\":\"bin/seek-bzip-table\"},\"bugs\":{\"url\":\"https://github.com/cscott/seek-bzip/issues\"},\"contributors\":[{\"name\":\"C. Scott Ananian\",\"url\":\"http://cscott.net\"},{\"name\":\"Eli Skeggs\"},{\"name\":\"Kevin Kwok\"},{\"name\":\"Rob Landley\",\"url\":\"http://landley.net\"}],\"dependencies\":{\"commander\":\"^2.8.1\"},\"description\":\"a pure-JavaScript Node.JS module for random-access decoding bzip2 data\",\"devDependencies\":{\"fibers\":\"~1.0.6\",\"mocha\":\"~2.2.5\"},\"directories\":{\"test\":\"test\"},\"homepage\":\"https://github.com/cscott/seek-bzip#readme\",\"license\":\"MIT\",\"main\":\"./lib/index.js\",\"name\":\"seek-bzip\",\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/cscott/seek-bzip.git\"},\"scripts\":{\"test\":\"mocha\"},\"version\":\"1.0.6\"}");
 
 /***/ }),
 
