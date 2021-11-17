@@ -14,7 +14,7 @@ import numpy as np
 from stt import Model, version
 
 try:
-    from shhlex import quote
+    from shlex import quote
 except ImportError:
     from pipes import quote
 
