@@ -8,14 +8,14 @@ from coqui_stt_training.evaluate import test
 # only one GPU for only one training sample
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-download_ldc("data/ldc93s1")
+download_ldc("data/smoke_test")
 
 initialize_globals_from_args(
     load_train="init",
     alphabet_config_path="data/alphabet.txt",
-    train_files=["data/ldc93s1/ldc93s1.csv"],
-    dev_files=["data/ldc93s1/ldc93s1.csv"],
-    test_files=["data/ldc93s1/ldc93s1.csv"],
+    train_files=["data/smoke_test/ldc93s1.csv"],
+    dev_files=["data/smoke_test/ldc93s1.csv"],
+    test_files=["data/smoke_test/ldc93s1.csv"],
     augment=["time_mask"],
     n_hidden=100,
     epochs=200,

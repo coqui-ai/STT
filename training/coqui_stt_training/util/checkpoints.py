@@ -82,13 +82,12 @@ def _load_checkpoint_impl(
                 init_vars.add(v)
         load_vars -= init_vars
 
-    def maybe_log_info(*args, **kwargs):
-        if not silent:
-            log_info(*args, **kwargs)
-
+    log_info(f"Vars to load: {list(sorted(v.op.name for v in load_vars))}")
     for v in sorted(load_vars, key=lambda v: v.op.name):
-        log_info("Loading variable from checkpoint: %s" % (v.op.name))
-        v.load(ckpt.get_tensor(v.op.name), session=session)
+        log_info(f"Getting tensor from variable: {v.op.name}")
+        tensor = ckpt.get_tensor(v.op.name)
+        log_info(f"Loading tensor from checkpoint: {v.op.name}")
+        v.load(tensor, session=session)
 
     for v in sorted(init_vars, key=lambda v: v.op.name):
         log_info("Initializing variable: %s" % (v.op.name))
