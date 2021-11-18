@@ -16,7 +16,7 @@ mkdir -p /tmp/train_tflite || true
 
 set -o pipefail
 python -m pip install --upgrade pip setuptools wheel | cat
-python -m pip install --upgrade . | cat
+python -m pip install --upgrade ".[transcribe]" | cat
 set +o pipefail
 
 # Prepare correct arguments for training
@@ -72,3 +72,20 @@ time python ./bin/run-ldc93s1.py
 
 # Training graph inference
 time ./bin/run-ci-ldc93s1_singleshotinference.sh
+
+# transcribe module
+time python -m coqui_stt_training.transcribe \
+    --src "data/smoke_test/LDC93S1.wav" \
+    --dst ${CI_ARTIFACTS_DIR}/transcribe.log \
+    --n_hidden 100 \
+    --scorer_path "data/smoke_test/pruned_lm.scorer"
+
+#TODO: investigate why this is hanging in CI
+#mkdir /tmp/transcribe_dir
+#cp data/smoke_test/LDC93S1.wav /tmp/transcribe_dir
+#time python -m coqui_stt_training.transcribe \
+#    --src "/tmp/transcribe_dir/" \
+#    --n_hidden 100 \
+#    --scorer_path "data/smoke_test/pruned_lm.scorer"
+#
+#for i in data/smoke_test/*.tlog; do echo $i; cat $i; echo; done
