@@ -69,6 +69,9 @@ def main():
         python_requires=">=3.5, <4",
         install_requires=install_requires,
         include_package_data=True,
+        extras_require={
+            "transcribe": ["webrtcvad"],
+        },
     )
 
 

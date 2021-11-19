@@ -808,7 +808,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
-          sudo apt-get install -y --no-install-recommends libopus0
+          sudo apt-get install -y --no-install-recommends libopus0 sox
       - name: Run extra training tests
         run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl

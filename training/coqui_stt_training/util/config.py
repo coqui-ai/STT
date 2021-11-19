@@ -37,7 +37,7 @@ Config = _ConfigSingleton()  # pylint: disable=invalid-name
 
 
 @dataclass
-class _SttConfig(Coqpit):
+class BaseSttConfig(Coqpit):
     def __post_init__(self):
         # Augmentations
         self.augmentations = parse_augmentations(self.augment)
@@ -587,6 +587,10 @@ class _SttConfig(Coqpit):
         default=True,
         metadata=dict(help="export a quantized model (optimized for size)"),
     )
+    export_savedmodel: bool = field(
+        default=False,
+        metadata=dict(help="export model in TF SavedModel format"),
+    )
     n_steps: int = field(
         default=16,
         metadata=dict(
@@ -831,14 +835,20 @@ class _SttConfig(Coqpit):
 
 
 def initialize_globals_from_cli():
-    c = _SttConfig.init_from_argparse(arg_prefix="")
+    c = BaseSttConfig.init_from_argparse(arg_prefix="")
     _ConfigSingleton._config = c  # pylint: disable=protected-access
 
 
 def initialize_globals_from_args(**override_args):
     # Update Config with new args
-    c = _SttConfig(**override_args)
+    c = BaseSttConfig(**override_args)
     _ConfigSingleton._config = c  # pylint: disable=protected-access
+
+
+def initialize_globals_from_instance(config):
+    """ Initialize Config singleton from an existing Config instance (or subclass) """
+    assert isinstance(config, BaseSttConfig)
+    _ConfigSingleton._config = config  # pylint: disable=protected-access
 
 
 # Logging functions

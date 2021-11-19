@@ -1,4 +1,4 @@
-.. _c-usage:
+.. _c-api:
 
 C API
 =====

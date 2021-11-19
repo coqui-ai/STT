@@ -16,7 +16,7 @@ You can deploy 🐸STT models either via a command-line client or a language bin
 * :ref:`The Node.JS package + language binding <nodejs-usage>`
 * :ref:`The Android libstt AAR package <android-usage>`
 * :ref:`The command-line client <cli-usage>`
-* :ref:`The native C API <c-usage>`
+* :ref:`The C API <c-usage>`
 
 .. _download-models:
 
@@ -172,7 +172,7 @@ This will link all .aar files in the ``libs`` directory you just created, includ
 Using the command-line client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The pre-built binaries for the ``stt`` command-line (compiled C++) client are available in the ``native_client.tar.xz`` archive for your desired platform. You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
+The pre-built binaries for the ``stt`` command-line (compiled C++) client are available in the ``native_client.*.tar.xz`` archive for your desired platform (where the * is the appropriate identifier for the platform you want to run on). You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
 
 Assuming you have :ref:`downloaded the pre-trained models <download-models>`, you can use the client as such:
 
@@ -181,6 +181,15 @@ Assuming you have :ref:`downloaded the pre-trained models <download-models>`, yo
    ./stt --model model.tflite --scorer huge-vocabulary.scorer --audio audio_input.wav
 
 See the help output with ``./stt -h`` for more details.
+
+.. _c-usage:
+
+Using the C API
+^^^^^^^^^^^^^^^
+
+Alongside the pre-built binaries for the ``stt`` command-line client described :ref:`above <cli-usage>`, in the same ``native_client.*.tar.xz`` platform-specific archive, you'll find the ``coqui-stt.h`` header file as well as the pre-built shared libraries needed to use the 🐸STT C API. You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
+
+Then, simply include the header file and link against the shared libraries in your project, and you should be able to use the C API. Reference documentation is available in :ref:`c-api`.
 
 Installing bindings from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

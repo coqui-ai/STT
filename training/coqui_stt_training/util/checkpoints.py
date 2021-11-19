@@ -75,9 +75,12 @@ def _load_checkpoint(session, checkpoint_path, allow_drop_layers, allow_lr_init=
                 init_vars.add(v)
         load_vars -= init_vars
 
+    log_info(f"Vars to load: {list(sorted(v.op.name for v in load_vars))}")
     for v in sorted(load_vars, key=lambda v: v.op.name):
-        log_info("Loading variable from checkpoint: %s" % (v.op.name))
-        v.load(ckpt.get_tensor(v.op.name), session=session)
+        log_info(f"Getting tensor from variable: {v.op.name}")
+        tensor = ckpt.get_tensor(v.op.name)
+        log_info(f"Loading tensor from checkpoint: {v.op.name}")
+        v.load(tensor, session=session)
 
     for v in sorted(init_vars, key=lambda v: v.op.name):
         log_info("Initializing variable: %s" % (v.op.name))
