@@ -240,6 +240,13 @@ def export_savedmodel():
         )
 
         builder.save()
+
+        # Copy scorer and alphabet alongside SavedModel
+        if Config.scorer_path:
+            print(f"Saving {Config.scorer_path} to {Config.export_dir}")
+            shutil.copy(Config.scorer_path, Config.export_dir)
+        shutil.copy(Config.effective_alphabet_path, Config.export_dir)
+
         log_info(f"Exported SavedModel to {Config.export_dir}")
 
 

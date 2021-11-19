@@ -11,8 +11,6 @@ DESIRED_LOG_LEVEL = (
 )
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = DESIRED_LOG_LEVEL
 
-import json
-import shutil
 import time
 from datetime import datetime
 from pathlib import Path
@@ -59,11 +57,7 @@ from .util.config import (
 )
 from .util.feeding import create_dataset
 from .util.helpers import check_ctcdecoder_version
-from .util.io import (
-    is_remote_path,
-    open_remote,
-    remove_remote,
-)
+from .util.io import remove_remote
 
 
 # Accuracy and Loss
@@ -415,18 +409,6 @@ def train():
 
     best_dev_saver = tfv1.train.Saver(max_to_keep=1)
     best_dev_path = os.path.join(Config.save_checkpoint_dir, "best_dev")
-
-    # Save flags next to checkpoints
-    if not is_remote_path(Config.save_checkpoint_dir):
-        os.makedirs(Config.save_checkpoint_dir, exist_ok=True)
-    flags_file = os.path.join(Config.save_checkpoint_dir, "flags.txt")
-    with open_remote(flags_file, "w") as fout:
-        json.dump(Config.serialize(), fout, indent=2)
-
-    # Serialize alphabet alongside checkpoint
-    preserved_alphabet_file = os.path.join(Config.save_checkpoint_dir, "alphabet.txt")
-    with open_remote(preserved_alphabet_file, "wb") as fout:
-        fout.write(Config.alphabet.SerializeText())
 
     with tfv1.Session(config=Config.session_config) as session:
         log_debug("Session opened.")
