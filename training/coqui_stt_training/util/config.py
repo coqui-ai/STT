@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import json
 import os
 import sys
 from dataclasses import asdict, dataclass, field
@@ -17,7 +18,7 @@ from .augmentations import NormalizeSampleRate, parse_augmentations
 from .auto_input import create_alphabet_from_sources, create_datasets_from_auto_input
 from .gpu import get_available_gpus
 from .helpers import parse_file_size
-from .io import path_exists_remote
+from .io import is_remote_path, open_remote, path_exists_remote
 
 
 class _ConfigSingleton:
@@ -161,6 +162,7 @@ class BaseSttConfig(Coqpit):
             self.alphabet = UTF8Alphabet()
         elif self.alphabet_config_path:
             self.alphabet = Alphabet(self.alphabet_config_path)
+            self.effective_alphabet_path = self.alphabet_config_path
         elif os.path.exists(loaded_checkpoint_alphabet_file):
             print(
                 "I --alphabet_config_path not specified, but found an alphabet file "
@@ -168,6 +170,7 @@ class BaseSttConfig(Coqpit):
                 "Will use this alphabet file for this run."
             )
             self.alphabet = Alphabet(loaded_checkpoint_alphabet_file)
+            self.effective_alphabet_path = loaded_checkpoint_alphabet_file
         elif self.train_files and self.dev_files and self.test_files:
             # If all subsets are in the same folder and there's an alphabet file
             # alongside them, use it.
@@ -185,6 +188,7 @@ class BaseSttConfig(Coqpit):
                         "Will use this alphabet file for this run."
                     )
                     self.alphabet = Alphabet(str(possible_alphabet))
+                    self.effective_alphabet_path = possible_alphabet
 
             if not self.alphabet:
                 # Generate alphabet automatically from input dataset, but only if
@@ -199,6 +203,7 @@ class BaseSttConfig(Coqpit):
                 characters, alphabet = create_alphabet_from_sources(sources)
                 print(f"I Generated alphabet characters: {characters}.")
                 self.alphabet = alphabet
+                self.effective_alphabet_path = saved_checkpoint_alphabet_file
         else:
             raise RuntimeError(
                 "Missing --alphabet_config_path flag. Couldn't find an alphabet file "
@@ -207,6 +212,17 @@ class BaseSttConfig(Coqpit):
                 "Either specify an alphabet file or fully specify the dataset, so one will "
                 "be generated automatically."
             )
+
+        # Save flags next to checkpoints
+        if not is_remote_path(self.save_checkpoint_dir):
+            os.makedirs(self.save_checkpoint_dir, exist_ok=True)
+        flags_file = os.path.join(self.save_checkpoint_dir, "flags.txt")
+        with open_remote(flags_file, "w") as fout:
+            json.dump(self.serialize(), fout, indent=2)
+
+        # Serialize alphabet alongside checkpoint
+        with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
+            fout.write(self.alphabet.SerializeText())
 
         # Geometric Constants
         # ===================
