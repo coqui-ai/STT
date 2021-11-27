@@ -85,6 +85,7 @@ RUN mkdir -p /code/kenlm/build/
 COPY --from=kenlm-build /code/kenlm/build/bin /code/kenlm/build/bin
 COPY --from=wget-binaries /convert_graphdef_memmapped_format /code/convert_graphdef_memmapped_format
 COPY --from=wget-binaries /generate_scorer_package /code/generate_scorer_package
+COPY --from=wget-binaries /libkenlm.so /usr/lib/libkenlm.so
 
 # Install STT
 # No need for the decoder since we did it earlier
