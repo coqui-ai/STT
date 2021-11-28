@@ -44,7 +44,7 @@ RUN wget --no-check-certificate https://github.com/reuben/STT/releases/download/
     rm temp.tar.xz
 
 
-FROM nvcr.io/nvidia/tensorflow:21.08-tf1-py3
+FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
 # We need to purge python3-xdg because
