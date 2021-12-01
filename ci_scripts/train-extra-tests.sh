@@ -80,12 +80,11 @@ time python -m coqui_stt_training.transcribe \
     --n_hidden 100 \
     --scorer_path "data/smoke_test/pruned_lm.scorer"
 
-#TODO: investigate why this is hanging in CI
-#mkdir /tmp/transcribe_dir
-#cp data/smoke_test/LDC93S1.wav /tmp/transcribe_dir
-#time python -m coqui_stt_training.transcribe \
-#    --src "/tmp/transcribe_dir/" \
-#    --n_hidden 100 \
-#    --scorer_path "data/smoke_test/pruned_lm.scorer"
-#
-#for i in data/smoke_test/*.tlog; do echo $i; cat $i; echo; done
+mkdir /tmp/transcribe_dir
+cp data/smoke_test/LDC93S1.wav /tmp/transcribe_dir
+time python -m coqui_stt_training.transcribe \
+   --src "/tmp/transcribe_dir/" \
+   --n_hidden 100 \
+   --scorer_path "data/smoke_test/pruned_lm.scorer"
+
+for i in /tmp/transcribe_dir/*.tlog; do echo $i; cat $i; echo; done

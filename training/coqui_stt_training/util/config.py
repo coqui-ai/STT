@@ -217,12 +217,14 @@ class BaseSttConfig(Coqpit):
         if not is_remote_path(self.save_checkpoint_dir):
             os.makedirs(self.save_checkpoint_dir, exist_ok=True)
         flags_file = os.path.join(self.save_checkpoint_dir, "flags.txt")
-        with open_remote(flags_file, "w") as fout:
-            json.dump(self.serialize(), fout, indent=2)
+        if not os.path.exists(flags_file):
+            with open_remote(flags_file, "w") as fout:
+                json.dump(self.serialize(), fout, indent=2)
 
         # Serialize alphabet alongside checkpoint
-        with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
-            fout.write(self.alphabet.SerializeText())
+        if not os.path.exists(saved_checkpoint_alphabet_file):
+            with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
+                fout.write(self.alphabet.SerializeText())
 
         # Geometric Constants
         # ===================
