@@ -27,3 +27,5 @@ This document contains more advanced topics with regard to training models with 
    PARALLLEL_OPTIMIZATION
 
    DATASET_IMPORTERS
+
+   Checkpoint-Inference
