@@ -1,3 +1,3 @@
-#flags pre {
+#flags pre, #inference-tools-in-the-training-package pre {
     white-space: pre-wrap;
 }
