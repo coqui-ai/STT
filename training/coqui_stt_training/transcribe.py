@@ -36,19 +36,6 @@ from tqdm import tqdm
 
 
 def transcribe_file(audio_path: Path, tlog_path: Path):
-    initialize_transcribe_config()
-
-    scorer = None
-    if Config.scorer_path:
-        scorer = Scorer(
-            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
-        )
-
-    try:
-        num_processes = cpu_count()
-    except NotImplementedError:
-        num_processes = 1
-
     with AudioFile(str(audio_path), as_path=True) as wav_path:
         data_set = split_audio_file(
             wav_path,
@@ -59,46 +46,78 @@ def transcribe_file(audio_path: Path, tlog_path: Path):
         )
         iterator = tfv1.data.make_one_shot_iterator(data_set)
         batch_time_start, batch_time_end, batch_x, batch_x_len = iterator.get_next()
-        no_dropout = [None] * 6
-        logits, _ = create_model(
-            batch_x=batch_x, seq_length=batch_x_len, dropout=no_dropout
-        )
-        transposed = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
-        tf.train.get_or_create_global_step()
-        with tf.Session(config=Config.session_config) as session:
-            # Load checkpoint in a mutex way to avoid hangs in TensorFlow code
-            with lock:
-                load_graph_for_evaluation(session, silent=True)
-            transcripts = []
-            while True:
-                try:
-                    starts, ends, batch_logits, batch_lengths = session.run(
-                        [batch_time_start, batch_time_end, transposed, batch_x_len]
-                    )
-                except tf.errors.OutOfRangeError:
-                    break
-                decoded = ctc_beam_search_decoder_batch(
-                    batch_logits,
-                    batch_lengths,
-                    Config.alphabet,
-                    Config.beam_width,
-                    num_processes=num_processes,
-                    scorer=scorer,
+
+        transcripts = []
+        while True:
+            try:
+                starts, ends, batch_inputs, batch_lengths = session.run(
+                    [batch_time_start, batch_time_end, batch_x, batch_x_len],
                 )
-                decoded = list(d[0][1] for d in decoded)
-                transcripts.extend(zip(starts, ends, decoded))
-            transcripts.sort(key=lambda t: t[0])
-            transcripts = [
-                {"start": int(start), "end": int(end), "transcript": transcript}
-                for start, end, transcript in transcripts
-            ]
-            with open(tlog_path, "w") as tlog_file:
-                json.dump(transcripts, tlog_file, default=float)
+
+                batch_logits = session.run(
+                    transposed,
+                    feed_dict={
+                        batch_x_ph: batch_inputs,
+                        batch_x_len_ph: batch_lengths,
+                    },
+                )
+            except tf.errors.OutOfRangeError:
+                break
+
+            decoded = ctc_beam_search_decoder_batch(
+                batch_logits,
+                batch_lengths,
+                Config.alphabet,
+                Config.beam_width,
+                num_processes=num_processes,
+                scorer=scorer,
+            )
+            decoded = list(d[0][1] for d in decoded)
+            transcripts.extend(zip(starts, ends, decoded))
+        transcripts.sort(key=lambda t: t[0])
+        transcripts = [
+            {"start": int(start), "end": int(end), "transcript": transcript}
+            for start, end, transcript in transcripts
+        ]
+        with open(tlog_path, "w") as tlog_file:
+            json.dump(transcripts, tlog_file, default=float)
 
 
-def init_fn(l):
-    global lock
-    lock = l
+def init_fn(lock):
+    initialize_transcribe_config()
+
+    global scorer
+    scorer = None
+    if Config.scorer_path:
+        scorer = Scorer(
+            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
+        )
+
+    global num_processes
+    try:
+        num_processes = cpu_count()
+    except NotImplementedError:
+        num_processes = 1
+
+    global batch_x_ph
+    batch_x_ph = tf.placeholder(tf.float32, [None, None, Config.n_input])
+    global batch_x_len_ph
+    batch_x_len_ph = tf.placeholder(tf.int32)
+
+    no_dropout = [None] * 6
+    logits, _ = create_model(
+        batch_x=batch_x_ph, seq_length=batch_x_len_ph, dropout=no_dropout
+    )
+    global transposed
+    transposed = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
+    tfv1.train.get_or_create_global_step()
+
+    global session
+    session = tfv1.Session(config=Config.session_config)
+
+    # Load checkpoint in a mutex way to avoid hangs in TensorFlow code
+    with lock:
+        load_graph_for_evaluation(session, silent=True)
 
 
 def step_function(job):
