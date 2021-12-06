@@ -1108,6 +1108,26 @@ jobs:
           name: '' # use filename
           path: "*.whl"
           release-tag: ${{ needs.create-release.outputs.release-tag }}
+  python-notebooks-tests-production:
+    name: "Lin|Python notebook tests with PyPI package"
+    needs: [twine-upload-decoder]
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+      - run: |
+          python -m pip install -U pip setuptools wheel jupyter
+          python -m pip install .
+      - name: Run python notebooks
+        run: |
+          ./ci_scripts/notebook-tests.sh
   npmjs-publish:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
