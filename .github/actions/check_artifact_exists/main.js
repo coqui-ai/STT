@@ -1,4 +1,5 @@
 const core = require('@actions/core');
+const exec = require('@actions/exec');
 const github = require('@actions/github');
 const AdmZip = require('adm-zip');
 const filesize = require('filesize');
@@ -6,11 +7,8 @@ const pathname = require('path');
 const fs = require('fs');
 const { throttling } = require('@octokit/plugin-throttling');
 const { GitHub } = require('@actions/github/lib/utils');
-const Download = require('download');
 const Util = require('util');
 const Stream = require('stream');
-
-const Pipeline = Util.promisify(Stream.pipeline);
 
 async function getGoodArtifacts(client, owner, repo, releaseId, name) {
     console.log(`==> GET /repos/${owner}/${repo}/releases/${releaseId}/assets`);
@@ -107,15 +105,13 @@ async function main() {
             console.log(`==> Creating containing dir if needed: ${dir}`)
             fs.mkdirSync(dir, { recursive: true })
 
-            await Pipeline(
-                Download(artifact.url, {
-                    headers: {
-                        "Accept": "application/octet-stream",
-                        "Authorization": `token ${token}`,
-                    },
-                }),
-                fs.createWriteStream(path)
-            )
+            await exec.exec('curl', [
+                '-L',
+                '-o', path,
+                '-H', 'Accept: application/octet-stream',
+                '-H', `Authorization: token ${token}`,
+                artifact.url
+            ])
         }
 
         if (artifactStatus === "missing" && download == "true") {
