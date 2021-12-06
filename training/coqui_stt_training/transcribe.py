@@ -7,7 +7,6 @@ import multiprocessing
 import os
 import sys
 from dataclasses import dataclass, field
-from multiprocessing import Pool, Lock, cpu_count
 from pathlib import Path
 from typing import Optional, List, Tuple
 
@@ -16,8 +15,6 @@ DESIRED_LOG_LEVEL = (
     sys.argv[LOG_LEVEL_INDEX] if 0 < LOG_LEVEL_INDEX < len(sys.argv) else "3"
 )
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = DESIRED_LOG_LEVEL
-# Hide GPUs to prevent issues with child processes trying to use the same GPU
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 
@@ -32,113 +29,116 @@ from coqui_stt_training.util.config import (
 )
 from coqui_stt_training.util.feeding import split_audio_file
 from coqui_stt_training.util.helpers import check_ctcdecoder_version
+from coqui_stt_training.util.multiprocessing import PoolBase
 from tqdm import tqdm
 
 
-def transcribe_file(audio_path: Path, tlog_path: Path):
-    with AudioFile(str(audio_path), as_path=True) as wav_path:
-        data_set = split_audio_file(
-            wav_path,
-            batch_size=Config.batch_size,
-            aggressiveness=Config.vad_aggressiveness,
-            outlier_duration_ms=Config.outlier_duration_ms,
-            outlier_batch_size=Config.outlier_batch_size,
-        )
-        iterator = tfv1.data.make_one_shot_iterator(data_set)
-        batch_time_start, batch_time_end, batch_x, batch_x_len = iterator.get_next()
+def cpu_count():
+    return os.cpu_count() or 1
 
-        transcripts = []
-        while True:
-            try:
-                starts, ends, batch_inputs, batch_lengths = session.run(
-                    [batch_time_start, batch_time_end, batch_x, batch_x_len],
-                )
 
-                batch_logits = session.run(
-                    transposed,
-                    feed_dict={
-                        batch_x_ph: batch_inputs,
-                        batch_x_len_ph: batch_lengths,
-                    },
-                )
-            except tf.errors.OutOfRangeError:
-                break
+class TranscriptionPool(PoolBase):
+    def init(self):
+        initialize_transcribe_config()
 
-            decoded = ctc_beam_search_decoder_batch(
-                batch_logits,
-                batch_lengths,
-                Config.alphabet,
-                Config.beam_width,
-                num_processes=num_processes,
-                scorer=scorer,
+        self.scorer = None
+        if Config.scorer_path:
+            self.scorer = Scorer(
+                Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
             )
-            decoded = list(d[0][1] for d in decoded)
-            transcripts.extend(zip(starts, ends, decoded))
-        transcripts.sort(key=lambda t: t[0])
-        transcripts = [
-            {"start": int(start), "end": int(end), "transcript": transcript}
-            for start, end, transcript in transcripts
-        ]
-        with open(tlog_path, "w") as tlog_file:
-            json.dump(transcripts, tlog_file, default=float)
 
+        # If we have GPUs available, scope the graph so that we only use one
+        # GPU per child process. In this case, the pool should also be created
+        # with only one process per GPU.
+        if tf.test.is_gpu_available():
+            with tf.device(f"/GPU:{self.process_id}"):
+                self.create_graph()
+        else:
+            self.create_graph()
 
-def init_fn(lock):
-    initialize_transcribe_config()
+    def create_graph(self):
+        self.batch_x_ph = tf.placeholder(tf.float32, [None, None, Config.n_input])
+        self.batch_x_len_ph = tf.placeholder(tf.int32)
 
-    global scorer
-    scorer = None
-    if Config.scorer_path:
-        scorer = Scorer(
-            Config.lm_alpha, Config.lm_beta, Config.scorer_path, Config.alphabet
+        no_dropout = [None] * 6
+        logits, _ = create_model(
+            batch_x=self.batch_x_ph, seq_length=self.batch_x_len_ph, dropout=no_dropout
         )
+        self.transposed = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
+        tfv1.train.get_or_create_global_step()
 
-    global num_processes
-    try:
-        num_processes = cpu_count()
-    except NotImplementedError:
-        num_processes = 1
+        self.session = tfv1.Session(config=Config.session_config)
 
-    global batch_x_ph
-    batch_x_ph = tf.placeholder(tf.float32, [None, None, Config.n_input])
-    global batch_x_len_ph
-    batch_x_len_ph = tf.placeholder(tf.int32)
+        # Load checkpoint in a mutex way to avoid hangs in TensorFlow code
+        with self.lock:
+            load_graph_for_evaluation(self.session, silent=True)
 
-    no_dropout = [None] * 6
-    logits, _ = create_model(
-        batch_x=batch_x_ph, seq_length=batch_x_len_ph, dropout=no_dropout
-    )
-    global transposed
-    transposed = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
-    tfv1.train.get_or_create_global_step()
+    def run(self, job):
+        idx, src, dst = job
+        self.transcribe_file(src, dst)
+        return idx, src, dst
 
-    global session
-    session = tfv1.Session(config=Config.session_config)
+    def transcribe_file(self, audio_path: Path, tlog_path: Path):
+        with AudioFile(str(audio_path), as_path=True) as wav_path:
+            data_set = split_audio_file(
+                wav_path,
+                batch_size=Config.batch_size,
+                aggressiveness=Config.vad_aggressiveness,
+                outlier_duration_ms=Config.outlier_duration_ms,
+                outlier_batch_size=Config.outlier_batch_size,
+            )
+            iterator = tfv1.data.make_one_shot_iterator(data_set)
+            batch_time_start, batch_time_end, batch_x, batch_x_len = iterator.get_next()
 
-    # Load checkpoint in a mutex way to avoid hangs in TensorFlow code
-    with lock:
-        load_graph_for_evaluation(session, silent=True)
+            transcripts = []
+            while True:
+                try:
+                    starts, ends, batch_inputs, batch_lengths = self.session.run(
+                        [batch_time_start, batch_time_end, batch_x, batch_x_len],
+                    )
 
+                    batch_logits = self.session.run(
+                        self.transposed,
+                        feed_dict={
+                            self.batch_x_ph: batch_inputs,
+                            self.batch_x_len_ph: batch_lengths,
+                        },
+                    )
+                except tf.errors.OutOfRangeError:
+                    break
 
-def step_function(job):
-    """Wrap transcribe_file to unpack arguments from a single tuple"""
-    idx, src, dst = job
-    transcribe_file(src, dst)
-    return idx, src, dst
+                decoded = ctc_beam_search_decoder_batch(
+                    batch_logits,
+                    batch_lengths,
+                    Config.alphabet,
+                    Config.beam_width,
+                    num_processes=cpu_count(),
+                    scorer=self.scorer,
+                )
+                decoded = list(d[0][1] for d in decoded)
+                transcripts.extend(zip(starts, ends, decoded))
+            transcripts.sort(key=lambda t: t[0])
+            transcripts = [
+                {"start": int(start), "end": int(end), "transcript": transcript}
+                for start, end, transcript in transcripts
+            ]
+            with open(tlog_path, "w") as tlog_file:
+                json.dump(transcripts, tlog_file, default=float)
 
 
 def transcribe_many(src_paths, dst_paths):
     # Create list of items to be processed: [(i, src_path[i], dst_paths[i])]
     jobs = zip(itertools.count(), src_paths, dst_paths)
 
-    lock = Lock()
-    with Pool(
-        processes=min(cpu_count(), len(src_paths)),
-        initializer=init_fn,
-        initargs=(lock,),
-    ) as pool:
+    if tf.test.is_gpu_available():
+        num_gpus = len(tf.config.experimental.list_physical_devices("GPU"))
+        num_processes = min(num_gpus, len(src_paths))
+    else:
+        num_processes = min(cpu_count(), len(src_paths))
+
+    with TranscriptionPool.create(processes=num_processes) as pool:
         process_iterable = tqdm(
-            pool.imap_unordered(step_function, jobs),
+            pool.imap_unordered(jobs),
             desc="Transcribing files",
             total=len(src_paths),
             disable=not Config.show_progressbar,
@@ -331,8 +331,6 @@ def initialize_transcribe_config():
 
 
 def main():
-    assert not tf.test.is_gpu_available()
-
     # Set start method to spawn on all platforms to avoid issues with TensorFlow
     multiprocessing.set_start_method("spawn")
 
