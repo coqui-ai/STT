@@ -516,36 +516,7 @@ class TarWriter:  # pylint: disable=too-many-instance-attributes
         self.close()
 
 
-class SampleList:
-    """Sample collection base class with samples loaded from a list of in-memory paths."""
-
-    def __init__(self, samples, labeled=True, reverse=False):
-        """
-        Parameters
-        ----------
-        samples : iterable of tuples of the form (sample_filename, filesize [, transcript])
-            File-size is used for ordering the samples; transcript has to be provided if labeled=True
-        labeled : bool or None
-            If True: Reads LabeledSample instances.
-            If False: Ignores transcripts (if available) and reads (unlabeled) util.audio.Sample instances.
-        reverse : bool
-            If the order of the samples should be reversed
-        """
-        self.labeled = labeled
-        self.samples = list(samples)
-        self.samples.sort(key=lambda r: r[1], reverse=reverse)
-
-    def __getitem__(self, i):
-        sample_spec = self.samples[i]
-        return load_sample(
-            sample_spec[0], label=sample_spec[2] if self.labeled else None
-        )
-
-    def __len__(self):
-        return len(self.samples)
-
-
-class CSV(SampleList):
+class CSV:
     """Sample collection reader for reading a Coqui STT CSV file
     Automatically orders samples by CSV column wav_filesize (if available)."""
 

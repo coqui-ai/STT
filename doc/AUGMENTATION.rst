@@ -195,19 +195,19 @@ Example training with all augmentations:
           --train_files "train.sdb" \
           --epochs 100 \
           --augment \
-          "overlay[p=0.5,source=noise.sdb,layers=1,snr=50:20~10]" \
-          "reverb[p=0.1,delay=50.0~30.0,decay=10.0:2.0~1.0]" \
-          "resample[p=0.1,rate=12000:8000~4000]" \
-          "codec[p=0.1,bitrate=48000:16000]" \
-          "volume[p=0.1,dbfs=-10:-40]" \
-          "pitch[p=0.1,pitch=1~0.2]" \
-          "tempo[p=0.1,factor=1~0.5]" \
-          "warp[p=0.1,nt=4,nf=1,wt=0.5:1.0,wf=0.1:0.2]" \
-          "frequency_mask[p=0.1,n=1:3,size=1:5]" \
-          "time_mask[p=0.1,domain=signal,n=3:10~2,size=50:100~40]" \
-          "dropout[p=0.1,rate=0.05]" \
-          "add[p=0.1,domain=signal,stddev=0~0.5]" \
-          "multiply[p=0.1,domain=features,stddev=0~0.5]" \
+              "overlay[p=0.5,source=noise.sdb,layers=1,snr=50:20~10]" \
+              "reverb[p=0.1,delay=50.0~30.0,decay=10.0:2.0~1.0]" \
+              "resample[p=0.1,rate=12000:8000~4000]" \
+              "codec[p=0.1,bitrate=48000:16000]" \
+              "volume[p=0.1,dbfs=-10:-40]" \
+              "pitch[p=0.1,pitch=1~0.2]" \
+              "tempo[p=0.1,factor=1~0.5]" \
+              "warp[p=0.1,nt=4,nf=1,wt=0.5:1.0,wf=0.1:0.2]" \
+              "frequency_mask[p=0.1,n=1:3,size=1:5]" \
+              "time_mask[p=0.1,domain=signal,n=3:10~2,size=50:100~40]" \
+              "dropout[p=0.1,rate=0.05]" \
+              "add[p=0.1,domain=signal,stddev=0~0.5]" \
+              "multiply[p=0.1,domain=features,stddev=0~0.5]" \
           [...]
 
 
@@ -217,14 +217,14 @@ Example of playing all samples with reverberation and maximized volume:
 
 .. code-block:: bash
 
-        bin/play.py --augment "reverb[p=0.1,delay=50.0,decay=2.0]" --augment volume --random test.sdb
+        bin/play.py --augment "reverb[p=0.1,delay=50.0,decay=2.0]" --augment volume --random true --source test.sdb
 
 Example simulation of the codec augmentation of a wav-file first at the beginning and then at the end of an epoch:
 
 .. code-block:: bash
 
-        bin/play.py --augment "codec[p=0.1,bitrate=48000:16000]" --clock 0.0 test.wav
-        bin/play.py --augment "codec[p=0.1,bitrate=48000:16000]" --clock 1.0 test.wav
+        bin/play.py --augment "codec[p=0.1,bitrate=48000:16000]" --clock 0.0 --source test.wav
+        bin/play.py --augment "codec[p=0.1,bitrate=48000:16000]" --clock 1.0 --source test.wav
 
 Example of creating a pre-augmented test set:
 
@@ -233,4 +233,4 @@ Example of creating a pre-augmented test set:
         bin/data_set_tool.py \
           --augment "overlay[source=noise.sdb,layers=1,snr=20~10]" \
           --augment "resample[rate=12000:8000~4000]" \
-          test.sdb test-augmented.sdb
+          --sources test.sdb --target test-augmented.sdb

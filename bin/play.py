@@ -4,24 +4,29 @@ Tool for playing (and augmenting) single samples or samples from Sample Database
 Use "python3 play.py -h" for help
 """
 
-import argparse
 import os
 import random
 import sys
+from dataclasses import dataclass, field
 
 from coqui_stt_training.util.audio import (
     AUDIO_TYPE_PCM,
     AUDIO_TYPE_WAV,
     get_loadable_audio_type_from_extension,
+    Sample,
 )
 from coqui_stt_training.util.augmentations import (
     SampleAugmentation,
     apply_sample_augmentations,
     parse_augmentations,
 )
+from coqui_stt_training.util.config import (
+    BaseSttConfig,
+    Config,
+    initialize_globals_from_instance,
+)
 from coqui_stt_training.util.sample_collections import (
     LabeledSample,
-    SampleList,
     samples_from_source,
 )
 
@@ -51,17 +56,15 @@ def get_samples_in_play_order():
 
 
 def play_collection():
-    augmentations = parse_augmentations(CLI_ARGS.augment)
-    print(f"Parsed augmentations from flags: {augmentations}")
-    if any(not isinstance(a, SampleAugmentation) for a in augmentations):
+    if any(not isinstance(a, SampleAugmentation) for a in Config.augmentations):
         print("Warning: Some of the augmentations cannot be simulated by this command.")
     samples = get_samples_in_play_order()
     samples = apply_sample_augmentations(
         samples,
         audio_type=AUDIO_TYPE_PCM,
-        augmentations=augmentations,
+        augmentations=Config.augmentations,
         process_ahead=0,
-        clock=CLI_ARGS.clock,
+        clock=Config.clock,
     )
     for sample in samples:
         if not Config.quiet:
@@ -72,6 +75,8 @@ def play_collection():
             sample.change_audio_type(AUDIO_TYPE_WAV)
             sys.stdout.buffer.write(sample.audio.getvalue())
             return
+        import simpleaudio
+
         wave_obj = simpleaudio.WaveObject(
             sample.audio,
             sample.audio_format.channels,
@@ -83,19 +88,14 @@ def play_collection():
 
 
 @dataclass
-class PlayConfig(Coqpit):
+class PlayConfig(BaseSttConfig):
     source: str = field(
         default="",
         metadata=dict(
             help="Sample DB, CSV or WAV file to play samples from",
         ),
     )
-    parser.add_argument(
-        "source", help="Sample DB, CSV or WAV file to play samples from"
-    )
-    parser.add_argument(
-        "--start",
-        type=int,
+    start: int = field(
         default=0,
         metadata=dict(
             help="Sample index to start at (negative numbers are relative to the end of the collection)",
@@ -113,18 +113,13 @@ class PlayConfig(Coqpit):
             help="If samples should be played in random order",
         ),
     )
-    parser.add_argument(
-        "--augment",
-        action="append",
-        help="Add an augmentation operation",
-    )
-    parser.add_argument(
-        "--clock",
-        type=float,
+    clock: float = field(
         default=0.5,
-        help="Simulates clock value used for augmentations during training."
-        "Ranges from 0.0 (representing parameter start values) to"
-        "1.0 (representing parameter end values)",
+        metadata=dict(
+            help="Simulates clock value used for augmentations during training."
+            "Ranges from 0.0 (representing parameter start values) to"
+            "1.0 (representing parameter end values)",
+        ),
     )
     pipe: bool = field(
         default=False,
@@ -138,12 +133,6 @@ class PlayConfig(Coqpit):
             help="No info logging to console",
         ),
     )
-    augment: List[str] = field(
-        default=None,
-        metadata=dict(
-            help='space-separated list of augmenations for training samples. Format is "--augment operation1[param1=value1, ...] operation2[param1=value1, ...] ..."'
-        ),
-    )
 
     def __post_init__(self):
         if not self.pipe:
@@ -154,19 +143,19 @@ class PlayConfig(Coqpit):
                     'Unless using --pipe true, play.py requires Python package "simpleaudio" for playing samples'
                 )
 
+        super().__post_init__()
+
+        # Disable automatic insertion of NormalizeSampleRate augmentation
+        # TODO move training config into its own child class so this behavior
+        # is not inherited from BaseSttConfig
+        self.normalize_sample_rate = False
         self.augmentations = parse_augmentations(self.augment)
 
 
-if __name__ == "__main__":
-    CLI_ARGS = handle_args()
-    if not CLI_ARGS.pipe:
-        try:
-            import simpleaudio
-        except ModuleNotFoundError:
-            print(
-                'Unless using the --pipe flag, play.py requires Python package "simpleaudio" for playing samples'
-            )
-            sys.exit(1)
+def main():
+    config = PlayConfig.init_from_argparse(arg_prefix="")
+    initialize_globals_from_instance(config)
+
     try:
         play_collection()
     except KeyboardInterrupt:
