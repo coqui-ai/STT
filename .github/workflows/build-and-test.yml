@@ -1821,7 +1821,7 @@ jobs:
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          "C:/Program Files/7-Zip/7z.exe" x tf-cache.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x tf-cache.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -snld -ttar -o`pwd`
           rm tf-cache.tar.xz
       - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
         run: |
@@ -1867,7 +1867,7 @@ jobs:
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           pushd tensorflow/bazel-bin/native_client/
-          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so* ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
@@ -1929,7 +1929,7 @@ jobs:
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           pushd tensorflow/bazel-bin/native_client/
-          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so* ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
@@ -2000,7 +2000,7 @@ jobs:
         run: |
           mkdir -p ${{ env.CI_TMP_DIR }}/ds
           pushd ${{ env.CI_TMP_DIR }}/ds
-          "C:/Program Files/7-Zip/7z.exe" x ../native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x ../native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           ls -hal
           popd
       - name: Download trained test model
