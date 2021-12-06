@@ -716,6 +716,7 @@ jobs:
         timeout-minutes: 5
   python-notebooks-tests:
     name: "Lin|Python notebook tests"
+    needs: ["build-ctc-decoder-Linux"]
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'pull_request' }}
     steps:
@@ -725,10 +726,21 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-3.7.whl"
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+      - run: |
+          python --version
+          python -m pip --version
+      - run: |
+          python -m pip install --upgrade pip setuptools wheel jupyter
+      - run: |
+          python -m pip install coqui_stt_ctcdecoder-*-cp37-cp37m-*_x86_64.whl
+          DS_NODECODER=y python -m pip install --upgrade .
       - name: Run python notebooks
         run: |
-          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
-          python -m pip install jupyter
           ./ci_scripts/notebook-tests.sh
   training-basic-tests:
     name: "Lin|Basic training tests"
