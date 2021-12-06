@@ -15,7 +15,7 @@ The ``--augment`` flag uses a common syntax for all augmentation types:
 
 .. code-block::
 
-  --augment augmentation_type1[param1=value1,param2=value2,...] --augment augmentation_type2[param1=value1,param2=value2,...] ...
+  --augment "augmentation_type1[param1=value1,param2=value2,...]" "augmentation_type2[param1=value1,param2=value2,...]" ...
 
 For example, for the ``overlay`` augmentation:
 
@@ -55,7 +55,7 @@ Within a single domain, augmentations are applied in the same order as they appe
 Sample domain augmentations
 ---------------------------
 
-**Overlay augmentation** ``--augment "overlay[p=<float>,source=<str>,snr=<float-range>,layers=<int-range>]"``
+**Overlay augmentation** ``"overlay[p=<float>,source=<str>,snr=<float-range>,layers=<int-range>]"``
   Layers another audio source (multiple times) onto augmented samples.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -67,7 +67,7 @@ Sample domain augmentations
   * **layers**: number of layers added onto the sample (e.g. 10 layers of speech to get "cocktail-party effect"). A layer is just a sample of the same duration as the sample to augment. It gets stitched together from as many source samples as required.
 
 
-**Reverb augmentation** ``--augment "reverb[p=<float>,delay=<float-range>,decay=<float-range>]"``
+**Reverb augmentation** ``"reverb[p=<float>,delay=<float-range>,decay=<float-range>]"``
   Adds simplified (no all-pass filters) `Schroeder reverberation <https://ccrma.stanford.edu/~jos/pasp/Schroeder_Reverberators.html>`_ to the augmented samples.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -77,7 +77,7 @@ Sample domain augmentations
   * **decay**: sound decay in dB per reflection - higher values will result in a less reflective perceived "room"
 
 
-**Resample augmentation** ``--augment "resample[p=<float>,rate=<int-range>]"``
+**Resample augmentation** ``"resample[p=<float>,rate=<int-range>]"``
   Resamples augmented samples to another sample rate and then resamples back to the original sample rate.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -85,7 +85,7 @@ Sample domain augmentations
   * **rate**: sample-rate to re-sample to
 
 
-**Codec augmentation** ``--augment "codec[p=<float>,bitrate=<int-range>]"``
+**Codec augmentation** ``"codec[p=<float>,bitrate=<int-range>]"``
   Compresses and then decompresses augmented samples using the lossy Opus audio codec.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -93,7 +93,7 @@ Sample domain augmentations
   * **bitrate**: bitrate used during compression
 
 
-**Volume augmentation** ``--augment "volume[p=<float>,dbfs=<float-range>]"``
+**Volume augmentation** ``"volume[p=<float>,dbfs=<float-range>]"``
   Measures and levels augmented samples to a target dBFS value.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -103,7 +103,7 @@ Sample domain augmentations
 Spectrogram domain augmentations
 --------------------------------
 
-**Pitch augmentation** ``--augment "pitch[p=<float>,pitch=<float-range>]"``
+**Pitch augmentation** ``"pitch[p=<float>,pitch=<float-range>]"``
   Scales spectrogram on frequency axis and thus changes pitch.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -111,7 +111,7 @@ Spectrogram domain augmentations
   * **pitch**: pitch factor by with the frequency axis is scaled (e.g. a value of 2.0 will raise audio frequency by one octave)
 
 
-**Tempo augmentation** ``--augment "tempo[p=<float>,factor=<float-range>]"``
+**Tempo augmentation** ``"tempo[p=<float>,factor=<float-range>]"``
   Scales spectrogram on time axis and thus changes playback tempo.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -119,7 +119,7 @@ Spectrogram domain augmentations
   * **factor**: speed factor by which the time axis is stretched or shrunken (e.g. a value of 2.0 will double playback tempo)
 
 
-**Warp augmentation** ``--augment "warp[p=<float>,nt=<int-range>,nf=<int-range>,wt=<float-range>,wf=<float-range>]"``
+**Warp augmentation** ``"warp[p=<float>,nt=<int-range>,nf=<int-range>,wt=<float-range>,wf=<float-range>]"``
   Applies a non-linear image warp to the spectrogram. This is achieved by randomly shifting a grid of equally distributed warp points along time and frequency axis.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -133,7 +133,7 @@ Spectrogram domain augmentations
   * **wf**: standard deviation of the random shift applied to warp points along frequency axis (0.0 = no warp, 1.0 = half the distance to the neighbour point)
 
 
-**Frequency mask augmentation** ``--augment "frequency_mask[p=<float>,n=<int-range>,size=<int-range>]"``
+**Frequency mask augmentation** ``"frequency_mask[p=<float>,n=<int-range>,size=<int-range>]"``
   Sets frequency-intervals within the augmented samples to zero (silence) at random frequencies. See the SpecAugment paper for more details - https://arxiv.org/abs/1904.08779
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -145,7 +145,7 @@ Spectrogram domain augmentations
 Multi domain augmentations
 --------------------------
 
-**Time mask augmentation** ``--augment "time_mask[p=<float>,n=<int-range>,size=<float-range>,domain=<domain>]"``
+**Time mask augmentation** ``"time_mask[p=<float>,n=<int-range>,size=<float-range>,domain=<domain>]"``
   Sets time-intervals within the augmented samples to zero (silence) at random positions.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -157,7 +157,7 @@ Multi domain augmentations
   * **domain**: data representation to apply augmentation to - "signal", "features" or "spectrogram" (default)
 
 
-**Dropout augmentation** ``--augment "dropout[p=<float>,rate=<float-range>,domain=<domain>]"``
+**Dropout augmentation** ``"dropout[p=<float>,rate=<float-range>,domain=<domain>]"``
   Zeros random data points of the targeted data representation.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -167,7 +167,7 @@ Multi domain augmentations
   * **domain**: data representation to apply augmentation to - "signal", "features" or "spectrogram" (default)
 
 
-**Add augmentation** ``--augment "add[p=<float>,stddev=<float-range>,domain=<domain>]"``
+**Add augmentation** ``"add[p=<float>,stddev=<float-range>,domain=<domain>]"``
   Adds random values picked from a normal distribution (with a mean of 0.0) to all data points of the targeted data representation.
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -177,7 +177,7 @@ Multi domain augmentations
   * **domain**: data representation to apply augmentation to - "signal", "features" (default) or "spectrogram"
 
 
-**Multiply augmentation** ``--augment "multiply[p=<float>,stddev=<float-range>,domain=<domain>]"``
+**Multiply augmentation** ``"multiply[p=<float>,stddev=<float-range>,domain=<domain>]"``
   Multiplies all data points of the targeted data representation with random values picked from a normal distribution (with a mean of 1.0).
 
   * **p**: probability value between 0.0 (never) and 1.0 (always) if a given sample gets augmented by this method
@@ -194,19 +194,20 @@ Example training with all augmentations:
         python -m coqui_stt_training.train \
           --train_files "train.sdb" \
           --epochs 100 \
-          --augment "overlay[p=0.5,source=noise.sdb,layers=1,snr=50:20~10]" \
-          --augment "reverb[p=0.1,delay=50.0~30.0,decay=10.0:2.0~1.0]" \
-          --augment "resample[p=0.1,rate=12000:8000~4000]" \
-          --augment "codec[p=0.1,bitrate=48000:16000]" \
-          --augment "volume[p=0.1,dbfs=-10:-40]" \
-          --augment "pitch[p=0.1,pitch=1~0.2]" \
-          --augment "tempo[p=0.1,factor=1~0.5]" \
-          --augment "warp[p=0.1,nt=4,nf=1,wt=0.5:1.0,wf=0.1:0.2]" \
-          --augment "frequency_mask[p=0.1,n=1:3,size=1:5]" \
-          --augment "time_mask[p=0.1,domain=signal,n=3:10~2,size=50:100~40]" \
-          --augment "dropout[p=0.1,rate=0.05]" \
-          --augment "add[p=0.1,domain=signal,stddev=0~0.5]" \
-          --augment "multiply[p=0.1,domain=features,stddev=0~0.5]" \
+          --augment \
+          "overlay[p=0.5,source=noise.sdb,layers=1,snr=50:20~10]" \
+          "reverb[p=0.1,delay=50.0~30.0,decay=10.0:2.0~1.0]" \
+          "resample[p=0.1,rate=12000:8000~4000]" \
+          "codec[p=0.1,bitrate=48000:16000]" \
+          "volume[p=0.1,dbfs=-10:-40]" \
+          "pitch[p=0.1,pitch=1~0.2]" \
+          "tempo[p=0.1,factor=1~0.5]" \
+          "warp[p=0.1,nt=4,nf=1,wt=0.5:1.0,wf=0.1:0.2]" \
+          "frequency_mask[p=0.1,n=1:3,size=1:5]" \
+          "time_mask[p=0.1,domain=signal,n=3:10~2,size=50:100~40]" \
+          "dropout[p=0.1,rate=0.05]" \
+          "add[p=0.1,domain=signal,stddev=0~0.5]" \
+          "multiply[p=0.1,domain=features,stddev=0~0.5]" \
           [...]
 
 
