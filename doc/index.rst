@@ -26,7 +26,7 @@
 Quickstart
 ^^^^^^^^^^
 
-The fastest way to use a pre-trained 🐸STT model is with the 🐸STT model manager, a tool that lets you quickly test and demo models locally. You'll need Python 3.6, 3.7, 3.8 or 3.9:
+The fastest way to use a pre-trained 🐸STT model is with the 🐸STT model manager, a tool that lets you quickly test and demo models locally. You'll need Python 3.7, 3.8 or 3.9:
 
 .. code-block:: bash
 
