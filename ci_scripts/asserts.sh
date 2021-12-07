@@ -367,12 +367,7 @@ run_netframework_inference_tests()
   assert_working_ldc93s1 "${phrase_pbmodel_nolm}" "$?"
 
   set +e
-  phrase_pbmodel_nolm=$(STTConsole.exe --model ${CI_TMP_DIR}/${model_name_mmap} --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  set -e
-  assert_working_ldc93s1 "${phrase_pbmodel_nolm}" "$?"
-
-  set +e
-  phrase_pbmodel_withlm=$(STTConsole.exe --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm=$(STTConsole.exe --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
   set -e
   assert_working_ldc93s1_lm "${phrase_pbmodel_withlm}" "$?"
 }
@@ -390,12 +385,7 @@ run_electronjs_inference_tests()
   assert_working_ldc93s1 "${phrase_pbmodel_nolm}" "$?"
 
   set +e
-  phrase_pbmodel_nolm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  set -e
-  assert_working_ldc93s1 "${phrase_pbmodel_nolm}" "$?"
-
-  set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
   set -e
   assert_working_ldc93s1_lm "${phrase_pbmodel_withlm}" "$?"
 }
@@ -420,13 +410,7 @@ run_basic_inference_tests()
   assert_correct_ldc93s1 "${phrase_pbmodel_nolm}" "$status"
 
   set +e
-  phrase_pbmodel_nolm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  status=$?
-  set -e
-  assert_correct_ldc93s1 "${phrase_pbmodel_nolm}" "$status"
-
-  set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm}" "$status"
@@ -437,13 +421,13 @@ run_all_inference_tests()
   run_basic_inference_tests
 
   set +e
-  phrase_pbmodel_nolm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_nolm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name} --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_correct_ldc93s1 "${phrase_pbmodel_nolm_stereo_44k}" "$status"
 
   set +e
-  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm_stereo_44k}" "$status"
@@ -451,12 +435,12 @@ run_all_inference_tests()
   # Run down-sampling warning test only when we actually perform downsampling
   if [ "${ldc93s1_sample_filename}" != "LDC93S1_pcms16le_1_8000.wav" ]; then
     set +e
-    phrase_pbmodel_nolm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
+    phrase_pbmodel_nolm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name} --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
     set -e
     assert_correct_warning_upsampling "${phrase_pbmodel_nolm_mono_8k}"
 
     set +e
-    phrase_pbmodel_withlm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
+    phrase_pbmodel_withlm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
     set -e
     assert_correct_warning_upsampling "${phrase_pbmodel_withlm_mono_8k}"
   fi;
@@ -468,7 +452,7 @@ run_prod_concurrent_stream_tests()
 
   set +e
   output=$(python3 ${CI_TMP_DIR}/test_sources/concurrent_streams.py \
-             --model ${CI_TMP_DIR}/${model_name_mmap} \
+             --model ${CI_TMP_DIR}/${model_name} \
              --scorer ${CI_TMP_DIR}/kenlm.scorer \
              --audio1 ${CI_TMP_DIR}/LDC93S1_pcms16le_1_16000.wav \
              --audio2 ${CI_TMP_DIR}/new-home-in-the-stars-16k.wav 2>${CI_TMP_DIR}/stderr)
@@ -493,13 +477,7 @@ run_prod_inference_tests()
   assert_correct_ldc93s1_prodmodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
 
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  status=$?
-  set -e
-  assert_correct_ldc93s1_prodmodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
-
-  set +e
-  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_correct_ldc93s1_prodmodel_stereo_44k "${phrase_pbmodel_withlm_stereo_44k}" "$status"
@@ -507,7 +485,7 @@ run_prod_inference_tests()
   # Run down-sampling warning test only when we actually perform downsampling
   if [ "${ldc93s1_sample_filename}" != "LDC93S1_pcms16le_1_8000.wav" ]; then
     set +e
-    phrase_pbmodel_withlm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
+    phrase_pbmodel_withlm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
     set -e
     assert_correct_warning_upsampling "${phrase_pbmodel_withlm_mono_8k}"
   fi;
@@ -526,13 +504,7 @@ run_electronjs_prod_inference_tests()
   assert_working_ldc93s1_prodmodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
 
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  status=$?
-  set -e
-  assert_working_ldc93s1_prodmodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
-
-  set +e
-  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_working_ldc93s1_prodmodel_stereo_44k "${phrase_pbmodel_withlm_stereo_44k}" "$status"
@@ -549,13 +521,7 @@ run_prodtflite_inference_tests()
   assert_correct_ldc93s1_prodtflitemodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
 
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  status=$?
-  set -e
-  assert_correct_ldc93s1_prodtflitemodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
-
-  set +e
-  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_correct_ldc93s1_prodtflitemodel_stereo_44k "${phrase_pbmodel_withlm_stereo_44k}" "$status"
@@ -563,7 +529,7 @@ run_prodtflite_inference_tests()
   # Run down-sampling warning test only when we actually perform downsampling
   if [ "${ldc93s1_sample_filename}" != "LDC93S1_pcms16le_1_8000.wav" ]; then
     set +e
-    phrase_pbmodel_withlm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
+    phrase_pbmodel_withlm_mono_8k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_1_8000.wav 2>&1 1>/dev/null)
     set -e
     assert_correct_warning_upsampling "${phrase_pbmodel_withlm_mono_8k}"
   fi;
@@ -582,13 +548,7 @@ run_electronjs_prodtflite_inference_tests()
   assert_working_ldc93s1_prodtflitemodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
 
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} 2>${CI_TMP_DIR}/stderr)
-  status=$?
-  set -e
-  assert_working_ldc93s1_prodtflitemodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
-
-  set +e
-  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
+  phrase_pbmodel_withlm_stereo_44k=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/LDC93S1_pcms16le_2_44100.wav 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_working_ldc93s1_prodtflitemodel_stereo_44k "${phrase_pbmodel_withlm_stereo_44k}" "$status"
@@ -613,7 +573,7 @@ run_hotword_tests()
 {
   DS_BINARY_FILE=${DS_BINARY_FILE:-"stt"}
   set +e
-  hotwords_decode=$(${DS_BINARY_PREFIX}${DS_BINARY_FILE} --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --hot_words "foo:0.0,bar:-0.1" 2>${CI_TMP_DIR}/stderr)
+  hotwords_decode=$(${DS_BINARY_PREFIX}${DS_BINARY_FILE} --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --hot_words "foo:0.0,bar:-0.1" 2>${CI_TMP_DIR}/stderr)
   status=$?
   set -e
   assert_working_ldc93s1_lm "${hotwords_decode}" "$status"
@@ -631,7 +591,7 @@ run_android_hotword_tests()
 run_cpp_only_inference_tests()
 {
   set +e
-  phrase_pbmodel_withlm_intermediate_decode=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 1280 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm_intermediate_decode=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 1280 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm_intermediate_decode}" "$status"
@@ -640,13 +600,13 @@ run_cpp_only_inference_tests()
 run_js_streaming_inference_tests()
 {
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm}" "$status"
 
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm}" "$status"
@@ -656,14 +616,14 @@ run_js_streaming_prod_inference_tests()
 {
   local _bitrate=$1
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_prodmodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
 
   local _bitrate=$1
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_prodmodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
@@ -673,14 +633,14 @@ run_js_streaming_prodtflite_inference_tests()
 {
   local _bitrate=$1
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_prodtflitemodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"
 
   local _bitrate=$1
   set +e
-  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name_mmap} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended 2>${CI_TMP_DIR}/stderr | tail -n 1)
   status=$?
   set -e
   assert_correct_ldc93s1_prodtflitemodel "${phrase_pbmodel_withlm}" "$status" "${_bitrate}"

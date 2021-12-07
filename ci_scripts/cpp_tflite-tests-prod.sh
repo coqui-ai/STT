@@ -9,10 +9,8 @@ source $(dirname "$0")/asserts.sh
 bitrate=$1
 set_ldc_sample_filename "${bitrate}"
 
-model_source=${STT_PROD_MODEL//.pb/.tflite}
+model_source=${STT_PROD_MODEL}
 model_name=$(basename "${model_source}")
-model_name_mmap=$(basename "${model_source}")
-model_source_mmap=${STT_PROD_MODEL_MMAP//.pbmm/.tflite}
 export DATA_TMP_DIR=${CI_TMP_DIR}
 
 download_model_prod

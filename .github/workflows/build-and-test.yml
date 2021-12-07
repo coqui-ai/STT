@@ -11,6 +11,7 @@ env:
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
   EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-14-g4bdd3955115"
+  STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
 
   # macOS specific
   MACOSX_DEPLOYMENT_TARGET: "10.10"
@@ -541,9 +542,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -581,9 +580,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -627,9 +624,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -680,9 +675,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -723,6 +716,7 @@ jobs:
         timeout-minutes: 5
   python-notebooks-tests:
     name: "Lin|Python notebook tests"
+    needs: ["build-ctc-decoder-Linux"]
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'pull_request' }}
     steps:
@@ -732,10 +726,21 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-3.7.whl"
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+      - run: |
+          python --version
+          python -m pip --version
+      - run: |
+          python -m pip install --upgrade pip setuptools wheel jupyter
+      - run: |
+          python -m pip install coqui_stt_ctcdecoder-*-cp37-cp37m-*_x86_64.whl
+          DS_NODECODER=y python -m pip install --upgrade .
       - name: Run python notebooks
         run: |
-          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
-          python -m pip install jupyter
           ./ci_scripts/notebook-tests.sh
   training-basic-tests:
     name: "Lin|Basic training tests"
@@ -1103,6 +1108,26 @@ jobs:
           name: '' # use filename
           path: "*.whl"
           release-tag: ${{ needs.create-release.outputs.release-tag }}
+  python-notebooks-tests-production:
+    name: "Lin|Python notebook tests with PyPI package"
+    needs: [twine-upload-decoder]
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+      - run: |
+          python -m pip install -U pip setuptools wheel jupyter
+          python -m pip install .
+      - name: Run python notebooks
+        run: |
+          ./ci_scripts/notebook-tests.sh
   npmjs-publish:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
@@ -1491,9 +1516,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1511,7 +1534,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
-          ls -hal ${{ env.CI_TMP_DIR }}/
+          ls -halR ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - uses: ./.github/actions/run-tests
         with:
@@ -1530,9 +1553,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1574,9 +1595,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1624,9 +1643,7 @@ jobs:
         bitrate: ["16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1979,7 +1996,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     env:
       CI_TMP_DIR: tmp/
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -2032,9 +2049,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -2086,9 +2101,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -2149,9 +2162,7 @@ jobs:
         bitrate: ["16k"]
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -2259,9 +2270,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2312,9 +2321,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2367,9 +2374,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2418,9 +2423,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2474,9 +2477,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -2538,9 +2539,7 @@ jobs:
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -3084,9 +3083,7 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
     steps:
       - name: "Install QEMU"
@@ -3145,9 +3142,7 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
       PIP_EXTRA_INDEX_URL: "https://www.piwheels.org/simple https://lissyx.github.io/deepspeech-python-wheels/"
     steps:
@@ -3208,9 +3203,7 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
     steps:
       - name: "Install QEMU"
@@ -3271,9 +3264,7 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
       DISPLAY: ":99.0"
     steps:
