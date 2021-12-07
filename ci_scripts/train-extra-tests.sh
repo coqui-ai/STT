@@ -88,3 +88,6 @@ time python -m coqui_stt_training.transcribe \
    --scorer_path "data/smoke_test/pruned_lm.scorer"
 
 for i in /tmp/transcribe_dir/*.tlog; do echo $i; cat $i; echo; done
+
+# Augmentations
+time ./bin/run-ci-sample_augmentations.sh

@@ -8,7 +8,7 @@ ldc93s1_wav="${ldc93s1_dir}/LDC93S1.wav"
 ldc93s1_overlay_csv="${ldc93s1_dir}/LDC93S1_overlay.csv"
 ldc93s1_overlay_wav="${ldc93s1_dir}/LDC93S1_reversed.wav"
 
-play="python bin/play.py --number 1 --quiet"
+play="python bin/play.py --number 1 --quiet true"
 compare="python bin/compare_samples.py --no-success-output"
 
 if [ ! -f "${ldc93s1_csv}" ]; then
@@ -29,31 +29,31 @@ if ! $compare --if-differ "${ldc93s1_wav}" "${ldc93s1_overlay_wav}"; then
   exit 1
 fi
 
-$play ${ldc93s1_wav} --augment overlay[source="${ldc93s1_overlay_csv}",snr=20] --pipe >/tmp/overlay-test.wav
+$play --source ${ldc93s1_wav} --augment overlay[source="${ldc93s1_overlay_csv}",snr=20] --pipe true >/tmp/overlay-test.wav
 if ! $compare --if-differ "${ldc93s1_wav}" /tmp/overlay-test.wav; then
   echo "Overlay augmentation had no effect or changed basic sample properties"
   exit 1
 fi
 
-$play ${ldc93s1_wav} --augment reverb[delay=50.0,decay=2.0] --pipe >/tmp/reverb-test.wav
+$play --source ${ldc93s1_wav} --augment reverb[delay=50.0,decay=2.0] --pipe true >/tmp/reverb-test.wav
 if ! $compare --if-differ "${ldc93s1_wav}" /tmp/reverb-test.wav; then
   echo "Reverb augmentation had no effect or changed basic sample properties"
   exit 1
 fi
 
-$play ${ldc93s1_wav} --augment resample[rate=4000] --pipe >/tmp/resample-test.wav
+$play --source ${ldc93s1_wav} --augment resample[rate=4000] --pipe true >/tmp/resample-test.wav
 if ! $compare --if-differ "${ldc93s1_wav}" /tmp/resample-test.wav; then
   echo "Resample augmentation had no effect or changed basic sample properties"
   exit 1
 fi
 
-$play ${ldc93s1_wav} --augment codec[bitrate=4000] --pipe >/tmp/codec-test.wav
+$play --source ${ldc93s1_wav} --augment codec[bitrate=4000] --pipe true >/tmp/codec-test.wav
 if ! $compare --if-differ "${ldc93s1_wav}" /tmp/codec-test.wav; then
   echo "Codec augmentation had no effect or changed basic sample properties"
   exit 1
 fi
 
-$play ${ldc93s1_wav} --augment volume --pipe >/tmp/volume-test.wav
+$play --source ${ldc93s1_wav} --augment volume --pipe true >/tmp/volume-test.wav
 if ! $compare --if-differ "${ldc93s1_wav}" /tmp/volume-test.wav; then
   echo "Volume augmentation had no effect or changed basic sample properties"
   exit 1
