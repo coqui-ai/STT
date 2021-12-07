@@ -127,7 +127,7 @@ jobs:
     name: "Lin|Build SWIG"
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     env:
@@ -170,7 +170,7 @@ jobs:
     name: "Lin|Build libsox3"
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -213,12 +213,12 @@ jobs:
     needs: [ swig_Linux ]
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -347,7 +347,7 @@ jobs:
     needs: tensorflow_opt-Linux
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -385,7 +385,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-tensorflow-Linux, tensorflow_opt-Linux, libsox3_Linux]
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -428,9 +428,9 @@ jobs:
     needs: [build-lib_Linux, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -575,7 +575,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
