@@ -127,7 +127,7 @@ jobs:
     name: "Lin|Build SWIG"
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     env:
@@ -170,7 +170,7 @@ jobs:
     name: "Lin|Build libsox3"
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -213,12 +213,12 @@ jobs:
     needs: [ swig_Linux ]
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -347,7 +347,7 @@ jobs:
     needs: tensorflow_opt-Linux
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -385,7 +385,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-tensorflow-Linux, tensorflow_opt-Linux, libsox3_Linux]
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -428,9 +428,9 @@ jobs:
     needs: [build-lib_Linux, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -575,7 +575,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
@@ -892,6 +892,9 @@ jobs:
           name: stt-tflite-3.9.4-macOS.whl
       - uses: actions/download-artifact@v2
         with:
+          name: stt-tflite-3.10.1-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: stt-tflite-3.6.8-Windows.whl
       - uses: actions/download-artifact@v2
         with:
@@ -904,6 +907,9 @@ jobs:
           name: stt-tflite-3.9.4-Windows.whl
       - uses: actions/download-artifact@v2
         with:
+          name: stt-tflite-3.10.0-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: stt-tflite-3.6-Linux.whl
       - uses: actions/download-artifact@v2
         with:
@@ -914,6 +920,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.9-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.10-Linux.whl
       - name: Setup PyPI config
         run: |
           cat << EOF > ~/.pypirc
@@ -1080,6 +1089,9 @@ jobs:
           name: coqui_stt_ctcdecoder-Linux-3.9.whl
       - uses: actions/download-artifact@v2
         with:
+          name: coqui_stt_ctcdecoder-Linux-3.10.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: coqui_stt_ctcdecoder-macOS-3.6.8.whl
       - uses: actions/download-artifact@v2
         with:
@@ -1090,6 +1102,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: coqui_stt_ctcdecoder-macOS-3.9.4.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-macOS-3.10.1.whl
       - uses: actions/download-artifact@v2
         with:
           name: coqui_stt_ctcdecoder-windows-test.whl
@@ -1213,7 +1228,7 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1408,7 +1423,7 @@ jobs:
     needs: [ build-lib_macOS, swig_macOS ]
     strategy:
       matrix:
-        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1865,7 +1880,7 @@ jobs:
       matrix:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
-        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
     steps:
       - uses: msys2/setup-msys2@v2
         with:
@@ -2044,7 +2059,7 @@ jobs:
       matrix:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
-        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
