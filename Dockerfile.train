@@ -27,23 +27,6 @@ RUN cd /code/kenlm && \
     exit 1; )
 
 
-FROM ubuntu:20.04 AS wget-binaries
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget unzip xz-utils && \
-    rm -rf /var/lib/apt/lists/*
-
-# Tool to convert output graph for inference
-RUN wget --no-check-certificate https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip -O temp.zip && \
-    unzip temp.zip && \
-    rm temp.zip
-
-RUN wget --no-check-certificate https://github.com/reuben/STT/releases/download/v0.10.0-alpha.1/native_client.tar.xz -O temp.tar.xz && \
-    tar -xf temp.tar.xz && \
-    rm temp.tar.xz
-
-
 FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -83,8 +66,13 @@ COPY training /code/training
 # Copy files from previous build stages
 RUN mkdir -p /code/kenlm/build/
 COPY --from=kenlm-build /code/kenlm/build/bin /code/kenlm/build/bin
-COPY --from=wget-binaries /convert_graphdef_memmapped_format /code/convert_graphdef_memmapped_format
-COPY --from=wget-binaries /generate_scorer_package /code/generate_scorer_package
+
+# Tool to convert output graph for inference
+RUN curl -L https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip | funzip > convert_graphdef_memmapped_format && \
+    chmod +x convert_graphdef_memmapped_format
+
+# Pre-built native client tools
+RUN curl -L https://github.com/coqui-ai/STT/releases/download/v1.1.0/native_client.tflite.Linux.tar.xz | tar -xJvf -
 
 # Install STT
 # No need for the decoder since we did it earlier
