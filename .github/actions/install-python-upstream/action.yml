@@ -10,7 +10,13 @@ runs:
     - shell: bash
       run: |
         set -xe
-        curl https://www.python.org/ftp/python/${{ inputs.version }}/python-${{ inputs.version }}-macosx10.9.pkg -o "python.pkg"
+        url="https://www.python.org/ftp/python/${{ inputs.version }}/python-${{ inputs.version }}"
+        req_10_9=$(curl -o /dev/null -Isw '%{http_code}\n' "${url}-macosx10.9.pkg")
+        if [[ $req_10_9 == "200" ]]; then
+          curl -sSL "${url}-macosx10.9.pkg" -o "python.pkg"
+        else
+          curl -sSL "${url}-macos11.pkg" -o "python.pkg"
+        fi
     - shell: bash
       run: ls -hal .
     - shell: bash

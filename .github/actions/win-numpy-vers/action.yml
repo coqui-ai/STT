@@ -38,6 +38,10 @@ runs:
                         NUMPY_BUILD_VERSION="==1.19.4"
                         NUMPY_DEP_VERSION=">=1.19.4,<=1.19.4"
                     ;;
+                    3.10*)
+                        NUMPY_BUILD_VERSION="==1.21.4"
+                        NUMPY_DEP_VERSION=">=1.21.4"
+                    ;;
                 esac
             ;;
 
@@ -58,6 +62,10 @@ runs:
                     3.9*)
                         NUMPY_BUILD_VERSION="==1.19.4"
                         NUMPY_DEP_VERSION=">=1.19.4,<=1.19.4"
+                    ;;
+                    3.10*)
+                        NUMPY_BUILD_VERSION="==1.21.4"
+                        NUMPY_DEP_VERSION=">=1.21.4"
                     ;;
                 esac
             ;;
@@ -83,6 +91,10 @@ runs:
                     3.9*)
                         NUMPY_BUILD_VERSION="==1.19.4"
                         NUMPY_DEP_VERSION=">=1.19.4,<=1.19.4"
+                    ;;
+                    3.10*)
+                        NUMPY_BUILD_VERSION="==1.21.4"
+                        NUMPY_DEP_VERSION=">=1.21.4"
                     ;;
                 esac
             ;;
