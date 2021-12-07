@@ -40,7 +40,7 @@ Documentation is available on [stt.readthedocs.io](https://stt.readthedocs.io/).
 
 # Contributors to 1.1.0 release
 
-
+ - Alexandre Lissy
  - Josh Meyer
  - Julian Darley
  - Leon Kiefer
