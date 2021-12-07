@@ -59,8 +59,8 @@ Installation
 
 Installing STT and its dependencies is much easier with a virtual environment.
 
-Set up Virtural Environment
-"""""""""""""""""""""""""""
+Set up Virtual Environment
+""""""""""""""""""""""""""
 
 We recommend Python's built-in `venv <https://docs.python.org/3/library/venv.html>`_ module to manage your Python environment.
 
