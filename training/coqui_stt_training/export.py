@@ -181,53 +181,57 @@ def export_savedmodel():
     tfv1.reset_default_graph()
 
     with tfv1.Session(config=Config.session_config) as session:
-        input_wavfile_contents = tf.placeholder(tf.string)
+        input_wavfile_contents = tf.placeholder(tf.string, [None])
+        batch_size = tf.shape(input_wavfile_contents)[0]
 
-        features, features_len = wavfile_bytes_to_features(input_wavfile_contents)
-        previous_state_c = tf.zeros([1, Config.n_cell_dim], tf.float32)
-        previous_state_h = tf.zeros([1, Config.n_cell_dim], tf.float32)
+        dataset = (
+            tf.data.Dataset.from_tensor_slices(input_wavfile_contents)
+            .map(map_func=wavfile_bytes_to_features, num_parallel_calls=batch_size)
+            .padded_batch(
+                batch_size=tf.cast(batch_size, tf.int64),
+                padded_shapes=([None, Config.n_input], []),
+            )
+        )
+
+        previous_state_c = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
+        previous_state_h = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
 
         previous_state = tf.nn.rnn_cell.LSTMStateTuple(
             previous_state_c, previous_state_h
         )
 
-        # Add batch dimension
-        features = tf.expand_dims(features, 0)
-        features_len = tf.expand_dims(features_len, 0)
-
         # One rate per layer
         no_dropout = [None] * 6
 
-        logits, layers = create_model(
-            batch_x=features,
-            batch_size=1,
-            seq_length=features_len,
-            dropout=no_dropout,
-            previous_state=previous_state,
-        )
+        iterator = tfv1.data.make_initializable_iterator(dataset)
+        with tf.control_dependencies([iterator.initializer]):
+            features, features_len = iterator.get_next()
+            logits, layers = create_model(
+                batch_x=features,
+                seq_length=features_len,
+                dropout=no_dropout,
+                previous_state=previous_state,
+            )
 
         # Restore variables from training checkpoint
         load_graph_for_evaluation(session)
 
-        probs = tf.nn.softmax(logits)
-
-        # Remove batch dimension
-        squeezed = tf.squeeze(probs)
+        # Transpose to batch major and softmax for decoder
+        probs = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
 
         builder = tfv1.saved_model.builder.SavedModelBuilder(Config.export_dir)
 
         input_file_tinfo = tfv1.saved_model.utils.build_tensor_info(
             input_wavfile_contents
         )
-        output_probs_tinfo = tfv1.saved_model.utils.build_tensor_info(squeezed)
+        output_probs_tinfo = tfv1.saved_model.utils.build_tensor_info(probs)
+        output_lens_tinfo = tfv1.saved_model.utils.build_tensor_info(features_len)
 
         forward_sig = tfv1.saved_model.signature_def_utils.build_signature_def(
             inputs={
                 "input_wavfile": input_file_tinfo,
             },
-            outputs={
-                "probs": output_probs_tinfo,
-            },
+            outputs={"probs": output_probs_tinfo, "input_lens": output_lens_tinfo},
             method_name="forward",
         )
 
