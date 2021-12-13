@@ -323,6 +323,45 @@ Metadata* STT_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
                                              unsigned int aNumResults);
 
 /**
+ * @brief Compute the intermediate decoding of an ongoing streaming inference, flushing
+ *        buffers first. This ensures that all audio that has been streamed so far is
+ *        included in the result, but is more expensive than STT_IntermediateDecode()
+ *        because buffers are processed through the acoustic model. Calling this function
+ *        too often will also degrade transcription accuracy due to trashing of the
+ *        LSTM hidden state vectors.
+ *
+ * @param aSctx A streaming state pointer returned by {@link STT_CreateStream()}.
+ *
+ * @return The STT result. The user is responsible for freeing the string using
+ *         {@link STT_FreeString()}.
+ *
+ * @note This method will free the state pointer (@p aSctx).
+ */
+STT_EXPORT
+char* STT_IntermediateDecodeFlushBuffers(StreamingState* aSctx);
+
+/**
+ * @brief Compute the intermediate decoding of an ongoing streaming inference, flushing
+ *        buffers first. This ensures that all audio that has been streamed so far is
+ *        included in the result, but is more expensive than
+ *        STT_IntermediateDecodeWithMetadata() because buffers are processed through
+ *        the acoustic model. Calling this function too often will also degrade
+ *        transcription accuracy due to trashing of the LSTM hidden state vectors.
+ *        Return results including metadata.
+ *
+ * @param aSctx A streaming state pointer returned by {@link STT_CreateStream()}.
+ * @param aNumResults The number of candidate transcripts to return.
+ *
+ * @return Metadata struct containing multiple candidate transcripts. Each transcript
+ *         has per-token metadata including timing information. The user is
+ *         responsible for freeing Metadata by calling {@link STT_FreeMetadata()}.
+ *         Returns NULL on error.
+ */
+STT_EXPORT
+Metadata* STT_IntermediateDecodeWithMetadataFlushBuffers(StreamingState* aSctx,
+                                                         unsigned int aNumResults);
+
+/**
  * @brief Compute the final decoding of an ongoing streaming inference and return
  *        the result. Signals the end of an ongoing streaming inference.
  *
