@@ -364,7 +364,7 @@ TFLiteModelState::infer(const vector<float>& mfcc,
   const size_t num_classes = alphabet_.GetSize() + 1; // +1 for blank
 
   // Feeding input_node
-  copy_vector_to_tensor(mfcc, input_node_idx_, n_frames*mfcc_feats_per_timestep_);
+  copy_vector_to_tensor(mfcc, input_node_idx_, n_steps_*mfcc_feats_per_timestep_);
 
   // Feeding previous_state_c, previous_state_h
   assert(previous_state_c.size() == state_size_);
@@ -395,7 +395,7 @@ TFLiteModelState::compute_mfcc(const vector<float>& samples,
                                vector<float>& mfcc_output)
 {
   // Feeding input_node
-  copy_vector_to_tensor(samples, input_samples_idx_, samples.size());
+  copy_vector_to_tensor(samples, input_samples_idx_, audio_win_len_);
 
   TfLiteStatus status = interpreter_->SetExecutionPlan(mfcc_exec_plan_);
   if (status != kTfLiteOk) {
