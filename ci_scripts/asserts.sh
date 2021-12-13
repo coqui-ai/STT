@@ -610,6 +610,12 @@ run_js_streaming_inference_tests()
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm}" "$status"
+
+  set +e
+  phrase_pbmodel_withlm=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --stream --extended --flush 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  status=$?
+  set -e
+  assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm}" "$status"
 }
 
 run_js_streaming_prod_inference_tests()

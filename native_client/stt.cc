@@ -73,7 +73,7 @@ struct StreamingState {
   void feedAudioContent(const short* buffer, unsigned int buffer_size);
   char* intermediateDecode() const;
   Metadata* intermediateDecodeWithMetadata(unsigned int num_results) const;
-  void finalizeStream();
+  void flushBuffers(bool addZeroMfccVectors = false);
   char* finishStream();
   Metadata* finishStreamWithMetadata(unsigned int num_results);
 
@@ -138,16 +138,30 @@ StreamingState::intermediateDecodeWithMetadata(unsigned int num_results) const
 }
 
 char*
+StreamingState::intermediateDecodeFlushBuffers()
+{
+  flushBuffers();
+  return model_->decode(decoder_state_);
+}
+
+Metadata*
+StreamingState::intermediateDecodeWithMetadataFlushBuffers(unsigned int num_results)
+{
+  flushBuffers();
+  return model_->decode_metadata(decoder_state_, num_results);
+}
+
+char*
 StreamingState::finishStream()
 {
-  finalizeStream();
+  flushBuffers(true);
   return model_->decode(decoder_state_);
 }
 
 Metadata*
 StreamingState::finishStreamWithMetadata(unsigned int num_results)
 {
-  finalizeStream();
+  flushBuffers(true);
   return model_->decode_metadata(decoder_state_, num_results);
 }
 
@@ -162,14 +176,16 @@ StreamingState::processAudioWindow(const vector<float>& buf)
 }
 
 void
-StreamingState::finalizeStream()
+StreamingState::flushBuffers(bool addZeroMfccVectors)
 {
   // Flush audio buffer
   processAudioWindow(audio_buffer_);
 
-  // Add empty mfcc vectors at end of sample
-  for (int i = 0; i < model_->n_context_; ++i) {
-    addZeroMfccWindow();
+  if (addZeroMfccVectors) {
+    // Add empty mfcc vectors at end of sample
+    for (int i = 0; i < model_->n_context_; ++i) {
+      addZeroMfccWindow();
+    }
   }
 
   // Process final batch
@@ -450,6 +466,21 @@ Metadata*
 STT_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
                                   unsigned int aNumResults)
 {
+  return aSctx->intermediateDecodeWithMetadata(aNumResults);
+}
+
+char*
+STT_IntermediateDecodeFlushBuffers(StreamingState* aSctx)
+{
+  aSctx->flushBuffers();
+  return aSctx->intermediateDecode();
+}
+
+Metadata*
+STT_IntermediateDecodeWithMetadataFlushBuffers(StreamingState* aSctx,
+                                               unsigned int aNumResults)
+{
+  aSctx->flushBuffers();
   return aSctx->intermediateDecodeWithMetadata(aNumResults);
 }
 
