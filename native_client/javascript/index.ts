@@ -107,7 +107,7 @@ class StreamImpl {
     }
 
     /**
-     * EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming inference, flushing buffers first. This ensures that all audio that has been streamed so far is included in the result, but is more expensive than intermediateDecode() because buffers are processed through the acoustic model.
+     * Compute the intermediate decoding of an ongoing streaming inference, flushing buffers first. This ensures that all audio that has been streamed so far is included in the result, but is more expensive than intermediateDecode() because buffers are processed through the acoustic model.
      *
      * @return The STT intermediate result.
      */
@@ -116,7 +116,7 @@ class StreamImpl {
     }
 
     /**
-     * EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming inference, flushing buffers first. This ensures that all audio that has been streamed so far is included in the result, but is more expensive than intermediateDecodeWithMetadata() because buffers are processed through the acoustic model. Returns results including metadata.
+     * Compute the intermediate decoding of an ongoing streaming inference, flushing buffers first. This ensures that all audio that has been streamed so far is included in the result, but is more expensive than intermediateDecodeWithMetadata() because buffers are processed through the acoustic model. Return results including metadata.
      *
      * @param aNumResults Maximum number of candidate transcripts to return. Returned list might be smaller than this. Default value is 1 if not specified.
      *
