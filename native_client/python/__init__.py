@@ -283,10 +283,11 @@ class Stream(object):
 
     def intermediateDecodeFlushBuffers(self):
         """
-        Compute the intermediate decoding of an ongoing streaming inference, flushing
-        buffers first. This ensures that all audio that has been streamed so far is
-        included in the result, but is more expensive than intermediateDecode() because
-        buffers are processed through the acoustic model.
+        EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming
+        inference, flushing buffers first. This ensures that all audio that has
+        been streamed so far is included in the result, but is more expensive
+        than intermediateDecode() because buffers are processed through the
+        acoustic model.
 
         :return: The STT intermediate result.
         :type: str
@@ -301,11 +302,11 @@ class Stream(object):
 
     def intermediateDecodeWithMetadataFlushBuffers(self, num_results=1):
         """
-        Compute the intermediate decoding of an ongoing streaming inference, flushing
-        buffers first. This ensures that all audio that has been streamed so far is
-        included in the result, but is more expensive than intermediateDecode() because
-        buffers are processed through the acoustic model. Return results including
-        metadata.
+        EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming
+        inference, flushing buffers first. This ensures that all audio that has
+        been streamed so far is included in the result, but is more expensive
+        than intermediateDecode() because buffers are processed through the
+        acoustic model. Returns results including metadata.
 
         :param num_results: Maximum number of candidate transcripts to return. Returned list might be smaller than this.
         :type num_results: int
