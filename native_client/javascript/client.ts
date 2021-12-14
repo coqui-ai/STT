@@ -31,6 +31,7 @@ parser.addArgument(['--audio'], {required: true, help: 'Path to the audio file t
 parser.addArgument(['--version'], {action: VersionAction, nargs: 0, help: 'Print version and exits'});
 parser.addArgument(['--extended'], {action: 'storeTrue', help: 'Output string from extended metadata'});
 parser.addArgument(['--stream'], {action: 'storeTrue', help: 'Use streaming code path (for tests)'});
+parser.addArgument(['--flush'], {action: 'storeTrue', help: 'Flush buffers before computing intermediate results in streaming code path (for tests)'});
 parser.addArgument(['--hot_words'], {help: 'Hot-words and their boosts. Word:Boost pairs are comma-separated'});
 let args = parser.parseArgs();
 
@@ -154,19 +155,32 @@ if (!args['stream']) {
     handleExit();
   });
 } else {
-  let stream  = model.createStream();
+  let stream = model.createStream();
   conversionStream.on('data', (chunk: Buffer) => {
     stream.feedAudioContent(chunk);
     if (args['extended']) {
-      let metadata = stream.intermediateDecodeWithMetadata();
+      const metadata = (() => {
+        if (args['flush']) {
+          return stream.intermediateDecodeWithMetadataFlushBuffers();
+        } else {
+          return stream.intermediateDecodeWithMetadata();
+        }
+      })();
       console.error('intermediate: ' + candidateTranscriptToString(metadata.transcripts[0]));
     } else {
-      console.error('intermediate: ' + stream.intermediateDecode());
+      const result = (() => {
+        if (args['flush']) {
+          return stream.intermediateDecodeFlushBuffers();
+        } else {
+          return stream.intermediateDecode();
+        }
+      })();
+      console.error('intermediate: ' + result);
     }
   });
   conversionStream.on('end', () => {
     if (args['extended']) {
-      let metadata = stream.finishStreamWithMetadata();
+      const metadata = stream.finishStreamWithMetadata();
       console.log(candidateTranscriptToString(metadata.transcripts[0]));
     } else {
       console.log(stream.finishStream());
