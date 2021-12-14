@@ -323,12 +323,12 @@ Metadata* STT_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
                                              unsigned int aNumResults);
 
 /**
- * @brief Compute the intermediate decoding of an ongoing streaming inference, flushing
- *        buffers first. This ensures that all audio that has been streamed so far is
- *        included in the result, but is more expensive than STT_IntermediateDecode()
- *        because buffers are processed through the acoustic model. Calling this function
- *        too often will also degrade transcription accuracy due to trashing of the
- *        LSTM hidden state vectors.
+ * @brief EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming
+ *        inference, flushing buffers first. This ensures that all audio that
+ *        has been streamed so far is included in the result, but is more expensive
+ *        than STT_IntermediateDecode() because buffers are processed through
+ *        the acoustic model. Calling this function too often will also degrade
+ *        transcription accuracy due to trashing of the LSTM hidden state vectors.
  *
  * @param aSctx A streaming state pointer returned by {@link STT_CreateStream()}.
  *
@@ -341,13 +341,13 @@ STT_EXPORT
 char* STT_IntermediateDecodeFlushBuffers(StreamingState* aSctx);
 
 /**
- * @brief Compute the intermediate decoding of an ongoing streaming inference, flushing
- *        buffers first. This ensures that all audio that has been streamed so far is
- *        included in the result, but is more expensive than
- *        STT_IntermediateDecodeWithMetadata() because buffers are processed through
- *        the acoustic model. Calling this function too often will also degrade
- *        transcription accuracy due to trashing of the LSTM hidden state vectors.
- *        Return results including metadata.
+ * @brief EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming
+ *        inference, flushing buffers first. This ensures that all audio that
+ *        has been streamed so far is included in the result, but is more expensive
+ *        than STT_IntermediateDecodeWithMetadata() because buffers are processed
+ *        through the acoustic model. Calling this function too often will also
+ *        degrade transcription accuracy due to trashing of the LSTM hidden state
+ *        vectors. Returns results including metadata.
  *
  * @param aSctx A streaming state pointer returned by {@link STT_CreateStream()}.
  * @param aNumResults The number of candidate transcripts to return.
