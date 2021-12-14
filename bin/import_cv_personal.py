@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 """
 This script takes your personal audio downloaded from Common Voice
-(i.e. "a personal data takeout") and will format the data
+(i.e. "a personal data takeout") and will format the data 
 and transcripts to be in a state usable by coqui_stt_training.train
-You can download your recordings from Common Voice from your user profile.
 Use "python3 import_cv_personal.py -h" for help
 """
 import csv
@@ -13,8 +12,10 @@ import unicodedata
 from multiprocessing import Pool
 
 import zipfile
+import progressbar
 import sox
 from coqui_stt_ctcdecoder import Alphabet
+from coqui_stt_training.util.downloader import SIMPLE_BAR
 from coqui_stt_training.util.importers import (
     get_counter,
     get_imported_samples,
@@ -98,13 +99,13 @@ def one_sample(sample):
     return (counter, rows)
 
 
-def _maybe_convert_set(tsv_file, audio_dir, space_after_every_character=None):
+def _maybe_convert_set(tsv_file,audio_dir,space_after_every_character=None):
     rows = []
     input_tsv = os.path.abspath(tsv_file)
     print("Loading TSV file: ", input_tsv)
     # Get audiofile path and transcript for each sentence in tsv
     samples = []
-    with open(input_tsv, encoding="utf-8", newline="") as input_tsv_file:
+    with open(input_tsv, encoding="utf-8") as input_tsv_file:
         reader = csv.DictReader(input_tsv_file, delimiter="\t")
         for row in reader:
             samples.append(
@@ -118,9 +119,14 @@ def _maybe_convert_set(tsv_file, audio_dir, space_after_every_character=None):
     num_samples = len(samples)
     print("Importing mp3 files...")
     pool = Pool(initializer=init_worker, initargs=(PARAMS,))
-    for i, processed in enumerate(pool.imap_unordered(one_sample, samples), start=1):
+    bar = progressbar.ProgressBar(max_value=num_samples, widgets=SIMPLE_BAR)
+    for i, processed in enumerate(
+        pool.imap_unordered(one_sample, samples), start=1
+    ):
         counter += processed[0]
         rows += processed[1]
+        bar.update(i)
+    bar.update(num_samples)
     pool.close()
     pool.join()
 
@@ -135,7 +141,8 @@ def _maybe_convert_set(tsv_file, audio_dir, space_after_every_character=None):
         print("Writing CSV file for train.py as: ", output_csv)
         writer = csv.DictWriter(output_csv_file, fieldnames=FIELDNAMES)
         writer.writeheader()
-        for filename, file_size, transcript, _ in rows:
+        bar = progressbar.ProgressBar(max_value=len(rows), widgets=SIMPLE_BAR)
+        for filename, file_size, transcript, _ in bar(rows):
             if space_after_every_character:
                 writer.writerow(
                     {
@@ -155,6 +162,12 @@ def _maybe_convert_set(tsv_file, audio_dir, space_after_every_character=None):
     return rows
 
 
+def _preprocess_data(tsv_file, audio_dir, space_after_every_character=False):
+    set_samples = _maybe_convert_set(
+        tsv_file, audio_dir, space_after_every_character
+    )
+
+
 def _maybe_convert_wav(mp3_filename, wav_filename):
     if not os.path.exists(wav_filename):
         transformer = sox.Transformer()
@@ -166,13 +179,8 @@ def _maybe_convert_wav(mp3_filename, wav_filename):
 
 
 def parse_args():
-    parser = get_importers_parser(
-        description="Import Common Voice data from a single user's account"
-    )
-    parser.add_argument(
-        "txt_file",
-        help="Path to the single .txt metadata file (eg: takeout_*_metadata.txt)",
-    )
+    parser = get_importers_parser(description="Import Common Voice data from a single user's account")
+    parser.add_argument("tsv_file", help="Path to the single TSV file")
     parser.add_argument("zip_file", help="Zipped directory containing MP3 clips")
     parser.add_argument(
         "--filter_alphabet",
@@ -193,19 +201,15 @@ def parse_args():
 
 def main():
 
-    with zipfile.ZipFile(os.path.abspath(PARAMS.zip_file), "r") as zipped:
+    with zipfile.ZipFile(os.path.abspath(PARAMS.zip_file),"r") as zipped:
         zipped.extractall(os.path.abspath(os.path.dirname(PARAMS.zip_file)))
 
-    audio_dir, _ = os.path.splitext(os.path.abspath(PARAMS.zip_file))
-    _maybe_convert_set(PARAMS.txt_file, audio_dir, PARAMS.space_after_every_character)
+    audio_dir=os.path.splitext(os.path.abspath(PARAMS.zip_file))[0]
+    _preprocess_data(PARAMS.tsv_file, audio_dir, PARAMS.space_after_every_character)
 
-    print(
-        "INFO: compiled",
-        str(os.path.abspath(os.path.dirname(PARAMS.zip_file))) + "/data.csv",
-    )
-    print("INFO: formatted data located in ", str(audio_dir))
-    print("INFO: you now should decide {train,test,dev} splits on your own")
-    print("INFO: or you can use --auto_input_dataset flag from our training code")
+    print("FINISHED: compiled", str(os.path.abspath(os.path.dirname(PARAMS.zip_file))) + "/data.csv")
+    print("FINISHED: formatted data located in ", str(audio_dir))
+    print("FINISHED: you now should decide {train,test,dev} splits on your own")
 
 
 if __name__ == "__main__":
