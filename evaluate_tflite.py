@@ -10,4 +10,3 @@ if __name__ == "__main__":
         raise
 
     stt_evaluate_tflite.main()
-
