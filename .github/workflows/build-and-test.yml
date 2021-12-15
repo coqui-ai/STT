@@ -610,6 +610,44 @@ jobs:
           runtime: "python"
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
+  test-evaluate-export:
+    name: "Lin|Test evaluate_export"
+    runs-on: ubuntu-20.04
+    needs: [ build-python-Linux, train-test-model-Linux, build-ctc-decoder-Linux ]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        samplerate: ["8k", "16k"]
+    env:
+      CI_TMP_DIR: ${{ github.workspace }}/tmp/
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
+          path: ${{ env.CI_TMP_DIR }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - uses: actions/download-artifact@v2
+        with:
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+          path: ${{ env.CI_TMP_DIR }}
+      - run: |
+          ls -hal ${{ env.CI_TMP_DIR }}/
+      - run: |
+          python -m pip install --only-binary :all: --upgrade ${{ env.CI_TMP_DIR }}/stt*.whl
+      - run: |
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+      - run: |
+          ./ci_scripts/evaluate-export-test.sh ${{ matrix.samplerate }}
   test-nodejs-Linux:
     name: "Lin|Test NodeJS bindings"
     runs-on: ubuntu-20.04
