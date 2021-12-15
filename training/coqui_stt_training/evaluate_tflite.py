@@ -13,10 +13,14 @@ from multiprocessing import JoinableQueue, Manager, Process, cpu_count
 
 import numpy as np
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
-from coqui_stt_training.util.config import Config, initialize_globals_from_args
+from coqui_stt_training.util.config import (
+    Config,
+    initialize_globals_from_args,
+    initialize_globals_from_cli,
+    log_error,
+)
 from coqui_stt_training.util.audio import read_ogg_opus
 from six.moves import range, zip
-from stt import Model
 
 r"""
 This module should be self-contained:
@@ -33,6 +37,12 @@ Then run with a TFLite model, a scorer and a CSV test file
 
 def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_mask)
+    try:
+        from stt import Model
+    except ModuleNotFoundError:
+        log_error('ImportError: No module named stt, use "pip install stt" ')
+        sys.exit(-1)
+
     ds = Model(model)
     if scorer:
         ds.enableExternalScorer(scorer)
@@ -69,6 +79,7 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
 
 def main(args):
     initialize_globals_from_args()
+    initialize_globals_from_cli()
     manager = Manager()
     work_todo = JoinableQueue()  # this is where we are going to store input data
     work_done = manager.Queue()  # this where we are gonna push them out
