@@ -7,12 +7,14 @@ import csv
 import os
 import sys
 import wave
+import io
 from functools import partial
 from multiprocessing import JoinableQueue, Manager, Process, cpu_count
 
 import numpy as np
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
 from coqui_stt_training.util.config import Config, initialize_globals_from_args
+from coqui_stt_training.util.audio import read_ogg_opus
 from six.moves import range, zip
 from stt import Model
 
@@ -40,9 +42,14 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
             msg = queue_in.get()
 
             filename = msg["filename"]
-            fin = wave.open(filename, "rb")
-            audio = np.frombuffer(fin.readframes(fin.getnframes()), np.int16)
-            fin.close()
+            filetype = filename.split("/")[-1].split(".")[-1]
+            if filetype == "wav":
+                fin = wave.open(filename, "rb")
+                audio = np.frombuffer(fin.readframes(fin.getnframes()), np.int16)
+                fin.close()
+            elif filetype == "opus":
+                with open(filename, "rb") as fin:
+                    audio_format, audio = read_ogg_opus(io.BytesIO(fin.read()))
 
             decoded = ds.stt(audio)
 
