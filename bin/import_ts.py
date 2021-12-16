@@ -10,8 +10,8 @@ import progressbar
 import sox
 
 
-from deepspeech_training.util.downloader import SIMPLE_BAR, maybe_download
-from deepspeech_training.util.importers import (
+from coqui_training.util.downloader import SIMPLE_BAR, maybe_download
+from coqui_training.util.importers import (
     get_counter,
     get_imported_samples,
     get_importers_parser,
