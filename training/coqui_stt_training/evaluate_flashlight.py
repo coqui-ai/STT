@@ -165,7 +165,13 @@ def evaluate(test_csvs, create_model):
 
             # Print test summary
             test_samples = calculate_and_print_report(
-                wav_filenames, ground_truths, predictions, losses, dataset
+                wav_filenames,
+                ground_truths,
+                predictions,
+                losses,
+                dataset,
+                "cer" if Config.bytes_output_mode else "wer",
+                Config.report_count,
             )
             return test_samples
 
