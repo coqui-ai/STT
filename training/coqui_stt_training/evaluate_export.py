@@ -1,20 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-if __name__ == "__main__":
-
-    print(
-        "Using the top level evaluate_tflite.py script is deprecated and will be removed "
-        "in a future release. Instead use: python -m coqui_stt_training.evaluate_export"
-    )
-    try:
-        from coqui_stt_training import evaluate_export as stt_evaluate_export
-    except ImportError:
-        print("Training package is not installed. See training documentation.")
-        raise
-
-    stt_evaluate_export.main(stt_evaluate_export.parse_args())
-
 import argparse
 import csv
 import os
@@ -77,7 +63,8 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
         queue_in.task_done()
 
 
-def main(args):
+def main():
+    args = parse_args()
     initialize_globals_from_args()
     manager = Manager()
     work_todo = JoinableQueue()  # this is where we are going to store input data
@@ -170,3 +157,7 @@ def parse_args():
     )
     args, unknown = parser.parse_known_args()
     return args
+
+
+if __name__ == "__main__":
+    main()
