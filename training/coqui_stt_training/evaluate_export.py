@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
+
+if __name__ == "__main__":
+
+    print(
+        "Using the top level evaluate_tflite.py script is deprecated and will be removed "
+        "in a future release. Instead use: python -m coqui_stt_training.evaluate_export"
+    )
+    try:
+        from coqui_stt_training import evaluate_export as stt_evaluate_export
+    except ImportError:
+        print("Training package is not installed. See training documentation.")
+        raise
+
+    stt_evaluate_export.main(stt_evaluate_export.parse_args())
 
 import argparse
 import csv
@@ -13,25 +26,14 @@ from multiprocessing import JoinableQueue, Manager, Process, cpu_count
 
 import numpy as np
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
-from coqui_stt_training.util.config import (
-    Config,
-    initialize_globals_from_args,
-    initialize_globals_from_cli,
-    log_error,
-)
+from coqui_stt_training.util.config import initialize_globals_from_args
 from coqui_stt_training.util.audio import read_ogg_opus
 from six.moves import range, zip
 
 r"""
-This module should be self-contained:
-  - build libstt.so with TFLite:
-    - bazel build [...] --define=runtime=tflite [...] //native_client:libstt.so
-  - make -C native_client/python/ TFDIR=... bindings
-  - setup a virtualenv
-  - pip install native_client/python/dist/*.whl
-  - pip install -r requirements_eval_tflite.txt
-
-Then run with a TFLite model, a scorer and a CSV test file
+This module requires the inference package to be installed:
+    - pip install stt
+Then run using `python -m coqui_stt_training.evaluate_export` with a TFLite model and a CSV test file, and optionally a scorer.
 """
 
 
@@ -40,9 +42,7 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
     try:
         from stt import Model
     except ModuleNotFoundError:
-        log_error('ImportError: No module named stt, use "pip install stt" ')
-        sys.exit(-1)
-
+        raise RuntimeError('ImportError: No module named stt, use "pip install stt"')
     ds = Model(model)
     if scorer:
         ds.enableExternalScorer(scorer)
@@ -79,7 +79,6 @@ def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
 
 def main(args):
     initialize_globals_from_args()
-    initialize_globals_from_cli()
     manager = Manager()
     work_todo = JoinableQueue()  # this is where we are going to store input data
     work_done = manager.Queue()  # this where we are gonna push them out
@@ -170,10 +169,4 @@ def parse_args():
         help='Path to dump the results as text file, with one line for each wav: "wav transcription".',
     )
     args, unknown = parser.parse_known_args()
-    # Reconstruct argv for absl.flags
-    sys.argv = [sys.argv[0]] + unknown
     return args
-
-
-if __name__ == "__main__":
-    main(parse_args())
