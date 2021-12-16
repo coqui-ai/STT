@@ -647,7 +647,7 @@ jobs:
       - run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl
       - run: |
-          sudo apt-get install -y --no-install-recommends libopus0 
+          sudo apt-get install -y --no-install-recommends libopus0 libopusfile0
       - run: |
           ./ci_scripts/evaluate-export-test.sh ${{ matrix.samplerate }}
   test-nodejs-Linux:
