@@ -197,15 +197,15 @@ def main():
         zipped.extractall(os.path.abspath(os.path.dirname(PARAMS.zip_file)))
 
     audio_dir, _ = os.path.splitext(os.path.abspath(PARAMS.zip_file))
-    _maybe_convert_set(PARAMS.tsv_file, audio_dir, PARAMS.space_after_every_character)
+    _maybe_convert_set(PARAMS.txt_file, audio_dir, PARAMS.space_after_every_character)
 
     print(
-        "FINISHED: compiled",
+        "INFO: compiled",
         str(os.path.abspath(os.path.dirname(PARAMS.zip_file))) + "/data.csv",
     )
-    print("FINISHED: formatted data located in ", str(audio_dir))
-    print("FINISHED: you now should decide {train,test,dev} splits on your own")
-    print("FINISHED: or you can use --auto_input_dataset flag from our training code")
+    print("INFO: formatted data located in ", str(audio_dir))
+    print("INFO: you now should decide {train,test,dev} splits on your own")
+    print("INFO: or you can use --auto_input_dataset flag from our training code")
 
 
 if __name__ == "__main__":
