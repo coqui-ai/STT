@@ -36,7 +36,7 @@ def _download_and_preprocess_data(target_dir, english_compatible=False):
     target_dir = os.path.abspath(target_dir)
     # Conditionally download data
     archive_path = maybe_download(
-        "ts_" + ARCHIVE_NAME + ".zip", target_dir, ARCHIVE_URL
+        "ts_" + ARCHIVE_NAME + ".tar.gz", target_dir, ARCHIVE_URL
     )
     # Conditionally extract archive data
     _maybe_extract(target_dir, ARCHIVE_DIR_NAME, archive_path)
@@ -213,4 +213,5 @@ def handle_args():
 if __name__ == "__main__":
     cli_args = handle_args()
     validate_label = get_validate_label(cli_args)
-    _download_and_preprocess_data(cli_args.target_dir, cli_args.english_compatible) 
+    _download_and_preprocess_data(cli_args.target_dir, cli_args.english_compatible)
+
