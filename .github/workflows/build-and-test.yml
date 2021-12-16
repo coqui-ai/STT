@@ -635,7 +635,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.python-version }}.whl"
       - uses: actions/download-artifact@v2
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
