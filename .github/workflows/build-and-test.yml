@@ -617,7 +617,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.6", "3.7"]
         samplerate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
