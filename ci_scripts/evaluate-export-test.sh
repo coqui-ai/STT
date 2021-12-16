@@ -36,6 +36,15 @@ esac
 echo "Moving ${sample_name} to LDC93S1.wav"
 cp "data/smoke_test/${sample_name}" "data/smoke_test/LDC93S1.wav"
 
+# Evaluate tflite model on wav files
 python bin/import_ldc93s1.py data/smoke_test
-python -m coqui_stt_training.evaluate_export  --model $STT_TEST_MODEL --csv "data/smoke_test/ldc93s1.csv" --dump /tmp/result 
-cat /tmp/result.out 
+python -m coqui_stt_training.evaluate_export  --model $STT_TEST_MODEL --csv "data/smoke_test/ldc93s1.csv" --dump /tmp/result_wav
+cat /tmp/result_wav.out
+
+# Evaluate tflite model on opus files
+opus_csv="data/smoke_test/ldc93s1_opus.csv"
+opus_path=$(readlink -f data/smoke_test/LDC93S1.opus)
+echo "wav_filename,wav_filesize,transcript" > $opus_csv
+echo $opus_path",93638,she had your dark suit in greasy wash water all year" >> $opus_csv
+python -m coqui_stt_training.evaluate_export  --model $STT_TEST_MODEL --csv $opus_csv --dump /tmp/result_opus
+cat /tmp/result_opus.out
