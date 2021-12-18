@@ -107,6 +107,26 @@ class StreamImpl {
     }
 
     /**
+     * EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming inference, flushing buffers first. This ensures that all audio that has been streamed so far is included in the result, but is more expensive than intermediateDecode() because buffers are processed through the acoustic model.
+     *
+     * @return The STT intermediate result.
+     */
+    intermediateDecodeFlushBuffers(): string {
+        return binding.IntermediateDecodeFlushBuffers(this._impl);
+    }
+
+    /**
+     * EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming inference, flushing buffers first. This ensures that all audio that has been streamed so far is included in the result, but is more expensive than intermediateDecodeWithMetadata() because buffers are processed through the acoustic model. Returns results including metadata.
+     *
+     * @param aNumResults Maximum number of candidate transcripts to return. Returned list might be smaller than this. Default value is 1 if not specified.
+     *
+     * @return :js:func:`Metadata` object containing multiple candidate transcripts. Each transcript has per-token metadata including timing information. The user is responsible for freeing Metadata by calling :js:func:`FreeMetadata`. Returns undefined on error.
+     */
+    intermediateDecodeWithMetadataFlushBuffers(aNumResults: number = 1): Metadata {
+        return binding.IntermediateDecodeWithMetadataFlushBuffers(this._impl, aNumResults);
+    }
+
+    /**
      * Compute the final decoding of an ongoing streaming inference and return the result. Signals the end of an ongoing streaming inference.
      *
      * @return The STT result.

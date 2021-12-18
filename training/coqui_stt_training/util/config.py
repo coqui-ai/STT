@@ -43,14 +43,15 @@ class BaseSttConfig(Coqpit):
         # Augmentations
         self.augmentations = parse_augmentations(self.augment)
         if self.augmentations:
-            print(f"Parsed augmentations: {self.augmentations}")
+            print(f"Parsed augmentations: {self.augmentations}", file=sys.stderr)
         if self.augmentations and self.feature_cache and self.cache_for_epochs == 0:
             print(
                 "Due to your feature-cache settings, augmentations of "
                 "the first epoch will be repeated on all following epochs. "
                 "This may lead to unintended over-fitting. "
                 "You can use --cache_for_epochs <n_epochs> to invalidate "
-                "the cache after a given number of epochs."
+                "the cache after a given number of epochs.",
+                file=sys.stderr,
             )
 
         if self.normalize_sample_rate:
@@ -63,7 +64,8 @@ class BaseSttConfig(Coqpit):
             print(
                 "--cache_for_epochs == 1 is (re-)creating the feature cache "
                 "on every epoch but will never use it. You can either set "
-                "--cache_for_epochs > 1, or not use feature caching at all."
+                "--cache_for_epochs > 1, or not use feature caching at all.",
+                file=sys.stderr,
             )
 
         # Read-buffer
@@ -167,7 +169,8 @@ class BaseSttConfig(Coqpit):
             print(
                 "I --alphabet_config_path not specified, but found an alphabet file "
                 f"alongside specified checkpoint ({loaded_checkpoint_alphabet_file}). "
-                "Will use this alphabet file for this run."
+                "Will use this alphabet file for this run.",
+                file=sys.stderr,
             )
             self.alphabet = Alphabet(loaded_checkpoint_alphabet_file)
             self.effective_alphabet_path = loaded_checkpoint_alphabet_file
@@ -185,7 +188,8 @@ class BaseSttConfig(Coqpit):
                         "datasets are present and in the same folder (--train_files, "
                         "--dev_files and --test_files), and an alphabet.txt file "
                         f"was found alongside the sets ({possible_alphabet}). "
-                        "Will use this alphabet file for this run."
+                        "Will use this alphabet file for this run.",
+                        file=sys.stderr,
                     )
                     self.alphabet = Alphabet(str(possible_alphabet))
                     self.effective_alphabet_path = possible_alphabet
@@ -198,10 +202,14 @@ class BaseSttConfig(Coqpit):
                     "I --alphabet_config_path not specified, but all input datasets are "
                     "present (--train_files, --dev_files, --test_files). An alphabet "
                     "will be generated automatically from the data and placed alongside "
-                    f"the checkpoint ({saved_checkpoint_alphabet_file})."
+                    f"the checkpoint ({saved_checkpoint_alphabet_file}).",
+                    file=sys.stderr,
                 )
                 characters, alphabet = create_alphabet_from_sources(sources)
-                print(f"I Generated alphabet characters: {characters}.")
+                print(
+                    f"I Generated alphabet characters: {characters}.",
+                    file=sys.stderr,
+                )
                 self.alphabet = alphabet
                 self.effective_alphabet_path = saved_checkpoint_alphabet_file
         else:
@@ -217,12 +225,14 @@ class BaseSttConfig(Coqpit):
         if not is_remote_path(self.save_checkpoint_dir):
             os.makedirs(self.save_checkpoint_dir, exist_ok=True)
         flags_file = os.path.join(self.save_checkpoint_dir, "flags.txt")
-        with open_remote(flags_file, "w") as fout:
-            json.dump(self.serialize(), fout, indent=2)
+        if not os.path.exists(flags_file):
+            with open_remote(flags_file, "w") as fout:
+                json.dump(self.serialize(), fout, indent=2)
 
         # Serialize alphabet alongside checkpoint
-        with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
-            fout.write(self.alphabet.SerializeText())
+        if not os.path.exists(saved_checkpoint_alphabet_file):
+            with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
+                fout.write(self.alphabet.SerializeText())
 
         # Geometric Constants
         # ===================
