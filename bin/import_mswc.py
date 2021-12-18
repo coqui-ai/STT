@@ -3,7 +3,7 @@ import csv
 import os
 import re
 import subprocess
-import zipfile
+import tarfile
 from multiprocessing import Pool
 
 import progressbar
@@ -53,10 +53,10 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
 		print('No directory "%s" - extracting archive...' % extracted_path)
 		if not os.path.isdir(extracted_path):
 			os.mkdir(extracted_path)
-		with zipfile.ZipFile(archive_path) as zip_f:
-			zip_f.extractall(extracted_path)
+		with tarfile.open(archive_path) as tar:
+			tar.extractall(extracted_path)
 	else:
-		print('Found directory "%s" - not extracting it from archive.' % archive_path)
+		print('Found directory "%s" - not extracting it from archive.' % extracted_path)
 
 
 def one_sample(sample):
