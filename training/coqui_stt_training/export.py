@@ -181,17 +181,16 @@ def export_savedmodel():
     tfv1.reset_default_graph()
 
     with tfv1.Session(config=Config.session_config) as session:
-        input_wavfile_contents = tf.placeholder(tf.string, [None])
-        batch_size = tf.shape(input_wavfile_contents)[0]
-
-        dataset = (
-            tf.data.Dataset.from_tensor_slices(input_wavfile_contents)
-            .map(map_func=wavfile_bytes_to_features, num_parallel_calls=batch_size)
-            .padded_batch(
-                batch_size=tf.cast(batch_size, tf.int64),
-                padded_shapes=([None, Config.n_input], []),
-            )
+        input_wavfile_contents = tf.placeholder(
+            tf.string, [], name="input_wavfile_contents"
         )
+        features, features_len = wavfile_bytes_to_features(input_wavfile_contents)
+
+        features_in = tf.placeholder(
+            tf.float32, [None, None, Config.n_input], name="features_in"
+        )
+        feature_lens_in = tf.placeholder(tf.int32, [None], name="feature_lens_in")
+        batch_size = tf.shape(features_in)[0]
 
         previous_state_c = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
         previous_state_h = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
@@ -203,43 +202,59 @@ def export_savedmodel():
         # One rate per layer
         no_dropout = [None] * 6
 
-        iterator = tfv1.data.make_initializable_iterator(dataset)
-        with tf.control_dependencies([iterator.initializer]):
-            features, features_len = iterator.get_next()
-            logits, layers = create_model(
-                batch_x=features,
-                seq_length=features_len,
-                dropout=no_dropout,
-                previous_state=previous_state,
-            )
+        logits, layers = create_model(
+            batch_x=features_in,
+            seq_length=feature_lens_in,
+            dropout=no_dropout,
+            previous_state=previous_state,
+        )
+        # Transpose to batch major and softmax for decoder
+        probs = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
 
         # Restore variables from training checkpoint
         load_graph_for_evaluation(session)
-
-        # Transpose to batch major and softmax for decoder
-        probs = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
 
         builder = tfv1.saved_model.builder.SavedModelBuilder(Config.export_dir)
 
         input_file_tinfo = tfv1.saved_model.utils.build_tensor_info(
             input_wavfile_contents
         )
+        input_feat_tinfo = tfv1.saved_model.utils.build_tensor_info(features_in)
+        input_feat_lens_tinfo = tfv1.saved_model.utils.build_tensor_info(
+            feature_lens_in
+        )
+        output_feats_tinfo = tfv1.saved_model.utils.build_tensor_info(features)
+        output_feat_lens_tinfo = tfv1.saved_model.utils.build_tensor_info(features_len)
         output_probs_tinfo = tfv1.saved_model.utils.build_tensor_info(probs)
-        output_lens_tinfo = tfv1.saved_model.utils.build_tensor_info(features_len)
 
-        forward_sig = tfv1.saved_model.signature_def_utils.build_signature_def(
+        compute_feats_sig = tfv1.saved_model.signature_def_utils.build_signature_def(
             inputs={
                 "input_wavfile": input_file_tinfo,
             },
-            outputs={"probs": output_probs_tinfo, "input_lens": output_lens_tinfo},
-            method_name="forward",
+            outputs={
+                "features": output_feats_tinfo,
+                "features_len": output_feat_lens_tinfo,
+            },
+            method_name="compute_features",
+        )
+
+        from_feats_sig = tfv1.saved_model.signature_def_utils.build_signature_def(
+            inputs={
+                "features": input_feat_tinfo,
+                "features_len": input_feat_lens_tinfo,
+            },
+            outputs={
+                "probs": output_probs_tinfo,
+            },
+            method_name="forward_from_features",
         )
 
         builder.add_meta_graph_and_variables(
             session,
             [tfv1.saved_model.tag_constants.SERVING],
             signature_def_map={
-                tfv1.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: forward_sig
+                "compute_features": compute_feats_sig,
+                "forward_from_features": from_feats_sig,
             },
         )
 
