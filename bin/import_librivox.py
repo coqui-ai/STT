@@ -9,15 +9,13 @@ import tarfile
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple
 
 import pandas
-import progressbar
 from coqui_stt_training.util.downloader import maybe_download
 from sox import Transformer
 from tensorflow.python.platform import gfile
-
-SAMPLE_RATE = 16000
+from tqdm import tqdm
 
 
 @dataclass(frozen=True)
@@ -35,9 +33,7 @@ def set_specs_from_url(url: str) -> Tuple[str, LibriSpeechSetSpecs]:
     return name, LibriSpeechSetSpecs(url, filename, name, csv)
 
 
-def _download_and_preprocess_data(
-    data_dir: Path, sets_to_process, sample_rate: int, relative: bool
-):
+def _download_and_preprocess_data(data_dir: Path, sets_to_process, sample_rate: int):
     # Conditionally download data to data_dir
     print(
         f"Downloading Librivox data set (55GB) into {data_dir} if not already present..."
@@ -68,7 +64,7 @@ def _download_and_preprocess_data(
             source_dir=extracted_dir,
             dest_dir=extracted_dir.parent / (extracted_dir.stem + "-wav"),
             sample_rate=sample_rate,
-            relative_to=extracted_dir.parent if relative else None,
+            relative_to=extracted_dir.parent,
         )
 
         csv_path = data_dir / "LibriSpeech" / spec.csv
@@ -91,7 +87,7 @@ def _convert_single_flac(job):
 
 
 def _convert_audio_and_split_sentences(
-    source_dir: Path, dest_dir: Path, sample_rate: int, relative_to: Optional[Path]
+    source_dir: Path, dest_dir: Path, sample_rate: int, relative_to: Path
 ):
     os.makedirs(dest_dir, exist_ok=True)
 
@@ -140,10 +136,7 @@ def _convert_audio_and_split_sentences(
                 else:
                     conversions.append((flac_file, wav_file, sample_rate))
 
-                if relative_to:
-                    wav_file = wav_file.relative_to(relative_to)
-
-                files.append(str(wav_file))
+                files.append(str(wav_file.relative_to(relative_to)))
                 transcripts.append(transcript)
 
     if conversions:
@@ -192,17 +185,10 @@ def main():
         default=16000,
         help="sample rate to convert samples to",
     )
-    parser.add_argument(
-        "--relative",
-        action="store_true",
-        help="whether to store relative paths in CSV",
-    )
     args = parser.parse_args()
 
     set_specs = [all_sets[set] for set in args.sets]
-    _download_and_preprocess_data(
-        Path(args.base_folder), set_specs, args.sample_rate, args.relative
-    )
+    _download_and_preprocess_data(Path(args.base_folder), set_specs, args.sample_rate)
 
 
 if __name__ == "__main__":
