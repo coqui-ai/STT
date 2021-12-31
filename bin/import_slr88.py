@@ -41,7 +41,7 @@ def _download_and_preprocess_data(target_dir):
     _maybe_extract(target_dir, f"Volumes/CLEM_HDD/IRCAM/Open_SLR/{ARCHIVE_NAME_txt}", txt_archive_path)
     _maybe_extract(target_dir, f"Volumes/CLEM_HDD/IRCAM/Open_SLR/{ARCHIVE_NAME_wav}", wav_archive_path)
     # Produce CSV files
-    _maybe_convert_sets(target_dir, "Volumes/CLEM_HDD/IRCAM//Open_SLR")
+    _maybe_convert_sets(target_dir, "Volumes/CLEM_HDD/IRCAM/Open_SLR")
 
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
