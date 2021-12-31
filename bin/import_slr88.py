@@ -110,8 +110,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         all_files = glob(f"{extracted_dir}/{ARCHIVE_NAME_txt}/*.txt")
 
-        print(all_files)
-
         transcripts = {}
         for tr in all_files:
             with open(tr, "r") as tr_source:
