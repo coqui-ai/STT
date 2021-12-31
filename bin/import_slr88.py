@@ -120,8 +120,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
                 transcripts[audio] = transcript
                 tr_source.close()
 
-        print(transcripts)
-
         # Get audiofile path and transcript for each sentence
         samples = []
         for record in glob(f"{extracted_dir}/{ARCHIVE_NAME_wav}/*.wav"):
@@ -129,14 +127,12 @@ def _maybe_convert_sets(target_dir, extracted_data):
             if record_file in transcripts.keys():
                 samples.append((record, transcripts[record_file]))
 
-        print(samples)
-
         # Keep track of how many samples are good vs. problematic
         counter = get_counter()
         num_samples = len(samples)
         rows = []
 
-        print(f"Importing {str(num_samples)} WAV files...")
+        print("Importing WAV files...")
         pool = Pool()
         bar = progressbar.ProgressBar(max_value=num_samples, widgets=SIMPLE_BAR)
         for i, processed in enumerate(pool.imap_unordered(one_sample, samples), start=1):
