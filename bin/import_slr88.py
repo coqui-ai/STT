@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import csv
 import os
+import random
 import subprocess
 import tarfile
 import unicodedata
@@ -147,11 +148,11 @@ def _maybe_convert_sets(target_dir, extracted_data):
         )
 
         with open(
-            target_csv_template.format("train"), "w", encoding="utf-8", newline=""  # 80%
+            target_csv_template.format("train"), "w", encoding="utf-8", newline=""
         ) as train_csv_file, open(
-            target_csv_template.format("dev"), "w", encoding="utf-8", newline=""  # 10%
+            target_csv_template.format("dev"), "w", encoding="utf-8", newline=""
         ) as dev_csv_file, open(
-            target_csv_template.format("test"), "w", encoding="utf-8", newline=""  # 10%
+            target_csv_template.format("test"), "w", encoding="utf-8", newline=""
         ) as test_csv_file:
                     train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
                     train_writer.writeheader()
@@ -159,20 +160,44 @@ def _maybe_convert_sets(target_dir, extracted_data):
                     dev_writer.writeheader()
                     test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
                     test_writer.writeheader()
+ 
+                    train_set, dev_set, test_set = _split_sets(rows)
 
-                    for i, item in enumerate(rows):
+                    # save train_set
+                    for item in train_set:
                         transcript = validate_label(item[2])
                         if not transcript:
                             continue
                         wav_filename = item[0]
-                        i_mod = i % 10
-                        if i_mod == 0:
-                            writer = test_writer
-                        elif i_mod == 1:
-                            writer = dev_writer
-                        else:
-                            writer = train_writer
-                        writer.writerow(
+                        train_writer.writerow(
+                            dict(
+                                wav_filename=wav_filename,
+                                wav_filesize=os.path.getsize(wav_filename),
+                                transcript=transcript,
+                            )
+                        )
+                    
+                    # save dev_set
+                    for item in dev_set:
+                        transcript = validate_label(item[2])
+                        if not transcript:
+                            continue
+                        wav_filename = item[0]
+                        dev_writer.writerow(
+                            dict(
+                                wav_filename=wav_filename,
+                                wav_filesize=os.path.getsize(wav_filename),
+                                transcript=transcript,
+                            )
+                        )
+                    
+                    # save test_set
+                    for item in test_set:
+                        transcript = validate_label(item[2])
+                        if not transcript:
+                            continue
+                        wav_filename = item[0]
+                        test_writer.writerow(
                             dict(
                                 wav_filename=wav_filename,
                                 wav_filesize=os.path.getsize(wav_filename),
@@ -185,6 +210,47 @@ def _maybe_convert_sets(target_dir, extracted_data):
         assert len(rows) == imported_samples
 
         print_import_report(counter, SAMPLE_RATE, MAX_SECS)
+
+def _split_sets(rows):
+    """
+    randomply split the datasets into train, validation, and test sets where the size of the
+    validation and test sets are determined by the `get_sample_size` function.
+    """
+    random.shuffle(rows)
+    sample_size = get_sample_size(len(rows))
+
+    train_beg = 0
+    train_end = len(rows) - 2 * sample_size
+
+    dev_beg = train_end
+    dev_end = train_end + sample_size
+
+    test_beg = dev_end
+    test_end = len(rows)
+
+    return (
+        rows[train_beg:train_end],
+        rows[dev_beg:dev_end],
+        rows[test_beg:test_end],
+    )
+
+def get_sample_size(population_size):
+    """calculates the sample size for a 99% confidence and 1% margin of error"""
+    margin_of_error = 0.01
+    fraction_picking = 0.50
+    z_score = 2.58  # Corresponds to confidence level 99%
+    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
+        margin_of_error ** 2
+    )
+    sample_size = 0
+    for train_size in range(population_size, 0, -1):
+        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
+            margin_of_error ** 2 * train_size
+        )
+        sample_size = int(numerator / denominator)
+        if 2 * sample_size + train_size <= population_size:
+            break
+    return sample_size
 
 
 def handle_args():
