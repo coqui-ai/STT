@@ -29,6 +29,7 @@ ARCHIVE_NAME_wav = "wav"
 BASE_SLR_URL = "http://www.openslr.org/resources/88"
 ARCHIVE_URL_txt = f"{BASE_SLR_URL}/{ARCHIVE_NAME_txt}{ARCHIVE_EXT}"
 ARCHIVE_URL_wav = f"{BASE_SLR_URL}/{ARCHIVE_NAME_wav}{ARCHIVE_EXT}"
+ARCHIVE_ROOT_PATH = "Volumes/CLEM_HDD/IRCAM/Open_SLR"
 
 
 def _download_and_preprocess_data(target_dir):
@@ -38,10 +39,10 @@ def _download_and_preprocess_data(target_dir):
     txt_archive_path = maybe_download(f"{ARCHIVE_NAME_txt}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_txt)
     wav_archive_path = maybe_download(f"{ARCHIVE_NAME_wav}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_wav)
     # Conditionally extract data
-    _maybe_extract(target_dir, f"Volumes/CLEM_HDD/IRCAM/Open_SLR/{ARCHIVE_NAME_txt}", txt_archive_path)
-    _maybe_extract(target_dir, f"Volumes/CLEM_HDD/IRCAM/Open_SLR/{ARCHIVE_NAME_wav}", wav_archive_path)
+    _maybe_extract(target_dir, f"{ARCHIVE_ROOT_PATH}/{ARCHIVE_NAME_txt}", txt_archive_path)
+    _maybe_extract(target_dir, f"{ARCHIVE_ROOT_PATH}/{ARCHIVE_NAME_wav}", wav_archive_path)
     # Produce CSV files
-    _maybe_convert_sets(target_dir, "Volumes/CLEM_HDD/IRCAM/Open_SLR")
+    _maybe_convert_sets(target_dir, ARCHIVE_ROOT_PATH)
 
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
