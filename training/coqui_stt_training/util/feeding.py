@@ -84,6 +84,14 @@ def audiofile_to_features(
     wav_filename, clock=0.0, train_phase=False, augmentations=None
 ):
     samples = tf.io.read_file(wav_filename)
+    return wavfile_bytes_to_features(
+        samples, clock, train_phase, augmentations, sample_id=wav_filename
+    )
+
+
+def wavfile_bytes_to_features(
+    samples, clock=0.0, train_phase=False, augmentations=None, sample_id=None
+):
     decoded = contrib_audio.decode_wav(samples, desired_channels=1)
     return audio_to_features(
         decoded.audio,
@@ -91,7 +99,7 @@ def audiofile_to_features(
         clock=clock,
         train_phase=train_phase,
         augmentations=augmentations,
-        sample_id=wav_filename,
+        sample_id=sample_id,
     )
 
 

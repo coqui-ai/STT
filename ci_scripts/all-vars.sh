@@ -80,7 +80,5 @@ fi
 
 model_source="${STT_TEST_MODEL}"
 model_name="$(basename "${model_source}")"
-model_name_mmap="$(basename -s ".pb" "${model_source}").pbmm"
-model_source_mmap="$(dirname "${model_source}")/${model_name_mmap}"
 
 ldc93s1_sample_filename=''

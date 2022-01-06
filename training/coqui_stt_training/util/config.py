@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import json
 import os
 import sys
 from dataclasses import asdict, dataclass, field
@@ -17,7 +18,7 @@ from .augmentations import NormalizeSampleRate, parse_augmentations
 from .auto_input import create_alphabet_from_sources, create_datasets_from_auto_input
 from .gpu import get_available_gpus
 from .helpers import parse_file_size
-from .io import path_exists_remote
+from .io import is_remote_path, open_remote, path_exists_remote
 
 
 class _ConfigSingleton:
@@ -37,19 +38,20 @@ Config = _ConfigSingleton()  # pylint: disable=invalid-name
 
 
 @dataclass
-class _SttConfig(Coqpit):
+class BaseSttConfig(Coqpit):
     def __post_init__(self):
         # Augmentations
         self.augmentations = parse_augmentations(self.augment)
         if self.augmentations:
-            print(f"Parsed augmentations: {self.augmentations}")
+            print(f"Parsed augmentations: {self.augmentations}", file=sys.stderr)
         if self.augmentations and self.feature_cache and self.cache_for_epochs == 0:
             print(
                 "Due to your feature-cache settings, augmentations of "
                 "the first epoch will be repeated on all following epochs. "
                 "This may lead to unintended over-fitting. "
                 "You can use --cache_for_epochs <n_epochs> to invalidate "
-                "the cache after a given number of epochs."
+                "the cache after a given number of epochs.",
+                file=sys.stderr,
             )
 
         if self.normalize_sample_rate:
@@ -62,7 +64,8 @@ class _SttConfig(Coqpit):
             print(
                 "--cache_for_epochs == 1 is (re-)creating the feature cache "
                 "on every epoch but will never use it. You can either set "
-                "--cache_for_epochs > 1, or not use feature caching at all."
+                "--cache_for_epochs > 1, or not use feature caching at all.",
+                file=sys.stderr,
             )
 
         # Read-buffer
@@ -161,13 +164,16 @@ class _SttConfig(Coqpit):
             self.alphabet = UTF8Alphabet()
         elif self.alphabet_config_path:
             self.alphabet = Alphabet(self.alphabet_config_path)
+            self.effective_alphabet_path = self.alphabet_config_path
         elif os.path.exists(loaded_checkpoint_alphabet_file):
             print(
                 "I --alphabet_config_path not specified, but found an alphabet file "
                 f"alongside specified checkpoint ({loaded_checkpoint_alphabet_file}). "
-                "Will use this alphabet file for this run."
+                "Will use this alphabet file for this run.",
+                file=sys.stderr,
             )
             self.alphabet = Alphabet(loaded_checkpoint_alphabet_file)
+            self.effective_alphabet_path = loaded_checkpoint_alphabet_file
         elif self.train_files and self.dev_files and self.test_files:
             # If all subsets are in the same folder and there's an alphabet file
             # alongside them, use it.
@@ -182,9 +188,11 @@ class _SttConfig(Coqpit):
                         "datasets are present and in the same folder (--train_files, "
                         "--dev_files and --test_files), and an alphabet.txt file "
                         f"was found alongside the sets ({possible_alphabet}). "
-                        "Will use this alphabet file for this run."
+                        "Will use this alphabet file for this run.",
+                        file=sys.stderr,
                     )
                     self.alphabet = Alphabet(str(possible_alphabet))
+                    self.effective_alphabet_path = possible_alphabet
 
             if not self.alphabet:
                 # Generate alphabet automatically from input dataset, but only if
@@ -194,11 +202,16 @@ class _SttConfig(Coqpit):
                     "I --alphabet_config_path not specified, but all input datasets are "
                     "present (--train_files, --dev_files, --test_files). An alphabet "
                     "will be generated automatically from the data and placed alongside "
-                    f"the checkpoint ({saved_checkpoint_alphabet_file})."
+                    f"the checkpoint ({saved_checkpoint_alphabet_file}).",
+                    file=sys.stderr,
                 )
                 characters, alphabet = create_alphabet_from_sources(sources)
-                print(f"I Generated alphabet characters: {characters}.")
+                print(
+                    f"I Generated alphabet characters: {characters}.",
+                    file=sys.stderr,
+                )
                 self.alphabet = alphabet
+                self.effective_alphabet_path = saved_checkpoint_alphabet_file
         else:
             raise RuntimeError(
                 "Missing --alphabet_config_path flag. Couldn't find an alphabet file "
@@ -207,6 +220,19 @@ class _SttConfig(Coqpit):
                 "Either specify an alphabet file or fully specify the dataset, so one will "
                 "be generated automatically."
             )
+
+        # Save flags next to checkpoints
+        if not is_remote_path(self.save_checkpoint_dir):
+            os.makedirs(self.save_checkpoint_dir, exist_ok=True)
+        flags_file = os.path.join(self.save_checkpoint_dir, "flags.txt")
+        if not os.path.exists(flags_file):
+            with open_remote(flags_file, "w") as fout:
+                json.dump(self.serialize(), fout, indent=2)
+
+        # Serialize alphabet alongside checkpoint
+        if not os.path.exists(saved_checkpoint_alphabet_file):
+            with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
+                fout.write(self.alphabet.SerializeText())
 
         # Geometric Constants
         # ===================
@@ -319,6 +345,13 @@ class _SttConfig(Coqpit):
         default="",
         metadata=dict(
             help="path to a single CSV file to use for training. Cannot be specified alongside --train_files, --dev_files, --test_files. Training/validation/testing subsets will be automatically generated from the input, alongside with an alphabet file, if not already present.",
+        ),
+    )
+
+    vocab_file: str = field(
+        default="",
+        metadata=dict(
+            help="For use with evaluate_flashlight - text file containing vocabulary of scorer, one word per line."
         ),
     )
 
@@ -580,6 +613,10 @@ class _SttConfig(Coqpit):
         default=True,
         metadata=dict(help="export a quantized model (optimized for size)"),
     )
+    export_savedmodel: bool = field(
+        default=False,
+        metadata=dict(help="export model in TF SavedModel format"),
+    )
     n_steps: int = field(
         default=16,
         metadata=dict(
@@ -824,14 +861,20 @@ class _SttConfig(Coqpit):
 
 
 def initialize_globals_from_cli():
-    c = _SttConfig.init_from_argparse(arg_prefix="")
+    c = BaseSttConfig.init_from_argparse(arg_prefix="")
     _ConfigSingleton._config = c  # pylint: disable=protected-access
 
 
 def initialize_globals_from_args(**override_args):
     # Update Config with new args
-    c = _SttConfig(**override_args)
+    c = BaseSttConfig(**override_args)
     _ConfigSingleton._config = c  # pylint: disable=protected-access
+
+
+def initialize_globals_from_instance(config):
+    """ Initialize Config singleton from an existing Config instance (or subclass) """
+    assert isinstance(config, BaseSttConfig)
+    _ConfigSingleton._config = config  # pylint: disable=protected-access
 
 
 # Logging functions

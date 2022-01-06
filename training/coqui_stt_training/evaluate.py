@@ -134,7 +134,7 @@ def evaluate(test_csvs, create_model):
                     batch_logits,
                     batch_lengths,
                     Config.alphabet,
-                    Config.beam_width,
+                    Config.export_beam_width,
                     num_processes=num_processes,
                     scorer=scorer,
                     cutoff_prob=Config.cutoff_prob,
@@ -156,7 +156,13 @@ def evaluate(test_csvs, create_model):
 
             # Print test summary
             test_samples = calculate_and_print_report(
-                wav_filenames, ground_truths, predictions, losses, dataset
+                wav_filenames,
+                ground_truths,
+                predictions,
+                losses,
+                dataset,
+                "cer" if Config.bytes_output_mode else "wer",
+                Config.report_count,
             )
             return test_samples
 

@@ -1,6 +1,7 @@
 #ifdef _MSC_VER
   #include <stdlib.h>
   #include <io.h>
+  #define NOMINMAX
   #include <windows.h>
 
   #define R_OK    4       /* Read permission.  */
@@ -17,15 +18,26 @@
 #include <iostream>
 #include <fstream>
 
-#include "lm/config.hh"
-#include "lm/model.hh"
-#include "lm/state.hh"
-#include "util/string_piece.hh"
+#include "kenlm/lm/config.hh"
+#include "kenlm/lm/model.hh"
+#include "kenlm/lm/state.hh"
+#include "kenlm/lm/word_index.hh"
+#include "kenlm/util/string_piece.hh"
 
 #include "decoder_utils.h"
 
+using namespace fl::lib::text;
+
 static const int32_t MAGIC = 'TRIE';
 static const int32_t FILE_VERSION = 6;
+
+Scorer::Scorer()
+{
+}
+
+Scorer::~Scorer()
+{
+}
 
 int
 Scorer::init(const std::string& lm_path,
@@ -346,4 +358,55 @@ void Scorer::fill_dictionary(const std::unordered_set<std::string>& vocabulary)
   // Now we convert the MutableFst to a ConstFst (Scorer::FstType) via its ctor
   std::unique_ptr<FstType> converted(new FstType(*new_dict));
   this->dictionary = std::move(converted);
+}
+
+LMStatePtr
+Scorer::start(bool startWithNothing)
+{
+  auto outState = std::make_shared<KenLMState>();
+  if (startWithNothing) {
+    language_model_->NullContextWrite(outState->ken());
+  } else {
+    language_model_->BeginSentenceWrite(outState->ken());
+  }
+
+  return outState;
+}
+
+std::pair<LMStatePtr, float>
+Scorer::score(const LMStatePtr& state,
+              const int usrTokenIdx)
+{
+  if (usrTokenIdx < 0 || usrTokenIdx >= usrToLmIdxMap_.size()) {
+    throw std::runtime_error(
+        "[Scorer] Invalid user token index: " + std::to_string(usrTokenIdx));
+  }
+  auto inState = std::static_pointer_cast<KenLMState>(state);
+  auto outState = inState->child<KenLMState>(usrTokenIdx);
+  float score = language_model_->BaseScore(
+      inState->ken(), usrToLmIdxMap_[usrTokenIdx], outState->ken());
+  return std::make_pair(std::move(outState), score);
+}
+
+std::pair<LMStatePtr, float>
+Scorer::finish(const LMStatePtr& state)
+{
+  auto inState = std::static_pointer_cast<KenLMState>(state);
+  auto outState = inState->child<KenLMState>(-1);
+  float score = language_model_->BaseScore(
+                  inState->ken(),
+                  language_model_->BaseVocabulary().EndSentence(),
+                  outState->ken()
+                );
+  return std::make_pair(std::move(outState), score);
+}
+
+void
+Scorer::load_words(const Dictionary& word_dict)
+{
+  const auto& vocab = language_model_->BaseVocabulary();
+  usrToLmIdxMap_.resize(word_dict.indexSize());
+  for (int i = 0; i < word_dict.indexSize(); ++i) {
+    usrToLmIdxMap_[i] = vocab.Index(word_dict.getEntry(i));
+  }
 }

@@ -99,6 +99,7 @@ def main():
         py_modules=["stt", "stt.client", "stt.impl"],
         entry_points={"console_scripts": ["stt=stt.client:main"]},
         install_requires=["numpy%s" % numpy_min_ver],
+        python_requires=">=3.6,<3.11",
         include_package_data=True,
         classifiers=[
             "Development Status :: 3 - Alpha",

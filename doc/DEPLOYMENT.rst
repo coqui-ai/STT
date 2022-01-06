@@ -16,7 +16,9 @@ You can deploy 🐸STT models either via a command-line client or a language bin
 * :ref:`The Node.JS package + language binding <nodejs-usage>`
 * :ref:`The Android libstt AAR package <android-usage>`
 * :ref:`The command-line client <cli-usage>`
-* :ref:`The native C API <c-usage>`
+* :ref:`The C API <c-usage>`
+
+In some use cases, you might want to use the inference facilities built into the training code, for example for faster prototyping of new features. They are not production-ready, but because it's all Python code you won't need to recompile in order to test code changes, which can be much faster. See :ref:`checkpoint-inference` for more details.
 
 .. _download-models:
 
@@ -103,14 +105,6 @@ The following command assumes you :ref:`downloaded the pre-trained models <downl
 
 See :ref:`the Python client <py-api-example>` for an example of how to use the package programatically.
 
-*GPUs will soon be supported:* If you have a supported NVIDIA GPU on Linux, you can install the GPU specific package as follows:
-
-.. code-block::
-
-   (coqui-stt-venv)$ python -m pip install -U pip && python -m pip install stt-gpu
-
-See the `release notes <https://github.com/coqui-ai/STT/releases>`_ to find which GPUs are supported. Please ensure you have the required `CUDA dependency <#cuda-dependency>`_.
-
 .. _nodejs-usage:
 
 Using the Node.JS / Electron.JS package
@@ -131,14 +125,6 @@ Please note that as of now, we support:
  - Electron.JS versions 1.6 to 7.1
 
 TypeScript support is also provided.
-
-If you're using Linux and have a supported NVIDIA GPU, you can install the GPU specific package as follows:
-
-.. code-block:: bash
-
-   npm install stt-gpu
-
-See the `release notes <https://github.com/coqui-ai/STT/releases>`_ to find which GPUs are supported. Please ensure you have the required `CUDA dependency <#cuda-dependency>`_.
 
 See the :ref:`TypeScript client <js-api-example>` for an example of how to use the bindings programatically.
 
@@ -172,7 +158,7 @@ This will link all .aar files in the ``libs`` directory you just created, includ
 Using the command-line client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The pre-built binaries for the ``stt`` command-line (compiled C++) client are available in the ``native_client.tar.xz`` archive for your desired platform. You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
+The pre-built binaries for the ``stt`` command-line (compiled C++) client are available in the ``native_client.*.tar.xz`` archive for your desired platform (where the * is the appropriate identifier for the platform you want to run on). You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
 
 Assuming you have :ref:`downloaded the pre-trained models <download-models>`, you can use the client as such:
 
@@ -181,6 +167,15 @@ Assuming you have :ref:`downloaded the pre-trained models <download-models>`, yo
    ./stt --model model.tflite --scorer huge-vocabulary.scorer --audio audio_input.wav
 
 See the help output with ``./stt -h`` for more details.
+
+.. _c-usage:
+
+Using the C API
+^^^^^^^^^^^^^^^
+
+Alongside the pre-built binaries for the ``stt`` command-line client described :ref:`above <cli-usage>`, in the same ``native_client.*.tar.xz`` platform-specific archive, you'll find the ``coqui-stt.h`` header file as well as the pre-built shared libraries needed to use the 🐸STT C API. You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
+
+Then, simply include the header file and link against the shared libraries in your project, and you should be able to use the C API. Reference documentation is available in :ref:`c-api`.
 
 Installing bindings from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -222,11 +217,6 @@ Running ``stt`` may require runtime dependencies. Please refer to your system's 
 * ``libstdc++`` - Standard C++ Library implementation
 * ``libpthread`` - Reported dependency on Linux. On Ubuntu, ``libpthread`` is part of the ``libpthread-stubs0-dev`` package
 * ``Redistribuable Visual C++ 2015 Update 3 (64-bits)`` - Reported dependency on Windows. Please `download from Microsoft <https://www.microsoft.com/download/details.aspx?id=53587>`_
-
-CUDA Dependency
-^^^^^^^^^^^^^^^
-
-The GPU capable builds (Python, NodeJS, C++, etc) depend on CUDA 10.1 and CuDNN v7.6.
 
 .. toctree::
    :maxdepth: 1

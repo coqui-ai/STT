@@ -89,6 +89,17 @@ The fastest way to use a pre-trained 🐸STT model is with the 🐸STT model man
 
    playbook/README
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Advanced topics
+
+   DECODER
+
+   Decoder-API
+
+   PARALLEL_OPTIMIZATION
+
+
 Indices and tables
 ==================
 

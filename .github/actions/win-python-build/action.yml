@@ -1,0 +1,31 @@
+name: "Python binding"
+description: "Binding a python binding"
+inputs:
+  numpy_build:
+    description: "NumPy build dependecy"
+    required: true
+  numpy_dep:
+    description: "NumPy runtime dependecy"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        set -xe
+
+        python3 --version
+        pip3 --version
+
+        PROJECT_NAME="stt"
+
+        NUMPY_BUILD_VERSION="${{ inputs.numpy_build }}" \
+        NUMPY_DEP_VERSION="${{ inputs.numpy_dep }}" \
+        EXTRA_CFLAGS=${{ inputs.local_cflags }} \
+        EXTRA_LDFLAGS=${{ inputs.local_ldflags }} \
+        EXTRA_LIBS=${{ inputs.local_libs }} \
+          make -C native_client/python/ \
+            TARGET=${{ inputs.target }} \
+            RASPBIAN=${{ inputs.chroot }} \
+            SETUP_FLAGS="--project_name ${PROJECT_NAME}" \
+            bindings-clean bindings
+      shell: msys2 {0}

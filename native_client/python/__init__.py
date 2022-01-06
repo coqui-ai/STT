@@ -281,6 +281,49 @@ class Stream(object):
             )
         return stt.impl.IntermediateDecodeWithMetadata(self._impl, num_results)
 
+    def intermediateDecodeFlushBuffers(self):
+        """
+        EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming
+        inference, flushing buffers first. This ensures that all audio that has
+        been streamed so far is included in the result, but is more expensive
+        than intermediateDecode() because buffers are processed through the
+        acoustic model.
+
+        :return: The STT intermediate result.
+        :type: str
+
+        :throws: RuntimeError if the stream object is not valid
+        """
+        if not self._impl:
+            raise RuntimeError(
+                "Stream object is not valid. Trying to decode an already finished stream?"
+            )
+        return stt.impl.intermediateDecodeFlushBuffers(self._impl)
+
+    def intermediateDecodeWithMetadataFlushBuffers(self, num_results=1):
+        """
+        EXPERIMENTAL: Compute the intermediate decoding of an ongoing streaming
+        inference, flushing buffers first. This ensures that all audio that has
+        been streamed so far is included in the result, but is more expensive
+        than intermediateDecode() because buffers are processed through the
+        acoustic model. Returns results including metadata.
+
+        :param num_results: Maximum number of candidate transcripts to return. Returned list might be smaller than this.
+        :type num_results: int
+
+        :return: Metadata object containing multiple candidate transcripts. Each transcript has per-token metadata including timing information.
+        :type: :func:`Metadata`
+
+        :throws: RuntimeError if the stream object is not valid
+        """
+        if not self._impl:
+            raise RuntimeError(
+                "Stream object is not valid. Trying to decode an already finished stream?"
+            )
+        return stt.impl.intermediateDecodeWithMetadataFlushBuffers(
+            self._impl, num_results
+        )
+
     def finishStream(self):
         """
         Compute the final decoding of an ongoing streaming inference and return

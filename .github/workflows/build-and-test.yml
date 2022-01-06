@@ -11,6 +11,7 @@ env:
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
   EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-14-g4bdd3955115"
+  STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
 
   # macOS specific
   MACOSX_DEPLOYMENT_TARGET: "10.10"
@@ -18,7 +19,6 @@ env:
 
   # Windows specific
   CI_MSYS_VERSION: MSYS_NT-10.0-17763
-  MSYS2_SHELL_PATH: D:\a\_temp\msys\msys64\usr\bin
 defaults:
   run:
     shell: bash
@@ -70,10 +70,11 @@ jobs:
           assert ref.startswith(prefix)
           parsed = semver.parse_version_info(ref[len(prefix):])
           print("::set-output name=is-prerelease::{}".format("true" if parsed.prerelease else "false"))
+          print("::set-output name=release-notes-file::{}".format("" if parsed.prerelease else "RELEASE_NOTES.md"))
           EOF
       - uses: softprops/action-gh-release@v1
         with:
-          body_path: RELEASE_NOTES.md
+          body_path: ${{ steps.check-version.outputs.release-notes-file }}
           prerelease: ${{ steps.check-version.outputs.is-prerelease }}
           name: ${{ format('Coqui STT {0}', steps.check-version.outputs.version) }}
   # Linux jobs
@@ -98,7 +99,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends autoconf automake bison build-essential mingw-w64
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
-          curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
           ./Tools/pcre-build.sh --host=x86_64-w64-mingw32
@@ -126,7 +127,7 @@ jobs:
     name: "Lin|Build SWIG"
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     env:
@@ -144,7 +145,7 @@ jobs:
           path: build-static/
           key: swig-4-${{ runner.os }}-${{ env.swig_hash }}
       - run: |
-          curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
           ./Tools/pcre-build.sh
@@ -169,7 +170,7 @@ jobs:
     name: "Lin|Build libsox3"
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -212,12 +213,12 @@ jobs:
     needs: [ swig_Linux ]
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -346,7 +347,7 @@ jobs:
     needs: tensorflow_opt-Linux
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -384,7 +385,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-tensorflow-Linux, tensorflow_opt-Linux, libsox3_Linux]
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -394,15 +395,15 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - name: Install dependencies
         run: |
           apt-get update
           apt-get install -y --no-install-recommends xz-utils zip
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linux.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
@@ -427,9 +428,9 @@ jobs:
     needs: [build-lib_Linux, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-07-25-cfe8a6c
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
@@ -512,16 +513,16 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_16.0.0
+          key: node-headers-12.7.0_17.0.1
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-5.0.13_12.0.0
+          key: electron-headers-12.0.0_15.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
-          electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
+          nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
       - uses: actions/upload-artifact@v2
         with:
           name: "nodewrapper-tflite-Linux_amd64.tar.gz"
@@ -541,9 +542,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -576,14 +575,12 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -613,6 +610,46 @@ jobs:
           runtime: "python"
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
+  test-evaluate-export:
+    name: "Lin|Test evaluate_export"
+    runs-on: ubuntu-20.04
+    needs: [ build-python-Linux, train-test-model-Linux, build-ctc-decoder-Linux ]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7"]
+        samplerate: ["8k", "16k"]
+    env:
+      CI_TMP_DIR: ${{ github.workspace }}/tmp/
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
+          path: ${{ env.CI_TMP_DIR }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.python-version }}.whl"
+      - uses: actions/download-artifact@v2
+        with:
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+          path: ${{ env.CI_TMP_DIR }}
+      - run: |
+          ls -hal ${{ env.CI_TMP_DIR }}/
+      - run: |
+          python -m pip install --only-binary :all: --upgrade ${{ env.CI_TMP_DIR }}/stt*.whl
+      - run: |
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 libopusfile0
+      - run: |
+          ./ci_scripts/evaluate-export-test.sh ${{ matrix.samplerate }}
   test-nodejs-Linux:
     name: "Lin|Test NodeJS bindings"
     runs-on: ubuntu-20.04
@@ -621,15 +658,13 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 12, 14, 16]
+        nodejs-version: [12, 14, 16, 17]
         models: ["test"]
         bitrate: ["16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -674,15 +709,13 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
         bitrate: ["16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -723,6 +756,7 @@ jobs:
         timeout-minutes: 5
   python-notebooks-tests:
     name: "Lin|Python notebook tests"
+    needs: ["build-ctc-decoder-Linux"]
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'pull_request' }}
     steps:
@@ -732,10 +766,21 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-3.7.whl"
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+      - run: |
+          python --version
+          python -m pip --version
+      - run: |
+          python -m pip install --upgrade pip setuptools wheel jupyter
+      - run: |
+          python -m pip install coqui_stt_ctcdecoder-*-cp37-cp37m-*_x86_64.whl
+          DS_NODECODER=y python -m pip install --upgrade .
       - name: Run python notebooks
         run: |
-          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
-          python -m pip install jupyter
           ./ci_scripts/notebook-tests.sh
   training-basic-tests:
     name: "Lin|Basic training tests"
@@ -808,7 +853,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
-          sudo apt-get install -y --no-install-recommends libopus0
+          sudo apt-get install -y --no-install-recommends libopus0 sox
       - name: Run extra training tests
         run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl
@@ -887,6 +932,9 @@ jobs:
           name: stt-tflite-3.9.4-macOS.whl
       - uses: actions/download-artifact@v2
         with:
+          name: stt-tflite-3.10.1-macOS.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: stt-tflite-3.6.8-Windows.whl
       - uses: actions/download-artifact@v2
         with:
@@ -899,6 +947,9 @@ jobs:
           name: stt-tflite-3.9.4-Windows.whl
       - uses: actions/download-artifact@v2
         with:
+          name: stt-tflite-3.10.0-Windows.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: stt-tflite-3.6-Linux.whl
       - uses: actions/download-artifact@v2
         with:
@@ -909,6 +960,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.9-Linux.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.10-Linux.whl
       - name: Setup PyPI config
         run: |
           cat << EOF > ~/.pypirc
@@ -1075,6 +1129,9 @@ jobs:
           name: coqui_stt_ctcdecoder-Linux-3.9.whl
       - uses: actions/download-artifact@v2
         with:
+          name: coqui_stt_ctcdecoder-Linux-3.10.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: coqui_stt_ctcdecoder-macOS-3.6.8.whl
       - uses: actions/download-artifact@v2
         with:
@@ -1085,6 +1142,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: coqui_stt_ctcdecoder-macOS-3.9.4.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: coqui_stt_ctcdecoder-macOS-3.10.1.whl
       - uses: actions/download-artifact@v2
         with:
           name: coqui_stt_ctcdecoder-windows-test.whl
@@ -1103,6 +1163,26 @@ jobs:
           name: '' # use filename
           path: "*.whl"
           release-tag: ${{ needs.create-release.outputs.release-tag }}
+  python-notebooks-tests-production:
+    name: "Lin|Python notebook tests with PyPI package"
+    needs: [twine-upload-decoder]
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
+      - run: |
+          python -m pip install -U pip setuptools wheel jupyter
+          python -m pip install .
+      - name: Run python notebooks
+        run: |
+          ./ci_scripts/notebook-tests.sh
   npmjs-publish:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
@@ -1161,7 +1241,7 @@ jobs:
           brew install automake
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
-          curl -sSL https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
           ./Tools/pcre-build.sh
@@ -1188,7 +1268,7 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1353,11 +1433,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar xkf ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
+          tar xkf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - run: |
           git status
       - uses: ./.github/actions/select-xcode
@@ -1383,7 +1463,7 @@ jobs:
     needs: [ build-lib_macOS, swig_macOS ]
     strategy:
       matrix:
-        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1462,16 +1542,16 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_16.0.0
+          key: node-headers-12.7.0_17.0.1
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-5.0.13_12.0.0
+          key: electron-headers-12.0.0_15.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
-          electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
+          nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
       - uses: actions/upload-artifact@v2
         with:
           name: "nodewrapper-tflite-macOS_amd64.tar.gz"
@@ -1491,9 +1571,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1511,7 +1589,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
-          ls -hal ${{ env.CI_TMP_DIR }}/
+          ls -halR ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - uses: ./.github/actions/run-tests
         with:
@@ -1530,9 +1608,7 @@ jobs:
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1568,15 +1644,13 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 12, 14, 16]
+        nodejs-version: [12, 14, 16, 17]
         models: ["test"]
         bitrate: ["16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1619,14 +1693,12 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
         bitrate: ["16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1668,9 +1740,10 @@ jobs:
     name: "Win|Build CTC decoder Python package"
     needs: [swig_Windows_crosscompiled]
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1693,19 +1766,29 @@ jobs:
         with:
           name: "swig_Windows_crosscompiled"
           path: ${{ github.workspace }}/native_client/ds-swig/
+      - name: Remove /usr/bin/link conflicting with MSVC link.exe
+        run: |
+          set -ex
+          which link
+          rm /usr/bin/link
+      - name: Remove mingw32-make conflicting with MSYS make
+        run: |
+          set -ex
+          which mingw32-make
+          rm /c/ProgramData/Chocolatey/bin/mingw32-make
       - name: Link ds-swig into swig
         run: |
           set -ex
           ls -hal native_client/ds-swig/bin
           ln -s ds-swig.exe native_client/ds-swig/bin/swig.exe
           chmod +x native_client/ds-swig/bin/ds-swig.exe native_client/ds-swig/bin/swig.exe
-      - name: Remove /usr/bin/link conflicting with MSVC link.exe
-        run: |
-          rm /usr/bin/link
       - run: |
           make -C native_client/ctcdecode/ \
             NUM_PROCESSES=$(nproc) \
             bindings
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
       - uses: actions/upload-artifact@v2
         with:
           name: "coqui_stt_ctcdecoder-windows-test.whl"
@@ -1725,7 +1808,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "9"
+          extras: "10"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -1734,10 +1817,17 @@ jobs:
     name: "Win|Build TensorFlow (opt)"
     needs: tensorflow_opt-Windows
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - run: true
+        shell: bash
         if: needs.tensorflow_opt-Windows.outputs.status == 'found'
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - uses: msys2/setup-msys2@v2
         with:
@@ -1751,20 +1841,16 @@ jobs:
             unzip
             zip
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7.9
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      # It's important that this PATH change only happens *after* the checkout
-      # above, because otherwise the checkout fails when persisisting the
-      # credentials for submodules due to using MSYS2 Git
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
+      - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
+        run: |
+          rm -f /c/msys64/mingw64/clang-cl*
+          rm -rf "/c/Program Files/LLVM"
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - run: ./ci_scripts/tf-setup.sh
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
@@ -1780,14 +1866,14 @@ jobs:
   build-lib_Windows:
     name: "Win|Build libstt+client"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [build-tensorflow-Windows, tensorflow_opt-Windows]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1800,16 +1886,19 @@ jobs:
             tar
             unzip
             zip
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          "C:/Program Files/7-Zip/7z.exe" x ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -ttar -o`pwd`
-          rm ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
-      - run: |
-          git status
+          "C:/Program Files/7-Zip/7z.exe" x tf-cache.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -snld -ttar -o`pwd`
+          rm tf-cache.tar.xz
+      - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
+        run: |
+          rm -f /c/msys64/mingw64/clang-cl*
+          rm -rf "/c/Program Files/LLVM"
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
@@ -1823,15 +1912,16 @@ jobs:
   build-python-Windows:
     name: "Win|Build Python bindings"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [build-lib_Windows, swig_Windows_crosscompiled]
     strategy:
       matrix:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
-        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1849,7 +1939,7 @@ jobs:
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           pushd tensorflow/bazel-bin/native_client/
-          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so* ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
@@ -1871,13 +1961,16 @@ jobs:
         run: |
           rm /usr/bin/link
       - id: get_numpy
-        uses: ./.github/actions/numpy_vers
+        uses: ./.github/actions/win-numpy-vers
         with:
           pyver: ${{ matrix.python-version }}
-      - uses: ./.github/actions/python-build
+      - uses: ./.github/actions/win-python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
@@ -1885,10 +1978,11 @@ jobs:
   build-nodejs-Windows:
     name: "Win|Build NodeJS/ElectronJS"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [build-lib_Windows, swig_Windows_crosscompiled]
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1907,7 +2001,7 @@ jobs:
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           pushd tensorflow/bazel-bin/native_client/
-          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so* ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
@@ -1929,16 +2023,16 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-win-10.0.0_16.0.0
+          key: node-headers-win-12.7.0_16.0.0
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-win-5.0.13_12.0.0
-      - uses: ./.github/actions/node-build
+          key: electron-headers-win-12.0.0_15.0.0
+      - uses: ./.github/actions/win-node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
-          electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
+          nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
       - uses: actions/upload-artifact@v2
         with:
           name: "nodewrapper-tflite-Windows_amd64.tar.gz"
@@ -1950,17 +2044,19 @@ jobs:
   test-cpp-Windows:
     name: "Win|Test C++ binary"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [build-lib_Windows, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     env:
       CI_TMP_DIR: tmp/
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
+          path-type: inherit
           update: true
           install: >-
             vim
@@ -1976,7 +2072,7 @@ jobs:
         run: |
           mkdir -p ${{ env.CI_TMP_DIR }}/ds
           pushd ${{ env.CI_TMP_DIR }}/ds
-          "C:/Program Files/7-Zip/7z.exe" x ../native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -ttar -o`pwd`
+          "C:/Program Files/7-Zip/7z.exe" x ../native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           ls -hal
           popd
       - name: Download trained test model
@@ -1986,7 +2082,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
-      - uses: ./.github/actions/run-tests
+      - uses: ./.github/actions/win-run-tests
         with:
           runtime: "cppwin"
           bitrate: "16k"
@@ -1994,23 +2090,22 @@ jobs:
   test-py-Windows:
     name: "Win|Test Python bindings"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [ build-python-Windows, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
-        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4]
+        python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2040,7 +2135,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
           python -m pip install --only-binary :all: --upgrade ${{ env.CI_TMP_DIR }}/stt*.whl
-      - uses: ./.github/actions/run-tests
+      - uses: ./.github/actions/win-run-tests
         with:
           runtime: "python"
           bitrate: ${{ matrix.bitrate }}
@@ -2048,22 +2143,21 @@ jobs:
   test-nodejs-Windows:
     name: "Win|Test NodeJS bindings"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [ build-nodejs-Windows, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        nodejs-version: [10, 12, 14, 16]
+        nodejs-version: [12, 14, 16]
         models: ["test"]
         bitrate: ["16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2103,7 +2197,7 @@ jobs:
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
           npm install ${{ env.CI_TMP_DIR }}/stt*.tgz
-      - uses: ./.github/actions/run-tests
+      - uses: ./.github/actions/win-run-tests
         with:
           runtime: "node"
           bitrate: ${{ matrix.bitrate }}
@@ -2111,21 +2205,20 @@ jobs:
   test-electronjs-Windows:
     name: "Win|Test ElectronJS bindings"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [ build-nodejs-Windows, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
         bitrate: ["16k"]
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2167,7 +2260,7 @@ jobs:
           npm install ${{ env.CI_TMP_DIR }}/stt*.tgz
       - run: |
           npm install electron@${{ matrix.electronjs-version }}
-      - uses: ./.github/actions/run-tests
+      - uses: ./.github/actions/win-run-tests
         with:
           runtime: "electronjs"
           bitrate: ${{ matrix.bitrate }}
@@ -2226,15 +2319,13 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 16]
+        nodejs-version: [12, 17]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2279,15 +2370,13 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [5.0.13, 12.0.0]
+        electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2334,15 +2423,13 @@ jobs:
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 16]
+        nodejs-version: [12, 17]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2385,15 +2472,13 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [5.0.13, 12.0.0]
+        electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2433,23 +2518,22 @@ jobs:
   test-nodejs_all-Windows:
     name: "Win|Test MultiArchPlatform NodeJS bindings"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 16]
+        nodejs-version: [12, 16]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2489,7 +2573,7 @@ jobs:
         run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
           npm install --verbose ${{ env.CI_TMP_DIR }}/stt*.tgz
-      - uses: ./.github/actions/run-tests
+      - uses: ./.github/actions/win-run-tests
         with:
           runtime: "node"
           bitrate: ${{ matrix.bitrate }}
@@ -2497,22 +2581,21 @@ jobs:
   test-electronjs_all-Windows:
     name: "Win|Test MultiArchPlatform ElectronJS bindings"
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [5.0.13, 12.0.0]
+        electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
         bitrate: ["8k", "16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: tmp/output_graph.pb
+      STT_TEST_MODEL: tmp/output_graph.tflite
     steps:
-      - name: Switch git-bash shell to MSYS2 shell by adding MSYS2 path to PATH front
-        run: echo "$MSYS2_SHELL_PATH" >> $GITHUB_PATH
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2554,7 +2637,7 @@ jobs:
           npm install --verbose ${{ env.CI_TMP_DIR }}/stt*.tgz
       - run: |
           npm install electron@${{ matrix.electronjs-version }}
-      - uses: ./.github/actions/run-tests
+      - uses: ./.github/actions/win-run-tests
         with:
           runtime: "electronjs"
           bitrate: ${{ matrix.bitrate }}
@@ -2667,11 +2750,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - run: |
           git status
       - name: "Install chroot"
@@ -2704,11 +2787,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - run: |
           git status
       - name: "Install chroot"
@@ -2765,11 +2848,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -2831,11 +2914,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxarmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -2850,16 +2933,16 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_16.0.0
+          key: node-headers-12.7.0_17.0.1
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-5.0.13_12.0.0
+          key: electron-headers-12.0.0_15.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
-          electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
+          nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
@@ -2910,11 +2993,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -2976,11 +3059,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-linuxaarch64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -2995,16 +3078,16 @@ jobs:
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
-          key: node-headers-10.0.0_16.0.0
+          key: node-headers-12.7.0_17.0.1
       - uses: actions/cache@v2
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-5.0.13_12.0.0
+          key: electron-headers-12.0.0_15.0.0
       - uses: ./.github/actions/node-build
         with:
-          nodejs_versions: "10.0.0 11.0.0 12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
-          electronjs_versions: "5.0.13 6.0.12 6.1.7 7.0.1 7.1.8 8.0.1 9.0.1 9.1.0 9.2.0 10.0.0 10.1.0 11.0.0 12.0.0"
+          nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
@@ -3055,9 +3138,7 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
     steps:
       - name: "Install QEMU"
@@ -3116,9 +3197,7 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
       PIP_EXTRA_INDEX_URL: "https://www.piwheels.org/simple https://lissyx.github.io/deepspeech-python-wheels/"
     steps:
@@ -3172,16 +3251,14 @@ jobs:
       matrix:
         arch: [ "armv7", "aarch64" ]
         # https://nodejs.org/en/about/releases/
-        nodejs-version: [10, 12, 14, 16]
+        nodejs-version: [12, 14, 16, 17]
         models: ["test"]
         bitrate: ["16k"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
     steps:
       - name: "Install QEMU"
@@ -3236,15 +3313,13 @@ jobs:
     strategy:
       matrix:
         arch: [ "armv7", "aarch64" ]
-        electronjs-version: [5.0.13, 6.1.7, 7.1.8, 8.0.1, 9.2.0, 10.1.0, 11.0.0, 12.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
         bitrate: ["16k"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      STT_PROD_MODEL: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pb
-      STT_PROD_MODEL_MMAP: https://github.com/reuben/STT/releases/download/v0.7.0-alpha.3/output_graph.pbmm
-      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.pb
+      STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
       DISPLAY: ":99.0"
     steps:
@@ -3368,11 +3443,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-armv7
@@ -3440,11 +3515,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-arm64
@@ -3464,11 +3539,11 @@ jobs:
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          rm ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-x86_64
@@ -3493,7 +3568,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/armeabi-v7a
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/libstt.so
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3503,7 +3578,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/arm64-v8a
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/libstt.so
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3513,7 +3588,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/x86_64
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/libstt.so
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
           rm -f *
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV

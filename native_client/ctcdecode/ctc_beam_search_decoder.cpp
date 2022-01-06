@@ -12,6 +12,12 @@
 #include "fst/fstlib.h"
 #include "path_trie.h"
 
+#include "flashlight/lib/text/dictionary/Dictionary.h"
+#include "flashlight/lib/text/decoder/Trie.h"
+#include "flashlight/lib/text/decoder/LexiconDecoder.h"
+#include "flashlight/lib/text/decoder/LexiconFreeDecoder.h"
+
+namespace flt = fl::lib::text;
 
 int
 DecoderState::init(const Alphabet& alphabet,
@@ -264,6 +270,180 @@ DecoderState::decode(size_t num_results) const
   return outputs;
 }
 
+int
+FlashlightDecoderState::init(
+  const Alphabet& alphabet,
+  size_t beam_size,
+  double beam_threshold,
+  size_t cutoff_top_n,
+  std::shared_ptr<Scorer> ext_scorer,
+  FlashlightDecoderState::LMTokenType token_type,
+  flt::Dictionary lm_tokens,
+  FlashlightDecoderState::DecoderType decoder_type,
+  double silence_score,
+  bool merge_with_log_add,
+  FlashlightDecoderState::CriterionType criterion_type,
+  std::vector<float> transitions)
+{
+  // Lexicon-free decoder must use single-token based LM
+  if (decoder_type == LexiconFree) {
+    assert(token_type == Single);
+  }
+
+  // Build lexicon index to LM index map
+  if (!lm_tokens.contains("<unk>")) {
+    lm_tokens.addEntry("<unk>");
+  }
+  ext_scorer->load_words(lm_tokens);
+  lm_tokens_ = lm_tokens;
+
+  // Convert our criterion type to Flashlight type
+  flt::CriterionType flt_criterion;
+  switch (criterion_type) {
+    case ASG: flt_criterion = flt::CriterionType::ASG; break;
+    case CTC: flt_criterion = flt::CriterionType::CTC; break;
+    case S2S: flt_criterion = flt::CriterionType::S2S; break;
+    default: assert(false);
+  }
+
+  // Build Trie
+  std::shared_ptr<flt::Trie> trie = nullptr;
+  auto startState = ext_scorer->start(false);
+  if (token_type == Aggregate || decoder_type == LexiconBased) {
+    trie = std::make_shared<flt::Trie>(lm_tokens.indexSize(), alphabet.GetSpaceLabel());
+    for (int i = 0; i < lm_tokens.entrySize(); ++i) {
+      const std::string entry = lm_tokens.getEntry(i);
+      if (entry[0] == '<') { // don't insert <s>, </s> and <unk>
+        continue;
+      }
+      float score = -1;
+      if (token_type == Aggregate) {
+        flt::LMStatePtr dummyState;
+        std::tie(dummyState, score) = ext_scorer->score(startState, i);
+      }
+      std::vector<unsigned int> encoded = alphabet.Encode(entry);
+      std::vector<int> encoded_s(encoded.begin(), encoded.end());
+      trie->insert(encoded_s, i, score);
+    }
+
+    // Smear trie
+    trie->smear(flt::SmearingMode::MAX);
+  }
+
+  // Query unknown token score
+  int unknown_word_index = lm_tokens.getIndex("<unk>");
+  float unknown_score = -std::numeric_limits<float>::infinity();
+  if (token_type == Aggregate) {
+    std::tie(std::ignore, unknown_score) =
+      ext_scorer->score(startState, unknown_word_index);
+  }
+
+  // Make sure conversions from uint to int below don't trip us
+  assert(beam_size < INT_MAX);
+  assert(cutoff_top_n < INT_MAX);
+
+  if (decoder_type == LexiconBased) {
+    flt::LexiconDecoderOptions opts;
+    opts.beamSize = static_cast<int>(beam_size);
+    opts.beamSizeToken = static_cast<int>(cutoff_top_n);
+    opts.beamThreshold = beam_threshold;
+    opts.lmWeight = ext_scorer->alpha;
+    opts.wordScore = ext_scorer->beta;
+    opts.unkScore = unknown_score;
+    opts.silScore = silence_score;
+    opts.logAdd = merge_with_log_add;
+    opts.criterionType = flt_criterion;
+    decoder_impl_.reset(new flt::LexiconDecoder(
+      opts,
+      trie,
+      ext_scorer,
+      alphabet.GetSpaceLabel(), // silence index
+      alphabet.GetSize(), // blank index
+      unknown_word_index,
+      transitions,
+      token_type == Single)
+    );
+  } else {
+    flt::LexiconFreeDecoderOptions opts;
+    opts.beamSize = static_cast<int>(beam_size);
+    opts.beamSizeToken = static_cast<int>(cutoff_top_n);
+    opts.beamThreshold = beam_threshold;
+    opts.lmWeight = ext_scorer->alpha;
+    opts.silScore = silence_score;
+    opts.logAdd = merge_with_log_add;
+    opts.criterionType = flt_criterion;
+    decoder_impl_.reset(new flt::LexiconFreeDecoder(
+      opts,
+      ext_scorer,
+      alphabet.GetSpaceLabel(), // silence index
+      alphabet.GetSize(), // blank index
+      transitions)
+    );
+  }
+
+  // Init decoder for stream
+  decoder_impl_->decodeBegin();
+
+  return 0;
+}
+
+void
+FlashlightDecoderState::next(
+  const double *probs,
+  int time_dim,
+  int class_dim)
+{
+  std::vector<float> probs_f(probs, probs + (time_dim * class_dim) + 1);
+  decoder_impl_->decodeStep(probs_f.data(), time_dim, class_dim);
+}
+
+FlashlightOutput
+FlashlightDecoderState::intermediate(bool prune)
+{
+  flt::DecodeResult result = decoder_impl_->getBestHypothesis();
+  std::vector<int> valid_words;
+  for (int w : result.words) {
+    if (w != -1) {
+      valid_words.push_back(w);
+    }
+  }
+  FlashlightOutput ret;
+  ret.aggregate_score = result.score;
+  ret.acoustic_model_score = result.amScore;
+  ret.language_model_score = result.lmScore;
+  ret.words = lm_tokens_.mapIndicesToEntries(valid_words); // how does this interact with token-based decoding
+  ret.tokens = result.tokens;
+  if (prune) {
+    decoder_impl_->prune();
+  }
+  return ret;
+}
+
+std::vector<FlashlightOutput>
+FlashlightDecoderState::decode(size_t num_results)
+{
+  decoder_impl_->decodeEnd();
+  std::vector<flt::DecodeResult> flt_results = decoder_impl_->getAllFinalHypothesis();
+  std::vector<FlashlightOutput> ret;
+  for (auto result : flt_results) {
+    std::vector<int> valid_words;
+    for (int w : result.words) {
+      if (w != -1) {
+        valid_words.push_back(w);
+      }
+    }
+    FlashlightOutput out;
+    out.aggregate_score = result.score;
+    out.acoustic_model_score = result.amScore;
+    out.language_model_score = result.lmScore;
+    out.words = lm_tokens_.mapIndicesToEntries(valid_words); // how does this interact with token-based decoding
+    out.tokens = result.tokens;
+    ret.push_back(out);
+  }
+  decoder_impl_.reset(nullptr);
+  return ret;
+}
+
 std::vector<Output> ctc_beam_search_decoder(
     const double *probs,
     int time_dim,
@@ -326,5 +506,106 @@ ctc_beam_search_decoder_batch(
   for (size_t i = 0; i < batch_size; ++i) {
     batch_results.emplace_back(res[i].get());
   }
+  return batch_results;
+}
+
+std::vector<FlashlightOutput>
+flashlight_beam_search_decoder(
+    const double* probs,
+    int time_dim,
+    int class_dim,
+    const Alphabet& alphabet,
+    size_t beam_size,
+    double beam_threshold,
+    size_t cutoff_top_n,
+    std::shared_ptr<Scorer> ext_scorer,
+    FlashlightDecoderState::LMTokenType token_type,
+    const std::vector<std::string>& lm_tokens,
+    FlashlightDecoderState::DecoderType decoder_type,
+    double silence_score,
+    bool merge_with_log_add,
+    FlashlightDecoderState::CriterionType criterion_type,
+    std::vector<float> transitions,
+    size_t num_results)
+{
+  VALID_CHECK_EQ(alphabet.GetSize()+1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
+  flt::Dictionary tokens_dict;
+  for (auto str : lm_tokens) {
+    tokens_dict.addEntry(str);
+  }
+  FlashlightDecoderState state;
+  state.init(
+    alphabet,
+    beam_size,
+    beam_threshold,
+    cutoff_top_n,
+    ext_scorer,
+    token_type,
+    tokens_dict,
+    decoder_type,
+    silence_score,
+    merge_with_log_add,
+    criterion_type,
+    transitions);
+  state.next(probs, time_dim, class_dim);
+  return state.decode(num_results);
+}
+
+std::vector<std::vector<FlashlightOutput>>
+flashlight_beam_search_decoder_batch(
+    const double *probs,
+    int batch_size,
+    int time_dim,
+    int class_dim,
+    const int* seq_lengths,
+    int seq_lengths_size,
+    const Alphabet& alphabet,
+    size_t beam_size,
+    double beam_threshold,
+    size_t cutoff_top_n,
+    std::shared_ptr<Scorer> ext_scorer,
+    FlashlightDecoderState::LMTokenType token_type,
+    const std::vector<std::string>& lm_tokens,
+    FlashlightDecoderState::DecoderType decoder_type,
+    double silence_score,
+    bool merge_with_log_add,
+    FlashlightDecoderState::CriterionType criterion_type,
+    std::vector<float> transitions,
+    size_t num_processes,
+    size_t num_results)
+{
+  VALID_CHECK_GT(num_processes, 0, "num_processes must be nonnegative!");
+  VALID_CHECK_EQ(batch_size, seq_lengths_size, "must have one sequence length per batch element");
+
+  ThreadPool pool(num_processes);
+
+  // enqueue the tasks of decoding
+  std::vector<std::future<std::vector<FlashlightOutput>>> res;
+  for (size_t i = 0; i < batch_size; ++i) {
+    res.emplace_back(pool.enqueue(flashlight_beam_search_decoder,
+                                  &probs[i*time_dim*class_dim],
+                                  seq_lengths[i],
+                                  class_dim,
+                                  alphabet,
+                                  beam_size,
+                                  beam_threshold,
+                                  cutoff_top_n,
+                                  ext_scorer,
+                                  token_type,
+                                  lm_tokens,
+                                  decoder_type,
+                                  silence_score,
+                                  merge_with_log_add,
+                                  criterion_type,
+                                  transitions,
+                                  num_results));
+  }
+
+  // get decoding results
+  std::vector<std::vector<FlashlightOutput>> batch_results;
+  for (size_t i = 0; i < batch_size; ++i) {
+    batch_results.emplace_back(res[i].get());
+  }
+
   return batch_results;
 }

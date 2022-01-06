@@ -70,7 +70,7 @@ third_party_build = "third_party.{}".format(archive_ext)
 ctc_decoder_build = "first_party.{}".format(archive_ext)
 
 
-maybe_rebuild(KENLM_FILES, third_party_build, build_dir)
+maybe_rebuild(THIRD_PARTY_FILES, third_party_build, build_dir)
 maybe_rebuild(CTC_DECODER_FILES, ctc_decoder_build, build_dir)
 
 decoder_module = Extension(
@@ -96,7 +96,9 @@ class BuildExtFirst(build):
 setup(
     name="coqui_stt_ctcdecoder",
     version=project_version,
-    description="""DS CTC decoder""",
+    description="Coqui STT Python decoder package.",
+    long_description="Documentation available at `stt.readthedocs.io <https://stt.readthedocs.io/en/latest/Decoder-API.html>`_",
+    long_description_content_type="text/x-rst; charset=UTF-8",
     cmdclass={"build": BuildExtFirst},
     ext_modules=[decoder_module],
     package_dir={"coqui_stt_ctcdecoder": "."},

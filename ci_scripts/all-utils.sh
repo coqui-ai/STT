@@ -25,9 +25,6 @@ download_model_prod()
 {
   local _model_source_file=$(basename "${model_source}")
   ${WGET} "${model_source}" -O - | gunzip --force > "${CI_TMP_DIR}/${_model_source_file}"
-
-  local _model_source_mmap_file=$(basename "${model_source_mmap}")
-  ${WGET} "${model_source_mmap}" -O - | gunzip --force > "${CI_TMP_DIR}/${_model_source_mmap_file}"
 }
 
 download_data()
@@ -43,7 +40,7 @@ download_material()
 {
   download_data
 
-  ls -hal ${CI_TMP_DIR}/${model_name} ${CI_TMP_DIR}/${model_name_mmap} ${CI_TMP_DIR}/LDC93S1*.wav
+  ls -hal ${CI_TMP_DIR}/${model_name} ${CI_TMP_DIR}/LDC93S1*.wav
 }
 
 maybe_install_xldd()
