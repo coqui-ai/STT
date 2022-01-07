@@ -8,6 +8,7 @@ import csv
 import decimal
 import hashlib
 import math
+import random
 import os
 import re
 import subprocess
