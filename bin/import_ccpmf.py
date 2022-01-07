@@ -656,6 +656,73 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
+<<<<<<< HEAD
+    with open(
+        target_csv_template.format("train"), "w"
+    ) as train_csv_file, open(
+=======
+<<<<<<< HEAD
+    with open(target_csv_template.format("train"), "w") as train_csv_file, open(
+>>>>>>> a1b0b7c5 (update data distribution)
+        target_csv_template.format("dev"), "w"
+    ) as dev_csv_file, open(
+        target_csv_template.format("test"), "w"
+    ) as test_csv_file:
+                train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
+                train_writer.writeheader()
+                dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
+                dev_writer.writeheader()
+                test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
+                test_writer.writeheader()
+
+                train_set, dev_set, test_set = _split_sets(_rows)
+
+                train_bar = progressbar.ProgressBar(max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set")
+                for item in train_bar(train_set):
+                    train_writer.writerow(
+                        {
+                            "wav_filename": item[0],
+                            "wav_filesize": item[1],
+                            "transcript": item[2],
+                        }
+                    )
+                
+                dev_bar = progressbar.ProgressBar(max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set")
+                for item in dev_bar(dev_set):
+                    dev_writer.writerow(
+                        {
+                            "wav_filename": item[0],
+                            "wav_filesize": item[1],
+                            "transcript": item[2],
+                        }
+                    )
+
+<<<<<<< HEAD
+=======
+        dev_bar = progressbar.ProgressBar(
+            max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set"
+        )
+        for item in dev_bar(dev_set):
+            dev_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
+
+        test_bar = progressbar.ProgressBar(
+            max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set"
+        )
+        for item in test_bar(test_set):
+            test_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
+=======
     with open(
         target_csv_template.format("train"), "w"
     ) as train_csv_file, open(
@@ -692,6 +759,7 @@ def write_general_csv(target_dir, _rows, _counter):
                         }
                     )
 
+>>>>>>> a1b0b7c5 (update data distribution)
                 test_bar = progressbar.ProgressBar(max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set")
                 for item in test_bar(test_set):
                     test_writer.writerow(
@@ -701,6 +769,10 @@ def write_general_csv(target_dir, _rows, _counter):
                             "transcript": item[2],
                         }
                     )
+<<<<<<< HEAD
+=======
+>>>>>>> 966a5751 (update data distribution)
+>>>>>>> a1b0b7c5 (update data distribution)
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
