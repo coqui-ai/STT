@@ -527,7 +527,15 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         _counter["invalid_label"] += 1
+<<<<<<< HEAD
     elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
+=======
+<<<<<<< HEAD
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < int(len(str(label)) * 1.15):
+=======
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) and file_size / len(transcript) > 1400:
+>>>>>>> 0be94dbf (exclude sample too short to fit the transcript)
+>>>>>>> 0a7d97a3 (exclude sample too short to fit the transcript)
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
@@ -657,6 +665,7 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
 <<<<<<< HEAD
+<<<<<<< HEAD
     with open(
         target_csv_template.format("train"), "w"
     ) as train_csv_file, open(
@@ -723,6 +732,8 @@ def write_general_csv(target_dir, _rows, _counter):
                 }
             )
 =======
+=======
+>>>>>>> 0a7d97a3 (exclude sample too short to fit the transcript)
     with open(
         target_csv_template.format("train"), "w"
     ) as train_csv_file, open(
@@ -770,9 +781,12 @@ def write_general_csv(target_dir, _rows, _counter):
                         }
                     )
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 966a5751 (update data distribution)
 >>>>>>> a1b0b7c5 (update data distribution)
+=======
+>>>>>>> 0a7d97a3 (exclude sample too short to fit the transcript)
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
