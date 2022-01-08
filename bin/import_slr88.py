@@ -81,7 +81,7 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < len(str(label)):
+    elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < len(str(label)) and wav_filesize / len(transcript) > 1400:
         # Excluding samples that are too short to fit the transcript
         counter["too_short"] += 1
     elif frames / SAMPLE_RATE > MAX_SECS:
