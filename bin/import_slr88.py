@@ -22,7 +22,8 @@ from coqui_stt_training.util.importers import (
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
-MAX_SECS = 15
+CHANNELS = 1
+MAX_SECS = 10
 
 ARCHIVE_DIR_NAME = "Att-HACK"
 ARCHIVE_EXT = ".tgz"
@@ -86,7 +87,7 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < int(len(str(label)) * 1.25):
+    elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < len(str(label)):
         # Excluding samples that are too short to fit the transcript
         counter["too_short"] += 1
     elif frames / SAMPLE_RATE > MAX_SECS:
