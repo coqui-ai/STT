@@ -66,7 +66,7 @@ def one_sample(sample):
     """ Take a audio file, and optionally convert it to 16kHz mono channel WAV """
     wav_filename = sample[0]
     original_wav = wav_filename
-    formatted_wav = os.path.join(os.path.splitext(wav_filename)[0], f"_{os.path.basename(wav_filename)}")
+    formatted_wav = os.path.join(os.path.splitext(wav_filename)[0], "_.wav")
     _maybe_convert_wav(original_wav, formatted_wav)
     wav_filename = formatted_wav
     file_size = -1
