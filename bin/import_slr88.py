@@ -5,6 +5,7 @@ import random
 import subprocess
 import tarfile
 import unicodedata
+import sox
 from glob import glob
 from multiprocessing import Pool
 
@@ -61,8 +62,12 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar.close()
 
 def one_sample(sample):
-    """ Take a audio file, and optionally convert it to 16kHz WAV """
+    """ Take a audio file, and optionally convert it to 16kHz mono channel WAV """
     wav_filename = sample[0]
+    original_wav = wav_filename
+    formatted_wav = f"_{wav_filename}"
+    _maybe_convert_wav(original_wav, formatted_wav)
+    wav_filename = formatted_wav
     file_size = -1
     frames = 0
     if os.path.exists(wav_filename):
@@ -252,6 +257,15 @@ def get_sample_size(population_size):
             break
     return sample_size
 
+
+def _maybe_convert_wav(mp3_filename, wav_filename):
+    if not os.path.exists(wav_filename):
+        transformer = sox.Transformer()
+        transformer.convert(samplerate=SAMPLE_RATE, n_channels=CHANNELS)
+        try:
+            transformer.build(mp3_filename, wav_filename)
+        except sox.core.SoxError:
+            pass
 
 def handle_args():
     parser = get_importers_parser(
