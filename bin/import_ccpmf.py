@@ -529,6 +529,7 @@ def one_sample(sample):
         _counter["invalid_label"] += 1
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
 =======
 <<<<<<< HEAD
@@ -540,6 +541,12 @@ def one_sample(sample):
 =======
     elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) and file_size / len(transcript) > 1400:
 >>>>>>> 74f12326 (exclude sample too short to fit the transcript)
+=======
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) and file_size / len(transcript) > 1400:
+=======
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
+>>>>>>> 3b169c91 (and != or)
+>>>>>>> eac3c3e8 (and != or)
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
