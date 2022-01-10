@@ -18,7 +18,7 @@ We suggest you use our Docker image as a base for training. You can download and
 .. code-block:: bash
 
    $ docker pull ghcr.io/coqui-ai/stt-train
-   $ docker run -it stt-train:latest
+   $ docker run -it ghcr.io/coqui-ai/stt-train:latest
 
 Alternatively you can build it from source using ``Dockerfile.train``, and run the locally built version in a container:
 
