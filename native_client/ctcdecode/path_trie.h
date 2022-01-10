@@ -81,6 +81,8 @@ public:
 #ifdef DEBUG
   void vec(std::vector<PathTrie*>& out);
   void print(const Alphabet& a);
+  static std::string drawdot(PathTrie* root, std::vector<PathTrie*> prefixes);
+  static std::string drawdot(PathTrie* root, std::unordered_set<PathTrie*> active_prefixes, std::unordered_set<PathTrie*> leading_beam);
 #endif // DEBUG
 
   float log_prob_b_prev;

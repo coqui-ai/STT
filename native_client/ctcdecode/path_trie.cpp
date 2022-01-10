@@ -8,6 +8,10 @@
 
 #include "decoder_utils.h"
 
+#ifdef DEBUG
+#include <queue>
+#endif /* DEBUG */
+
 PathTrie::PathTrie() {
   log_prob_b_prev = -NUM_FLT_INF;
   log_prob_nb_prev = -NUM_FLT_INF;
@@ -243,5 +247,67 @@ void PathTrie::print(const Alphabet& a) {
   }
   printf("\n");
   printf("transcript:\t %s\n", tr.c_str());
+}
+
+std::string PathTrie::drawdot(PathTrie* root, std::vector<PathTrie*> prefixes) {
+  std::unordered_set<PathTrie*> all_prefixes(prefixes.begin(), prefixes.end());
+  std::vector<PathTrie*> leading_beam;
+  prefixes[0]->vec(leading_beam);
+  std::unordered_set<PathTrie*> leading_beam_set(leading_beam.begin(), leading_beam.end());
+  return PathTrie::drawdot(root, all_prefixes, leading_beam_set);
+}
+
+std::string PathTrie::drawdot(PathTrie* root, std::unordered_set<PathTrie*> active_prefixes, std::unordered_set<PathTrie*> leading_beam) {
+  std::stringstream str;
+  str << "digraph PathTrie {\n";
+  std::queue<std::pair<int, PathTrie*>> queue;
+  queue.push(std::make_pair(0, root));
+  // hardcode English Alphabet here for convenience
+  Alphabet alphabet;
+  alphabet.InitFromLabels({" ", "a", "b", "c", "d", "e", "f", "g", "h", "i",
+    "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x",
+    "y", "z", "'"
+  });
+  int id_counter = 1;
+  while (!queue.empty()) {
+    std::pair<int, PathTrie*> parent = queue.front();
+    queue.pop();
+
+    const int parent_id = parent.first;
+    PathTrie* parent_ptr = parent.second;
+
+    std::string decoded_char = parent_ptr->character == (unsigned int)-1 ? "ROOT" : alphabet.DecodeSingle(parent_ptr->character);
+    str << parent_id << " [label=\"" << decoded_char << "\"";
+
+    bool is_active = active_prefixes.count(parent_ptr) > 0;
+    bool is_leaf = parent_ptr->children_.size() == 0;
+
+    std::string color;
+    if (!is_active && !is_leaf) {
+      color = "];\n";
+    } else if (!is_active && is_leaf) {
+      color = ",style=filled,fillcolor=red,fontcolor=white];\n";
+    } else if (is_active && !is_leaf) {
+      color = ",style=filled,fillcolor=blue,fontcolor=white];\n";
+    } else if (is_active && is_leaf) {
+      color = ",style=filled,fillcolor=\"red:blue\",fontcolor=white];\n";
+    }
+    str << color;
+
+    for (std::pair<unsigned int, PathTrie*> child_it : parent_ptr->children_) {
+      PathTrie* child_ptr = child_it.second;
+
+      std::string edge_attr = ";\n";
+      if (leading_beam.count(child_ptr)) {
+        edge_attr = " [color=red];\n";
+      }
+
+      int child_id = id_counter++;
+      str << parent_id << "->" << child_id << edge_attr;
+      queue.push(std::make_pair(child_id, child_ptr));
+    }
+  }
+  str << "}\n";
+  return str.str();
 }
 #endif // DEBUG

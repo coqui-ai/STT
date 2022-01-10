@@ -7,6 +7,10 @@
 #include <unordered_map>
 #include <utility>
 
+#ifdef DEBUG
+#include <fstream>
+#endif /* DEBUG */
+
 #include "decoder_utils.h"
 #include "ThreadPool.h"
 #include "fst/fstlib.h"
@@ -220,12 +224,25 @@ DecoderState::next(const double *probs,
       // Remove the elements from std::vector
       prefixes_.resize(beam_size_);
     }
+
+#ifdef DEBUG
+    if (abs_time_step_ % 4 == 0) {
+      // Sort prefixes vector so we highlight the leading beam
+      std::partial_sort(prefixes_.begin(),
+                        prefixes_.begin() + 1,
+                        prefixes_.end(),
+                        prefix_compare);
+      drawdot("dbg/trie_at_%d.dot", abs_time_step_);
+    }
+#endif
   }  // end of loop over time
 }
 
 std::vector<Output>
 DecoderState::decode(size_t num_results) const
 {
+  drawdot("dbg/trie_at_decode.dot");
+
   std::vector<PathTrie*> prefixes_copy = prefixes_;
   std::unordered_map<const PathTrie*, float> scores;
   for (PathTrie* prefix : prefixes_copy) {
@@ -269,6 +286,25 @@ DecoderState::decode(size_t num_results) const
 
   return outputs;
 }
+
+#ifdef DEBUG
+void
+DecoderState::drawdot(const char* format, ...) const
+{
+  char name[256];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(name, sizeof(name), format, args);
+  va_end(args);
+  {
+    std::ofstream fout(name, std::ios_base::out);
+    fout << PathTrie::drawdot(prefix_root_.get(), prefixes_);
+  }
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd), "dot -Tpng %s -o %s.png && rm %s", name, name, name);
+  std::system(cmd);
+}
+#endif
 
 int
 FlashlightDecoderState::init(
