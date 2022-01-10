@@ -261,12 +261,9 @@ def get_sample_size(population_size):
 
 def _maybe_convert_wav(mp3_filename, wav_filename):
     if not os.path.exists(wav_filename):
-        transformer = sox.Transformer()
-        transformer.convert(samplerate=SAMPLE_RATE, n_channels=CHANNELS)
-        try:
-            transformer.build(mp3_filename, wav_filename)
-        except sox.core.SoxError:
-            pass
+        subprocess.check_call(
+                    ["ffmpeg", "-i", mp3_filename, "-acodec", "pcm_s16le", "-ac", str(CHANNELS), "-ar", str(SAMPLE_RATE), wav_filename]
+                )
 
 def handle_args():
     parser = get_importers_parser(
