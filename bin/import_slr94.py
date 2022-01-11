@@ -158,6 +158,10 @@ if __name__ == "__main__":
     CLI_ARGS = handle_args()
     ALPHABET = Alphabet(CLI_ARGS.filter_alphabet) if CLI_ARGS.filter_alphabet else None
     LANGUAGE = CLI_ARGS.language
+
+    if not LANGUAGE or LANGUAGE not in LANGUAGE_LIST:
+        raise ValueError(f"Choose from the availible languages: {str(LANGUAGE_LIST)}")
+
     ARCHIVE_NAME_LM = f"mls_lm_{LANGUAGE}"
     ARCHIVE_NAME_ASR = f"mls_{LANGUAGE}_opus"
     ARCHIVE_URL_LM = f"{BASE_SLR_URL}/{ARCHIVE_NAME_LM}{ARCHIVE_EXT}"
