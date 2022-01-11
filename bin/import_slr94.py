@@ -178,3 +178,4 @@ if __name__ == "__main__":
         return label
 
     _download_and_preprocess_data(target_dir=CLI_ARGS.target_dir)
+
