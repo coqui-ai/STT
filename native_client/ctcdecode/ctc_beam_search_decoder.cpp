@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <utility>
 
+#ifdef DEBUG
+#include <fstream>
+#include <cstdarg>
+#endif /* DEBUG */
+
 #include "decoder_utils.h"
 #include "ThreadPool.h"
 #include "fst/fstlib.h"
@@ -73,7 +78,6 @@ DecoderState::next(const double *probs,
     if (prob[blank_id_] < 0.999) {
       start_expanding_ = true;
     }
-
     // If not expanding yet, just continue to next timestep.
     if (!start_expanding_) {
       continue;
@@ -99,7 +103,6 @@ DecoderState::next(const double *probs,
     for (size_t index = 0; index < log_prob_idx.size(); index++) {
       auto c = log_prob_idx[index].first;
       auto log_prob_c = log_prob_idx[index].second;
-
       for (size_t i = 0; i < prefixes_.size() && i < beam_size_; ++i) {
         auto prefix = prefixes_[i];
         if (full_beam && log_prob_c + prefix->score < min_cutoff) {
@@ -184,7 +187,18 @@ DecoderState::next(const double *probs,
               }
 
               bool bos = ngram.size() < ext_scorer_->get_max_order();
-              score = ( ext_scorer_->get_log_cond_prob(ngram, bos) + hot_boost ) * ext_scorer_->alpha;
+              float raw_score = ext_scorer_->get_log_cond_prob(ngram, bos);
+              score = (raw_score + hot_boost) * ext_scorer_->alpha;
+              #ifdef DEBUG
+              if (abs_time_step_ > 314 && abs_time_step_ <= 354) {
+                printf("[%03d] scoring ngram: ", abs_time_step_);
+                for (const std::string& word : ngram) {
+                  printf("%s ", word.c_str());
+                }
+                printf("= %.2f (scaled = %.2f, beta = %.2f). prefix change: %.2f -> %.2f\n", raw_score, score, ext_scorer_->beta, log_p, log_p + score + ext_scorer_->beta);
+              }
+              #endif
+
               log_p += score;
               log_p += ext_scorer_->beta;
             }
@@ -207,6 +221,16 @@ DecoderState::next(const double *probs,
     prefixes_.clear();
     prefix_root_->iterate_to_vec(prefixes_);
 
+#ifdef DEBUG
+    if (abs_time_step_ > 314 && abs_time_step_ <= 354) {
+      // Sort prefixes vector so we highlight the leading beam
+      std::partial_sort(prefixes_.begin(),
+                        prefixes_.begin() + 1,
+                        prefixes_.end(),
+                        prefix_compare);
+      drawdot("dbg/trie_at_%d.dot", abs_time_step_);
+    }
+#endif
     // only preserve top beam_size prefixes
     if (prefixes_.size() > beam_size_) {
       std::nth_element(prefixes_.begin(),
@@ -220,12 +244,16 @@ DecoderState::next(const double *probs,
       // Remove the elements from std::vector
       prefixes_.resize(beam_size_);
     }
+
+
   }  // end of loop over time
 }
 
 std::vector<Output>
 DecoderState::decode(size_t num_results) const
 {
+  drawdot("dbg/trie_at_decode.dot");
+
   std::vector<PathTrie*> prefixes_copy = prefixes_;
   std::unordered_map<const PathTrie*, float> scores;
   for (PathTrie* prefix : prefixes_copy) {
@@ -269,6 +297,25 @@ DecoderState::decode(size_t num_results) const
 
   return outputs;
 }
+
+#ifdef DEBUG
+void
+DecoderState::drawdot(const char* format, ...) const
+{
+  char name[256];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(name, sizeof(name), format, args);
+  va_end(args);
+  {
+    std::ofstream fout(name, std::ios_base::out);
+    fout << PathTrie::drawdot(prefix_root_.get(), prefixes_);
+  }
+  char cmd[256];
+  snprintf(cmd, sizeof(cmd), "dot -Tpng %s -o %s.png && rm %s", name, name, name);
+  std::system(cmd);
+}
+#endif
 
 int
 FlashlightDecoderState::init(

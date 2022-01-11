@@ -256,11 +256,6 @@ double Scorer::get_log_cond_prob(const std::vector<std::string>::const_iterator&
   for (auto it = begin; it != end; ++it) {
     lm::WordIndex word_index = vocab.Index(*it);
 
-    // encounter OOV
-    if (word_index == lm::kUNK) {
-      return OOV_SCORE;
-    }
-
     cond_prob = language_model_->BaseScore(in_state, word_index, out_state);
     std::swap(in_state, out_state);
   }
