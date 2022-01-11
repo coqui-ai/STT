@@ -22,7 +22,7 @@ FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 48000 # opus files are always 48kHz
 SAMPLE_WIDTH = 2 # always 16-bit (2*8)
 CHANNELS = 1
-MAX_SECS = 10
+MAX_SECS = 10. #float
 
 LANGUAGE_LIST = [
     "english",
@@ -102,7 +102,11 @@ def _maybe_convert_sets(target_dir, extracted_data):
         print("Processing {} subset...".format(subset))
         with open(Path(extracted_dir) / subset / "transcripts.txt") as fin:
             subset_entries = []
+            # Keep track of how many samples are good vs. problematic
+            counter = get_counter()
+            
             for i, line in tqdm(enumerate(fin)):
+                file_size = -1
                 audio_id, transcript = line.split("\t")
                 audio_id_parts = audio_id.split("_")
                 # e.g. 4800_10003_000000 -> train/audio/4800/10003/4800_10003_000000.opus
@@ -115,21 +119,44 @@ def _maybe_convert_sets(target_dir, extracted_data):
                     / "{}.opus".format(audio_id)
                 )
                 audio_duration = read_ogg_opus_duration(audio_path)
+                frames = int(audio_duration * SAMPLE_RATE)
+                file_size = os.path.getsize(audio_path)
                 transcript = label_filter(transcript)
-                subset_entries.append(
-                    (
-                        audio_path.relative_to(extracted_dir),
-                        audio_duration,
-                        transcript.strip(),
+
+                if file_size == -1:
+                    # Excluding samples that failed upon importation
+                    counter["failed"] += 1
+                elif transcript is None:
+                    # Excluding samples that failed on label validation
+                    counter["invalid_label"] += 1
+                elif int(audio_duration * 1000 / 15 / 2) < len(str(transcript)):
+                    # Excluding samples that are too short to fit the transcript
+                    counter["too_short"] += 1
+                elif audio_duration > MAX_SECS:
+                    # Excluding very long samples to keep a reasonable batch-size
+                    counter["too_long"] += 1
+                else:
+                    subset_entries.append(
+                        (
+                            audio_path.relative_to(extracted_dir),
+                            file_size,
+                            transcript.strip(),
+                        )
                     )
-                )
+                    counter["imported_time"] += frames
+                
+                counter["all"] += 1
+                counter["total_time"] += frames
+            
             df = pandas.DataFrame(
                 columns=FIELDNAMES,
                 data=subset_entries,
             )
-            csv_name = Path(target_dir) / "{}.csv".format(subset)
+            csv_name = Path(target_dir) / "MLS_{}.csv".format(subset)
             df.to_csv(csv_name, index=False)
             print("Wrote {}".format(csv_name))
+            
+            print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
 
 def handle_args():
