@@ -19,8 +19,8 @@ from coqui_stt_training.util.importers import (
 )
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
-SAMPLE_RATE = 48000 # opus files are always 48kHz
-SAMPLE_WIDTH = 2 # always 16-bit (2*8)
+SAMPLE_RATE = 48000  # opus files are always 48kHz
+SAMPLE_WIDTH = 2  # always 16-bit (2*8)
 CHANNELS = 1
 
 LANGUAGE_LIST = [
@@ -31,7 +31,7 @@ LANGUAGE_LIST = [
     "spanish",
     "italian",
     "portuguese",
-    "polish"
+    "polish",
 ]
 
 ARCHIVE_DIR_NAME = "MLS"
@@ -39,31 +39,43 @@ ARCHIVE_EXT = ".tar.gz"
 
 BASE_SLR_URL = "https://dl.fbaipublicfiles.com/mls/"
 
+
 class ValidateLangAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if values not in LANGUAGE_LIST:
             print("Got value:", values)
-            raise ValueError(f"Choose from the availible languages: {str(LANGUAGE_LIST)}")
+            raise ValueError(
+                f"Choose from the availible languages: {str(LANGUAGE_LIST)}"
+            )
         setattr(namespace, self.dest, values)
+
 
 def _download_and_preprocess_data(target_dir):
     # Making path absolute
     target_dir = os.path.abspath(target_dir)
     # Conditionally download data
-    lm_archive_path = maybe_download(f"{ARCHIVE_NAME_LM}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_LM)
-    asr_archive_path = maybe_download(f"{ARCHIVE_NAME_ASR}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_ASR)
+    lm_archive_path = maybe_download(
+        f"{ARCHIVE_NAME_LM}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_LM
+    )
+    asr_archive_path = maybe_download(
+        f"{ARCHIVE_NAME_ASR}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_ASR
+    )
     # Conditionally extract data
     _maybe_extract(target_dir, f"{ARCHIVE_NAME_LM}", lm_archive_path)
     _maybe_extract(target_dir, f"{ARCHIVE_NAME_ASR}", asr_archive_path)
     # Produce CSV files
     _maybe_convert_sets(target_dir, ARCHIVE_NAME_ASR)
 
+
 def _maybe_extract(target_dir, extracted_data, archive_path):
     # If target_dir/extracted_data does not exist, extract archive in target_dir
     try:
         extracted_path = os.path.join(target_dir, extracted_data)
         if os.path.exists(extracted_path):
-            print('Found directory "%s" - not extracting it from archive.' % extracted_path)
+            print(
+                'Found directory "%s" - not extracting it from archive.'
+                % extracted_path
+            )
         else:
             raise FileNotFoundError
     except FileNotFoundError:
@@ -71,6 +83,7 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar = tarfile.open(archive_path)
         tar.extractall(target_dir)
         tar.close()
+
 
 def read_ogg_opus_duration(ogg_file_path):
     error = ctypes.c_int()
@@ -80,7 +93,9 @@ def read_ogg_opus_duration(ogg_file_path):
 
     if error.value != 0:
         raise ValueError(
-            ("Ogg/Opus file {} could not be read." "Error code: {}").format(ogg_file_path.as_posix().encode("utf-8"), error.value)
+            ("Ogg/Opus file {} could not be read." "Error code: {}").format(
+                ogg_file_path.as_posix().encode("utf-8"), error.value
+            )
         )
 
     pcm_buffer_size = pyogg.opus.op_pcm_total(opusfile, -1)
@@ -103,7 +118,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
             subset_entries = []
             # Keep track of how many samples are good vs. problematic
             counter = get_counter()
-            
+
             for i, line in tqdm(enumerate(fin)):
                 file_size = -1
                 audio_id, transcript = line.split("\t")
@@ -146,10 +161,10 @@ def _maybe_convert_sets(target_dir, extracted_data):
                         )
                     )
                     counter["imported_time"] += frames
-                
+
                 counter["all"] += 1
                 counter["total_time"] += frames
-            
+
             df = pandas.DataFrame(
                 columns=FIELDNAMES,
                 data=subset_entries,
@@ -157,7 +172,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
             csv_name = Path(target_dir) / "MLS_{}.csv".format(subset)
             df.to_csv(csv_name, index=False)
             print("Wrote {}".format(csv_name))
-            
+
             print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
 
@@ -166,11 +181,11 @@ def handle_args():
         description="Importer for MLS dataset. More information on http://www.openslr.org/94/."
     )
     parser.add_argument(
-        '-l',
-        '--language',
+        "-l",
+        "--language",
         action=ValidateLangAction,
         help="Select language to download, process and import",
-        required=True
+        required=True,
     )
     parser.add_argument(dest="target_dir")
     parser.add_argument(
@@ -184,20 +199,15 @@ def handle_args():
     )
 
     parser.add_argument(
-        '--min_sec',
-        type=float,
-        help="Min audio length in sec",
-        default=0.85
+        "--min_sec", type=float, help="Min audio length in sec", default=0.85
     )
 
     parser.add_argument(
-        '--max_sec',
-        type=float,
-        help="Max audio length in sec",
-        default=15.
+        "--max_sec", type=float, help="Max audio length in sec", default=15.0
     )
-    
+
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     CLI_ARGS = handle_args()
@@ -212,8 +222,8 @@ if __name__ == "__main__":
     ARCHIVE_URL_LM = f"{BASE_SLR_URL}/{ARCHIVE_NAME_LM}{ARCHIVE_EXT}"
     ARCHIVE_URL_ASR = f"{BASE_SLR_URL}/{ARCHIVE_NAME_ASR}{ARCHIVE_EXT}"
 
-    MAX_SECS = CLI_ARGS.max_sec #float
-    MIN_SECS = CLI_ARGS.min_sec #float
+    MAX_SECS = CLI_ARGS.max_sec  # float
+    MIN_SECS = CLI_ARGS.min_sec  # float
 
     validate_label = get_validate_label(CLI_ARGS)
 
@@ -230,4 +240,3 @@ if __name__ == "__main__":
         return label
 
     _download_and_preprocess_data(target_dir=CLI_ARGS.target_dir)
-
