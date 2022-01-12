@@ -5,10 +5,11 @@ import random
 import subprocess
 import tarfile
 import unicodedata
+import sox
 from glob import glob
 from multiprocessing import Pool
-from pathlib import Path
 
+import progressbar
 from coqui_stt_ctcdecoder import Alphabet
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
@@ -18,11 +19,11 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from tqdm import tqdm
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
 CHANNELS = 1
+MAX_SECS = 10
 
 ARCHIVE_DIR_NAME = "Att-HACK"
 ARCHIVE_EXT = ".tgz"
@@ -38,19 +39,11 @@ def _download_and_preprocess_data(target_dir):
     # Making path absolute
     target_dir = os.path.abspath(target_dir)
     # Conditionally download data
-    txt_archive_path = maybe_download(
-        f"{ARCHIVE_NAME_txt}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_txt
-    )
-    wav_archive_path = maybe_download(
-        f"{ARCHIVE_NAME_wav}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_wav
-    )
+    txt_archive_path = maybe_download(f"{ARCHIVE_NAME_txt}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_txt)
+    wav_archive_path = maybe_download(f"{ARCHIVE_NAME_wav}{ARCHIVE_EXT}", target_dir, ARCHIVE_URL_wav)
     # Conditionally extract data
-    _maybe_extract(
-        target_dir, f"{ARCHIVE_ROOT_PATH}/{ARCHIVE_NAME_txt}", txt_archive_path
-    )
-    _maybe_extract(
-        target_dir, f"{ARCHIVE_ROOT_PATH}/{ARCHIVE_NAME_wav}", wav_archive_path
-    )
+    _maybe_extract(target_dir, f"{ARCHIVE_ROOT_PATH}/{ARCHIVE_NAME_txt}", txt_archive_path)
+    _maybe_extract(target_dir, f"{ARCHIVE_ROOT_PATH}/{ARCHIVE_NAME_wav}", wav_archive_path)
     # Produce CSV files
     _maybe_convert_sets(target_dir, ARCHIVE_ROOT_PATH)
 
@@ -60,10 +53,7 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
     try:
         extracted_path = os.path.join(target_dir, extracted_data)
         if os.path.exists(extracted_path):
-            print(
-                'Found directory "%s" - not extracting it from archive.'
-                % extracted_path
-            )
+            print('Found directory "%s" - not extracting it from archive.' % extracted_path)
         else:
             raise FileNotFoundError
     except FileNotFoundError:
@@ -72,9 +62,8 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar.extractall(target_dir)
         tar.close()
 
-
 def one_sample(sample):
-    """Take an audio file, and optionally convert it to 16kHz mono channel WAV"""
+    """ Take a audio file, and optionally convert it to 16kHz mono channel WAV """
     wav_filename = sample[0]
     original_wav = wav_filename
     formatted_wav = os.path.splitext(wav_filename)[0] + "_.wav"
@@ -101,10 +90,7 @@ def one_sample(sample):
     elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < len(str(label)):
         # Excluding samples that are too short to fit the transcript
         counter["too_short"] += 1
-    elif float(frames / SAMPLE_RATE) < MIN_SECS:
-        # Excluding samples that are too short
-        counter["too_short"] += 1
-    elif float(frames / SAMPLE_RATE) > MAX_SECS:
+    elif frames / SAMPLE_RATE > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
     else:
@@ -154,14 +140,8 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         print("Importing WAV files...")
         pool = Pool()
-        bar = tqdm(
-            enumerate(pool.imap_unordered(one_sample, samples), start=1),
-            total=num_samples,
-        )
-        for i, processed in bar:
-            bar.set_description(
-                f"Processing|{str(i)}/{str(num_samples)} ({int(i/num_samples*100)}%)"
-            )
+        bar = progressbar.ProgressBar(max_value=num_samples, widgets=SIMPLE_BAR)
+        for i, processed in enumerate(pool.imap_unordered(one_sample, samples), start=1):
             counter += processed[0]
             rows += processed[1]
             bar.update(i)
@@ -180,63 +160,62 @@ def _maybe_convert_sets(target_dir, extracted_data):
         ) as dev_csv_file, open(
             target_csv_template.format("test"), "w", encoding="utf-8", newline=""
         ) as test_csv_file:
-            train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
-            train_writer.writeheader()
-            dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
-            dev_writer.writeheader()
-            test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
-            test_writer.writeheader()
+                    train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
+                    train_writer.writeheader()
+                    dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
+                    dev_writer.writeheader()
+                    test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
+                    test_writer.writeheader()
+ 
+                    train_set, dev_set, test_set = _split_sets(rows)
 
-            train_set, dev_set, test_set = _split_sets(rows)
-
-            # save train_set
-            for item in train_set:
-                transcript = validate_label(item[2])
-                if not transcript:
-                    continue
-                wav_filename = item[0]
-                train_writer.writerow(
-                    dict(
-                        wav_filename=Path(wav_filename).relative_to(target_dir),
-                        wav_filesize=os.path.getsize(wav_filename),
-                        transcript=transcript,
-                    )
-                )
-
-            # save dev_set
-            for item in dev_set:
-                transcript = validate_label(item[2])
-                if not transcript:
-                    continue
-                wav_filename = item[0]
-                dev_writer.writerow(
-                    dict(
-                        wav_filename=Path(wav_filename).relative_to(target_dir),
-                        wav_filesize=os.path.getsize(wav_filename),
-                        transcript=transcript,
-                    )
-                )
-
-            # save test_set
-            for item in test_set:
-                transcript = validate_label(item[2])
-                if not transcript:
-                    continue
-                wav_filename = item[0]
-                test_writer.writerow(
-                    dict(
-                        wav_filename=Path(wav_filename).relative_to(target_dir),
-                        wav_filesize=os.path.getsize(wav_filename),
-                        transcript=transcript,
-                    )
-                )
+                    # save train_set
+                    for item in train_set:
+                        transcript = validate_label(item[2])
+                        if not transcript:
+                            continue
+                        wav_filename = item[0]
+                        train_writer.writerow(
+                            dict(
+                                wav_filename=wav_filename,
+                                wav_filesize=os.path.getsize(wav_filename),
+                                transcript=transcript,
+                            )
+                        )
+                    
+                    # save dev_set
+                    for item in dev_set:
+                        transcript = validate_label(item[2])
+                        if not transcript:
+                            continue
+                        wav_filename = item[0]
+                        dev_writer.writerow(
+                            dict(
+                                wav_filename=wav_filename,
+                                wav_filesize=os.path.getsize(wav_filename),
+                                transcript=transcript,
+                            )
+                        )
+                    
+                    # save test_set
+                    for item in test_set:
+                        transcript = validate_label(item[2])
+                        if not transcript:
+                            continue
+                        wav_filename = item[0]
+                        test_writer.writerow(
+                            dict(
+                                wav_filename=wav_filename,
+                                wav_filesize=os.path.getsize(wav_filename),
+                                transcript=transcript,
+                            )
+                        )
 
         imported_samples = get_imported_samples(counter)
         assert counter["all"] == num_samples
         assert len(rows) == imported_samples
 
         print_import_report(counter, SAMPLE_RATE, MAX_SECS)
-
 
 def _split_sets(rows):
     """
@@ -261,7 +240,6 @@ def _split_sets(rows):
         rows[test_beg:test_end],
     )
 
-
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
     margin_of_error = 0.01
@@ -284,20 +262,8 @@ def get_sample_size(population_size):
 def _maybe_convert_wav(mp3_filename, wav_filename):
     if not os.path.exists(wav_filename):
         subprocess.check_call(
-            [
-                "ffmpeg",
-                "-i",
-                mp3_filename,
-                "-acodec",
-                "pcm_s16le",
-                "-ac",
-                str(CHANNELS),
-                "-ar",
-                str(SAMPLE_RATE),
-                wav_filename,
-            ]
-        )
-
+                    ["ffmpeg", "-i", mp3_filename, "-acodec", "pcm_s16le", "-ac", str(CHANNELS), "-ar", str(SAMPLE_RATE), wav_filename]
+                )
 
 def handle_args():
     parser = get_importers_parser(
@@ -313,28 +279,12 @@ def handle_args():
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
-    parser.add_argument(
-        "--min_sec",
-        type=float,
-        help="[FLOAT] Min audio length in sec",
-        default=0.85,
-    )
-    parser.add_argument(
-        "--max_sec",
-        type=float,
-        help="[FLOAT] Max audio length in sec",
-        default=10.0,
-    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     CLI_ARGS = handle_args()
     ALPHABET = Alphabet(CLI_ARGS.filter_alphabet) if CLI_ARGS.filter_alphabet else None
-
-    MAX_SECS = CLI_ARGS.max_sec
-    MIN_SECS = CLI_ARGS.min_sec
-
     validate_label = get_validate_label(CLI_ARGS)
 
     def label_filter(label):
