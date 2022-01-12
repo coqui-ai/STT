@@ -15,7 +15,6 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
-import zipfile38 as zipfile
 from glob import glob
 from multiprocessing import Pool
 
@@ -24,9 +23,11 @@ import sox
 
 try:
     from num2words import num2words
-except ImportError as ex:
-    print("pip install num2words")
-    sys.exit(1)
+    import zipfile38 as zipfile
+except ImportError:
+    print("ERROR: This importer needs additional dependencies. To fix run:")
+    print("   python -m pip install num2words zipfile38")
+    raise
 
 import json
 
