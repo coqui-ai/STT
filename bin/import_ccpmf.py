@@ -15,7 +15,6 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
-import zipfile38 as zipfile
 from glob import glob
 from multiprocessing import Pool
 
