@@ -5,10 +5,11 @@ import random
 import subprocess
 import tarfile
 import unicodedata
-import tqdm
+from tqdm import tqdm
 
 from glob import glob
 from multiprocessing import Pool
+from pathlib import Path
 
 from coqui_stt_ctcdecoder import Alphabet
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
@@ -23,7 +24,6 @@ from coqui_stt_training.util.importers import (
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
 CHANNELS = 1
-MAX_SECS = 10
 
 ARCHIVE_DIR_NAME = "Att-HACK"
 ARCHIVE_EXT = ".tgz"
@@ -63,7 +63,7 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar.close()
 
 def one_sample(sample):
-    """ Take a audio file, and optionally convert it to 16kHz mono channel WAV """
+    """ Take an audio file, and optionally convert it to 16kHz mono channel WAV """
     wav_filename = sample[0]
     original_wav = wav_filename
     formatted_wav = os.path.splitext(wav_filename)[0] + "_.wav"
@@ -90,7 +90,10 @@ def one_sample(sample):
     elif int(frames / SAMPLE_RATE * 1000 / 15 / 2) < len(str(label)):
         # Excluding samples that are too short to fit the transcript
         counter["too_short"] += 1
-    elif frames / SAMPLE_RATE > MAX_SECS:
+    elif float(frames / SAMPLE_RATE) < MIN_SECS:
+        # Excluding samples that are too short
+        counter["too_short"] += 1
+    elif float(frames / SAMPLE_RATE) > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
     else:
@@ -140,8 +143,9 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         print("Importing WAV files...")
         pool = Pool()
-        bar = progressbar.ProgressBar(max_value=num_samples, widgets=SIMPLE_BAR)
-        for i, processed in enumerate(pool.imap_unordered(one_sample, samples), start=1):
+        bar = tqdm(enumerate(pool.imap_unordered(one_sample, samples), start=1), total=num_samples)
+        for i, processed in bar:
+            bar.set_description(f"Processing|{str(i)}/{str(num_samples)} ({int(i/num_samples*100)}%)")
             counter += processed[0]
             rows += processed[1]
             bar.update(i)
@@ -177,7 +181,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
                         wav_filename = item[0]
                         train_writer.writerow(
                             dict(
-                                wav_filename=wav_filename,
+                                wav_filename=Path(wav_filename).relative_to(target_dir),
                                 wav_filesize=os.path.getsize(wav_filename),
                                 transcript=transcript,
                             )
@@ -191,7 +195,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
                         wav_filename = item[0]
                         dev_writer.writerow(
                             dict(
-                                wav_filename=wav_filename,
+                                wav_filename=Path(wav_filename).relative_to(target_dir),
                                 wav_filesize=os.path.getsize(wav_filename),
                                 transcript=transcript,
                             )
@@ -205,7 +209,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
                         wav_filename = item[0]
                         test_writer.writerow(
                             dict(
-                                wav_filename=wav_filename,
+                                wav_filename=Path(wav_filename).relative_to(target_dir),
                                 wav_filesize=os.path.getsize(wav_filename),
                                 transcript=transcript,
                             )
@@ -279,14 +283,24 @@ def handle_args():
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
+    parser.add_argument(
+        "--min_sec", type=float, help="[FLOAT] Min audio length in sec (default: 0.85)", default=0.85
+    )
+    parser.add_argument(
+        "--max_sec", type=float, help="[FLOAT] Max audio length in sec (default: 15.0)", default=10.0
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     CLI_ARGS = handle_args()
     ALPHABET = Alphabet(CLI_ARGS.filter_alphabet) if CLI_ARGS.filter_alphabet else None
-    validate_label = get_validate_label(CLI_ARGS)
+    
+    MAX_SECS = CLI_ARGS.max_sec
+    MIN_SECS = CLI_ARGS.min_sec
 
+    validate_label = get_validate_label(CLI_ARGS)
+    
     def label_filter(label):
         if CLI_ARGS.normalize:
             label = (
