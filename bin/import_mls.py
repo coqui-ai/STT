@@ -199,11 +199,11 @@ def handle_args():
     )
 
     parser.add_argument(
-        "--min_sec", type=float, help="Min audio length in sec", default=0.85
+        "--min_sec", type=float, help="[FLOAT] Min audio length in sec (default: 0.85)", default=0.85
     )
 
     parser.add_argument(
-        "--max_sec", type=float, help="Max audio length in sec", default=15.0
+        "--max_sec", type=float, help="[FLOAT] Max audio length in sec (default: 15.0)", default=15.0
     )
 
     return parser.parse_args()
