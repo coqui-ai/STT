@@ -22,7 +22,6 @@ FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 48000 # opus files are always 48kHz
 SAMPLE_WIDTH = 2 # always 16-bit (2*8)
 CHANNELS = 1
-MAX_SECS = 10. #float
 
 LANGUAGE_LIST = [
     "english",
@@ -132,6 +131,9 @@ def _maybe_convert_sets(target_dir, extracted_data):
                 elif int(audio_duration * 1000 / 15 / 2) < len(str(transcript)):
                     # Excluding samples that are too short to fit the transcript
                     counter["too_short"] += 1
+                elif audio_duration < MIN_SECS:
+                    # Excluding samples that are too short
+                    counter["too_short"] += 1
                 elif audio_duration > MAX_SECS:
                     # Excluding very long samples to keep a reasonable batch-size
                     counter["too_long"] += 1
@@ -167,7 +169,8 @@ def handle_args():
         '-l',
         '--language',
         action=ValidateLangAction,
-        help="Select language to download, process and import"
+        help="Select language to download, process and import",
+        required=True
     )
     parser.add_argument(dest="target_dir")
     parser.add_argument(
@@ -179,6 +182,21 @@ def handle_args():
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
+
+    parser.add_argument(
+        '--min_sec',
+        type=float,
+        help="Min audio length in sec",
+        default=0.85
+    )
+
+    parser.add_argument(
+        '--max_sec',
+        type=float,
+        help="Max audio length in sec",
+        default=15.
+    )
+    
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -193,6 +211,9 @@ if __name__ == "__main__":
     ARCHIVE_NAME_ASR = f"mls_{LANGUAGE}_opus"
     ARCHIVE_URL_LM = f"{BASE_SLR_URL}/{ARCHIVE_NAME_LM}{ARCHIVE_EXT}"
     ARCHIVE_URL_ASR = f"{BASE_SLR_URL}/{ARCHIVE_NAME_ASR}{ARCHIVE_EXT}"
+
+    MAX_SECS = CLI_ARGS.max_sec #float
+    MIN_SECS = CLI_ARGS.min_sec #float
 
     validate_label = get_validate_label(CLI_ARGS)
 
