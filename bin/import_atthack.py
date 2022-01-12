@@ -5,11 +5,11 @@ import random
 import subprocess
 import tarfile
 import unicodedata
-import sox
+import tqdm
+
 from glob import glob
 from multiprocessing import Pool
 
-import progressbar
 from coqui_stt_ctcdecoder import Alphabet
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
