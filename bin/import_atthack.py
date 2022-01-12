@@ -237,7 +237,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
-
 def _split_sets(rows):
     """
     randomply split the datasets into train, validation, and test sets where the size of the
@@ -260,7 +259,6 @@ def _split_sets(rows):
         rows[dev_beg:dev_end],
         rows[test_beg:test_end],
     )
-
 
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
