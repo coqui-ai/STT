@@ -74,11 +74,7 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
 
 
 def one_sample(sample):
-<<<<<<< HEAD
     """Take an audio file, and optionally convert it to 16kHz mono channel WAV"""
-=======
-    """ Take an audio file, and optionally convert it to 16kHz mono channel WAV """
->>>>>>> 41327447 (use tqdm and various improvements)
     wav_filename = sample[0]
     original_wav = wav_filename
     formatted_wav = os.path.splitext(wav_filename)[0] + "_.wav"
@@ -158,7 +154,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         print("Importing WAV files...")
         pool = Pool()
-<<<<<<< HEAD
         bar = tqdm(
             enumerate(pool.imap_unordered(one_sample, samples), start=1),
             total=num_samples,
@@ -167,11 +162,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
             bar.set_description(
                 f"Processing|{str(i)}/{str(num_samples)} ({int(i/num_samples*100)}%)"
             )
-=======
-        bar = tqdm(enumerate(pool.imap_unordered(one_sample, samples), start=1), total=num_samples)
-        for i, processed in bar:
-            bar.set_description(f"Processing|{str(i)}/{str(num_samples)} ({int(i/num_samples*100)}%)")
->>>>>>> 41327447 (use tqdm and various improvements)
             counter += processed[0]
             rows += processed[1]
             bar.update(i)
@@ -197,7 +187,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
             test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
             test_writer.writeheader()
 
-<<<<<<< HEAD
             train_set, dev_set, test_set = _split_sets(rows)
 
             # save train_set
@@ -241,49 +230,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
                         transcript=transcript,
                     )
                 )
-=======
-                    # save train_set
-                    for item in train_set:
-                        transcript = validate_label(item[2])
-                        if not transcript:
-                            continue
-                        wav_filename = item[0]
-                        train_writer.writerow(
-                            dict(
-                                wav_filename=Path(wav_filename).relative_to(target_dir),
-                                wav_filesize=os.path.getsize(wav_filename),
-                                transcript=transcript,
-                            )
-                        )
-                    
-                    # save dev_set
-                    for item in dev_set:
-                        transcript = validate_label(item[2])
-                        if not transcript:
-                            continue
-                        wav_filename = item[0]
-                        dev_writer.writerow(
-                            dict(
-                                wav_filename=Path(wav_filename).relative_to(target_dir),
-                                wav_filesize=os.path.getsize(wav_filename),
-                                transcript=transcript,
-                            )
-                        )
-                    
-                    # save test_set
-                    for item in test_set:
-                        transcript = validate_label(item[2])
-                        if not transcript:
-                            continue
-                        wav_filename = item[0]
-                        test_writer.writerow(
-                            dict(
-                                wav_filename=Path(wav_filename).relative_to(target_dir),
-                                wav_filesize=os.path.getsize(wav_filename),
-                                transcript=transcript,
-                            )
-                        )
->>>>>>> 41327447 (use tqdm and various improvements)
 
         imported_samples = get_imported_samples(counter)
         assert counter["all"] == num_samples
@@ -366,7 +312,6 @@ def handle_args():
         help="Converts diacritic characters to their base ones",
     )
     parser.add_argument(
-<<<<<<< HEAD
         "--min_sec",
         type=float,
         help="[FLOAT] Min audio length in sec",
@@ -377,12 +322,6 @@ def handle_args():
         type=float,
         help="[FLOAT] Max audio length in sec",
         default=10.0,
-=======
-        "--min_sec", type=float, help="[FLOAT] Min audio length in sec (default: 0.85)", default=0.85
-    )
-    parser.add_argument(
-        "--max_sec", type=float, help="[FLOAT] Max audio length in sec (default: 15.0)", default=10.0
->>>>>>> 41327447 (use tqdm and various improvements)
     )
     return parser.parse_args()
 
@@ -390,17 +329,11 @@ def handle_args():
 if __name__ == "__main__":
     CLI_ARGS = handle_args()
     ALPHABET = Alphabet(CLI_ARGS.filter_alphabet) if CLI_ARGS.filter_alphabet else None
-<<<<<<< HEAD
 
     MAX_SECS = CLI_ARGS.max_sec
     MIN_SECS = CLI_ARGS.min_sec
 
     validate_label = get_validate_label(CLI_ARGS)
-=======
-    
-    MAX_SECS = CLI_ARGS.max_sec
-    MIN_SECS = CLI_ARGS.min_sec
->>>>>>> 41327447 (use tqdm and various improvements)
 
     validate_label = get_validate_label(CLI_ARGS)
     
