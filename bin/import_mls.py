@@ -155,7 +155,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
                 else:
                     subset_entries.append(
                         (
-                            audio_path.relative_to(extracted_dir),
+                            audio_path.relative_to(target_dir),
                             file_size,
                             transcript.strip(),
                         )
