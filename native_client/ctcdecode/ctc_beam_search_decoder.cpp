@@ -91,11 +91,27 @@ DecoderState::next(const double *probs,
                         prefixes_.begin() + num_prefixes,
                         prefixes_.end(),
                         prefix_compare);
-
       min_cutoff = prefixes_[num_prefixes - 1]->score +
                    std::log(prob[blank_id_]) - std::max(0.0, ext_scorer_->beta);
       full_beam = (num_prefixes == beam_size_);
     }
+
+    #ifdef DEBUG
+     if (abs_time_step_ > 25 && abs_time_step_ <= 60) {
+      printf("_________\n");
+      printf("[%2d] \n", abs_time_step_);
+      for (size_t i = 0; i < prefixes_.size() && i < beam_size_; ++i) {
+       std::vector<std::string> ngram;
+       ngram = ext_scorer_->make_ngram(prefixes_[i]);
+       printf("p_i = %02d, ", i);
+       for (const std::string& word : ngram) {
+        printf("%s ", word.c_str());
+      }
+       printf(".\n");
+      }
+       printf("_________\n");
+    }
+    #endif
 
     std::vector<std::pair<size_t, float>> log_prob_idx =
         get_pruned_log_probs(prob, class_dim, cutoff_prob_, cutoff_top_n_);
@@ -190,13 +206,15 @@ DecoderState::next(const double *probs,
               float raw_score = ext_scorer_->get_log_cond_prob(ngram, bos);
               score = (raw_score + hot_boost) * ext_scorer_->alpha;
               #ifdef DEBUG
-              if (abs_time_step_ > 314 && abs_time_step_ <= 354) {
-                printf("[%03d] scoring ngram: ", abs_time_step_);
+              if (abs_time_step_ > 25 && abs_time_step_ <= 100) {
+                //printf("[%03d] scoring ngram: ", abs_time_step_);
+                printf("[%03d], p_i = %02d, ngram = ", abs_time_step_, i);
                 for (const std::string& word : ngram) {
-                  printf("%s ", word.c_str());
+                  printf("%s ",word.c_str());
                 }
-                printf("= %.2f (scaled = %.2f, beta = %.2f). prefix change: %.2f -> %.2f\n", raw_score, score, ext_scorer_->beta, log_p, log_p + score + ext_scorer_->beta);
-              }
+               // printf("= %.2f (scaled = %.2f, beta = %.2f). prefix change: %.2f -> %.2f\n", raw_score, score, ext_scorer_->beta, log_p, log_p + score + ext_scorer_->beta);
+              printf("= %.2f (scaled = %.2f). prefix change: %.2f --> %.2f\n", raw_score, score, log_p, log_p + score + ext_scorer_->beta);
+                }
               #endif
 
               log_p += score;
@@ -222,7 +240,7 @@ DecoderState::next(const double *probs,
     prefix_root_->iterate_to_vec(prefixes_);
 
 #ifdef DEBUG
-    if (abs_time_step_ > 314 && abs_time_step_ <= 354) {
+    if (abs_time_step_ > 25 && abs_time_step_ <= 25) {
       // Sort prefixes vector so we highlight the leading beam
       std::partial_sort(prefixes_.begin(),
                         prefixes_.begin() + 1,
