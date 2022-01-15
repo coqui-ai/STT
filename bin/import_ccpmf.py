@@ -15,6 +15,10 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
+<<<<<<< HEAD
+=======
+import zipfile38 as zipfile
+>>>>>>> ccpmf-fix
 from glob import glob
 from multiprocessing import Pool
 
@@ -656,53 +660,51 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
-    with open(target_csv_template.format("train"), "w") as train_csv_file, open(
+    with open(
+        target_csv_template.format("train"), "w"
+    ) as train_csv_file, open(
         target_csv_template.format("dev"), "w"
-    ) as dev_csv_file, open(target_csv_template.format("test"), "w") as test_csv_file:
-        train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
-        train_writer.writeheader()
-        dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
-        dev_writer.writeheader()
-        test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
-        test_writer.writeheader()
+    ) as dev_csv_file, open(
+        target_csv_template.format("test"), "w"
+    ) as test_csv_file:
+                train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
+                train_writer.writeheader()
+                dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
+                dev_writer.writeheader()
+                test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
+                test_writer.writeheader()
 
-        train_set, dev_set, test_set = _split_sets(_rows)
+                train_set, dev_set, test_set = _split_sets(_rows)
 
-        train_bar = progressbar.ProgressBar(
-            max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set"
-        )
-        for item in train_bar(train_set):
-            train_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
+                train_bar = progressbar.ProgressBar(max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set")
+                for item in train_bar(train_set):
+                    train_writer.writerow(
+                        {
+                            "wav_filename": item[0],
+                            "wav_filesize": item[1],
+                            "transcript": item[2],
+                        }
+                    )
+                
+                dev_bar = progressbar.ProgressBar(max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set")
+                for item in dev_bar(dev_set):
+                    dev_writer.writerow(
+                        {
+                            "wav_filename": item[0],
+                            "wav_filesize": item[1],
+                            "transcript": item[2],
+                        }
+                    )
 
-        dev_bar = progressbar.ProgressBar(
-            max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set"
-        )
-        for item in dev_bar(dev_set):
-            dev_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
-
-        test_bar = progressbar.ProgressBar(
-            max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set"
-        )
-        for item in test_bar(test_set):
-            test_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
+                test_bar = progressbar.ProgressBar(max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set")
+                for item in test_bar(test_set):
+                    test_writer.writerow(
+                        {
+                            "wav_filename": item[0],
+                            "wav_filesize": item[1],
+                            "transcript": item[2],
+                        }
+                    )
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
@@ -733,7 +735,6 @@ def _split_sets(rows):
         rows[dev_beg:dev_end],
         rows[test_beg:test_end],
     )
-
 
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
