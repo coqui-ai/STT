@@ -3,11 +3,19 @@ import csv
 import os
 import re
 import subprocess
-import zipfile
+
 from multiprocessing import Pool
+from pathlib import Path
 import random
 import progressbar
 import sox
+
+try:
+    import zipfile38 as zipfile
+except ImportError:
+    print("ERROR: This importer needs additional dependencies. To fix run:")
+    print("   python -m pip install zipfile38")
+    raise
 
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
