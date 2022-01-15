@@ -3,19 +3,11 @@ import csv
 import os
 import re
 import subprocess
-
+import zipfile
 from multiprocessing import Pool
-from pathlib import Path
-import random
+
 import progressbar
 import sox
-
-try:
-    import zipfile38 as zipfile
-except ImportError:
-    print("ERROR: This importer needs additional dependencies. To fix run:")
-    print("   python -m pip install zipfile38")
-    raise
 
 from coqui_stt_training.util.downloader import SIMPLE_BAR, maybe_download
 from coqui_stt_training.util.importers import (
@@ -275,9 +267,7 @@ def cleanup_transcript(text, english_compatible=False):
 
 
 def handle_args():
-    parser = get_importers_parser(
-        description="Importer for TrainingSpeech dataset. More info at https://github.com/wasertech/TrainingSpeech."
-    )
+    parser = get_importers_parser(description="Importer for TrainingSpeech dataset.")
     parser.add_argument(dest="target_dir")
     parser.add_argument(
         "--english-compatible",
