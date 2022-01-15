@@ -267,7 +267,9 @@ def cleanup_transcript(text, english_compatible=False):
 
 
 def handle_args():
-    parser = get_importers_parser(description="Importer for TrainingSpeech dataset.")
+    parser = get_importers_parser(
+        description="Importer for TrainingSpeech dataset. More info at https://github.com/wasertech/TrainingSpeech."
+    )
     parser.add_argument(dest="target_dir")
     parser.add_argument(
         "--english-compatible",
