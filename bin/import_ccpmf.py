@@ -15,10 +15,7 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
-<<<<<<< HEAD
-=======
 import zipfile38 as zipfile
->>>>>>> ccpmf-fix
 from glob import glob
 from multiprocessing import Pool
 
