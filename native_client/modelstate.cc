@@ -73,3 +73,44 @@ ModelState::decode_metadata(const DecoderState& state,
   memcpy(ret, &metadata, sizeof(Metadata));
   return ret;
 }
+
+ExtendedMetadata*
+ModelState::decode_extended_metadata(const DecoderState& state,
+                            size_t num_results)
+{
+  vector<Output> out = state.decode(num_results);
+  unsigned int num_returned = out.size();
+
+  CandidateTranscript* transcripts = (CandidateTranscript*)malloc(sizeof(CandidateTranscript)*num_returned);
+//  const double **logits  = NULL;
+  const char *logits = "LOLGITS";
+
+  for (int i = 0; i < num_returned; ++i) {
+    TokenMetadata* tokens = (TokenMetadata*)malloc(sizeof(TokenMetadata)*out[i].tokens.size());
+
+    for (int j = 0; j < out[i].tokens.size(); ++j) {
+      TokenMetadata token {
+        strdup(alphabet_.DecodeSingle(out[i].tokens[j]).c_str()),   // text
+        static_cast<unsigned int>(out[i].timesteps[j]),                // timestep
+        out[i].timesteps[j] * ((float)audio_win_step_ / sample_rate_), // start_time
+      };
+      memcpy(&tokens[j], &token, sizeof(TokenMetadata));
+    }
+
+    CandidateTranscript transcript {
+      tokens,                                          // tokens
+      static_cast<unsigned int>(out[i].tokens.size()), // num_tokens
+      out[i].confidence,                               // confidence
+    };
+    memcpy(&transcripts[i], &transcript, sizeof(CandidateTranscript));
+  }
+
+  ExtendedMetadata* ret = (ExtendedMetadata*)malloc(sizeof(ExtendedMetadata));
+  ExtendedMetadata metadata {
+    transcripts,  // transcripts
+    num_returned, // num_transcripts
+    logits,       // logits
+  };
+  memcpy(ret, &metadata, sizeof(ExtendedMetadata));
+  return ret;
+}

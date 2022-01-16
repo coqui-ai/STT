@@ -185,6 +185,22 @@ class Model(object):
         """
         return stt.impl.SpeechToText(self._impl, audio_buffer)
 
+    def sttWithExtendedMetadata(self, audio_buffer, num_results=1):
+        """
+        Use the Coqui STT model to perform Speech-To-Text and return results including metadata.
+
+        :param audio_buffer: A 16-bit, mono raw audio signal at the appropriate sample rate (matching what the model was trained on).
+        :type audio_buffer: numpy.int16 array
+
+        :param num_results: Maximum number of candidate transcripts to return. Returned list might be smaller than this.
+        :type num_results: int
+
+        :return: ExtendedMetadata object containing multiple candidate transcripts. Each transcript has per-token metadata including timing information.
+        :type: :func:`ExtendedMetadata`
+        """
+        return stt.impl.SpeechToTextWithExtendedMetadata(self._impl, audio_buffer, num_results)
+
+
     def sttWithMetadata(self, audio_buffer, num_results=1):
         """
         Use the Coqui STT model to perform Speech-To-Text and return results including metadata.
@@ -262,6 +278,25 @@ class Stream(object):
                 "Stream object is not valid. Trying to decode an already finished stream?"
             )
         return stt.impl.IntermediateDecode(self._impl)
+
+    def intermediateDecodeWithExtendedMetadata(self, num_results=1):
+        """
+        Compute the intermediate decoding of an ongoing streaming inference and return results including metadata.
+
+        :param num_results: Maximum number of candidate transcripts to return. Returned list might be smaller than this.
+        :type num_results: int
+
+        :return: ExtendedMetadata object containing multiple candidate transcripts. Each transcript has per-token metadata including timing information.
+        :type: :func:`ExtendedMetadata`
+
+        :throws: RuntimeError if the stream object is not valid
+        """
+        if not self._impl:
+            raise RuntimeError(
+                "Stream object is not valid. Trying to decode an already finished stream?"
+            )
+        return stt.impl.IntermediateDecodeWithExtendedMetadata(self._impl, num_results)
+
 
     def intermediateDecodeWithMetadata(self, num_results=1):
         """
@@ -342,6 +377,30 @@ class Stream(object):
         result = stt.impl.FinishStream(self._impl)
         self._impl = None
         return result
+
+    def finishStreamWithExtendedMetadata(self, num_results=1):
+        """
+        Compute the final decoding of an ongoing streaming inference and return
+        results including metadata. Signals the end of an ongoing streaming
+        inference. The underlying stream object must not be used after this
+        method is called.
+
+        :param num_results: Maximum number of candidate transcripts to return. Returned list might be smaller than this.
+        :type num_results: int
+
+        :return: ExtendedMetadata object containing multiple candidate transcripts. Each transcript has per-token metadata including timing information.
+        :type: :func:`ExtendedMetadata`
+
+        :throws: RuntimeError if the stream object is not valid
+        """
+        if not self._impl:
+            raise RuntimeError(
+                "Stream object is not valid. Trying to finish an already finished stream?"
+            )
+        result = stt.impl.FinishStreamWithExtendedMetadata(self._impl, num_results)
+        self._impl = None
+        return result
+
 
     def finishStreamWithMetadata(self, num_results=1):
         """
@@ -424,6 +483,15 @@ class CandidateTranscript(object):
         contributed to the creation of this transcription.
         """
 
+
+class ExtendedMetadata(object):
+    def transcripts(self):
+        """
+        List of candidate transcripts
+
+        :return: A list of :func:`CandidateTranscript` objects
+        :type: list
+        """
 
 class Metadata(object):
     def transcripts(self):

@@ -2,6 +2,7 @@
 #define OUTPUT_H_
 
 #include <vector>
+//#include <map>
 
 /* Struct for the beam search output, containing the tokens based on the vocabulary indices, and the timesteps
  * for each token in the beam search output
@@ -10,6 +11,7 @@ struct Output {
     double confidence;
     std::vector<unsigned int> tokens;
     std::vector<unsigned int> timesteps;
+//    std::map<unsigned int, std::vector<double> logits;
 };
 
 struct FlashlightOutput {

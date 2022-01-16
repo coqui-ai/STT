@@ -73,9 +73,11 @@ struct StreamingState {
   void feedAudioContent(const short* buffer, unsigned int buffer_size);
   char* intermediateDecode() const;
   Metadata* intermediateDecodeWithMetadata(unsigned int num_results) const;
+  ExtendedMetadata* intermediateDecodeWithExtendedMetadata(unsigned int num_results) const;
   void flushBuffers(bool addZeroMfccVectors = false);
   char* finishStream();
   Metadata* finishStreamWithMetadata(unsigned int num_results);
+  ExtendedMetadata* finishStreamWithExtendedMetadata(unsigned int num_results);
 
   void processAudioWindow(const vector<float>& buf);
   void processMfccWindow(const vector<float>& buf);
@@ -131,6 +133,12 @@ StreamingState::intermediateDecode() const
   return model_->decode(decoder_state_);
 }
 
+ExtendedMetadata*
+StreamingState::intermediateDecodeWithExtendedMetadata(unsigned int num_results) const
+{
+  return model_->decode_extended_metadata(decoder_state_, num_results);
+}
+
 Metadata*
 StreamingState::intermediateDecodeWithMetadata(unsigned int num_results) const
 {
@@ -142,6 +150,13 @@ StreamingState::finishStream()
 {
   flushBuffers(true);
   return model_->decode(decoder_state_);
+}
+
+ExtendedMetadata*
+StreamingState::finishStreamWithExtendedMetadata(unsigned int num_results)
+{
+  flushBuffers(true);
+  return model_->decode_extended_metadata(decoder_state_, num_results);
 }
 
 Metadata*
@@ -449,6 +464,13 @@ STT_IntermediateDecode(const StreamingState* aSctx)
   return aSctx->intermediateDecode();
 }
 
+ExtendedMetadata*
+STT_IntermediateDecodeWithExtendedMetadata(const StreamingState* aSctx,
+                                  unsigned int aNumResults)
+{
+  return aSctx->intermediateDecodeWithExtendedMetadata(aNumResults);
+}
+
 Metadata*
 STT_IntermediateDecodeWithMetadata(const StreamingState* aSctx,
                                   unsigned int aNumResults)
@@ -462,6 +484,15 @@ STT_IntermediateDecodeFlushBuffers(StreamingState* aSctx)
   aSctx->flushBuffers();
   return aSctx->intermediateDecode();
 }
+
+ExtendedMetadata*
+STT_IntermediateDecodeWithExtendedMetadataFlushBuffers(StreamingState* aSctx,
+                                               unsigned int aNumResults)
+{
+  aSctx->flushBuffers();
+  return aSctx->intermediateDecodeWithExtendedMetadata(aNumResults);
+}
+
 
 Metadata*
 STT_IntermediateDecodeWithMetadataFlushBuffers(StreamingState* aSctx,
@@ -478,6 +509,16 @@ STT_FinishStream(StreamingState* aSctx)
   STT_FreeStream(aSctx);
   return str;
 }
+
+ExtendedMetadata*
+STT_FinishStreamWithExtendedMetadata(StreamingState* aSctx,
+                            unsigned int aNumResults)
+{
+  ExtendedMetadata* result = aSctx->finishStreamWithExtendedMetadata(aNumResults);
+  STT_FreeStream(aSctx);
+  return result;
+}
+
 
 Metadata*
 STT_FinishStreamWithMetadata(StreamingState* aSctx,
@@ -511,6 +552,16 @@ STT_SpeechToText(ModelState* aCtx,
   return STT_FinishStream(ctx);
 }
 
+ExtendedMetadata*
+STT_SpeechToTextWithExtendedMetadata(ModelState* aCtx,
+                            const short* aBuffer,
+                            unsigned int aBufferSize,
+                            unsigned int aNumResults)
+{
+  StreamingState* ctx = CreateStreamAndFeedAudioContent(aCtx, aBuffer, aBufferSize);
+  return STT_FinishStreamWithExtendedMetadata(ctx, aNumResults);
+}
+
 Metadata*
 STT_SpeechToTextWithMetadata(ModelState* aCtx,
                             const short* aBuffer,
@@ -526,6 +577,25 @@ STT_FreeStream(StreamingState* aSctx)
 {
   delete aSctx;
 }
+
+void
+STT_FreeExtendedMetadata(ExtendedMetadata* m)
+{
+  if (m) {
+    for (int i = 0; i < m->num_transcripts; ++i) {
+      for (int j = 0; j < m->transcripts[i].num_tokens; ++j) {
+        free((void*)m->transcripts[i].tokens[j].text);
+      }
+
+      free((void*)m->transcripts[i].tokens);
+    }
+
+    free((void*)m->transcripts);
+    free(m);
+  }
+  // delete logits here
+}
+
 
 void
 STT_FreeMetadata(Metadata* m)

@@ -56,6 +56,19 @@ typedef struct CandidateTranscript {
 /**
  * @brief An array of CandidateTranscript objects computed by the model.
  */
+typedef struct ExtendedMetadata {
+  /** Array of CandidateTranscript objects */
+  const CandidateTranscript* const transcripts;
+  /** Size of the transcripts array */
+  const unsigned int num_transcripts;
+  /** **/
+  //const double **logits;
+  const char *logits;
+} ExtendedMetadata;
+
+/**
+ * @brief An array of CandidateTranscript objects computed by the model.
+ */
 typedef struct Metadata {
   /** Array of CandidateTranscript objects */
   const CandidateTranscript* const transcripts;
@@ -267,6 +280,12 @@ Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
                                        unsigned int aBufferSize,
                                        unsigned int aNumResults);
 
+STT_EXPORT
+ExtendedMetadata* STT_SpeechToTextWithExtendedMetadata(ModelState* aCtx,
+                                       const short* aBuffer,
+                                       unsigned int aBufferSize,
+                                       unsigned int aNumResults);
+
 /**
  * @brief Create a new streaming inference state. The streaming state returned
  *        by this function can then be passed to {@link STT_FeedAudioContent()}
@@ -411,6 +430,12 @@ void STT_FreeStream(StreamingState* aSctx);
  */
 STT_EXPORT
 void STT_FreeMetadata(Metadata* m);
+
+/**
+ * @brief Free memory allocated for extended metadata information.
+ */
+STT_EXPORT
+void STT_FreeExtendedMetadata(ExtendedMetadata* m);
 
 /**
  * @brief Free a char* string returned by the Coqui STT API.

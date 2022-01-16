@@ -33,6 +33,11 @@ import_array();
   %append_output(SWIG_NewPointerObj(%as_voidptr(*$1), $*1_descriptor, 0));
 }
 
+%typemap(out) ExtendedMetadata* {
+  // owned, extended destructor needs to be called by SWIG
+  %append_output(SWIG_NewPointerObj(%as_voidptr($1), $1_descriptor, SWIG_POINTER_OWN));
+}
+
 %typemap(out) Metadata* {
   // owned, extended destructor needs to be called by SWIG
   %append_output(SWIG_NewPointerObj(%as_voidptr($1), $1_descriptor, SWIG_POINTER_OWN));
@@ -90,6 +95,15 @@ static PyObject *parent_reference() {
 %}
 }
 
+%extend struct ExtendedMetadata {
+%pythoncode %{
+  def __repr__(self):
+    transcripts_repr = ',\n'.join(repr(i) for i in self.transcripts)
+    transcripts_repr = '\n'.join('  ' + l for l in transcripts_repr.split('\n'))
+    return self.logits + 'ExtendedMetadata(transcripts=[\n{}\n])'.format(transcripts_repr)
+%}
+}
+
 %extend struct Metadata {
 %pythoncode %{
   def __repr__(self):
@@ -99,8 +113,16 @@ static PyObject *parent_reference() {
 %}
 }
 
+%ignore ExtendedMetadata::num_transcripts;
 %ignore Metadata::num_transcripts;
 %ignore CandidateTranscript::num_tokens;
+
+%extend struct ExtendedMetadata {
+  ~ExtendedMetadata() {
+    STT_FreeExtendedMetadata($self);
+  }
+}
+
 
 %extend struct Metadata {
   ~Metadata() {
@@ -108,6 +130,8 @@ static PyObject *parent_reference() {
   }
 }
 
+%nodefaultctor ExtendedMetadata;
+%nodefaultdtor ExtendedMetadata;
 %nodefaultctor Metadata;
 %nodefaultdtor Metadata;
 %nodefaultctor CandidateTranscript;

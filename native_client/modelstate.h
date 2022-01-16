@@ -75,6 +75,9 @@ struct ModelState {
    */
   virtual Metadata* decode_metadata(const DecoderState& state,
                                     size_t num_results);
+
+  virtual ExtendedMetadata* decode_extended_metadata(const DecoderState& state,
+                                    size_t num_results);
 };
 
 #endif // MODELSTATE_H

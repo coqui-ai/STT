@@ -122,6 +122,12 @@ def main():
         "--version", action=VersionAction, help="Print version and exits"
     )
     parser.add_argument(
+        "--logits",
+        required=False,
+        action="store_true",
+        help="Output logits",
+    )
+    parser.add_argument(
         "--extended",
         required=False,
         action="store_true",
@@ -192,6 +198,10 @@ def main():
     # sphinx-doc: python_ref_inference_start
     if args.extended:
         print(metadata_to_string(ds.sttWithMetadata(audio, 1).transcripts[0]))
+    elif args.logits:
+        res = ds.sttWithExtendedMetadata(audio, 1)
+        print(res.logits)
+        print(metadata_to_string(res.transcripts[0]))
     elif args.json:
         print(
             metadata_json_output(ds.sttWithMetadata(audio, args.candidate_transcripts))
