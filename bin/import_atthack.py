@@ -5,8 +5,6 @@ import random
 import subprocess
 import tarfile
 import unicodedata
-from tqdm import tqdm
-
 from glob import glob
 from multiprocessing import Pool
 from pathlib import Path
@@ -20,6 +18,7 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
+from tqdm import tqdm
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -317,13 +316,13 @@ def handle_args():
     parser.add_argument(
         "--min_sec",
         type=float,
-        help="[FLOAT] Min audio length in sec (default: 0.85)",
+        help="[FLOAT] Min audio length in sec",
         default=0.85,
     )
     parser.add_argument(
         "--max_sec",
         type=float,
-        help="[FLOAT] Max audio length in sec (default: 15.0)",
+        help="[FLOAT] Max audio length in sec",
         default=10.0,
     )
     return parser.parse_args()

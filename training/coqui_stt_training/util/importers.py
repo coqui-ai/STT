@@ -60,8 +60,12 @@ def print_import_report(counter, sample_rate, max_secs):
     )
 
 
-def get_importers_parser(description):
-    parser = argparse.ArgumentParser(description=description)
+def get_importers_parser(description, **kwargs):
+    parser = argparse.ArgumentParser(
+        description=description,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        **kwargs
+    )
     parser.add_argument(
         "--validate_label_locale",
         help="Path to a Python file defining a |validate_label| function for your locale.",
