@@ -541,18 +541,6 @@ class BaseSttConfig(Coqpit):
     )
 
     # Sample limits
-    limit_train: int = field(
-        default=0,
-        metadata=dict(
-            help="maximum number of elements to use from train set - 0 means no limit"
-        ),
-    )
-    limit_dev: int = field(
-        default=0,
-        metadata=dict(
-            help="maximum number of elements to use from validation set - 0 means no limit"
-        ),
-    )
     limit_test: int = field(
         default=0,
         metadata=dict(
@@ -561,12 +549,6 @@ class BaseSttConfig(Coqpit):
     )
 
     # Sample order
-    reverse_train: bool = field(
-        default=False, metadata=dict(help="if to reverse sample order of the train set")
-    )
-    reverse_dev: bool = field(
-        default=False, metadata=dict(help="if to reverse sample order of the dev set")
-    )
     reverse_test: bool = field(
         default=False, metadata=dict(help="if to reverse sample order of the test set")
     )
