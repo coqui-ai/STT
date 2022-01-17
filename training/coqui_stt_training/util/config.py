@@ -234,6 +234,30 @@ class BaseSttConfig(Coqpit):
             with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
                 fout.write(self.alphabet.SerializeText())
 
+        # If we have an existing checkpoint with a flags file, load its n_hidden value
+        prev_flags_file = os.path.join(self.load_checkpoint_dir, "flags.txt")
+        self.prev_n_hidden = None
+        if os.path.exists(prev_flags_file):
+            try:
+                with open(prev_flags_file) as fin:
+                    parsed = json.load(fin)
+                prev_n_hidden = parsed["n_hidden"]
+
+                if prev_n_hidden != self.n_hidden:
+                    print(
+                        f"W WARNING: --n_hidden value ({self.n_hidden}) is different "
+                        f"from value found in checkpoint ({prev_n_hidden})."
+                    )
+                    print(
+                        "W WARNING: This would result in an error when loading the "
+                        "checkpoint, so n_hidden has been overriden with the "
+                        "checkpoint value."
+                    )
+                    self.n_hidden = prev_n_hidden
+            except json.JSONDecodeError:
+                # File exists but is not JSON (older checkpoint), ignore error
+                pass
+
         # Geometric Constants
         # ===================
 
@@ -249,8 +273,6 @@ class BaseSttConfig(Coqpit):
         )
 
         # Number of units in hidden layers
-        self.n_hidden = self.n_hidden
-
         self.n_hidden_1 = self.n_hidden
 
         self.n_hidden_2 = self.n_hidden
