@@ -69,7 +69,7 @@ def main():
         install_requires=install_requires,
         include_package_data=True,
         extras_require={
-            "transcribe": ["webrtcvad"],
+            "transcribe": ["webrtcvad == 2.0.10"],
         },
     )
 
