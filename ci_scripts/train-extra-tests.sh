@@ -75,16 +75,16 @@ time ./bin/run-ci-ldc93s1_singleshotinference.sh
 
 # transcribe module
 time python -m coqui_stt_training.transcribe \
+    --checkpoint_dir "/tmp/ckpt" \
     --src "data/smoke_test/LDC93S1.wav" \
     --dst ${CI_ARTIFACTS_DIR}/transcribe.log \
-    --n_hidden 100 \
     --scorer_path "data/smoke_test/pruned_lm.scorer"
 
 mkdir /tmp/transcribe_dir
 cp data/smoke_test/LDC93S1.wav /tmp/transcribe_dir
 time python -m coqui_stt_training.transcribe \
+   --checkpoint_dir "/tmp/ckpt" \
    --src "/tmp/transcribe_dir/" \
-   --n_hidden 100 \
    --scorer_path "data/smoke_test/pruned_lm.scorer"
 
 for i in /tmp/transcribe_dir/*.tlog; do echo $i; cat $i; echo; done

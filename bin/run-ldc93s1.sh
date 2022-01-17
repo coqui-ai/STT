@@ -10,11 +10,7 @@ if [ ! -f "data/smoke_test/ldc93s1.csv" ]; then
     python -u bin/import_ldc93s1.py ./data/smoke_test
 fi;
 
-if [ -d "${COMPUTE_KEEP_DIR}" ]; then
-    checkpoint_dir=$COMPUTE_KEEP_DIR
-else
-    checkpoint_dir=$(python -c 'from xdg import BaseDirectory as xdg; print(xdg.save_data_path("stt/ldc93s1"))')
-fi
+checkpoint_dir="$HOME/.local/share/stt/ldc93s1"
 
 # Force only one visible device because we have a single-sample dataset
 # and when trying to run on multiple devices (like GPUs), this will break

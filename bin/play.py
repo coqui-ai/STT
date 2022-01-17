@@ -8,6 +8,7 @@ import os
 import random
 import sys
 from dataclasses import dataclass, field
+from typing import List
 
 from coqui_stt_training.util.audio import (
     AUDIO_TYPE_PCM,
@@ -29,6 +30,7 @@ from coqui_stt_training.util.sample_collections import (
     LabeledSample,
     samples_from_source,
 )
+from coqpit import Coqpit
 
 
 def get_samples_in_play_order():
@@ -88,7 +90,7 @@ def play_collection():
 
 
 @dataclass
-class PlayConfig(BaseSttConfig):
+class PlayConfig(Coqpit):
     source: str = field(
         default="",
         metadata=dict(
@@ -133,6 +135,12 @@ class PlayConfig(BaseSttConfig):
             help="No info logging to console",
         ),
     )
+    augment: List[str] = field(
+        default=None,
+        metadata=dict(
+            help='space-separated list of augmenations for training samples. Format is "--augment operation1[param1=value1, ...] operation2[param1=value1, ...] ..."'
+        ),
+    )
 
     def __post_init__(self):
         if not self.pipe:
@@ -143,12 +151,6 @@ class PlayConfig(BaseSttConfig):
                     'Unless using --pipe true, play.py requires Python package "simpleaudio" for playing samples'
                 )
 
-        super().__post_init__()
-
-        # Disable automatic insertion of NormalizeSampleRate augmentation
-        # TODO move training config into its own child class so this behavior
-        # is not inherited from BaseSttConfig
-        self.normalize_sample_rate = False
         self.augmentations = parse_augmentations(self.augment)
 
 

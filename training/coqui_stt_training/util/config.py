@@ -12,7 +12,6 @@ import tensorflow.compat.v1 as tfv1
 from attrdict import AttrDict
 from coqpit import MISSING, Coqpit, check_argument
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
-from xdg import BaseDirectory as xdg
 
 from .augmentations import NormalizeSampleRate, parse_augmentations
 from .auto_input import create_alphabet_from_sources, create_datasets_from_auto_input
@@ -79,20 +78,11 @@ class BaseSttConfig(Coqpit):
         if self.dropout_rate6 < 0:
             self.dropout_rate6 = self.dropout_rate
 
-        # Checkpoint dir logic #
+        # Checkpoint dir logic
         if self.checkpoint_dir:
             # checkpoint_dir always overrides {save,load}_checkpoint_dir
             self.save_checkpoint_dir = self.checkpoint_dir
             self.load_checkpoint_dir = self.checkpoint_dir
-        else:
-            if not self.save_checkpoint_dir:
-                self.save_checkpoint_dir = xdg.save_data_path(
-                    os.path.join("stt", "checkpoints")
-                )
-            if not self.load_checkpoint_dir:
-                self.load_checkpoint_dir = xdg.save_data_path(
-                    os.path.join("stt", "checkpoints")
-                )
 
         if self.load_train not in ["last", "best", "init", "auto"]:
             self.load_train = "auto"
@@ -102,7 +92,7 @@ class BaseSttConfig(Coqpit):
 
         # Set default summary dir
         if not self.summary_dir:
-            self.summary_dir = xdg.save_data_path(os.path.join("stt", "summaries"))
+            self.summary_dir = os.path.join(self.save_checkpoint_dir, "summaries")
 
         # Standard session configuration that'll be used for all new sessions.
         self.session_config = tfv1.ConfigProto(
@@ -213,12 +203,22 @@ class BaseSttConfig(Coqpit):
                 self.alphabet = alphabet
                 self.effective_alphabet_path = saved_checkpoint_alphabet_file
         else:
+            if not os.path.isdir(self.load_checkpoint_dir):
+                raise RuntimeError(
+                    "Missing checkpoint directory (--checkpoint_dir or --load_checkpoint_dir)"
+                )
+
             raise RuntimeError(
                 "Missing --alphabet_config_path flag. Couldn't find an alphabet file "
                 "alongside checkpoint, and input datasets are not fully specified "
                 "(--train_files, --dev_files, --test_files), so can't generate an alphabet. "
                 "Either specify an alphabet file or fully specify the dataset, so one will "
                 "be generated automatically."
+            )
+
+        if not self.save_checkpoint_dir:
+            raise RuntimeError(
+                "Missing checkpoint directory (--checkpoint_dir or --save_checkpoint_dir)"
             )
 
         # Save flags next to checkpoints
@@ -553,20 +553,16 @@ class BaseSttConfig(Coqpit):
     checkpoint_dir: str = field(
         default="",
         metadata=dict(
-            help='directory from which checkpoints are loaded and to which they are saved - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+            help="directory from which checkpoints are loaded and to which they are saved"
         ),
     )
     load_checkpoint_dir: str = field(
         default="",
-        metadata=dict(
-            help='directory in which checkpoints are stored - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
-        ),
+        metadata=dict(help="directory in which checkpoints are stored"),
     )
     save_checkpoint_dir: str = field(
         default="",
-        metadata=dict(
-            help='directory to which checkpoints are saved - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
-        ),
+        metadata=dict(help="directory to which checkpoints are saved"),
     )
     checkpoint_secs: int = field(
         default=600, metadata=dict(help="checkpoint saving interval in seconds")
@@ -708,7 +704,7 @@ class BaseSttConfig(Coqpit):
     summary_dir: str = field(
         default="",
         metadata=dict(
-            help='target directory for TensorBoard summaries - defaults to directory "stt/summaries" within user\'s data home specified by the XDG Base Directory Specification'
+            help='target directory for TensorBoard summaries - defaults to directory "summaries" within the checkpoint folder'
         ),
     )
 
@@ -872,8 +868,7 @@ def initialize_globals_from_args(**override_args):
 
 
 def initialize_globals_from_instance(config):
-    """ Initialize Config singleton from an existing Config instance (or subclass) """
-    assert isinstance(config, BaseSttConfig)
+    """ Initialize Config singleton from an existing instance """
     _ConfigSingleton._config = config  # pylint: disable=protected-access
 
 
