@@ -237,7 +237,7 @@ You can now generate a KenLM scorer file.
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \
-  --alphabet ../alphabet.txt  \
+  --checkpoint ../stt-data/checkpoints-newscorer-id  \
   --lm ../../stt-data/indonesian-scorer/lm.binary
   --vocab ../../stt-data/indonesian-scorer/vocab-500000.txt \
   --package kenlm-indonesian.scorer \
@@ -263,7 +263,7 @@ then you should add the parameter `--force_bytes_output_mode` when calling `gene
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \
-  --alphabet ../alphabet.txt  \
+  --checkpoint ../../checkpoints-newscorer-id  \
   --lm ../../stt-data/indonesian-scorer/lm.binary
   --vocab ../../stt-data/indonesian-scorer/vocab-500000.txt \
   --package kenlm-indonesian.scorer \
