@@ -12,6 +12,7 @@ download_ldc("data/smoke_test")
 
 initialize_globals_from_args(
     load_train="init",
+    checkpoint_dir="ldc93s1_ckpt",
     alphabet_config_path="data/alphabet.txt",
     train_files=["data/smoke_test/ldc93s1.csv"],
     dev_files=["data/smoke_test/ldc93s1.csv"],

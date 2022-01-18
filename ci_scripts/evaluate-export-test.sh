@@ -20,16 +20,7 @@ python -m pip install --upgrade . | cat
 set +o pipefail
 
 # Prepare correct arguments for training
-case "${samplerate}" in
-    8k)
-        sample_rate=8000
-        sample_name='LDC93S1_pcms16le_1_8000.wav'
-    ;;
-    16k)
-        sample_rate=16000
-        sample_name='LDC93S1_pcms16le_1_16000.wav'
-    ;;
-esac
+sample_name="LDC93S1_pcms16le_1_${samplerate}.wav"
 
 # Easier to rename to that we can exercize the LDC93S1 importer code to
 # generate the CSV file.

@@ -2,25 +2,6 @@
 
 set -xe
 
-set_ldc_sample_filename()
-{
-  local _bitrate=$1
-
-  if [ -z "${_bitrate}" ]; then
-    echo "Bitrate should not be empty"
-    exit 1
-  fi;
-
-  case "${_bitrate}" in
-    8k)
-      ldc93s1_sample_filename='LDC93S1_pcms16le_1_8000.wav'
-    ;;
-    16k)
-      ldc93s1_sample_filename='LDC93S1_pcms16le_1_16000.wav'
-    ;;
-  esac
-}
-
 download_model_prod()
 {
   local _model_source_file=$(basename "${model_source}")

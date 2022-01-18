@@ -73,11 +73,11 @@ Package the language model for deployment with ``generate_scorer_package`` as su
 .. code-block:: bash
 
     ./generate_scorer_package \
-      --alphabet ../alphabet.txt \
+      --checkpoint path/to/your/checkpoint \
       --lm lm.binary \
       --vocab vocab-500000.txt \
       --package kenlm.scorer \
       --default_alpha 0.931289039105002 \
       --default_beta 1.1834137581510284
 
-The ``--default_alpha`` and ``--default_beta`` parameters shown above were found with the ``lm_optimizer.py`` Python script.
+The ``--checkpoint`` flag should point to an acoustic model checkpoint you want to use the generated scorer with. The alphabet will be loaded from the checkpoint. External scorers must be created with the same alphabet as the acoustic models they will be used with. The ``--default_alpha`` and ``--default_beta`` parameters shown above were found with the ``lm_optimizer.py`` Python script.

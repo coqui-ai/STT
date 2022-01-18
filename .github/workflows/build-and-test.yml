@@ -266,7 +266,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -286,21 +286,13 @@ jobs:
           pip install coqui_stt_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
           DS_NODECODER=y pip install --upgrade .
       - run: |
-          bits=""
-          if [ "${{ matrix.bitrate }}" = "8k" ]; then
-            bits=8000
-          fi
-          if [ "${{ matrix.bitrate }}" = "16k"  ]; then
-            bits=16000
-          fi
-
           # Easier to rename to that we can exercize the LDC93S1 importer code to
           # generate the CSV file.
-          echo "Moving ${bits} to LDC93S1.wav"
-          mv data/smoke_test/LDC93S1_pcms16le_1_${bits}.wav data/smoke_test/LDC93S1.wav
+          echo "Moving ${{ matrix.samplerate }} to LDC93S1.wav"
+          mv data/smoke_test/LDC93S1_pcms16le_1_${{ matrix.samplerate}}.wav data/smoke_test/LDC93S1.wav
 
-          ./bin/run-ci-ldc93s1_new.sh 249 ${bits}
-          ./bin/run-ci-ldc93s1_tflite.sh ${bits}
+          ./bin/run-ci-ldc93s1_new.sh 249 ${{ matrix.samplerate}}
+          ./bin/run-ci-ldc93s1_tflite.sh ${{ matrix.samplerate}}
       - run: |
           wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
           unzip temp.zip
@@ -318,11 +310,11 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-checkpoint.${{ matrix.bitrate }}.zip"
+          name: "test-checkpoint.${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
   tensorflow_opt-Linux:
     name: "Lin|Check TensorFlow cache"
@@ -539,7 +531,7 @@ jobs:
     strategy:
       matrix:
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -557,7 +549,7 @@ jobs:
           ls -lh
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -566,7 +558,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cpp"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-py-Linux:
     name: "Lin|Test Python bindings"
@@ -577,7 +569,7 @@ jobs:
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -596,7 +588,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -608,7 +600,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-evaluate-export:
     name: "Lin|Test evaluate_export"
@@ -618,7 +610,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.6", "3.7"]
-        samplerate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -660,7 +652,7 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -680,7 +672,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -700,7 +692,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-Linux:
     name: "Lin|Test ElectronJS bindings"
@@ -711,7 +703,7 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -731,7 +723,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -751,7 +743,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   python-notebooks-tests:
@@ -789,7 +781,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        bitrate: [8k, 16k]
+        samplerate: ["8000", "16000"]
         pyver: [3.6, 3.7]
     steps:
       - uses: actions/checkout@v2
@@ -809,8 +801,29 @@ jobs:
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - name: Run basic training tests
         run: |
+          set -ex
           python -m pip install coqui_stt_ctcdecoder-*.whl
-          ./ci_scripts/train-tests.sh ${{ matrix.bitrate }}
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Run twice to test preprocessed features
+          time ./bin/run-ci-ldc93s1_new.sh 249 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_new.sh 1 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_tflite.sh "${{ matrix.samplerate }}"
+
+          tar -cf - \
+              -C /tmp/ckpt/ . \
+              | ${XZ} > ${CI_ARTIFACTS_DIR}/checkpoint.tar.xz
+
+          cp /tmp/train/output_graph.pb ${CI_ARTIFACTS_DIR}
+          cp /tmp/train_tflite/output_graph.tflite ${CI_ARTIFACTS_DIR}
+
+          /tmp/convert_graphdef_memmapped_format \
+            --in_graph=/tmp/train/output_graph.pb \
+            --out_graph=/tmp/train/output_graph.pbmm
+          cp /tmp/train/output_graph.pbmm ${CI_ARTIFACTS_DIR}
+
+          time ./bin/run-ci-ldc93s1_checkpoint.sh
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ github.job }}-output_graph.pb
@@ -834,7 +847,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        bitrate: [8k, 16k]
+        samplerate: ["8000", "16000"]
         pyver: [3.6, 3.7]
     steps:
       - uses: actions/checkout@v2
@@ -854,26 +867,200 @@ jobs:
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
           sudo apt-get install -y --no-install-recommends libopus0 sox
-      - name: Run extra training tests
+      - name: Run tests
         run: |
+          set -xe
           python -m pip install coqui_stt_ctcdecoder-*.whl
-          ./ci_scripts/train-extra-tests.sh ${{ matrix.bitrate }}
-      - uses: actions/upload-artifact@v2
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Test --metrics_files training argument
+          time ./bin/run-ci-ldc93s1_new_metrics.sh 2 "${{ matrix.samplerate }}"
+
+          # Training graph inference
+          time ./bin/run-ci-ldc93s1_singleshotinference.sh
+
+          # Augmentations
+          time ./bin/run-ci-sample_augmentations.sh
+  training-sdb-tests:
+    name: "Lin|SDB training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
-          name: ${{ github.job }}-output_graph.pb
-          path: ${{ github.workspace }}/artifacts/output_graph.pb
-      - uses: actions/upload-artifact@v2
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
         with:
-          name: ${{ github.job }}-output_graph.pbmm
-          path: ${{ github.workspace }}/artifacts/output_graph.pbmm
-      - uses: actions/upload-artifact@v2
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Testing single SDB source
+          time ./bin/run-ci-ldc93s1_new_sdb.sh 220 "${{ matrix.samplerate }}"
+
+          # Testing interleaved source (SDB+CSV combination) - run twice to test preprocessed features
+          time ./bin/run-ci-ldc93s1_new_sdb_csv.sh 109 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_new_sdb_csv.sh 1 "${{ matrix.samplerate }}"
+
+          # Test resuming from checkpoints created above
+          # SDB, resuming from checkpoint
+          time ./bin/run-ci-ldc93s1_checkpoint_sdb.sh
+  training-bytes-tests:
+    name: "Lin|Bytes output mode training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
-          name: ${{ github.job }}-output_graph.tflite
-          path: ${{ github.workspace }}/artifacts/output_graph.tflite
-      - uses: actions/upload-artifact@v2
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
         with:
-          name: ${{ github.job }}-checkpoint.tar.xz
-          path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Test training with bytes output mode
+          time ./bin/run-ci-ldc93s1_new_bytes.sh 200 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_new_bytes_tflite.sh "${{ matrix.samplerate }}"
+
+          # Bytes output mode, resuming from checkpoint
+          time ./bin/run-ci-ldc93s1_checkpoint_bytes.sh
+  training-python-tests:
+    name: "Lin|Python API training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Training with args set via initialize_globals_from_args()
+          time python ./bin/run-ldc93s1.py
+  training-transcribe-tests:
+    name: "Lin|Transcribe module tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux, training-basic-tests]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - uses: actions/download-artifact@v2
+        with:
+          name: "training-basic-tests-checkpoint.tar.xz"
+      - name: Extract training checkpoint
+        run: |
+          ls -lh
+          mkdir -p /tmp/ckpt
+          tar xvf checkpoint.tar.xz -C /tmp/ckpt
+          ls -lh /tmp/ckpt
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install ".[transcribe]"
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # transcribe module
+          time python -m coqui_stt_training.transcribe \
+              --checkpoint_dir "/tmp/ckpt" \
+              --src "data/smoke_test/LDC93S1.wav" \
+              --dst ${CI_ARTIFACTS_DIR}/transcribe.log \
+              --scorer_path "data/smoke_test/pruned_lm.scorer"
+
+          mkdir /tmp/transcribe_dir
+          cp data/smoke_test/LDC93S1.wav /tmp/transcribe_dir
+          time python -m coqui_stt_training.transcribe \
+             --checkpoint_dir "/tmp/ckpt" \
+             --src "/tmp/transcribe_dir/" \
+             --scorer_path "data/smoke_test/pruned_lm.scorer"
+
+          for i in /tmp/transcribe_dir/*.tlog; do echo $i; cat $i; echo; done
   twine-upload-training:
     name: "Upload STT training packages to PyPI"
     runs-on: ubuntu-20.04
@@ -1312,7 +1499,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1332,21 +1519,13 @@ jobs:
           python -m pip install coqui_stt_ctcdecoder-*.whl
           DS_NODECODER=y python -m pip install --upgrade .
       - run: |
-          bits=""
-          if [ "${{ matrix.bitrate }}" = "8k" ]; then
-            bits=8000
-          fi
-          if [ "${{ matrix.bitrate }}" = "16k"  ]; then
-            bits=16000
-          fi
-
           # Easier to rename to that we can exercize the LDC93S1 importer code to
           # generate the CSV file.
-          echo "Moving ${bits} to LDC93S1.wav"
-          mv data/smoke_test/LDC93S1_pcms16le_1_${bits}.wav data/smoke_test/LDC93S1.wav
+          echo "Moving ${{ matrix.samplerate }} to LDC93S1.wav"
+          mv data/smoke_test/LDC93S1_pcms16le_1_${{ matrix.samplerate}}.wav data/smoke_test/LDC93S1.wav
 
-          ./bin/run-ci-ldc93s1_new.sh 249 ${bits}
-          ./bin/run-ci-ldc93s1_tflite.sh ${bits}
+          ./bin/run-ci-ldc93s1_new.sh 249 ${{ matrix.samplerate}}
+          ./bin/run-ci-ldc93s1_tflite.sh ${{ matrix.samplerate}}
       - run: |
           wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.macOS.amd64.zip
           unzip temp.zip
@@ -1364,11 +1543,11 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-checkpoint.${{ matrix.bitrate }}.zip"
+          name: "test-checkpoint.${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
   tensorflow_opt-macOS:
     name: "Mac|Check TensorFlow cache"
@@ -1568,7 +1747,7 @@ jobs:
     strategy:
       matrix:
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1585,7 +1764,7 @@ jobs:
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1594,7 +1773,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cpp"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-py-macOS:
     name: "Mac|Test Python bindings"
@@ -1605,7 +1784,7 @@ jobs:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1622,7 +1801,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1634,7 +1813,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-macOS:
     name: "Mac|Test NodeJS bindings"
@@ -1646,7 +1825,7 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -1664,7 +1843,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1684,7 +1863,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-macOS:
     name: "Mac|Test ElectronJS bindings"
@@ -1695,7 +1874,7 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1712,7 +1891,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1732,7 +1911,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   # Windows jobs
@@ -2078,14 +2257,14 @@ jobs:
       - name: Download trained test model
         uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-16k.zip"
+          name: "test-model.tflite-16000.zip"
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "cppwin"
-          bitrate: "16k"
+          samplerate: "16000"
           model-kind: ""
   test-py-Windows:
     name: "Win|Test Python bindings"
@@ -2101,7 +2280,7 @@ jobs:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2126,7 +2305,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2138,7 +2317,7 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "python"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-Windows:
     name: "Win|Test NodeJS bindings"
@@ -2152,7 +2331,7 @@ jobs:
       matrix:
         nodejs-version: [12, 14, 16]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
@@ -2178,7 +2357,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - name: Get npm cache directory
@@ -2200,7 +2379,7 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "node"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-Windows:
     name: "Win|Test ElectronJS bindings"
@@ -2214,7 +2393,7 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2239,7 +2418,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2263,7 +2442,7 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "electronjs"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   # Shared jobs (multi-platform dependencies)
@@ -2321,7 +2500,7 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 17]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2341,7 +2520,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - uses: actions/cache@v2
@@ -2361,7 +2540,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs_all-Linux:
     name: "Lin|Test MultiArchPlatform ElectronJS bindings"
@@ -2372,7 +2551,7 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2392,7 +2571,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2412,7 +2591,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   test-nodejs_all-macOS:
@@ -2425,7 +2604,7 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 17]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2443,7 +2622,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - uses: actions/cache@v2
@@ -2463,7 +2642,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs_all-macOS:
     name: "Mac|Test MultiArchPlatform ElectronJS bindings"
@@ -2474,7 +2653,7 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2492,7 +2671,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2512,7 +2691,7 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   test-nodejs_all-Windows:
@@ -2528,7 +2707,7 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 16]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
@@ -2554,7 +2733,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - name: Get npm cache directory
@@ -2576,7 +2755,7 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "node"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs_all-Windows:
     name: "Win|Test MultiArchPlatform ElectronJS bindings"
@@ -2590,7 +2769,7 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
@@ -2616,7 +2795,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2640,7 +2819,7 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "electronjs"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   # Linux Armv7 and Aarch64 jobs
@@ -3134,7 +3313,7 @@ jobs:
       matrix:
         arch: [ "armv7", "aarch64" ]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3165,7 +3344,7 @@ jobs:
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3181,7 +3360,7 @@ jobs:
         with:
           runtime: "cpp"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-py-LinuxArm:
     name: "LinArm*|Test Python bindings"
@@ -3193,7 +3372,7 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         python-version: [3.7]
         models: ["test", "prod"]
-        bitrate: ["8k", "16k"]
+        samplerate: ["8000", "16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3222,7 +3401,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3240,7 +3419,7 @@ jobs:
         with:
           runtime: "python"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-nodejs-LinuxArm:
     name: "LinArm*|Test NodeJS bindings"
@@ -3253,7 +3432,7 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
@@ -3286,7 +3465,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3302,7 +3481,7 @@ jobs:
         with:
           runtime: "node"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
   test-electronjs-LinuxArm:
     name: "LinArm*|Test ElectronJS bindings"
@@ -3315,7 +3494,7 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
-        bitrate: ["16k"]
+        samplerate: ["16000"]
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3348,7 +3527,7 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3376,7 +3555,7 @@ jobs:
         with:
           runtime: "electronjs"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
-          bitrate: ${{ matrix.bitrate }}
+          samplerate: ${{ matrix.samplerate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
       - name: "Kill X"

@@ -30,10 +30,6 @@ RUN cd /code/kenlm && \
 FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
-# We need to purge python3-xdg because
-# it's breaking STT install later with
-# errors about setuptools
-#
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         git \
@@ -43,7 +39,6 @@ RUN apt-get update && \
         libsndfile1 \
         sox \
         libsox-fmt-mp3 && \
-    apt-get purge -y python3-xdg && \
     rm -rf /var/lib/apt/lists/*
 
 # Make sure pip and its dependencies are up-to-date
