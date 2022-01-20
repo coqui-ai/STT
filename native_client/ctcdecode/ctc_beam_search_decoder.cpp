@@ -244,10 +244,6 @@ DecoderState::decode(size_t num_results) const
     scores[prefix] = prefix->score;
   }
 
-  if(keep_logits_) {
-    std::cerr << "KEEP_LOGITS" << std::endl; 
-  }
-
   // score the last word of each prefix that doesn't end with space
   if (ext_scorer_) {
     for (size_t i = 0; i < beam_size_ && i < prefixes_copy.size(); ++i) {
