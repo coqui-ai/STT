@@ -162,16 +162,26 @@ MetadataToJSON(Metadata* result)
       symbols.erase(0, pos + 1);
     }
     out_string << ",\n" << R"("alphabet")" << ":[";
-    for (const auto &str : symbol_table) {
-      out_string << "'" << str << "', ";
+    for(int i = 0; i < symbol_table.size(); i++) {
+      out_string << "\"" << symbol_table[i] << "\"";
+      if(i < symbol_table.size() - 1) {
+        out_string << ", ";
+      }
     }
     out_string << "],\n" << R"("logits")" << ":[\n";
     for(int i = 0; i < result->timesteps; i++) {
       out_string << "[";
       for(int j = 0; j < result->alphabet_size; j++) {
-        out_string << result->logits[i * result->alphabet_size + j] << ", "; 
+        out_string << result->logits[i * result->alphabet_size + j] ;
+        if(j < result->alphabet_size - 1) {
+          out_string << ", ";
+        }
       }
-      out_string << "],\n";
+      out_string << "]";
+      if(i < result->timesteps - 1) {
+        out_string << ",";
+      }
+      out_string << "\n";
     }
     out_string << "\n]";
   } 
