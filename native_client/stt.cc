@@ -564,6 +564,14 @@ STT_FreeMetadata(Metadata* m)
     }
 
     free((void*)m->transcripts);
+
+    // Clean up logits if they are not NULL
+    if(m->logits) {
+      free((void*)m->logits);
+      if(m->alphabet) {
+        free((void*)m->alphabet);
+      }
+    }
     free(m);
   }
 }
