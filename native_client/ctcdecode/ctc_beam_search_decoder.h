@@ -57,8 +57,7 @@ public:
            double cutoff_prob,
            size_t cutoff_top_n,
            std::shared_ptr<Scorer> ext_scorer,
-           std::unordered_map<std::string, float> hot_words,
-           bool keep_logits);
+           std::unordered_map<std::string, float> hot_words);
 
   /* Send data to the decoder
    *
@@ -82,7 +81,15 @@ public:
    *     in descending order.
   */
   std::vector<Output> decode(size_t num_results=1) const;
-  
+
+  /* State if to keep logits or not.
+   *
+   * Parameters:
+   *     val: true or false
+   *
+  */
+  void withLogits(bool val);
+   
 };
 
 class FlashlightDecoderState

@@ -153,7 +153,7 @@ MetadataToJSON(Metadata* result)
     }
   }
 
-  if (keep_logits) {
+  if (keep_logits && result->logits != NULL) {
     std::string symbols = std::string(result->alphabet);
     std::vector<std::string> symbol_table;
     size_t pos = 0;
@@ -200,12 +200,16 @@ LocalDsSTT(ModelState* aCtx, const short* aBuffer, size_t aBufferSize,
   clock_t ds_start_time = clock();
 
   // sphinx-doc: c_ref_inference_start
-  if (extended_output) {
+  if (extended_output && !keep_logits) {
     Metadata *result = STT_SpeechToTextWithMetadata(aCtx, aBuffer, aBufferSize, 1);
     res.string = CandidateTranscriptToString(&result->transcripts[0]);
     STT_FreeMetadata(result);
-  } else if (json_output) {
+  } else if (json_output && !keep_logits) {
     Metadata *result = STT_SpeechToTextWithMetadata(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
+    res.string = MetadataToJSON(result);
+    STT_FreeMetadata(result);
+  } else if (keep_logits) {
+    Metadata *result = STT_SpeechToTextWithLogits(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
     res.string = MetadataToJSON(result);
     STT_FreeMetadata(result);
   } else if (stream_size > 0) {
@@ -517,10 +521,6 @@ main(int argc, char **argv)
     }
   }
   // sphinx-doc: c_ref_model_stop
-
-  if (keep_logits) {
-    STT_EnableKeepLogits(ctx);
-  } 
 
   if (hot_words) {
     std::vector<std::string> hot_words_ = SplitStringOnDelim(hot_words, ",");

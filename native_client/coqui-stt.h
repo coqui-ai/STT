@@ -222,16 +222,6 @@ STT_EXPORT
 int STT_DisableExternalScorer(ModelState* aCtx);
 
 /**
- * @brief Enable keeping of logits
- *
- * @param aCtx The ModelState pointer for the model being changed.
- *
- * @return Zero on success, non-zero on failure.
- */
-STT_EXPORT
-int STT_EnableKeepLogits(ModelState* aCtx);
-
-/**
  * @brief Set hyperparameters alpha and beta of the external scorer.
  *
  * @param aCtx The ModelState pointer for the model being changed.
@@ -278,6 +268,28 @@ char* STT_SpeechToText(ModelState* aCtx,
  */
 STT_EXPORT
 Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
+                                       const short* aBuffer,
+                                       unsigned int aBufferSize,
+                                       unsigned int aNumResults);
+
+/**
+ * @brief Use the Coqui STT model to convert speech to text and output results
+ * including metadata and result from the acoustic model.
+ *
+ * @param aCtx The ModelState pointer for the model to use.
+ * @param aBuffer A 16-bit, mono raw audio signal at the appropriate
+ *                sample rate (matching what the model was trained on).
+ * @param aBufferSize The number of samples in the audio signal.
+ * @param aNumResults The maximum number of CandidateTranscript structs to return. Returned value might be smaller than this.
+ *
+ * @return Metadata struct containing multiple CandidateTranscript structs. Each
+ *         transcript has per-token metadata including timing information. The
+ *         user is responsible for freeing Metadata by calling {@link STT_FreeMetadata()}.
+ *         Returns NULL on error. The struct in addition contains the number of timesteps
+ *         processed, the alphabet size, the alphabet and the output of the acoustic model.
+ */
+STT_EXPORT
+Metadata* STT_SpeechToTextWithLogits(ModelState* aCtx,
                                        const short* aBuffer,
                                        unsigned int aBufferSize,
                                        unsigned int aNumResults);

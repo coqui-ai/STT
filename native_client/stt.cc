@@ -382,13 +382,6 @@ STT_ClearHotWords(ModelState* aCtx)
 }
 
 int
-STT_EnableKeepLogits(ModelState* aCtx)
-{
-  aCtx->keep_logits_ = true;
-  return STT_ERR_OK;
-}
-
-int
 STT_DisableExternalScorer(ModelState* aCtx)
 {
   if (aCtx->scorer_) {
@@ -398,7 +391,8 @@ STT_DisableExternalScorer(ModelState* aCtx)
   return STT_ERR_SCORER_NOT_ENABLED;
 }
 
-int STT_SetScorerAlphaBeta(ModelState* aCtx,
+int 
+STT_SetScorerAlphaBeta(ModelState* aCtx,
                           float aAlpha,
                           float aBeta)
 {
@@ -408,6 +402,8 @@ int STT_SetScorerAlphaBeta(ModelState* aCtx,
   }
   return STT_ERR_SCORER_NOT_ENABLED;
 }
+
+
 
 int
 STT_CreateStream(ModelState* aCtx,
@@ -437,8 +433,7 @@ STT_CreateStream(ModelState* aCtx,
                            cutoff_prob,
                            cutoff_top_n,
                            aCtx->scorer_,
-                           aCtx->hot_words_,
-                           aCtx->keep_logits_);
+                           aCtx->hot_words_);
 
 
   *retval = ctx.release();
@@ -508,9 +503,6 @@ CreateStreamAndFeedAudioContent(ModelState* aCtx,
   if (status != STT_ERR_OK) {
     return nullptr;
   }
-  if(aCtx->keep_logits_) {
-    ctx->keep_logits_ = true;
-  }
   STT_FeedAudioContent(ctx, aBuffer, aBufferSize);
   return ctx;
 }
@@ -533,6 +525,25 @@ STT_SpeechToTextWithMetadata(ModelState* aCtx,
   StreamingState* ctx = CreateStreamAndFeedAudioContent(aCtx, aBuffer, aBufferSize);
   return STT_FinishStreamWithMetadata(ctx, aNumResults);
 }
+
+Metadata*
+STT_SpeechToTextWithLogits(ModelState* aCtx,
+                            const short* aBuffer,
+                            unsigned int aBufferSize,
+                            unsigned int aNumResults)
+{
+  StreamingState* ctx;
+  int status = STT_CreateStream(aCtx, &ctx);
+  if (status != STT_ERR_OK) {
+    return nullptr;
+  }
+  ctx->decoder_state_.withLogits(true);
+
+  STT_FeedAudioContent(ctx, aBuffer, aBufferSize);
+
+  return STT_FinishStreamWithMetadata(ctx, aNumResults);
+}
+
 
 void
 STT_FreeStream(StreamingState* aSctx)
