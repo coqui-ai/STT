@@ -61,6 +61,11 @@ typedef struct Metadata {
   const CandidateTranscript* const transcripts;
   /** Size of the transcripts array */
   const unsigned int num_transcripts;
+  /** Logits and information to decode them **/
+  const char* const alphabet;
+  const unsigned int alphabet_size;
+  const unsigned int timesteps;
+  const double* logits;
 } Metadata;
 
 #endif /* SWIG_ERRORS_ONLY */
@@ -215,6 +220,16 @@ int STT_ClearHotWords(ModelState* aCtx);
  */
 STT_EXPORT
 int STT_DisableExternalScorer(ModelState* aCtx);
+
+/**
+ * @brief Enable keeping of logits
+ *
+ * @param aCtx The ModelState pointer for the model being changed.
+ *
+ * @return Zero on success, non-zero on failure.
+ */
+STT_EXPORT
+int STT_EnableKeepLogits(ModelState* aCtx);
 
 /**
  * @brief Set hyperparameters alpha and beta of the external scorer.

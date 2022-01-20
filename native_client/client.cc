@@ -153,6 +153,29 @@ MetadataToJSON(Metadata* result)
     }
   }
 
+  if (keep_logits) {
+    std::string symbols = std::string(result->alphabet);
+    std::vector<std::string> symbol_table;
+    size_t pos = 0;
+    while ((pos = symbols.find("\n")) != std::string::npos) {
+      symbol_table.push_back(symbols.substr(0, pos));
+      symbols.erase(0, pos + 1);
+    }
+    out_string << ",\n" << R"("alphabet")" << ":[";
+    for (const auto &str : symbol_table) {
+      out_string << "'" << str << "', ";
+    }
+    out_string << "],\n" << R"("logits")" << ":[\n";
+    for(int i = 0; i < result->timesteps; i++) {
+      out_string << "[";
+      for(int j = 0; j < result->alphabet_size; j++) {
+        out_string << result->logits[i * result->alphabet_size + j] << ", "; 
+      }
+      out_string << "],\n";
+    }
+    out_string << "\n]";
+  } 
+
   out_string << "\n}\n";
 
   return strdup(out_string.str().c_str());
@@ -484,6 +507,10 @@ main(int argc, char **argv)
     }
   }
   // sphinx-doc: c_ref_model_stop
+
+  if (keep_logits) {
+    STT_EnableKeepLogits(ctx);
+  } 
 
   if (hot_words) {
     std::vector<std::string> hot_words_ = SplitStringOnDelim(hot_words, ",");

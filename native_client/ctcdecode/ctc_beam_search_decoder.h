@@ -20,10 +20,12 @@ class DecoderState
   double cutoff_prob_;
   size_t cutoff_top_n_;
   bool start_expanding_;
+  bool keep_logits_;
 
   std::shared_ptr<Scorer> ext_scorer_;
   std::vector<PathTrie*> prefixes_;
   std::unique_ptr<PathTrie> prefix_root_;
+  std::vector<std::vector<std::pair<int, double>>> logits_;
   TimestepTreeNode timestep_tree_root_{nullptr, 0};
   std::unordered_map<std::string, float> hot_words_;
 
@@ -45,6 +47,8 @@ public:
    *     ext_scorer: External scorer to evaluate a prefix, which consists of
    *                 n-gram language model scoring and word insertion term.
    *                 Default null, decoding the input sample without scorer.
+   *     hot_words: The hotwords and their scores
+   *     keep_logits: Should we return the output of the AM?
    * Return:
    *     Zero on success, non-zero on failure.
   */
@@ -53,7 +57,8 @@ public:
            double cutoff_prob,
            size_t cutoff_top_n,
            std::shared_ptr<Scorer> ext_scorer,
-           std::unordered_map<std::string, float> hot_words);
+           std::unordered_map<std::string, float> hot_words,
+           bool keep_logits);
 
   /* Send data to the decoder
    *
@@ -77,6 +82,7 @@ public:
    *     in descending order.
   */
   std::vector<Output> decode(size_t num_results=1) const;
+  
 };
 
 class FlashlightDecoderState

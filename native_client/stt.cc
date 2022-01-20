@@ -63,6 +63,7 @@ struct StreamingState {
   vector<float> batch_buffer_;
   vector<float> previous_state_c_;
   vector<float> previous_state_h_;
+  bool keep_logits_ = false;
 
   ModelState* model_;
   DecoderState decoder_state_;
@@ -381,6 +382,13 @@ STT_ClearHotWords(ModelState* aCtx)
 }
 
 int
+STT_EnableKeepLogits(ModelState* aCtx)
+{
+  aCtx->keep_logits_ = true;
+  return STT_ERR_OK;
+}
+
+int
 STT_DisableExternalScorer(ModelState* aCtx)
 {
   if (aCtx->scorer_) {
@@ -429,7 +437,9 @@ STT_CreateStream(ModelState* aCtx,
                            cutoff_prob,
                            cutoff_top_n,
                            aCtx->scorer_,
-                           aCtx->hot_words_);
+                           aCtx->hot_words_,
+                           aCtx->keep_logits_);
+
 
   *retval = ctx.release();
   return STT_ERR_OK;
@@ -497,6 +507,9 @@ CreateStreamAndFeedAudioContent(ModelState* aCtx,
   int status = STT_CreateStream(aCtx, &ctx);
   if (status != STT_ERR_OK) {
     return nullptr;
+  }
+  if(aCtx->keep_logits_) {
+    ctx->keep_logits_ = true;
   }
   STT_FeedAudioContent(ctx, aBuffer, aBufferSize);
   return ctx;

@@ -65,11 +65,43 @@ ModelState::decode_metadata(const DecoderState& state,
     memcpy(&transcripts[i], &transcript, sizeof(CandidateTranscript));
   }
 
-  Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
-  Metadata metadata {
-    transcripts,  // transcripts
-    num_returned, // num_transcripts
-  };
-  memcpy(ret, &metadata, sizeof(Metadata));
-  return ret;
+  unsigned int num_timesteps = out[0].logits.size();
+  unsigned int alphabet_size = alphabet_.GetSize();
+  if(keep_logits_) {
+    Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
+    double* logits = (double*)malloc(sizeof(double)*alphabet_size*num_timesteps);
+    for(int i = 0; i < num_timesteps; i++) {
+      for(int j = 0; j < alphabet_size; j++) {
+        logits[i * alphabet_size + j] = out[0].logits[i][j].second;
+      }
+    }
+    Metadata metadata {
+      transcripts,  // transcripts
+      num_returned, // num_transcripts
+      strdup(alphabet_.SerializeLine().c_str()), // alphabet
+      alphabet_size, // alphabet size
+      num_timesteps, // number of timesteps
+      logits, // matrix of logits from acoustic model
+    };
+    memcpy(ret, &metadata, sizeof(Metadata));
+    return ret;
+
+    fprintf(stderr, "res: %d\n",  out.size());
+    fprintf(stderr, "logits: %d\n",  out[0].logits.size());
+    fprintf(stderr, "alphabet: %s\n", metadata.alphabet);
+//    fprintf(stderr, "timesteps: %d, classes: %d\n", out[0].logits.size(), out[0].logits[0].size());
+
+  } else {
+    Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
+    Metadata metadata {
+      transcripts,  // transcripts
+      num_returned, // num_transcripts
+      NULL,
+      alphabet_size,
+      num_timesteps,
+      NULL,    
+    };
+    memcpy(ret, &metadata, sizeof(Metadata));
+    return ret;
+  }
 }

@@ -25,7 +25,8 @@ DecoderState::init(const Alphabet& alphabet,
                    double cutoff_prob,
                    size_t cutoff_top_n,
                    std::shared_ptr<Scorer> ext_scorer,
-                   std::unordered_map<std::string, float> hot_words)
+                   std::unordered_map<std::string, float> hot_words,
+                   bool keep_logits)
 {
   // assign special ids
   abs_time_step_ = 0;
@@ -38,6 +39,8 @@ DecoderState::init(const Alphabet& alphabet,
   ext_scorer_ = ext_scorer;
   hot_words_ = hot_words;
   start_expanding_ = false;
+
+  keep_logits_ = keep_logits;
 
   // init prefixes' root
   PathTrie *root = new PathTrie;
@@ -91,6 +94,15 @@ DecoderState::next(const double *probs,
       min_cutoff = prefixes_[num_prefixes - 1]->score +
                    std::log(prob[blank_id_]) - std::max(0.0, ext_scorer_->beta);
       full_beam = (num_prefixes == beam_size_);
+    }
+
+    // save the softmax of the current timestep
+    if(keep_logits_) {
+      std::vector<std::pair<int, double>> prob_idx;
+      for (size_t i = 0; i < class_dim; ++i) {
+        prob_idx.push_back(std::pair<int, double>(i, prob[i]));
+      }
+      logits_.push_back(prob_idx);
     }
 
     std::vector<std::pair<size_t, float>> log_prob_idx =
@@ -232,6 +244,10 @@ DecoderState::decode(size_t num_results) const
     scores[prefix] = prefix->score;
   }
 
+  if(keep_logits_) {
+    std::cerr << "KEEP_LOGITS" << std::endl; 
+  }
+
   // score the last word of each prefix that doesn't end with space
   if (ext_scorer_) {
     for (size_t i = 0; i < beam_size_ && i < prefixes_copy.size(); ++i) {
@@ -264,6 +280,7 @@ DecoderState::decode(size_t num_results) const
     output.timesteps  = get_history(prefixes_copy[i]->timesteps, &timestep_tree_root_);
     assert(output.tokens.size() == output.timesteps.size());
     output.confidence = scores[prefixes_copy[i]];
+    output.logits = logits_;
     outputs.push_back(output);
   }
 
@@ -458,7 +475,7 @@ std::vector<Output> ctc_beam_search_decoder(
 {
   VALID_CHECK_EQ(alphabet.GetSize()+1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
   DecoderState state;
-  state.init(alphabet, beam_size, cutoff_prob, cutoff_top_n, ext_scorer, hot_words);
+  state.init(alphabet, beam_size, cutoff_prob, cutoff_top_n, ext_scorer, hot_words, false);
   state.next(probs, time_dim, class_dim);
   return state.decode(num_results);
 }
