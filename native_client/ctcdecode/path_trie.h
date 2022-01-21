@@ -49,7 +49,7 @@ public:
   ~PathTrie();
 
   // get new prefix after appending new char
-  PathTrie* get_path_trie(unsigned int new_char, float log_prob_c, bool reset = true);
+  PathTrie* get_path_trie(unsigned int new_char, float log_prob_c, bool reset = true, bool is_scoring_boundary = false);
 
   // get the prefix data in correct time order from root to current node
   void get_path_vec(std::vector<unsigned int>& output);
@@ -81,8 +81,6 @@ public:
 #ifdef DEBUG
   void vec(std::vector<PathTrie*>& out);
   void print(const Alphabet& a);
-  static std::string drawdot(PathTrie* root, std::vector<PathTrie*> prefixes);
-  static std::string drawdot(PathTrie* root, std::unordered_set<PathTrie*> active_prefixes, std::unordered_set<PathTrie*> leading_beam);
 #endif // DEBUG
 
   float log_prob_b_prev;
@@ -94,7 +92,8 @@ public:
   float approx_ctc;
   unsigned int character;
   TimestepTreeNode* timesteps = nullptr;
-
+  bool oov_word;
+  bool first_time_oov;
   // timestep temporary storage for each decoding step.
   TimestepTreeNode* previous_timesteps = nullptr;
   unsigned int new_timestep;
