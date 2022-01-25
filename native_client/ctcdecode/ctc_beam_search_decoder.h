@@ -82,7 +82,6 @@ public:
    *     in descending order.
   */
   std::vector<Output> decode(size_t num_results=1) const;
-
 };
 
 class FlashlightDecoderState
