@@ -71,7 +71,6 @@ ModelState::decode_metadata(const DecoderState& state,
   Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
 
   if (num_timesteps > 0) { // see if the logit structure has been filled and returned
-
     AcousticModelEmissions* emissions = (AcousticModelEmissions*)malloc(sizeof(AcousticModelEmissions));
 
     emissions->num_symbols = alphabet_size;
@@ -81,18 +80,18 @@ ModelState::decode_metadata(const DecoderState& state,
         emissions->symbols[i] = strdup(alphabet_.DecodeSingle(i).c_str());
     }
 
-    double* logits = (double*)malloc(sizeof(double)*alphabet_size*num_timesteps);
+    double* probs = (double*)malloc(sizeof(double)*alphabet_size*num_timesteps);
     for (int i = 0; i < num_timesteps; i++) {
       for (int j = 0; j < alphabet_size; j++) {
-        logits[i * alphabet_size + j] = out[0].logits[i][j].second;
+        probs[i * alphabet_size + j] = out[0].logits[i][j].second;
       }
     }
-    emissions->emissions = logits;
+    emissions->emissions = probs;
 
     Metadata metadata {
       transcripts,  // transcripts
       num_returned, // num_transcripts
-      emissions, // matrix of logits from acoustic model
+      emissions, // matrix of probs from acoustic model
     };
     memcpy(ret, &metadata, sizeof(Metadata));
     return ret;

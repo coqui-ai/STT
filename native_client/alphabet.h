@@ -28,9 +28,6 @@ public:
   // Serialize alphabet into a binary buffer.
   std::string Serialize();
 
-  // Serialize alphabet into a compact text representation
-  std::string SerializeLine();
-
   // Serialize alphabet into a text representation (ie. config file read by `init`)
   std::string SerializeText();
 

@@ -80,19 +80,6 @@ Alphabet::InitFromLabels(const std::vector<std::string>& labels)
   }
 }
 
-
-std::string
-Alphabet::SerializeLine()
-{
-  std::stringstream out;
-
-  for (int idx = 0; idx < entrySize(); ++idx) {
-    out << getEntry(idx) << "\n";
-  }
-
-  return out.str();
-}
-
 std::string
 Alphabet::SerializeText()
 {
