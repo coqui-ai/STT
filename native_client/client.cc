@@ -153,32 +153,28 @@ MetadataToJSON(Metadata* result)
     }
   }
 
-  if (keep_logits && result->logits != NULL) {
-    std::string symbols = std::string(result->alphabet);
-    std::vector<std::string> symbol_table;
-    size_t pos = 0;
-    while ((pos = symbols.find("\n")) != std::string::npos) {
-      symbol_table.push_back(symbols.substr(0, pos));
-      symbols.erase(0, pos + 1);
-    }
+  if (keep_logits && result->emissions != NULL) {
+    int num_timesteps = result->emissions->num_timesteps;
+    int num_symbols = result->emissions->num_symbols;
+    char **symbol_table = result->emissions->symbols;
     out_string << ",\n" << R"("alphabet")" << ":[";
-    for(int i = 0; i < symbol_table.size(); i++) {
+    for(int i = 0; i < num_symbols; i++) {
       out_string << "\"" << symbol_table[i] << "\"";
-      if(i < symbol_table.size() - 1) {
+      if(i < num_symbols - 1) {
         out_string << ", ";
       }
     }
-    out_string << "],\n" << R"("logits")" << ":[\n";
-    for(int i = 0; i < result->timesteps; i++) {
+    out_string << "],\n" << R"("emissions")" << ":[\n";
+    for(int i = 0; i < num_timesteps; i++) {
       out_string << "[";
-      for(int j = 0; j < result->alphabet_size; j++) {
-        out_string << result->logits[i * result->alphabet_size + j] ;
-        if(j < result->alphabet_size - 1) {
+      for(int j = 0; j < num_symbols; j++) {
+        out_string << result->emissions->emissions[i * num_symbols + j];
+        if(j < num_symbols - 1) {
           out_string << ", ";
         }
       }
       out_string << "]";
-      if(i < result->timesteps - 1) {
+      if(i < num_timesteps - 1) {
         out_string << ",";
       }
       out_string << "\n";

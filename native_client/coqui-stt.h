@@ -54,6 +54,18 @@ typedef struct CandidateTranscript {
 } CandidateTranscript;
 
 /**
+ * @brief An structure to contain emissions (the softmax output of individual
+ *        timesteps) from the acoustic model.
+ *        The layout is time major.
+ */
+typedef struct AcousticModelEmissions {
+  int num_symbols;
+  char** symbols; // num_symbols long array of NUL-terminated strings
+  int num_timesteps;
+  double* emissions; // num_timesteps long array, each pointer is a num_symbols long array
+} AcousticModelEmissions;
+
+/**
  * @brief An array of CandidateTranscript objects computed by the model.
  */
 typedef struct Metadata {
@@ -62,10 +74,7 @@ typedef struct Metadata {
   /** Size of the transcripts array */
   const unsigned int num_transcripts;
   /** Logits and information to decode them **/
-  const char* const alphabet;
-  const unsigned int alphabet_size;
-  const unsigned int timesteps;
-  const double* logits;
+  AcousticModelEmissions *emissions;
 } Metadata;
 
 #endif /* SWIG_ERRORS_ONLY */
