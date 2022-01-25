@@ -96,7 +96,7 @@ DecoderState::next(const double *probs,
     }
 
     // save the softmax of the current timestep
-    if(keep_logits_) {
+    if (keep_logits_) {
       std::vector<std::pair<int, double>> prob_idx;
       for (size_t i = 0; i < class_dim; ++i) {
         prob_idx.push_back(std::pair<int, double>(i, prob[i]));

@@ -67,6 +67,7 @@ ModelState::decode_metadata(const DecoderState& state,
 
   unsigned int num_timesteps = out[0].logits.size();
   unsigned int alphabet_size = alphabet_.GetSize();
+  unsigned int class_dim = alphabet_size + 1; // include CTC blank symbol
 
   Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
 
@@ -75,14 +76,15 @@ ModelState::decode_metadata(const DecoderState& state,
 
     emissions->num_symbols = alphabet_size;
     emissions->num_timesteps = num_timesteps;
-    emissions->symbols = (char**)malloc(sizeof(char*)*alphabet_size);
+    emissions->symbols = (const char**)malloc(sizeof(char*)*alphabet_size + 1);
     for (int i = 0; i < alphabet_size; i++) {
         emissions->symbols[i] = strdup(alphabet_.DecodeSingle(i).c_str());
     }
+    emissions->symbols[alphabet_size] = strdup("\t");
 
-    double* probs = (double*)malloc(sizeof(double)*alphabet_size*num_timesteps);
+    double* probs = (double*)malloc(sizeof(double)*class_dim*num_timesteps);
     for (int i = 0; i < num_timesteps; i++) {
-      for (int j = 0; j < alphabet_size; j++) {
+      for (int j = 0; j < class_dim + 1; j++) {
         probs[i * alphabet_size + j] = out[0].logits[i][j].second;
       }
     }

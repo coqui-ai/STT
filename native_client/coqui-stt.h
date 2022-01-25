@@ -62,12 +62,14 @@ typedef struct CandidateTranscript {
  *         emissions[i * num_symbols + j]
  */
 typedef struct AcousticModelEmissions {
+  /** number of symbols in the alphabet, including CTC blank */
   int num_symbols;
-  const char *const *const symbols; // num_symbols long array 
-                                    // of NUL-terminated strings
+  /** num_symbols long array of NUL-terminated strings */
+  const char **symbols;
+  /** total number of timesteps */
   int num_timesteps;
-  const double *const emissions; // num_timesteps long array, 
-                                 // each pointer is a num_symbols long array
+  /** num_timesteps long array, each pointer is a num_symbols long array */
+  const double *emissions;
 } AcousticModelEmissions;
 
 /**
@@ -79,7 +81,7 @@ typedef struct Metadata {
   /** Size of the transcripts array */
   const unsigned int num_transcripts;
   /** Logits and information to decode them **/
-  const AcousticModelEmissions const *emissions;
+  const AcousticModelEmissions* const emissions;
 } Metadata;
 
 #endif /* SWIG_ERRORS_ONLY */

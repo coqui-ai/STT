@@ -156,11 +156,12 @@ MetadataToJSON(Metadata* result)
   if (keep_logits && result->emissions != NULL) {
     int num_timesteps = result->emissions->num_timesteps;
     int num_symbols = result->emissions->num_symbols;
-    char **symbol_table = result->emissions->symbols;
+    int class_dim = num_symbols + 1;
+    const char **symbol_table = result->emissions->symbols;
     out_string << ",\n" << R"("alphabet")" << ":[";
-    for(int i = 0; i < num_symbols; i++) {
+    for(int i = 0; i < class_dim; i++) {
       out_string << "\"" << symbol_table[i] << "\"";
-      if(i < num_symbols - 1) {
+      if(i < class_dim - 1) {
         out_string << ", ";
       }
     }
