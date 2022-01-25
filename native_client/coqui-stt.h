@@ -54,15 +54,20 @@ typedef struct CandidateTranscript {
 } CandidateTranscript;
 
 /**
- * @brief An structure to contain emissions (the softmax output of individual
- *        timesteps) from the acoustic model.
- *        The layout is time major.
+ * @brief  An structure to contain emissions (the softmax output of individual
+ *         timesteps) from the acoustic model.
+ *
+ * @member The layout of the emissions member is time major, thus to access the 
+ *         probability of symbol j at timestep i you would use 
+ *         emissions[i * num_symbols + j]
  */
 typedef struct AcousticModelEmissions {
   int num_symbols;
-  const char *const *const symbols; // num_symbols long array of NUL-terminated strings
+  const char *const *const symbols; // num_symbols long array 
+                                    // of NUL-terminated strings
   int num_timesteps;
-  const double *const emissions; // num_timesteps long array, each pointer is a num_symbols long array
+  const double *const emissions; // num_timesteps long array, 
+                                 // each pointer is a num_symbols long array
 } AcousticModelEmissions;
 
 /**
