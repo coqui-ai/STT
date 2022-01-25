@@ -60,9 +60,9 @@ typedef struct CandidateTranscript {
  */
 typedef struct AcousticModelEmissions {
   int num_symbols;
-  char** symbols; // num_symbols long array of NUL-terminated strings
+  const char *const *const symbols; // num_symbols long array of NUL-terminated strings
   int num_timesteps;
-  double* emissions; // num_timesteps long array, each pointer is a num_symbols long array
+  const double *const emissions; // num_timesteps long array, each pointer is a num_symbols long array
 } AcousticModelEmissions;
 
 /**
