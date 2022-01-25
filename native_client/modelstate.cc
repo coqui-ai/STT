@@ -67,11 +67,11 @@ ModelState::decode_metadata(const DecoderState& state,
 
   unsigned int num_timesteps = out[0].logits.size();
   unsigned int alphabet_size = alphabet_.GetSize();
-  if(num_timesteps > 0) { // see if the logit structure has been filled and returned
+  if (num_timesteps > 0) { // see if the logit structure has been filled and returned
     Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
     double* logits = (double*)malloc(sizeof(double)*alphabet_size*num_timesteps);
-    for(int i = 0; i < num_timesteps; i++) {
-      for(int j = 0; j < alphabet_size; j++) {
+    for (int i = 0; i < num_timesteps; i++) {
+      for (int j = 0; j < alphabet_size; j++) {
         logits[i * alphabet_size + j] = out[0].logits[i][j].second;
       }
     }
