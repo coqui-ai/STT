@@ -602,6 +602,9 @@ STT_FreeMetadata(Metadata* m)
     if (m->emissions) {
 
       if (m->emissions->symbols) {
+        for (int i = 0; i < m->emissions->num_symbols; i++) {
+          free((void*)m->emissions->symbols[i]);
+        }
         free((void*)m->emissions->symbols);
       }
       if (m->emissions->emissions) {
