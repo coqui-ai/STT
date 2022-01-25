@@ -76,7 +76,7 @@ ModelState::decode_metadata(const DecoderState& state,
     emissions->num_symbols = alphabet_size;
     emissions->num_timesteps = num_timesteps;
     emissions->symbols = (char**)malloc(sizeof(char*)*alphabet_size);
-    for(int i = 0; i < alphabet_size; i++) {
+    for (int i = 0; i < alphabet_size; i++) {
         emissions->symbols[i] = strdup(alphabet_.DecodeSingle(i).c_str());
     }
 
