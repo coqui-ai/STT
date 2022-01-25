@@ -74,7 +74,7 @@ typedef struct Metadata {
   /** Size of the transcripts array */
   const unsigned int num_transcripts;
   /** Logits and information to decode them **/
-  AcousticModelEmissions *emissions;
+  const AcousticModelEmissions const *emissions;
 } Metadata;
 
 #endif /* SWIG_ERRORS_ONLY */
