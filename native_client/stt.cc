@@ -63,7 +63,7 @@ struct StreamingState {
   vector<float> batch_buffer_;
   vector<float> previous_state_c_;
   vector<float> previous_state_h_;
-  bool keep_logits_ = false;
+  bool keep_emissions_ = false;
 
   ModelState* model_;
   DecoderState decoder_state_;
@@ -439,7 +439,7 @@ STT_CreateStream(ModelState* aCtx,
 }
 
 int
-CreateStreamWithLogits(ModelState* aCtx,
+CreateStreamWithEmissions(ModelState* aCtx,
                 StreamingState** retval)
 {
   *retval = nullptr;
@@ -561,13 +561,13 @@ STT_SpeechToTextWithMetadata(ModelState* aCtx,
 }
 
 Metadata*
-STT_SpeechToTextWithLogits(ModelState* aCtx,
+STT_SpeechToTextWithEmissions(ModelState* aCtx,
                             const short* aBuffer,
                             unsigned int aBufferSize,
                             unsigned int aNumResults)
 {
   StreamingState* ctx;
-  int status = CreateStreamWithLogits(aCtx, &ctx);
+  int status = CreateStreamWithEmissions(aCtx, &ctx);
   if (status != STT_ERR_OK) {
     return nullptr;
   }
@@ -602,7 +602,7 @@ STT_FreeMetadata(Metadata* m)
     if (m->emissions) {
 
       if (m->emissions->symbols) {
-        for (int i = 0; i < m->emissions->num_symbols; i++) {
+        for (int i = 0; i < m->emissions->num_symbols + 1; i++) {
           free((void*)m->emissions->symbols[i]);
         }
         free((void*)m->emissions->symbols);

@@ -153,7 +153,7 @@ MetadataToJSON(Metadata* result)
     }
   }
 
-  if (keep_logits && result->emissions != NULL) {
+  if (keep_emissions && result->emissions != NULL) {
     int num_timesteps = result->emissions->num_timesteps;
     int num_symbols = result->emissions->num_symbols;
     int class_dim = num_symbols + 1;
@@ -197,16 +197,16 @@ LocalDsSTT(ModelState* aCtx, const short* aBuffer, size_t aBufferSize,
   clock_t ds_start_time = clock();
 
   // sphinx-doc: c_ref_inference_start
-  if (extended_output && !keep_logits) {
+  if (extended_output && !keep_emissions) {
     Metadata *result = STT_SpeechToTextWithMetadata(aCtx, aBuffer, aBufferSize, 1);
     res.string = CandidateTranscriptToString(&result->transcripts[0]);
     STT_FreeMetadata(result);
-  } else if (json_output && !keep_logits) {
+  } else if (json_output && !keep_emissions) {
     Metadata *result = STT_SpeechToTextWithMetadata(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
     res.string = MetadataToJSON(result);
     STT_FreeMetadata(result);
-  } else if (keep_logits) {
-    Metadata *result = STT_SpeechToTextWithLogits(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
+  } else if (keep_emissions) {
+    Metadata *result = STT_SpeechToTextWithEmissions(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
     res.string = MetadataToJSON(result);
     STT_FreeMetadata(result);
   } else if (stream_size > 0) {

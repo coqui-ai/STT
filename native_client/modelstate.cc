@@ -65,7 +65,7 @@ ModelState::decode_metadata(const DecoderState& state,
     memcpy(&transcripts[i], &transcript, sizeof(CandidateTranscript));
   }
 
-  unsigned int num_timesteps = out[0].logits.size();
+  unsigned int num_timesteps = out[0].probs.size();
   unsigned int alphabet_size = alphabet_.GetSize();
   unsigned int class_dim = alphabet_size + 1; // include CTC blank symbol
 
@@ -85,7 +85,7 @@ ModelState::decode_metadata(const DecoderState& state,
     double* probs = (double*)malloc(sizeof(double)*class_dim*num_timesteps);
     for (int i = 0; i < num_timesteps; i++) {
       for (int j = 0; j < class_dim + 1; j++) {
-        probs[i * alphabet_size + j] = out[0].logits[i][j].second;
+        probs[i * alphabet_size + j] = out[0].probs[i][j].second;
       }
     }
     emissions->emissions = probs;

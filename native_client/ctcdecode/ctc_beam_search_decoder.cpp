@@ -26,7 +26,7 @@ DecoderState::init(const Alphabet& alphabet,
                    size_t cutoff_top_n,
                    std::shared_ptr<Scorer> ext_scorer,
                    std::unordered_map<std::string, float> hot_words,
-                   bool keep_logits)
+                   bool keep_emissions)
 {
   // assign special ids
   abs_time_step_ = 0;
@@ -39,7 +39,7 @@ DecoderState::init(const Alphabet& alphabet,
   ext_scorer_ = ext_scorer;
   hot_words_ = hot_words;
   start_expanding_ = false;
-  keep_logits_ = keep_logits;
+  keep_emissions_ = keep_emissions;
 
   // init prefixes' root
   PathTrie *root = new PathTrie;
@@ -96,12 +96,12 @@ DecoderState::next(const double *probs,
     }
 
     // save the softmax of the current timestep
-    if (keep_logits_) {
+    if (keep_emissions_) {
       std::vector<std::pair<int, double>> prob_idx;
       for (size_t i = 0; i < class_dim; ++i) {
         prob_idx.push_back(std::pair<int, double>(i, prob[i]));
       }
-      logits_.push_back(prob_idx);
+      probs_.push_back(prob_idx);
     }
 
     std::vector<std::pair<size_t, float>> log_prob_idx =
@@ -275,7 +275,7 @@ DecoderState::decode(size_t num_results) const
     output.timesteps  = get_history(prefixes_copy[i]->timesteps, &timestep_tree_root_);
     assert(output.tokens.size() == output.timesteps.size());
     output.confidence = scores[prefixes_copy[i]];
-    output.logits = logits_;
+    output.probs = probs_;
     outputs.push_back(output);
   }
 

@@ -305,7 +305,7 @@ Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
  *         processed, the alphabet size, the alphabet and the output of the acoustic model.
  */
 STT_EXPORT
-Metadata* STT_SpeechToTextWithLogits(ModelState* aCtx,
+Metadata* STT_SpeechToTextWithEmissions(ModelState* aCtx,
                                        const short* aBuffer,
                                        unsigned int aBufferSize,
                                        unsigned int aNumResults);
