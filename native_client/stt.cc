@@ -403,8 +403,6 @@ STT_SetScorerAlphaBeta(ModelState* aCtx,
   return STT_ERR_SCORER_NOT_ENABLED;
 }
 
-
-
 int
 STT_CreateStream(ModelState* aCtx,
                 StreamingState** retval)
@@ -433,12 +431,48 @@ STT_CreateStream(ModelState* aCtx,
                            cutoff_prob,
                            cutoff_top_n,
                            aCtx->scorer_,
-                           aCtx->hot_words_);
-
+                           aCtx->hot_words_,
+                           false);
 
   *retval = ctx.release();
   return STT_ERR_OK;
 }
+
+int
+CreateStreamWithLogits(ModelState* aCtx,
+                StreamingState** retval)
+{
+  *retval = nullptr;
+
+  std::unique_ptr<StreamingState> ctx(new StreamingState());
+  if (!ctx) {
+    std::cerr << "Could not allocate streaming state." << std::endl;
+    return STT_ERR_FAIL_CREATE_STREAM;
+  }
+
+  ctx->audio_buffer_.reserve(aCtx->audio_win_len_);
+  ctx->mfcc_buffer_.reserve(aCtx->mfcc_feats_per_timestep_);
+  ctx->mfcc_buffer_.resize(aCtx->n_features_*aCtx->n_context_, 0.f);
+  ctx->batch_buffer_.reserve(aCtx->n_steps_ * aCtx->mfcc_feats_per_timestep_);
+  ctx->previous_state_c_.resize(aCtx->state_size_, 0.f);
+  ctx->previous_state_h_.resize(aCtx->state_size_, 0.f);
+  ctx->model_ = aCtx;
+
+  const int cutoff_top_n = 40;
+  const double cutoff_prob = 1.0;
+
+  ctx->decoder_state_.init(aCtx->alphabet_,
+                           aCtx->beam_width_,
+                           cutoff_prob,
+                           cutoff_top_n,
+                           aCtx->scorer_,
+                           aCtx->hot_words_,
+                           true);
+
+  *retval = ctx.release();
+  return STT_ERR_OK;
+}
+
 
 void
 STT_FeedAudioContent(StreamingState* aSctx,
@@ -533,11 +567,10 @@ STT_SpeechToTextWithLogits(ModelState* aCtx,
                             unsigned int aNumResults)
 {
   StreamingState* ctx;
-  int status = STT_CreateStream(aCtx, &ctx);
+  int status = CreateStreamWithLogits(aCtx, &ctx);
   if (status != STT_ERR_OK) {
     return nullptr;
   }
-  ctx->decoder_state_.withLogits(true);
 
   STT_FeedAudioContent(ctx, aBuffer, aBufferSize);
 

@@ -25,7 +25,8 @@ DecoderState::init(const Alphabet& alphabet,
                    double cutoff_prob,
                    size_t cutoff_top_n,
                    std::shared_ptr<Scorer> ext_scorer,
-                   std::unordered_map<std::string, float> hot_words)
+                   std::unordered_map<std::string, float> hot_words,
+                   bool keep_logits)
 {
   // assign special ids
   abs_time_step_ = 0;
@@ -38,6 +39,7 @@ DecoderState::init(const Alphabet& alphabet,
   ext_scorer_ = ext_scorer;
   hot_words_ = hot_words;
   start_expanding_ = false;
+  keep_logits_ = keep_logits;
 
   // init prefixes' root
   PathTrie *root = new PathTrie;
@@ -55,12 +57,6 @@ DecoderState::init(const Alphabet& alphabet,
   }
 
   return 0;
-}
-
-void
-DecoderState::withLogits(bool val)
-{
-  keep_logits_ = val;
 }
 
 void
@@ -474,7 +470,7 @@ std::vector<Output> ctc_beam_search_decoder(
 {
   VALID_CHECK_EQ(alphabet.GetSize()+1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
   DecoderState state;
-  state.init(alphabet, beam_size, cutoff_prob, cutoff_top_n, ext_scorer, hot_words);
+  state.init(alphabet, beam_size, cutoff_prob, cutoff_top_n, ext_scorer, hot_words, false);
   state.next(probs, time_dim, class_dim);
   return state.decode(num_results);
 }
