@@ -142,6 +142,7 @@ def export():
             # AudioSpectrogram and Mfcc ops are custom but have built-in kernels in TFLite
             converter.allow_custom_ops = True
 
+            # When exporting without audio processing, complain about custom ops
             if Config.export_minimal:
                  converter.allow_custom_ops = False
 
