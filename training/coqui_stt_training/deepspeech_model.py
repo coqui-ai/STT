@@ -263,7 +263,7 @@ def create_model(
     return layer_6, layers
 
 
-def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
+def create_inference_graph(batch_size=1, n_steps=16, tflite=False, process_audio=True):
     batch_size = batch_size if batch_size > 0 else None
 
     # Create feature computation graph
@@ -275,11 +275,12 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         tf.float32, [Config.audio_window_samples], "input_samples"
     )
     samples = tf.expand_dims(input_samples, -1)
-    mfccs, _ = audio_to_features(samples, Config.audio_sample_rate)
-    # native_client: this node's name and shape are part of the API boundary
-    #   with the native client, if you change them you should sync changes with
-    #   the C++ code.
-    mfccs = tf.identity(mfccs, name="mfccs")
+    if process_audio:
+        mfccs, _ = audio_to_features(samples, Config.audio_sample_rate)
+        # native_client: this node's name and shape are part of the API boundary
+        #   with the native client, if you change them you should sync changes with
+        #   the C++ code.
+        mfccs = tf.identity(mfccs, name="mfccs")
 
     # Input tensor will be of shape [batch_size, n_steps, 2*n_context+1, n_input]
     # This shape is read by the native_client in STT_CreateModel to know the
@@ -394,10 +395,12 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         "outputs": probs,
         "new_state_c": new_state_c,
         "new_state_h": new_state_h,
-        "mfccs": mfccs,
         # Expose internal layers for downstream applications
         "layer_3": layers["layer_3"],
         "layer_5": layers["layer_5"],
     }
+
+    if process_audio:
+        outputs["mfccs"] = mfccs
 
     return inputs, outputs, layers

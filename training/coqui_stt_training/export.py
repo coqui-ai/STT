@@ -42,11 +42,16 @@ def export():
 
     tfv1.reset_default_graph()
 
-    inputs, outputs, _ = create_inference_graph(
+    inputs, outputs, layers = create_inference_graph(
         batch_size=Config.export_batch_size,
         n_steps=Config.n_steps,
         tflite=Config.export_tflite,
+        process_audio=not Config.export_minimal,
     )
+
+    print('inputs:', inputs, file=sys.stderr)
+    print('outputs:', outputs, file=sys.stderr)
+    print('layers:', layers, file=sys.stderr)
 
     graph_version = int(file_relative_read("GRAPH_VERSION").strip())
     assert graph_version > 0
@@ -110,6 +115,9 @@ def export():
             output_node_names=output_names,
         )
 
+        print('input_graph_def: ', tfv1.get_default_graph().as_graph_def(), file=sys.stderr)
+        print('output_names:', output_names, file=sys.stderr)
+
         frozen_graph = tfv1.graph_util.extract_sub_graph(
             graph_def=frozen_graph, dest_nodes=output_names
         )
@@ -133,6 +141,10 @@ def export():
 
             # AudioSpectrogram and Mfcc ops are custom but have built-in kernels in TFLite
             converter.allow_custom_ops = True
+
+            if Config.export_minimal:
+                 converter.allow_custom_ops = False
+
             tflite_model = converter.convert()
 
             with open_remote(output_tflite_path, "wb") as fout:
@@ -294,6 +306,9 @@ def package_zip():
 
 def main():
     initialize_globals_from_cli()
+
+    if Config.export_minimal:
+        print("Exporting minimal model", file=sys.stderr)
 
     if not Config.export_dir:
         raise RuntimeError(

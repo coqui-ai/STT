@@ -609,6 +609,9 @@ class BaseSttConfig(Coqpit):
     export_tflite: bool = field(
         default=True, metadata=dict(help="export a graph ready for TF Lite engine")
     )
+    export_minimal: bool = field(
+        default=False, metadata=dict(help="export a minimal graph without inbuilt audio processing")
+    )
     export_quantize: bool = field(
         default=True,
         metadata=dict(help="export a quantized model (optimized for size)"),
