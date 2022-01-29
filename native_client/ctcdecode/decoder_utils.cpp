@@ -60,7 +60,9 @@ std::vector<std::string> split_into_codepoints(const std::string &str) {
 
     out_str.append(1, c);
   }
-  result.push_back(out_str);
+  if (!out_str.empty()) {
+    result.push_back(out_str);
+  }
   return result;
 }
 

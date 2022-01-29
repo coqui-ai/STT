@@ -23,7 +23,6 @@ def main():
         "pandas",
         "progressbar2",
         "pyogg >= 0.6.14a1",
-        "pyxdg",
         "resampy >= 0.2.2",
         "requests",
         "semver",
@@ -70,7 +69,7 @@ def main():
         install_requires=install_requires,
         include_package_data=True,
         extras_require={
-            "transcribe": ["webrtcvad"],
+            "transcribe": ["webrtcvad == 2.0.10"],
         },
     )
 

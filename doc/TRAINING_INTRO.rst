@@ -8,6 +8,8 @@ Introduction
 
 This document is a quickstart guide to training an 🐸STT model using your own speech data. For more in-depth training documentation, you should refer to :ref:`Advanced Training Topics <advanced-training-docs>`.
 
+If you'd like to walk through a Python notebook (works in Google Colab), check out the `official STT Python notebooks <https://github.com/coqui-ai/STT/tree/main/notebooks>`_.
+
 Training a model using your own audio can lead to better transcriptions compared to an off-the-shelf 🐸STT model. If your speech data differs significantly from the data we used in training, training your own model (or fine-tuning one of ours) may lead to large improvements in transcription quality. You can read about how speech characteristics interact with transcription accuracy :ref:`here <model-data-match>`.
 
 Dockerfile Setup

@@ -345,7 +345,8 @@ cc_binary(
     name = "trie_load",
     srcs = [
         "trie_load.cc",
-    ] + DECODER_SOURCES,
+    ],
+    deps = [":decoder"],
     copts = select({
         "//tensorflow:windows": ["/std:c++14"],
         "//conditions:default": ["-std=c++14"],
