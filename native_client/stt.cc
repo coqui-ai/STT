@@ -260,8 +260,10 @@ StreamingState::processBatch(const vector<float>& buf, unsigned int n_steps)
 }
 
 int
-STT_CreateModel(const char* aModelPath,
-               ModelState** retval)
+CreateModelImpl(const char* aModelString,
+                bool init_from_bytes,
+                ModelState** retval,
+                unsigned int aBufferSize = 0)
 {
   *retval = nullptr;
 
@@ -274,7 +276,7 @@ STT_CreateModel(const char* aModelPath,
   LOGD(" Coqui STT: %s", ds_git_version());
 #endif
 
-  if (!aModelPath || strlen(aModelPath) < 1) {
+  if ((!init_from_bytes && !strlen(aModelString)) || (init_from_bytes && !aBufferSize)) {
     std::cerr << "No model specified, cannot continue." << std::endl;
     return STT_ERR_NO_MODEL;
   }
@@ -286,13 +288,28 @@ STT_CreateModel(const char* aModelPath,
     return STT_ERR_FAIL_CREATE_MODEL;
   }
 
-  int err = model->init(aModelPath);
+  int err = model->init(aModelString, init_from_bytes, aBufferSize);
   if (err != STT_ERR_OK) {
     return err;
   }
 
   *retval = model.release();
   return STT_ERR_OK;
+}
+
+int
+STT_CreateModel(const char* aModelPath,
+                ModelState** retval)
+{
+  return CreateModelImpl(aModelPath, false, retval);
+}
+
+int
+STT_CreateModelFromBuffer(const char* aModelBuffer,
+                          unsigned int aBufferSize,
+                          ModelState** retval)
+{
+  return CreateModelImpl(aModelBuffer, true, retval, aBufferSize);
 }
 
 unsigned int
@@ -321,16 +338,40 @@ STT_FreeModel(ModelState* ctx)
 }
 
 int
-STT_EnableExternalScorer(ModelState* aCtx,
-                        const char* aScorerPath)
+EnableExternalScorerImpl(ModelState* aCtx,
+                         const char* aScorerString,
+                         bool init_from_bytes,
+                         unsigned int aBufferSize = 0)
 {
   std::unique_ptr<Scorer> scorer(new Scorer());
-  int err = scorer->init(aScorerPath, aCtx->alphabet_);
+
+  int err;
+  if (init_from_bytes)
+    err = scorer->init(std::string(aScorerString, aBufferSize), init_from_bytes, aCtx->alphabet_);
+  else
+    err = scorer->init(aScorerString, init_from_bytes, aCtx->alphabet_);
+
+
   if (err != 0) {
     return STT_ERR_INVALID_SCORER;
   }
   aCtx->scorer_ = std::move(scorer);
   return STT_ERR_OK;
+}
+
+int
+STT_EnableExternalScorer(ModelState* aCtx,
+                         const char* aScorerPath)
+{
+  return EnableExternalScorerImpl(aCtx, aScorerPath, false);
+}
+
+int
+STT_EnableExternalScorerFromBuffer(ModelState* aCtx,
+                                   const char* aScorerBuffer,
+                                   unsigned int aBufferSize)
+{
+  return EnableExternalScorerImpl(aCtx, aScorerBuffer, true, aBufferSize);
 }
 
 int

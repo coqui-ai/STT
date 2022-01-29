@@ -37,9 +37,11 @@ public:
   Scorer& operator=(const Scorer&) = delete;
 
   int init(const std::string &lm_path,
+           bool load_from_bytes,
            const Alphabet &alphabet);
 
   int init(const std::string &lm_path,
+           bool load_from_bytes,
            const std::string &alphabet_config_path);
 
   double get_log_cond_prob(const std::vector<std::string> &words,
@@ -82,7 +84,7 @@ public:
   void fill_dictionary(const std::unordered_set<std::string> &vocabulary);
 
   // load language model from given path
-  int load_lm(const std::string &lm_path);
+  int load_lm(const std::string &lm_path, bool load_from_bytes=false);
 
   // language model weight
   double alpha = 0.;
@@ -119,7 +121,7 @@ protected:
   // necessary setup after setting alphabet
   void setup_char_map();
 
-  int load_trie(std::ifstream& fin, const std::string& file_path);
+  int load_trie(std::stringstream& fin, const std::string& file_path, bool load_from_bytes=false);
 
 private:
   std::unique_ptr<lm::base::Model> language_model_;

@@ -116,6 +116,20 @@ int STT_CreateModel(const char* aModelPath,
                     ModelState** retval);
 
 /**
+ * @brief An object providing an interface to a trained Coqui STT model, loaded from a buffer.
+ *
+ * @param aModelBuffer The buffer containing the content of the exported model.
+ * @param aBufferSize Size of model buffer.
+ * @param[out] retval a ModelState pointer
+ *
+ * @return Zero on success, non-zero on failure.
+ */
+STT_EXPORT
+int STT_CreateModelFromBuffer(const char* aModelBuffer,
+                              unsigned int aBufferSize,
+                              ModelState** retval);
+
+/**
  * @brief Get beam width value used by the model. If {@link STT_SetModelBeamWidth}
  *        was not called before, will return the default value loaded from the
  *        model file.
@@ -167,6 +181,20 @@ void STT_FreeModel(ModelState* ctx);
 STT_EXPORT
 int STT_EnableExternalScorer(ModelState* aCtx,
                              const char* aScorerPath);
+
+/**
+ * @brief Enable decoding using an external scorer loaded from a buffer.
+ *
+ * @param aCtx The ModelState pointer for the model being changed.
+ * @param aScorerBuffer The buffer containing the content of an external-scorer file.
+ * @param aBufferSize Size of scorer buffer.
+ *
+ * @return Zero on success, non-zero on failure (invalid arguments).
+ */
+STT_EXPORT
+int STT_EnableExternalScorerFromBuffer(ModelState* aCtx,
+                                       const char* aScorerBuffer,
+                                       unsigned int aBufferSize);
 
 /**
  * @brief Add a hot-word and its boost.
