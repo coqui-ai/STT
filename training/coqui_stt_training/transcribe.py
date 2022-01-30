@@ -57,8 +57,8 @@ class TranscriptionPool(PoolBase):
             self.create_graph()
 
     def create_graph(self):
-        self.batch_x_ph = tf.placeholder(tf.float32, [None, None, Config.n_input])
-        self.batch_x_len_ph = tf.placeholder(tf.int32)
+        self.batch_x_ph = tfv1.placeholder(tf.float32, [None, None, Config.n_input])
+        self.batch_x_len_ph = tfv1.placeholder(tf.int32)
 
         no_dropout = [None] * 6
         logits, _ = create_model(

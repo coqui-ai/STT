@@ -12,9 +12,14 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = DESIRED_LOG_LEVEL
 import numpy as np
 import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
+import tensorflow.lite as tfl
 import shutil
 
-from .deepspeech_model import create_inference_graph, create_model
+from .deepspeech_model import (
+    create_inference_graph,
+    create_featurizer_graph,
+    create_model,
+)
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import Config, initialize_globals_from_cli, log_error, log_info
 from .util.feeding import wavfile_bytes_to_features
@@ -31,7 +36,101 @@ def file_relative_read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-def export():
+def export_graph(
+    session,
+    graph,
+    inputs,
+    outputs,
+    output_filename,
+    optimizations=[tfl.Optimize.DEFAULT],
+    allow_custom_ops=True,
+    write_metadata=True,
+):
+    if Config.remove_export:
+        if isdir_remote(Config.export_dir):
+            log_info("Removing old export")
+            rmtree_remote(Config.export_dir)
+
+    if not is_remote_path(Config.export_dir) and not os.path.isdir(Config.export_dir):
+        os.makedirs(Config.export_dir)
+
+    def get_tensor_or_op_name(val):
+        if isinstance(val, tf.Tensor):
+            return val.op.name
+        elif isinstance(val, tf.Operation):
+            return val.name
+        return None
+
+    # Remove any None values
+    output_names = [n for n in map(get_tensor_or_op_name, outputs.values()) if n]
+
+    frozen_graph = tfv1.graph_util.convert_variables_to_constants(
+        sess=session,
+        input_graph_def=graph.as_graph_def(),
+        output_node_names=output_names,
+    )
+
+    frozen_graph = tfv1.graph_util.extract_sub_graph(
+        graph_def=frozen_graph, dest_nodes=output_names
+    )
+
+    converter = tfl.TFLiteConverter(
+        frozen_graph,
+        input_tensors=inputs.values(),
+        output_tensors=outputs.values(),
+    )
+
+    converter.optimizations = optimizations
+
+    # AudioSpectrogram and Mfcc ops are custom but have built-in kernels in TFLite
+    converter.allow_custom_ops = allow_custom_ops
+
+    tflite_model = converter.convert()
+
+    output_path = os.path.join(Config.export_dir, output_filename)
+    with open_remote(output_path, "wb") as fout:
+        fout.write(tflite_model)
+
+    log_info("Models exported at %s" % (Config.export_dir))
+
+    if write_metadata:
+        metadata_fname = os.path.join(
+            Config.export_dir,
+            "{}_{}_{}.md".format(
+                Config.export_author_id,
+                Config.export_model_name,
+                Config.export_model_version,
+            ),
+        )
+
+        with open_remote(metadata_fname, "w") as f:
+            f.write("---\n")
+            f.write("author: {}\n".format(Config.export_author_id))
+            f.write("model_name: {}\n".format(Config.export_model_name))
+            f.write("model_version: {}\n".format(Config.export_model_version))
+            f.write("contact_info: {}\n".format(Config.export_contact_info))
+            f.write("license: {}\n".format(Config.export_license))
+            f.write("language: {}\n".format(Config.export_language))
+            f.write("runtime: tflite\n")
+            f.write("min_stt_version: {}\n".format(Config.export_min_stt_version))
+            f.write("max_stt_version: {}\n".format(Config.export_max_stt_version))
+            f.write(
+                "acoustic_model_url: <replace this with a publicly available URL of the acoustic model>\n"
+            )
+            f.write(
+                "scorer_url: <replace this with a publicly available URL of the scorer, if present>\n"
+            )
+            f.write("---\n")
+            f.write("{}\n".format(Config.export_description))
+
+        log_info(
+            f"Model metadata file saved to {metadata_fname}. Before submitting "
+            "the exported model for publishing make sure all information in the "
+            "metadata file is correct, and complete the URL fields."
+        )
+
+
+def export(merged_featurizer_graph=True):
     r"""
     Restores the trained variables into a simpler graph that will be exported for serving.
     """
@@ -47,6 +146,11 @@ def export():
         n_steps=Config.n_steps,
         tflite=Config.export_tflite,
     )
+
+    inputs_feats, outputs_feats, _ = create_featurizer_graph()
+    if merged_featurizer_graph:
+        inputs.update(inputs_feats)
+        outputs.update(outputs_feats)
 
     graph_version = int(file_relative_read("GRAPH_VERSION").strip())
     assert graph_version > 0
@@ -79,117 +183,47 @@ def export():
     # Prevent further graph changes
     tfv1.get_default_graph().finalize()
 
-    output_names_tensors = [
-        tensor.op.name for tensor in outputs.values() if isinstance(tensor, tf.Tensor)
-    ]
-    output_names_ops = [
-        op.name for op in outputs.values() if isinstance(op, tf.Operation)
-    ]
-    output_names = output_names_tensors + output_names_ops
-
-    with tf.Session() as session:
+    with tfv1.Session() as session:
         # Restore variables from checkpoint
         load_graph_for_evaluation(session)
 
-        output_filename = Config.export_file_name + ".pb"
-        if Config.remove_export:
-            if isdir_remote(Config.export_dir):
-                log_info("Removing old export")
-                rmtree_remote(Config.export_dir)
-
-        output_graph_path = os.path.join(Config.export_dir, output_filename)
-
-        if not is_remote_path(Config.export_dir) and not os.path.isdir(
-            Config.export_dir
-        ):
-            os.makedirs(Config.export_dir)
-
-        frozen_graph = tfv1.graph_util.convert_variables_to_constants(
-            sess=session,
-            input_graph_def=tfv1.get_default_graph().as_graph_def(),
-            output_node_names=output_names,
+        export_graph(
+            session,
+            tfv1.get_default_graph(),
+            inputs,
+            outputs,
+            Config.export_file_name,
+            optimizations=[tfl.Optimize.DEFAULT] if Config.export_quantize else [],
+            allow_custom_ops=merged_featurizer_graph,
+            write_metadata=True,
         )
 
-        frozen_graph = tfv1.graph_util.extract_sub_graph(
-            graph_def=frozen_graph, dest_nodes=output_names
-        )
-
-        if not Config.export_tflite:
-            with open_remote(output_graph_path, "wb") as fout:
-                fout.write(frozen_graph.SerializeToString())
-        else:
-            output_tflite_path = os.path.join(
-                Config.export_dir, output_filename.replace(".pb", ".tflite")
+        if not merged_featurizer_graph:
+            export_graph(
+                session,
+                tfv1.get_default_graph(),
+                inputs_feats,
+                outputs_feats,
+                "featurizer.tflite",
+                optimizations=[],
+                allow_custom_ops=True,
+                write_metadata=False,
             )
-
-            converter = tf.lite.TFLiteConverter(
-                frozen_graph,
-                input_tensors=inputs.values(),
-                output_tensors=outputs.values(),
-            )
-
-            if Config.export_quantize:
-                converter.optimizations = [tf.lite.Optimize.DEFAULT]
-
-            # AudioSpectrogram and Mfcc ops are custom but have built-in kernels in TFLite
-            converter.allow_custom_ops = True
-            tflite_model = converter.convert()
-
-            with open_remote(output_tflite_path, "wb") as fout:
-                fout.write(tflite_model)
-
-        log_info("Models exported at %s" % (Config.export_dir))
-
-    metadata_fname = os.path.join(
-        Config.export_dir,
-        "{}_{}_{}.md".format(
-            Config.export_author_id,
-            Config.export_model_name,
-            Config.export_model_version,
-        ),
-    )
-
-    model_runtime = "tflite" if Config.export_tflite else "tensorflow"
-    with open_remote(metadata_fname, "w") as f:
-        f.write("---\n")
-        f.write("author: {}\n".format(Config.export_author_id))
-        f.write("model_name: {}\n".format(Config.export_model_name))
-        f.write("model_version: {}\n".format(Config.export_model_version))
-        f.write("contact_info: {}\n".format(Config.export_contact_info))
-        f.write("license: {}\n".format(Config.export_license))
-        f.write("language: {}\n".format(Config.export_language))
-        f.write("runtime: {}\n".format(model_runtime))
-        f.write("min_stt_version: {}\n".format(Config.export_min_stt_version))
-        f.write("max_stt_version: {}\n".format(Config.export_max_stt_version))
-        f.write(
-            "acoustic_model_url: <replace this with a publicly available URL of the acoustic model>\n"
-        )
-        f.write(
-            "scorer_url: <replace this with a publicly available URL of the scorer, if present>\n"
-        )
-        f.write("---\n")
-        f.write("{}\n".format(Config.export_description))
-
-    log_info(
-        "Model metadata file saved to {}. Before submitting the exported model for publishing make sure all information in the metadata file is correct, and complete the URL fields.".format(
-            metadata_fname
-        )
-    )
 
 
 def export_savedmodel():
     tfv1.reset_default_graph()
 
     with tfv1.Session(config=Config.session_config) as session:
-        input_wavfile_contents = tf.placeholder(
+        input_wavfile_contents = tfv1.placeholder(
             tf.string, [], name="input_wavfile_contents"
         )
         features, features_len = wavfile_bytes_to_features(input_wavfile_contents)
 
-        features_in = tf.placeholder(
+        features_in = tfv1.placeholder(
             tf.float32, [None, None, Config.n_input], name="features_in"
         )
-        feature_lens_in = tf.placeholder(tf.int32, [None], name="feature_lens_in")
+        feature_lens_in = tfv1.placeholder(tf.int32, [None], name="feature_lens_in")
         batch_size = tf.shape(features_in)[0]
 
         previous_state_c = tf.zeros([batch_size, Config.n_cell_dim], tf.float32)
@@ -302,7 +336,7 @@ def main():
 
     if not Config.export_zip:
         # Export to folder
-        export()
+        export(Config.merged_featurizer_graph)
     else:
         if listdir_remote(Config.export_dir):
             raise RuntimeError(

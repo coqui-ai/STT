@@ -263,9 +263,7 @@ def create_model(
     return layer_6, layers
 
 
-def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
-    batch_size = batch_size if batch_size > 0 else None
-
+def create_featurizer_graph():
     # Create feature computation graph
 
     # native_client: this node's name and shape are part of the API boundary
@@ -280,6 +278,15 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
     #   with the native client, if you change them you should sync changes with
     #   the C++ code.
     mfccs = tf.identity(mfccs, name="mfccs")
+
+    inputs = {"input_samples": input_samples}
+    outputs = {"mfccs": mfccs}
+    layers = {}
+    return (inputs, outputs, layers)
+
+
+def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
+    batch_size = batch_size if batch_size > 0 else None
 
     # Input tensor will be of shape [batch_size, n_steps, 2*n_context+1, n_input]
     # This shape is read by the native_client in STT_CreateModel to know the
@@ -384,7 +391,6 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         "input": input_tensor,
         "previous_state_c": previous_state_c,
         "previous_state_h": previous_state_h,
-        "input_samples": input_samples,
     }
 
     if not tflite:
@@ -394,7 +400,6 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
         "outputs": probs,
         "new_state_c": new_state_c,
         "new_state_h": new_state_h,
-        "mfccs": mfccs,
         # Expose internal layers for downstream applications
         "layer_3": layers["layer_3"],
         "layer_5": layers["layer_5"],

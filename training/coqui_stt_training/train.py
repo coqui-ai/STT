@@ -338,7 +338,7 @@ def train_impl(epochs=0, reverse=False, limit=0, write=True, silent_load=False):
     tfv1.reset_default_graph()
     tfv1.set_random_seed(Config.random_seed)
 
-    epoch_ph = tf.placeholder(tf.int64, name="epoch_ph")
+    epoch_ph = tfv1.placeholder(tf.int64, name="epoch_ph")
     train_set, dev_sets, metrics_sets = create_training_datasets(
         epoch_ph, reverse=reverse, limit=limit
     )

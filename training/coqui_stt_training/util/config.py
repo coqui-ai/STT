@@ -628,12 +628,16 @@ class BaseSttConfig(Coqpit):
         metadata=dict(help="export a TFLite model and package with LM and info.json"),
     )
     export_file_name: str = field(
-        default="output_graph",
+        default="output_graph.tflite",
         metadata=dict(help="name for the exported model file name"),
     )
     export_beam_width: int = field(
         default=500,
         metadata=dict(help="default beam width to embed into exported graph"),
+    )
+    merged_featurizer_graph: bool = field(
+        default=True,
+        metadata=dict(help="merge featurizer graph with acoustic model on export."),
     )
 
     # Model metadata
