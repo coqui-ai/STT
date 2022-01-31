@@ -65,6 +65,8 @@ struct StreamingState {
   vector<float> previous_state_h_;
   bool keep_emissions_ = false;
 
+  vector<double> probs_;
+
   ModelState* model_;
   DecoderState decoder_state_;
 
@@ -135,7 +137,42 @@ StreamingState::intermediateDecode() const
 Metadata*
 StreamingState::intermediateDecodeWithMetadata(unsigned int num_results) const
 {
-  return model_->decode_metadata(decoder_state_, num_results);
+  Metadata *m = model_->decode_metadata(decoder_state_, num_results);
+
+  if (keep_emissions_) {
+
+    const size_t alphabet_size = model_->alphabet_.GetSize();
+    const int num_timesteps = probs_.size() / (ModelState::BATCH_SIZE * (alphabet_size + 1));
+
+    AcousticModelEmissions* emissions = (AcousticModelEmissions*)malloc(sizeof(AcousticModelEmissions));
+
+    emissions->num_symbols = alphabet_size;
+    emissions->num_timesteps = num_timesteps;
+    emissions->symbols = (const char**)malloc(sizeof(char*)*alphabet_size + 1);
+    for (int i = 0; i < alphabet_size; i++) {
+        emissions->symbols[i] = strdup(model_->alphabet_.DecodeSingle(i).c_str());
+    }
+    emissions->symbols[alphabet_size] = strdup("\t");
+
+    double* probs = (double*)malloc(sizeof(double)*(alphabet_size + 1)*num_timesteps);
+    memcpy(probs, probs_.data(), sizeof(double)*(alphabet_size + 1)*num_timesteps);
+
+    emissions->emissions = probs;
+
+    Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
+
+    Metadata metadata {
+      m->transcripts,  // transcripts
+      m->num_transcripts, // num_transcripts
+      emissions,
+    };
+
+    memcpy(ret, &metadata, sizeof(Metadata));
+
+    return ret;
+  }
+
+  return m;
 }
 
 char*
@@ -149,7 +186,42 @@ Metadata*
 StreamingState::finishStreamWithMetadata(unsigned int num_results)
 {
   flushBuffers(true);
-  return model_->decode_metadata(decoder_state_, num_results);
+  Metadata *m = model_->decode_metadata(decoder_state_, num_results);
+
+  if (keep_emissions_) {
+
+    const size_t alphabet_size = model_->alphabet_.GetSize();
+    const int num_timesteps = probs_.size() / (ModelState::BATCH_SIZE * (alphabet_size + 1));
+
+    AcousticModelEmissions* emissions = (AcousticModelEmissions*)malloc(sizeof(AcousticModelEmissions));
+
+    emissions->num_symbols = alphabet_size;
+    emissions->num_timesteps = num_timesteps;
+    emissions->symbols = (const char**)malloc(sizeof(char*)*alphabet_size + 1);
+    for (int i = 0; i < alphabet_size; i++) {
+        emissions->symbols[i] = strdup(model_->alphabet_.DecodeSingle(i).c_str());
+    }
+    emissions->symbols[alphabet_size] = strdup("\t");
+
+    double* probs = (double*)malloc(sizeof(double)*(alphabet_size + 1)*num_timesteps);
+    memcpy(probs, probs_.data(), sizeof(double)*(alphabet_size + 1)*num_timesteps);
+
+    emissions->emissions = probs;
+
+    Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
+
+    Metadata metadata {
+      m->transcripts,  // transcripts
+      m->num_transcripts, // num_transcripts
+      emissions,
+    };
+
+    memcpy(ret, &metadata, sizeof(Metadata));
+
+    return ret;
+  }
+
+  return m;
 }
 
 void
@@ -254,6 +326,10 @@ StreamingState::processBatch(const vector<float>& buf, unsigned int n_steps)
 
   // Convert logits to double
   vector<double> inputs(logits.begin(), logits.end());
+
+  if (keep_emissions_) {
+    probs_ = inputs;
+  }
 
   decoder_state_.next(inputs.data(),
                       n_frames,
@@ -431,8 +507,7 @@ STT_CreateStream(ModelState* aCtx,
                            cutoff_prob,
                            cutoff_top_n,
                            aCtx->scorer_,
-                           aCtx->hot_words_,
-                           false);
+                           aCtx->hot_words_);
 
   *retval = ctx.release();
   return STT_ERR_OK;
@@ -457,6 +532,7 @@ CreateStreamWithEmissions(ModelState* aCtx,
   ctx->previous_state_c_.resize(aCtx->state_size_, 0.f);
   ctx->previous_state_h_.resize(aCtx->state_size_, 0.f);
   ctx->model_ = aCtx;
+  ctx->keep_emissions_ = true;
 
   const int cutoff_top_n = 40;
   const double cutoff_prob = 1.0;
@@ -466,8 +542,7 @@ CreateStreamWithEmissions(ModelState* aCtx,
                            cutoff_prob,
                            cutoff_top_n,
                            aCtx->scorer_,
-                           aCtx->hot_words_,
-                           true);
+                           aCtx->hot_words_);
 
   *retval = ctx.release();
   return STT_ERR_OK;
@@ -571,7 +646,6 @@ STT_SpeechToTextWithEmissions(ModelState* aCtx,
   if (status != STT_ERR_OK) {
     return nullptr;
   }
-
   STT_FeedAudioContent(ctx, aBuffer, aBufferSize);
 
   return STT_FinishStreamWithMetadata(ctx, aNumResults);

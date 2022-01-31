@@ -65,47 +65,13 @@ ModelState::decode_metadata(const DecoderState& state,
     memcpy(&transcripts[i], &transcript, sizeof(CandidateTranscript));
   }
 
-  unsigned int num_timesteps = out[0].probs.size();
-  unsigned int alphabet_size = alphabet_.GetSize();
-  unsigned int class_dim = alphabet_size + 1; // include CTC blank symbol
-
   Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
 
-  if (num_timesteps > 0) { // see if the logit structure has been filled and returned
-    AcousticModelEmissions* emissions = (AcousticModelEmissions*)malloc(sizeof(AcousticModelEmissions));
-
-    emissions->num_symbols = alphabet_size;
-    emissions->num_timesteps = num_timesteps;
-    emissions->symbols = (const char**)malloc(sizeof(char*)*alphabet_size + 1);
-    for (int i = 0; i < alphabet_size; i++) {
-        emissions->symbols[i] = strdup(alphabet_.DecodeSingle(i).c_str());
-    }
-    emissions->symbols[alphabet_size] = strdup("\t");
-
-    double* probs = (double*)malloc(sizeof(double)*class_dim*num_timesteps);
-    for (int i = 0; i < num_timesteps; i++) {
-      for (int j = 0; j < class_dim + 1; j++) {
-        probs[i * alphabet_size + j] = out[0].probs[i][j].second;
-      }
-    }
-    emissions->emissions = probs;
-
-    Metadata metadata {
-      transcripts,  // transcripts
-      num_returned, // num_transcripts
-      emissions, // matrix of probs from acoustic model
-    };
-    memcpy(ret, &metadata, sizeof(Metadata));
-    return ret;
-
-  } else {
-
-    Metadata metadata {
-      transcripts,  // transcripts
-      num_returned, // num_transcripts
-      NULL, 
-    };
-    memcpy(ret, &metadata, sizeof(Metadata));
-    return ret;
-  }
+  Metadata metadata {
+    transcripts,  // transcripts
+    num_returned, // num_transcripts
+    NULL,
+  };
+  memcpy(ret, &metadata, sizeof(Metadata));
+  return ret;
 }
