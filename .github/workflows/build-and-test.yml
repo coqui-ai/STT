@@ -884,7 +884,10 @@ jobs:
           time ./bin/run-ci-sample_augmentations.sh
 
           # Test Ogg/Vorbis input
-          time ./bin/run-ldc93s1-vorbis.sh --epochs 1
+          time ./bin/run-ci-ldc93s1-vorbis.sh --epochs 1
+
+          # Test WebDataset input
+          time ./bin/run-ci-ldc93s1-webdataset.sh --epochs 1
   training-sdb-tests:
     name: "Lin|SDB training tests"
     runs-on: ubuntu-20.04
