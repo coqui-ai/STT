@@ -866,7 +866,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
-          sudo apt-get install -y --no-install-recommends libopus0 sox
+          sudo apt-get install -y --no-install-recommends libopus0 libopusfile0 libvorbis-dev sox
       - name: Run tests
         run: |
           set -xe
