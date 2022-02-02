@@ -245,9 +245,13 @@ def apply_sample_augmentations(
                 yield sample, clock
         else:
             for sample_index, sample in enumerate(samples):
-                sample_clock = clock + (final_clock - clock) * (
-                    sample_index / len(samples)
-                )
+                try:
+                    sample_clock = clock + (final_clock - clock) * (
+                        sample_index / len(samples)
+                    )
+                except TypeError:
+                    # Dataset has no len
+                    sample_clock = 0.0
                 yield sample, sample_clock
 
     assert 0.0 <= clock <= 1.0

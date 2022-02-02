@@ -18,6 +18,9 @@ from .audio import (
 from .helpers import GIGABYTE, KILOBYTE, MEGABYTE, Interleaved, LenMap
 from .io import is_remote_path, open_remote
 
+import webdataset as wds
+
+
 BIG_ENDIAN = "big"
 INT_SIZE = 4
 BIGINT_SIZE = 2 * INT_SIZE
@@ -571,6 +574,74 @@ class CSV:
         return len(self.samples)
 
 
+class WebDatasetSource:
+    """Sample collection reader for reading a WebDataset source"""
+
+    def __init__(self, url, labeled=None):
+        """
+        Parameters
+        ----------
+        url : str
+            WebDataset URL
+        labeled : bool or None
+            If True: Reads LabeledSample instances. Fails, if CSV file has no transcript column.
+            If False: Ignores transcripts (if available) and reads (unlabeled) util.audio.Sample instances.
+            If None: Automatically determines if CSV file has a transcript column
+            (reading util.sample_collections.LabeledSample instances) or not (reading util.audio.Sample instances).
+        reverse : bool
+            If the order of the samples should be reversed
+        """
+        ds = wds.WebDataset(url)
+        self._dataset = ds
+        self.labeled = labeled
+
+    def __iter__(self):
+        class WrappedIterator:
+            def __init__(nself, wds_iter):
+                nself._iter = wds_iter
+
+            def __iter__(nself):
+                return nself
+
+            def __next__(nself):
+                sample = next(nself._iter)
+
+                detected_audio_type = None
+                raw_audio_data = None
+                transcript = None
+
+                for key, value in sample.items():
+                    if key == "txt":
+                        transcript = value.decode("utf8")
+
+                    audio_type = get_loadable_audio_type_from_extension(f".{key}")
+                    if audio_type:
+                        detected_audio_type = audio_type
+                        raw_audio_data = value
+
+                if not detected_audio_type:
+                    raise ValueError(f"Sample {sample['__key__']} has no audio")
+
+                if self.labeled is None and transcript:
+                    self.labeled = True
+
+                if self.labeled:
+                    processed_sample = LabeledSample(
+                        detected_audio_type,
+                        raw_audio_data,
+                        transcript,
+                        sample_id=sample["__key__"],
+                    )
+                else:
+                    processed_sample = Sample(
+                        detected_audio_type, raw_audio_data, sample_id=sample["__key__"]
+                    )
+
+                return processed_sample
+
+        return WrappedIterator(iter(self._dataset))
+
+
 def samples_from_source(
     sample_source, buffering=BUFFER_SIZE, labeled=None, reverse=False
 ):
@@ -593,9 +664,17 @@ def samples_from_source(
 
     Returns
     -------
-    iterable of util.sample_collections.LabeledSample or util.audio.Sample instances supporting len.
+    iterable of util.sample_collections.LabeledSample or util.audio.Sample instances
     """
     ext = os.path.splitext(sample_source)[1].lower()
+    if (
+        any(
+            sample_source.startswith(p)
+            for p in ("http://", "https://", "s3://", "pipe:")
+        )
+        or ext == ".tar"
+    ):
+        return WebDatasetSource(sample_source, labeled=labeled)
     if ext == ".sdb":
         return SDB(sample_source, buffering=buffering, labeled=labeled, reverse=reverse)
     if ext == ".csv":
