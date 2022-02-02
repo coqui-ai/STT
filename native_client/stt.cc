@@ -339,20 +339,19 @@ STT_FreeModel(ModelState* ctx)
 
 int
 EnableExternalScorerImpl(ModelState* aCtx,
-                         const char* aScorerString,
-                         bool init_from_bytes,
-                         unsigned int aBufferSize = 0)
+                         const std::string& aPathOrBuffer,
+                         bool aInitFromBuffer)
 {
   std::unique_ptr<Scorer> scorer(new Scorer());
 
   int err;
-  if (init_from_bytes)
-    err = scorer->init(std::string(aScorerString, aBufferSize), init_from_bytes, aCtx->alphabet_);
-  else
-    err = scorer->init(aScorerString, init_from_bytes, aCtx->alphabet_);
+  if (aInitFromBuffer) {
+    err = scorer->init_from_buffer(aPathOrBuffer, aCtx->alphabet_);
+  } else {
+    err = scorer->init_from_filepath(aPathOrBuffer, aCtx->alphabet_);
+  }
 
-
-  if (err != 0) {
+  if (err != STT_ERR_OK) {
     return STT_ERR_INVALID_SCORER;
   }
   aCtx->scorer_ = std::move(scorer);
@@ -371,7 +370,8 @@ STT_EnableExternalScorerFromBuffer(ModelState* aCtx,
                                    const char* aScorerBuffer,
                                    unsigned int aBufferSize)
 {
-  return EnableExternalScorerImpl(aCtx, aScorerBuffer, true, aBufferSize);
+  std::string buffer(aScorerBuffer, aBufferSize);
+  return EnableExternalScorerImpl(aCtx, aScorerBuffer, true);
 }
 
 int

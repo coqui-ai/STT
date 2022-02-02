@@ -105,7 +105,7 @@ class Scorer(swigwrapper.Scorer):
             assert beta is not None, "beta parameter is required"
             assert scorer_path, "scorer_path parameter is required"
 
-            err = self.init(scorer_path.encode("utf-8"), alphabet)
+            err = self.init_from_filepath(scorer_path.encode("utf-8"), alphabet)
             if err != 0:
                 raise ValueError(
                     "Scorer initialization failed with error code 0x{:X}".format(err)

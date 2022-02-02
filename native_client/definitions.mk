@@ -31,14 +31,7 @@ CXXFLAGS        :=
 LDFLAGS         :=
 SOX_CFLAGS      := -I$(ROOT_DIR)/sox-build/include
 ifeq ($(OS),Linux)
-MAGIC_LINK_LZMA := $(shell objdump -tTC /usr/lib/`uname -m`-linux-gnu/libmagic.so | grep lzma | grep '*UND*' | wc -l)
-ifneq ($(MAGIC_LINK_LZMA),0)
-MAYBE_LINK_LZMA := -llzma
-endif # MAGIC_LINK_LZMA
-MAGIC_LINK_BZ2  := $(shell objdump -tTC /usr/lib/`uname -m`-linux-gnu/libmagic.so | grep BZ2 | grep '*UND*' | wc -l)
-ifneq ($(MAGIC_LINK_BZ2),0)
-MAYBE_LINK_BZ2  := -lbz2
-endif # MAGIC_LINK_BZ2
+LINK_STT := $(LINK_STT) -llzma -lbz2
 SOX_LDFLAGS     := -L$(ROOT_DIR)/sox-build/lib -lsox
 else ifeq ($(OS),Darwin)
 SOX_CFLAGS              := $(shell pkg-config --cflags sox)

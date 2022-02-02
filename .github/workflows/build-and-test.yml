@@ -332,7 +332,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends xz-utils zip
+          apt-get install -y --no-install-recommends xz-utils zip liblzma-dev libbz2-dev
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
@@ -400,7 +400,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends xz-utils
+          apt-get install -y --no-install-recommends xz-utils liblzma-dev libbz2-dev
       - name: Extract native_client.tar.xz
         run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
