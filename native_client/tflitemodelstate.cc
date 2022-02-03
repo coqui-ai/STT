@@ -167,7 +167,7 @@ TFLiteModelState::init(const char *model_string, bool init_from_bytes, size_t bu
   }
 
   if (init_from_bytes) {
-    fbmodel_ = tflite::FlatBufferModel::VerifyAndBuildFromBuffer(model_string, bufferSize);
+    fbmodel_ = tflite::FlatBufferModel::BuildFromBuffer(model_string, bufferSize);
     if (!fbmodel_) {
       std::cerr << "Error at reading model buffer " << std::endl;
       return STT_ERR_FAIL_INIT_MMAP;

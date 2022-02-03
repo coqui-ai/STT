@@ -371,7 +371,7 @@ STT_EnableExternalScorerFromBuffer(ModelState* aCtx,
                                    unsigned int aBufferSize)
 {
   std::string buffer(aScorerBuffer, aBufferSize);
-  return EnableExternalScorerImpl(aCtx, aScorerBuffer, true);
+  return EnableExternalScorerImpl(aCtx, buffer, true);
 }
 
 int

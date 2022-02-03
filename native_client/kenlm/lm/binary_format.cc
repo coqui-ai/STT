@@ -115,19 +115,15 @@ bool IsBinaryFormat(int fd) {
   return false;
 }
 
-bool IsBinaryFormat(char *file_data, uint64_t size) {
-  char *file_data_temp = new char[size];
-  memcpy(file_data_temp,file_data, size);
-
+bool IsBinaryFormat(const char *file_data, uint64_t size) {
   if (size == util::kBadSize || (size <= static_cast<uint64_t>(sizeof(Sanity)))) {
-    delete[] file_data_temp;
     return false;
   }
 
   // Try reading the header.
   util::scoped_memory memory;
   try {
-    util::MapRead(util::LAZY, file_data_temp, 0, sizeof(Sanity), memory);
+    util::MapRead(util::READ, file_data, 0, sizeof(Sanity), memory);
   } catch (const util::Exception &e) {
     return false;
   }
@@ -167,11 +163,10 @@ void ReadHeader(int fd, Parameters &out) {
   if (out.fixed.order) util::ReadOrThrow(fd, &*out.counts.begin(), sizeof(uint64_t) * out.fixed.order);
 }
 
-void ReadHeader(char *file_data, Parameters &out) {
-  const char *file_data_tmp = file_data;
-  file_data_tmp += sizeof(Sanity);
-  std::memcpy(&out.fixed, file_data_tmp, sizeof(out.fixed));
-  file_data_tmp += sizeof(out.fixed);
+void ReadHeader(const char *file_data, Parameters &out) {
+  file_data += sizeof(Sanity);
+  std::memcpy(&out.fixed, file_data, sizeof(out.fixed));
+  file_data += sizeof(out.fixed);
 
   if (out.fixed.probing_multiplier < 1.0)
     UTIL_THROW(FormatLoadException, "Binary format claims to have a probing multiplier of " << out.fixed.probing_multiplier << " which is < 1.0.");
@@ -179,7 +174,7 @@ void ReadHeader(char *file_data, Parameters &out) {
   out.counts.resize(static_cast<std::size_t>(out.fixed.order));
 
   if (out.fixed.order) {
-    std::memcpy(&*out.counts.begin(), file_data_tmp, sizeof(uint64_t) * out.fixed.order);
+    std::memcpy(&*out.counts.begin(), file_data, sizeof(uint64_t) * out.fixed.order);
   }
 }
 
@@ -207,7 +202,7 @@ void BinaryFormat::InitializeBinary(int fd, ModelType model_type, unsigned int s
   header_size_ = TotalHeaderSize(params.counts.size());
 }
 
-void BinaryFormat::InitializeBinary(char *file_data, ModelType model_type, unsigned int search_version, Parameters &params) {  
+void BinaryFormat::InitializeBinary(const char *file_data, ModelType model_type, unsigned int search_version, Parameters &params) {
   file_data_ = file_data;
   write_mmap_ = NULL; // Ignore write requests; this is already in binary format.
   ReadHeader(file_data, params);
@@ -385,16 +380,12 @@ bool RecognizeBinary(const char *file, ModelType &recognized) {
 }
 
 bool RecognizeBinary(const char *file_data, const uint64_t file_data_size, ModelType &recognized) {
-  
-  char *file_data_temp = new char[file_data_size];
-  memcpy(file_data_temp, file_data, file_data_size);
-  
-  if (!IsBinaryFormat(file_data_temp, file_data_size)){
+  if (!IsBinaryFormat(file_data, file_data_size)){
     return false;
   }
 
   Parameters params;
-  ReadHeader(file_data_temp, params);
+  ReadHeader(file_data, params);
   recognized = params.fixed.model_type;
   return true;
 }

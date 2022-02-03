@@ -236,7 +236,7 @@ void WriteOrThrow(FILE *to, const void *data, std::size_t size) {
   UTIL_THROW_IF(1 != std::fwrite(data, size, 1, to), ErrnoException, "Short write; requested size " << size);
 }
 
-void ErsatzPRead(char *file_data, void *to_void, std::size_t size, uint64_t off) {
+void ErsatzPRead(const char *file_data, void *to_void, std::size_t size, uint64_t off) {
   uint8_t *to = static_cast<uint8_t*>(to_void);
   while (size) {
     errno = 0;
