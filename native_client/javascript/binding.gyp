@@ -27,16 +27,12 @@
                         "libraries": [
                             "../../../tensorflow/bazel-bin/native_client/libstt.so.if.lib",
                             "../../../tensorflow/bazel-bin/native_client/libkenlm.so.if.lib",
-                            "../../../tensorflow/bazel-bin/native_client/libtflitedelegates.so.if.lib",
-                            "../../../tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib",
                         ],
                     },
                     {
                         "libraries": [
                             "../../../tensorflow/bazel-bin/native_client/libstt.so",
                             "../../../tensorflow/bazel-bin/native_client/libkenlm.so",
-                            "../../../tensorflow/bazel-bin/native_client/libtflitedelegates.so",
-                            "../../../tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so",
                         ],
                     },
                 ],

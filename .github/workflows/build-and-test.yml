@@ -441,10 +441,6 @@ jobs:
         run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -485,10 +481,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -1660,10 +1652,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_macOS"
@@ -1707,10 +1695,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_macOS"
@@ -2123,12 +2107,8 @@ jobs:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
-          pushd tensorflow/bazel-bin/native_client/
+          cd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so* ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          popd
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Windows_crosscompiled"
@@ -2185,12 +2165,8 @@ jobs:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
-          pushd tensorflow/bazel-bin/native_client/
+          cd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so* ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          popd
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Windows_crosscompiled"
@@ -3017,10 +2993,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3083,10 +3055,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3162,10 +3130,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3228,10 +3192,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3753,7 +3713,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/armeabi-v7a
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3763,7 +3723,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/arm64-v8a
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3773,7 +3733,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/x86_64
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
           rm -f *
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
