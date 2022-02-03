@@ -329,7 +329,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "4"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -1560,7 +1560,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "3"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -1977,7 +1977,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "10"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -2821,7 +2821,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "1"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -2842,7 +2842,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "1"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -3542,7 +3542,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "1"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -3614,7 +3614,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          extras: "1"
+          extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
