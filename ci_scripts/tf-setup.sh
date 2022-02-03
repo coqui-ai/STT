@@ -41,6 +41,8 @@ if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     SUFFIX=".exe"
 fi
 
+$PYTHON_BIN_PATH -m pip install numpy==1.19.5
+
 cp ${DS_ROOT_TASK}/dls/${BAZEL_INSTALL_FILENAME} ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 chmod +x ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 
@@ -55,14 +57,14 @@ if [ ! -z "${install_android}" ]; then
     ANDROID_SDK_FILE=`basename ${ANDROID_SDK_URL}`
 
     pushd ${DS_ROOT_TASK}/STT/Android
-        unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
+        no | unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
     popd
 
     pushd ${DS_ROOT_TASK}/STT/Android/SDK
-        unzip ${DS_ROOT_TASK}/dls/${ANDROID_SDK_FILE}
+        no | unzip ${DS_ROOT_TASK}/dls/${ANDROID_SDK_FILE}
         yes | ./tools/bin/sdkmanager --licenses
         ./tools/bin/sdkmanager --update
-        ./tools/bin/sdkmanager --install "platforms;android-16" "build-tools;28.0.3"
+        ./tools/bin/sdkmanager --install "platforms;android-16" "build-tools;32.0.0"
     popd
 fi
 

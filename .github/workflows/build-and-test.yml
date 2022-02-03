@@ -1577,6 +1577,10 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/select-xcode
         with:
           version: "12.1.1"
@@ -2859,6 +2863,10 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/setup-tensorflow
         if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
       - uses: ./.github/actions/build-tensorflow
@@ -2883,6 +2891,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
+        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
       - uses: ./.github/actions/setup-tensorflow
         if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
@@ -3559,6 +3571,10 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
         if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
         if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
@@ -3630,6 +3646,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
         if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV

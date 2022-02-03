@@ -9,8 +9,8 @@ if [ "${OS}" = "Linux" ]; then
     BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64
     BAZEL_SHA256=4cb534c52cdd47a6223d4596d530e7c9c785438ab3b0a49ff347e991c210b2cd
 
-    ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r18b-linux-x86_64.zip
-    ANDROID_NDK_SHA256=4f61cbe4bbf6406aa5ef2ae871def78010eed6271af72de83f8bd0b07a9fd3fd
+    ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
+    ANDROID_NDK_SHA256=4c62514ec9c2309315fd84da6d52465651cdb68605058f231f1e480fcf2692e1
 
     ANDROID_SDK_URL=https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
     ANDROID_SDK_SHA256=92ffee5a1d98d856634e8b71132e8a95d96c83a63fde1099be3d86df3106def9
@@ -82,7 +82,7 @@ export PATH
 
 if [ "${OS}" = "Linux" ]; then
     export ANDROID_SDK_HOME=${DS_ROOT_TASK}/STT/Android/SDK/
-    export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r18b/
+    export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r19c/
 fi;
 
 export TF_ENABLE_XLA=0
@@ -111,6 +111,7 @@ export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
 
 if [ "${OS}" = "Linux" ]; then
     source /etc/os-release
+    export PYTHON_BIN_PATH=python
     if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
         export PYTHON_BIN_PATH=/opt/python/cp37-cp37m/bin/python
     fi

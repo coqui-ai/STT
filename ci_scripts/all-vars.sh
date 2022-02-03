@@ -58,7 +58,7 @@ export DS_VERSION="$(cat ${DS_DSDIR}/training/coqui_stt_training/VERSION)"
 
 export GRADLE_USER_HOME=${DS_ROOT_TASK}/gradle-cache
 export ANDROID_SDK_HOME=${DS_ROOT_TASK}/STT/Android/SDK/
-export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r18b/
+export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r19c/
 
 WGET=${WGET:-"wget"}
 TAR=${TAR:-"tar"}
