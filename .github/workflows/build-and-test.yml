@@ -355,12 +355,13 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends xz-utils
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
           echo "/tmp/venv/bin" >> $GITHUB_PATH
+        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - uses: ./.github/actions/build-tensorflow
         with:
           flavor: "--linux-cpu"
