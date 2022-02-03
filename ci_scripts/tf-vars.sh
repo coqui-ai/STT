@@ -151,8 +151,8 @@ export BAZEL_OUTPUT_USER_ROOT
 
 NVCC_COMPUTE="3.5"
 
-BAZEL_ARM_FLAGS="--config=rpi3_opt"
-BAZEL_ARM64_FLAGS="--config=rpi3-armv8_opt"
+BAZEL_ARM_FLAGS="--config=elinux_armhf"
+BAZEL_ARM64_FLAGS="--config=elinux_aarch64"
 BAZEL_ANDROID_ARM_FLAGS="--config=android_arm"
 BAZEL_ANDROID_ARM64_FLAGS="--config=android_arm64"
 BAZEL_ANDROID_X86_64_FLAGS="--config=android_x86_64"
