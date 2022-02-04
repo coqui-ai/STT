@@ -2,6 +2,13 @@
 
 set -ex
 
+ROOT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)
+CI_TASK_DIR=${CI_TASK_DIR:-${ROOT_DIR}}
+
+# /tmp/artifacts for docker-worker on linux,
+# and task subdir for generic-worker on osx
+export CI_ARTIFACTS_DIR=${CI_ARTIFACTS_DIR:-/tmp/artifacts}
+
 export OS=$(uname)
 if [ "${OS}" = "Linux" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
@@ -67,10 +74,6 @@ ZIP=${ZIP:-"zip"}
 UNXZ=${UNXZ:-"xz -T0 -d"}
 UNGZ=${UNGZ:-"gunzip"}
 SHA_SUM=${SHA_SUM:-"sha256sum -c --strict"}
-
-# /tmp/artifacts for docker-worker on linux,
-# and task subdir for generic-worker on osx
-export CI_ARTIFACTS_DIR=${CI_ARTIFACTS_DIR:-/tmp/artifacts}
 
 ### Define variables that needs to be exported to other processes
 
