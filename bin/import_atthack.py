@@ -73,6 +73,10 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar.extractall(target_dir)
         tar.close()
 
+def save_excluded_transcript_to_disk(transcript, to_disk):
+    with open(to_disk, 'a') as f:
+        f.write(f"{transcript}\n")
+        f.close()
 
 def one_sample(sample):
     """Take an audio file, and optionally convert it to 16kHz mono channel WAV"""
@@ -108,6 +112,8 @@ def one_sample(sample):
     elif float(frames / SAMPLE_RATE) > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
+        if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+            save_excluded_transcript_to_disk(label, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
     else:
         # This one is good - keep it for the target CSV
         rows.append((wav_filename, file_size, label))
@@ -326,6 +332,11 @@ def handle_args():
         help="[FLOAT] Max audio length in sec (default: 15.0)",
         default=10.0,
     )
+    parser.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        help="Save excluded sentences (too long) to disk so you can add them to the scorer",
+        default=None
+    )
     return parser.parse_args()
 
 
@@ -335,6 +346,8 @@ if __name__ == "__main__":
 
     MAX_SECS = CLI_ARGS.max_sec
     MIN_SECS = CLI_ARGS.min_sec
+
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = CLI_ARGS.save_excluded_max_sec_to_disk
 
     validate_label = get_validate_label(CLI_ARGS)
 
