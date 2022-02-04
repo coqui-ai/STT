@@ -455,7 +455,7 @@ def maybe_normalize_for_specials_chars(label):
         "[end]", ""
     )  # broken tag in 20150123_Entretiens_Tresor_PGM_wmv_0_fre_minefi.xml
     label = label.replace(
-        u"\xB8c", " ç"
+        "\xB8c", " ç"
     )  # strange cedilla in 20150417_Printemps_Economie_2_wmv_0_fre_minefi.xml
     label = label.replace(
         "C0²", "CO 2"
@@ -476,6 +476,12 @@ def maybe_normalize(label):
     label = maybe_normalize_for_anglicisms(label)
     label = maybe_normalize_for_digits(label)
     return label
+
+
+def save_excluded_transcript_to_disk(transcript, to_disk):
+    with open(to_disk, "a") as f:
+        f.write(f"{transcript}\n")
+        f.close()
 
 
 def one_sample(sample):
@@ -537,6 +543,8 @@ def one_sample(sample):
     elif frames / SAMPLE_RATE > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         _counter["too_long"] += 1
+        if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+            save_excluded_transcript_to_disk(label, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
     else:
         # This one is good - keep it for the target CSV
         _rows.append((os.path.join(dataset_basename, _wav_filename), file_size, label))
@@ -657,51 +665,53 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
-    with open(
-        target_csv_template.format("train"), "w"
-    ) as train_csv_file, open(
+    with open(target_csv_template.format("train"), "w") as train_csv_file, open(
         target_csv_template.format("dev"), "w"
-    ) as dev_csv_file, open(
-        target_csv_template.format("test"), "w"
-    ) as test_csv_file:
-                train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
-                train_writer.writeheader()
-                dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
-                dev_writer.writeheader()
-                test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
-                test_writer.writeheader()
+    ) as dev_csv_file, open(target_csv_template.format("test"), "w") as test_csv_file:
+        train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
+        train_writer.writeheader()
+        dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
+        dev_writer.writeheader()
+        test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
+        test_writer.writeheader()
 
-                train_set, dev_set, test_set = _split_sets(_rows)
+        train_set, dev_set, test_set = _split_sets(_rows)
 
-                train_bar = progressbar.ProgressBar(max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set")
-                for item in train_bar(train_set):
-                    train_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
-                
-                dev_bar = progressbar.ProgressBar(max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set")
-                for item in dev_bar(dev_set):
-                    dev_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
+        train_bar = progressbar.ProgressBar(
+            max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set"
+        )
+        for item in train_bar(train_set):
+            train_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
 
-                test_bar = progressbar.ProgressBar(max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set")
-                for item in test_bar(test_set):
-                    test_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
+        dev_bar = progressbar.ProgressBar(
+            max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set"
+        )
+        for item in dev_bar(dev_set):
+            dev_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
+
+        test_bar = progressbar.ProgressBar(
+            max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set"
+        )
+        for item in test_bar(test_set):
+            test_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
@@ -732,6 +742,7 @@ def _split_sets(rows):
         rows[dev_beg:dev_end],
         rows[test_beg:test_end],
     )
+
 
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
@@ -766,8 +777,15 @@ if __name__ == "__main__":
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
-
+    PARSER.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        help="Save excluded sentences (too long) to disk so you can add them to the scorer",
+        default=None,
+    )
     PARAMS = PARSER.parse_args()
+
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = PARAMS.save_excluded_max_sec_to_disk
+
     validate_label = get_validate_label(PARAMS)
     ALPHABET = Alphabet(PARAMS.filter_alphabet) if PARAMS.filter_alphabet else None
 

@@ -105,10 +105,12 @@ def read_ogg_opus_duration(ogg_file_path):
     pyogg.opus.op_free(opusfile)
     return pcm_buffer_size / sample_rate
 
+
 def save_excluded_transcript_to_disk(transcript, to_disk):
-    with open(to_disk, 'a') as f:
+    with open(to_disk, "a") as f:
         f.write(f"{transcript}\n")
         f.close()
+
 
 def _maybe_convert_sets(target_dir, extracted_data):
     extracted_dir = os.path.join(target_dir, extracted_data)
@@ -157,7 +159,9 @@ def _maybe_convert_sets(target_dir, extracted_data):
                     # Excluding very long samples to keep a reasonable batch-size
                     counter["too_long"] += 1
                     if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-                        save_excluded_transcript_to_disk(transcript, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+                        save_excluded_transcript_to_disk(
+                            transcript, SAVE_EXCLUDED_MAX_SEC_TO_DISK
+                        )
                 else:
                     subset_entries.append(
                         (
@@ -221,7 +225,7 @@ def handle_args():
     parser.add_argument(
         "--save_excluded_max_sec_to_disk",
         help="Save excluded sentences (too long) to disk so you can add them to the scorer",
-        default=None
+        default=None,
     )
 
     return parser.parse_args()

@@ -73,10 +73,12 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar.extractall(target_dir)
         tar.close()
 
+
 def save_excluded_transcript_to_disk(transcript, to_disk):
-    with open(to_disk, 'a') as f:
+    with open(to_disk, "a") as f:
         f.write(f"{transcript}\n")
         f.close()
+
 
 def one_sample(sample):
     """Take an audio file, and optionally convert it to 16kHz mono channel WAV"""
@@ -335,7 +337,7 @@ def handle_args():
     parser.add_argument(
         "--save_excluded_max_sec_to_disk",
         help="Save excluded sentences (too long) to disk so you can add them to the scorer",
-        default=None
+        default=None,
     )
     return parser.parse_args()
 

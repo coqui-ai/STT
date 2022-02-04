@@ -52,13 +52,15 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
     else:
         print('Found directory "%s" - not extracting it from archive.' % archive_path)
 
+
 def save_excluded_transcript_to_disk(transcript, to_disk):
-    with open(to_disk, 'a') as f:
+    with open(to_disk, "a") as f:
         f.write(f"{transcript}\n")
         f.close()
 
+
 def one_sample(sample):
-    """ Take a audio file, and optionally convert it to 16kHz WAV """
+    """Take a audio file, and optionally convert it to 16kHz WAV"""
     wav_filename = sample[0]
     file_size = -1
     frames = 0
@@ -223,7 +225,7 @@ def handle_args():
     parser.add_argument(
         "--save_excluded_max_sec_to_disk",
         help="Save excluded sentences (too long) to disk so you can add them to the scorer",
-        default=None
+        default=None,
     )
     return parser.parse_args()
 
@@ -232,9 +234,9 @@ if __name__ == "__main__":
     CLI_ARGS = handle_args()
     ALPHABET = Alphabet(CLI_ARGS.filter_alphabet) if CLI_ARGS.filter_alphabet else None
     SKIP_LIST = filter(None, CLI_ARGS.skiplist.split(","))
-    
+
     SAVE_EXCLUDED_MAX_SEC_TO_DISK = CLI_ARGS.save_excluded_max_sec_to_disk
-    
+
     validate_label = get_validate_label(CLI_ARGS)
 
     def label_filter(label):
