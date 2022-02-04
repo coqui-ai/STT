@@ -2,6 +2,9 @@
 
 set -ex
 
+ROOT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)
+CI_TASK_DIR=${CI_TASK_DIR:-${ROOT_DIR}}
+
 export OS=$(uname)
 if [ "${OS}" = "Linux" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
