@@ -105,6 +105,10 @@ def read_ogg_opus_duration(ogg_file_path):
     pyogg.opus.op_free(opusfile)
     return pcm_buffer_size / sample_rate
 
+def save_excluded_transcript_to_disk(transcript, to_disk):
+    with open(to_disk, 'a') as f:
+        f.write(f"{transcript}\n")
+        f.close()
 
 def _maybe_convert_sets(target_dir, extracted_data):
     extracted_dir = os.path.join(target_dir, extracted_data)
@@ -152,6 +156,8 @@ def _maybe_convert_sets(target_dir, extracted_data):
                 elif audio_duration > MAX_SECS:
                     # Excluding very long samples to keep a reasonable batch-size
                     counter["too_long"] += 1
+                    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+                        save_excluded_transcript_to_disk(transcript, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
                 else:
                     subset_entries.append(
                         (
@@ -187,7 +193,7 @@ def handle_args():
         help="Select language to download, process and import",
         required=True,
     )
-    parser.add_argument(dest="target_dir")
+    parser.add_argument(dest="target_dir", help="Where should the files be stored")
     parser.add_argument(
         "--filter_alphabet",
         help="Exclude samples with characters not in provided alphabet",
@@ -201,15 +207,21 @@ def handle_args():
     parser.add_argument(
         "--min_sec",
         type=float,
-        help="[FLOAT] Min audio length in sec (default: 0.85)",
+        help="[FLOAT] Min audio length in sec",
         default=0.85,
     )
 
     parser.add_argument(
         "--max_sec",
         type=float,
-        help="[FLOAT] Max audio length in sec (default: 15.0)",
+        help="[FLOAT] Max audio length in sec",
         default=15.0,
+    )
+
+    parser.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        help="Save excluded sentences (too long) to disk so you can add them to the scorer",
+        default=None
     )
 
     return parser.parse_args()
@@ -230,6 +242,8 @@ if __name__ == "__main__":
 
     MAX_SECS = CLI_ARGS.max_sec  # float
     MIN_SECS = CLI_ARGS.min_sec  # float
+
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = CLI_ARGS.save_excluded_max_sec_to_disk
 
     validate_label = get_validate_label(CLI_ARGS)
 
