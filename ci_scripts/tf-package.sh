@@ -23,7 +23,7 @@ done
 # to be ditched when we just wanted to get rid of ./public/ on OSX.
 # Switching to gnutar (already needed for the --transform on STT tasks)
 # does the trick.
-TAR_EXCLUDE="--exclude=./dls/*"
+TAR_EXCLUDE="--exclude=./dls/* --exclude=.bazel_cache/output/external/llvm-raw/* --exclude=.git/*"
 if [ "${OS}" = "Darwin" ]; then
     TAR_EXCLUDE="--exclude=./dls/* --exclude=./public/* --exclude=./generic-worker/* --exclude=./homebrew/* --exclude=./homebrew.cache/* --exclude=./homebrew.logs/*"
 fi;
