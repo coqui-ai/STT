@@ -49,7 +49,7 @@ class SpeechRecognitionImpl : NSObject, AVCaptureAudioDataOutputSampleBufferDele
         guard captureSession.canAddInput(audioDeviceInput) else { return }
         captureSession.addInput(audioDeviceInput)
 
-        let serialQueue = DispatchQueue(label: "serialQueue")
+        let serialQueue = DispatchQueue.main
         let audioOutput = AVCaptureAudioDataOutput()
         audioOutput.setSampleBufferDelegate(self, queue: serialQueue)
 
