@@ -14,6 +14,8 @@ do_bazel_build()
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
 
+  ls -lh bazel-bin/native_client
+
   if [ "${_opt_or_dbg}" = "opt" ]; then
     verify_bazel_rebuild "${DS_ROOT_TASK}/tensorflow/bazel_explain.log"
   fi
