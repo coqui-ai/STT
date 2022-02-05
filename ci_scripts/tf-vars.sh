@@ -112,14 +112,12 @@ export TF_NEED_ROCM=0
 # This should be gcc-5, hopefully. CUDA and TensorFlow might not be happy, otherwise.
 export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
 
+export PYTHON_BIN_PATH=`which python`
 if [ "${OS}" = "Linux" ]; then
     source /etc/os-release
-    export PYTHON_BIN_PATH=python
     if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
         export PYTHON_BIN_PATH=/opt/python/cp37-cp37m/bin/python
     fi
-elif [ "${OS}" != "${TC_MSYS_VERSION}" ]; then
-    export PYTHON_BIN_PATH=python
 fi
 
 ## Below, define or export some build variables
@@ -148,10 +146,16 @@ BAZEL_OUTPUT_CACHE_DIR="${DS_ROOT_TASK}/.bazel_cache/"
 BAZEL_OUTPUT_CACHE_INSTANCE="${BAZEL_OUTPUT_CACHE_DIR}/output/"
 mkdir -p ${BAZEL_OUTPUT_CACHE_INSTANCE} || true
 
-# We need both to ensure stable path ; default value for output_base is some
-# MD5 value.
-BAZEL_OUTPUT_USER_ROOT="--output_user_root ${BAZEL_OUTPUT_CACHE_DIR} --output_base ${BAZEL_OUTPUT_CACHE_INSTANCE}"
-export BAZEL_OUTPUT_USER_ROOT
+if [ "$CI" = "true" ]; then
+    BAZEL_CACHE_ROOT="${DS_ROOT_TASK}/STT/bazel-cache"
+    BAZEL_DISK_CACHE_PATH="${BAZEL_CACHE_ROOT}/disk"
+    mkdir -p $BAZEL_DISK_CACHE_PATH || true
+    BAZEL_REPO_CACHE_PATH="${BAZEL_CACHE_ROOT}/repo"
+    mkdir -p $BAZEL_REPO_CACHE_PATH || true
+    BAZEL_CACHE="--disk_cache=${BAZEL_DISK_CACHE_PATH} --repository_cache=${BAZEL_REPO_CACHE_PATH}"
+else
+    BAZEL_CACHE=""
+fi
 
 NVCC_COMPUTE="3.5"
 

@@ -6,7 +6,7 @@ set -o pipefail
 source $(dirname $0)/tf-vars.sh
 
 pushd ${DS_ROOT_TASK}/tensorflow/
-    BAZEL_BUILD="bazel ${BAZEL_OUTPUT_USER_ROOT} build -s"
+    BAZEL_BUILD="bazel build ${BAZEL_CACHE} -s"
 
     MAYBE_DEBUG=$2
     OPT_OR_DBG="-c opt"

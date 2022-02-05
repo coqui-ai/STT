@@ -9,7 +9,7 @@ do_bazel_build()
   cd ${DS_TFDIR}
   eval "export ${BAZEL_ENV_FLAGS}"
 
-  bazel ${BAZEL_OUTPUT_USER_ROOT} build \
+  bazel build ${BAZEL_CACHE} \
     -s --explain bazel_explain.log --verbose_explanations \
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
@@ -22,7 +22,7 @@ do_bazel_build()
 shutdown_bazel()
 {
   cd ${DS_TFDIR}
-  bazel ${BAZEL_OUTPUT_USER_ROOT} shutdown
+  bazel shutdown
 }
 
 do_stt_binary_build()

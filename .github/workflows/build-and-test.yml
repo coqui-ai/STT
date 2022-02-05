@@ -385,6 +385,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
@@ -395,7 +396,7 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends xz-utils zip
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - name: Setup venv
         run: |
@@ -405,6 +406,7 @@ jobs:
         with:
           name: "libsox3_Linux"
           path: ${{ github.workspace }}/sox-build/
+      - uses: ./.github/actions/setup-tensorflow
       - uses: ./.github/actions/libstt-build
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
@@ -1582,6 +1584,10 @@ jobs:
         with:
           python-version: "3.7"
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
+      - name: Install system deps
+        run:
+          brew install coreutils
+        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/select-xcode
         with:
           version: "12.1.1"
@@ -1612,6 +1618,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
@@ -1622,6 +1629,9 @@ jobs:
           rm tf-cache.tar.xz
       - run: |
           git status
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
       - uses: ./.github/actions/select-xcode
         with:
           version: "12.1.1"
@@ -1629,6 +1639,7 @@ jobs:
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
+      - uses: ./.github/actions/setup-tensorflow
       - uses: ./.github/actions/libstt-build
       - uses: ./.github/actions/package
       - uses: actions/upload-artifact@v2
@@ -2048,6 +2059,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2061,6 +2073,9 @@ jobs:
             unzip
             zip
       - uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.9
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
@@ -2073,6 +2088,7 @@ jobs:
         run: |
           rm -f /c/msys64/mingw64/clang-cl*
           rm -rf "/c/Program Files/LLVM"
+      - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
@@ -2921,16 +2937,21 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - run: |
           git status
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - uses: ./.github/actions/setup-tensorflow
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -2958,16 +2979,21 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - run: |
           git status
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - uses: ./.github/actions/setup-tensorflow
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3021,7 +3047,7 @@ jobs:
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
@@ -3083,7 +3109,7 @@ jobs:
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
@@ -3158,7 +3184,7 @@ jobs:
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
@@ -3220,7 +3246,7 @@ jobs:
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - uses: ./.github/actions/install-xldd
         with:
@@ -3602,14 +3628,23 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-armv7"
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-armv7
@@ -3678,14 +3713,24 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-arm64"
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-arm64
@@ -3702,14 +3747,24 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-arm64"
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-x86_64

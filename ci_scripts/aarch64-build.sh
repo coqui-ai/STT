@@ -16,8 +16,6 @@ BAZEL_TARGETS="
 BAZEL_BUILD_FLAGS="${BAZEL_ARM64_FLAGS} ${BAZEL_EXTRA_FLAGS}"
 BAZEL_ENV_FLAGS="TF_NEED_CUDA=0"
 
-maybe_install_xldd
-
 do_bazel_build
 
 do_stt_binary_build
