@@ -2828,7 +2828,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2856,9 +2857,6 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      # - uses: ./.github/actions/install-xldd
-      #   with:
-      #     target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -2870,6 +2868,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -2890,7 +2893,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2915,9 +2919,6 @@ jobs:
       - run: |
           tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      # - uses: ./.github/actions/install-xldd
-      #   with:
-      #     target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -2935,6 +2936,11 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_15.0.0
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -2965,7 +2971,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -2993,9 +3000,6 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      # - uses: ./.github/actions/install-xldd
-      #   with:
-      #     target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3007,6 +3011,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -3027,7 +3036,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -3052,9 +3062,6 @@ jobs:
       - run: |
           tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - uses: ./.github/actions/install-xldd
-        with:
-          target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3072,6 +3079,11 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_15.0.0
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -3506,11 +3518,6 @@ jobs:
         with:
           name: "native_client.tflite.android.x86_64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04
