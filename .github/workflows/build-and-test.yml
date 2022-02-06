@@ -10,7 +10,7 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-14-g4bdd3955115"
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-5-g0a77b72e379"
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
 
   # macOS specific
@@ -316,86 +316,42 @@ jobs:
         with:
           name: "test-checkpoint.${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
-  tensorflow_opt-Linux:
-    name: "Lin|Check TensorFlow cache"
+  build-lib-Linux:
+    name: "Lin|Build libstt+client"
     runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "4"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  build-tensorflow-Linux:
-    name: "Lin|Build TensorFlow (opt)"
-    needs: tensorflow_opt-Linux
-    runs-on: ubuntu-20.04
+    needs: [libsox3_Linux]
     container:
       image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
-      - run: true
-        if: needs.tensorflow_opt-Linux.outputs.status == 'found'
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends xz-utils
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - name: Setup venv
-        run: |
-          /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
-          echo "/tmp/venv/bin" >> $GITHUB_PATH
-      - uses: ./.github/actions/build-tensorflow
-        with:
-          flavor: "--linux-cpu"
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - uses: ./.github/actions/package-tensorflow
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
-  build-lib_Linux:
-    name: "Lin|Build libstt+client"
-    runs-on: ubuntu-20.04
-    needs: [build-tensorflow-Linux, tensorflow_opt-Linux, libsox3_Linux]
-    container:
-      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
-      volumes:
-        - ${{ github.workspace }}:${{ github.workspace }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
       - name: Install dependencies
         run: |
           apt-get update
           apt-get install -y --no-install-recommends xz-utils zip
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "Linux"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
@@ -404,8 +360,11 @@ jobs:
         with:
           name: "libsox3_Linux"
           path: ${{ github.workspace }}/sox-build/
-      - uses: ./.github/actions/libstt-build
-      - uses: ./.github/actions/package
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Linux.tar.xz"
@@ -414,10 +373,15 @@ jobs:
         with:
           name: "libstt.tflite.Linux.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-Linux:
     name: "Lin|Build Python bindings"
     runs-on: ubuntu-20.04
-    needs: [build-lib_Linux, swig_Linux]
+    needs: [build-lib-Linux, swig_Linux]
     strategy:
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
@@ -441,10 +405,6 @@ jobs:
         run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -473,7 +433,7 @@ jobs:
   build-nodejs-Linux:
     name: "Lin|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_Linux, swig_Linux ]
+    needs: [ build-lib-Linux, swig_Linux ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -485,10 +445,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -526,7 +482,7 @@ jobs:
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_Linux, train-test-model-Linux ]
+    needs: [ build-lib-Linux, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1184,7 +1140,7 @@ jobs:
     name: "Upload native client artifacts to release assets"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [create-release, build-lib_Windows, build-lib_Linux, build-lib_macOS, build-lib_LinuxAarch64, build-lib_LinuxArmv7]
+    needs: [create-release, build-lib-Windows, build-lib-Linux, build-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -1555,85 +1511,50 @@ jobs:
         with:
           name: "test-checkpoint.${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
-  tensorflow_opt-macOS:
-    name: "Mac|Check TensorFlow cache"
-    runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "3"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  build-tensorflow-macOS:
-    name: "Mac|Build TensorFlow (opt)"
-    needs: tensorflow_opt-macOS
+  build-lib-macOS:
+    name: "Mac|Build libstt+client"
     runs-on: macos-10.15
     steps:
-      - run: true
-        if: needs.tensorflow_opt-macOS.outputs.status == 'found'
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: ./.github/actions/select-xcode
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
         with:
-          version: "12.1.1"
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - run: |
-          # Taken from https://www.tensorflow.org/install/source
-          # Only future is needed for our builds, as we don't build the Python package
-          python -m pip install -U --user future==0.17.1 || true
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: ./.github/actions/build-tensorflow
+          arch: "macOS"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
         with:
-          flavor: "--darwin-cpu"
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: ./.github/actions/package-tensorflow
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
-  build-lib_macOS:
-    name: "Mac|Build libstt+client"
-    runs-on: macos-10.15
-    needs: [ build-tensorflow-macOS, tensorflow_opt-macOS ]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-macOS.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar xkf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - run: |
-          git status
-      - uses: ./.github/actions/select-xcode
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
         with:
-          version: "12.1.1"
+          python-version: "3.7"
+      - name: Install system deps
+        run:
+          brew install coreutils
+      - name: Select Xcode version
+        run: sudo xcode-select --switch /Applications/Xcode_12.1.1.app
+      - run: ./ci_scripts/tf-setup.sh
       - run: |
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
-      - uses: ./.github/actions/libstt-build
-      - uses: ./.github/actions/package
+      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.macOS.tar.xz"
@@ -1642,10 +1563,15 @@ jobs:
         with:
           name: "libstt.tflite.macOS.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-macOS:
     name: "Mac|Build Python bindings"
     runs-on: macos-10.15
-    needs: [ build-lib_macOS, swig_macOS ]
+    needs: [ build-lib-macOS, swig_macOS ]
     strategy:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
@@ -1660,10 +1586,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_macOS"
@@ -1695,7 +1617,7 @@ jobs:
   build-nodejs-macOS:
     name: "Mac|Build NodeJS and ElectronJS"
     runs-on: macos-10.15
-    needs: [ build-lib_macOS, swig_macOS ]
+    needs: [ build-lib-macOS, swig_macOS ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1707,10 +1629,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_macOS"
@@ -1748,7 +1666,7 @@ jobs:
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
     runs-on: macos-10.15
-    needs: [ build-lib_macOS, train-test-model-macOS ]
+    needs: [ build-lib-macOS, train-test-model-macOS ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1929,6 +1847,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1937,7 +1856,6 @@ jobs:
           install: >-
             git
             make
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -1956,11 +1874,6 @@ jobs:
           set -ex
           which link
           rm /usr/bin/link
-      - name: Remove mingw32-make conflicting with MSYS make
-        run: |
-          set -ex
-          which mingw32-make
-          rm /c/ProgramData/Chocolatey/bin/mingw32-make
       - name: Link ds-swig into swig
         run: |
           set -ex
@@ -1980,40 +1893,14 @@ jobs:
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
       - run: |
           make -C native_client/ctcdecode clean-keep-third-party
-  tensorflow_opt-Windows:
-    name: "Win|Check TensorFlow cache"
-    runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "10"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  build-tensorflow-Windows:
-    name: "Win|Build TensorFlow (opt)"
-    needs: tensorflow_opt-Windows
+  build-lib-Windows:
+    name: "Win|Build libstt+client"
     runs-on: windows-2019
     defaults:
       run:
         shell: msys2 {0}
     steps:
-      - run: true
-        shell: bash
-        if: needs.tensorflow_opt-Windows.outputs.status == 'found'
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2025,67 +1912,45 @@ jobs:
             tar
             unzip
             zip
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7.9
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
-        run: |
-          rm -f /c/msys64/mingw64/clang-cl*
-          rm -rf "/c/Program Files/LLVM"
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - run: ./ci_scripts/tf-setup.sh
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - run: ./ci_scripts/tf-build.sh "--windows-cpu"
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - run: ./ci_scripts/tf-package.sh
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
-  build-lib_Windows:
-    name: "Win|Build libstt+client"
-    runs-on: windows-2019
-    defaults:
-      run:
-        shell: msys2 {0}
-    needs: [build-tensorflow-Windows, tensorflow_opt-Windows]
-    steps:
+            make
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: msys2/setup-msys2@v2
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
         with:
-          msystem: MSYS
-          update: true
-          install: >-
-            git
-            make
-            patch
-            pkg-config
-            tar
-            unzip
-            zip
-      - uses: ilammy/msvc-dev-cmd@v1
+          arch: "Windows"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-Windows.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          "C:/Program Files/7-Zip/7z.exe" x tf-cache.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -snld -ttar -o`pwd`
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.9
       - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
         run: |
           rm -f /c/msys64/mingw64/clang-cl*
           rm -rf "/c/Program Files/LLVM"
+      - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Windows.tar.xz"
@@ -2094,19 +1959,25 @@ jobs:
         with:
           name: "libstt.tflite.Windows.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-Windows:
     name: "Win|Build Python bindings"
     runs-on: windows-2019
     defaults:
       run:
         shell: msys2 {0}
-    needs: [build-lib_Windows, swig_Windows_crosscompiled]
+    needs: [build-lib-Windows, swig_Windows_crosscompiled]
     strategy:
       matrix:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2114,7 +1985,6 @@ jobs:
           update: true
           install: >-
             make
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -2123,12 +1993,8 @@ jobs:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
-          pushd tensorflow/bazel-bin/native_client/
+          cd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so* ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          popd
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Windows_crosscompiled"
@@ -2166,8 +2032,9 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    needs: [build-lib_Windows, swig_Windows_crosscompiled]
+    needs: [build-lib-Windows, swig_Windows_crosscompiled]
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2176,7 +2043,6 @@ jobs:
           install: >-
             make
             tar
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -2185,12 +2051,8 @@ jobs:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
-          pushd tensorflow/bazel-bin/native_client/
+          cd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so* ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          popd
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Windows_crosscompiled"
@@ -2232,7 +2094,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    needs: [build-lib_Windows, train-test-model-Linux]
+    needs: [build-lib-Windows, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     env:
       CI_TMP_DIR: tmp/
@@ -2829,127 +2691,50 @@ jobs:
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   # Linux Armv7 and Aarch64 jobs
-  tensorflow_opt-LinuxArmv7:
-    name: "LinArmv7|Check TensorFlow cache"
-    runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    strategy:
-      matrix:
-        arch: [ "armv7" ]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "1"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  tensorflow_opt-LinuxAarch64:
-    name: "LinAarch64|Check TensorFlow cache"
-    runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    strategy:
-      matrix:
-        arch: [ "aarch64" ]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "1"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  build-tensorflow-LinuxArmv7:
-    name: "LinArmv7|Build TensorFlow (opt)"
-    needs: tensorflow_opt-LinuxArmv7
-    runs-on: ubuntu-20.04
-    steps:
-      - run: true
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'found'
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/build-tensorflow
-        with:
-          flavor: "--linux-armv7"
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/package-tensorflow
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-LinuxArmv7.outputs.status == 'missing'
-  build-tensorflow-LinuxAarch64:
-    name: "LinAarch64|Build TensorFlow (opt)"
-    needs: tensorflow_opt-LinuxAarch64
-    runs-on: ubuntu-20.04
-    steps:
-      - run: true
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'found'
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-      - uses: ./.github/actions/build-tensorflow
-        with:
-          flavor: "--linux-aarch64"
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-      - uses: ./.github/actions/package-tensorflow
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-LinuxAarch64.outputs.status == 'missing'
-  build-lib_LinuxArmv7:
+  build-lib-LinuxArmv7:
     name: "LinArmv7|Build libstt+client"
     runs-on: ubuntu-20.04
-    needs: [ build-tensorflow-LinuxArmv7, tensorflow_opt-LinuxArmv7 ]
     env:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+    outputs:
+      cache-key: ${{ steps.get_cache_key.outputs.key }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "LinuxArmv7"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - run: |
-          git status
-      - name: "Install chroot"
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install chroot
         uses: ./.github/actions/multistrap
         with:
           arch: armv7
-      - uses: ./.github/actions/libstt-build
-        with:
-          arch: armv7
-      - uses: ./.github/actions/package
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2958,35 +2743,55 @@ jobs:
         with:
           name: "libstt.tflite.linux.armv7.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-  build-lib_LinuxAarch64:
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-LinuxAarch64:
     name: "LinAarch64|Build libstt+client"
     runs-on: ubuntu-20.04
-    needs: [ build-tensorflow-LinuxAarch64, tensorflow_opt-LinuxAarch64 ]
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+    outputs:
+      cache-key: ${{ steps.get_cache_key.outputs.key }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "LinuxAarch64"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - run: |
-          git status
-      - name: "Install chroot"
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install chroot
         uses: ./.github/actions/multistrap
         with:
           arch: aarch64
-      - uses: ./.github/actions/libstt-build
-        with:
-          arch: aarch64
-      - uses: ./.github/actions/package
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -2995,10 +2800,15 @@ jobs:
         with:
           name: "libstt.tflite.linux.aarch64.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-LinuxArmv7:
     name: "LinArmv7|Build Python bindings"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
+    needs: [build-lib-LinuxArmv7, swig_Linux]
     strategy:
       matrix:
         python-version: [3.7]
@@ -3009,7 +2819,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -3017,10 +2828,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3032,18 +2839,15 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          name: ${{ needs.build-lib-LinuxArmv7.outputs.cache-key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: ./.github/actions/install-xldd
-        with:
-          target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3055,6 +2859,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -3068,14 +2877,15 @@ jobs:
   build-nodejs-LinuxArmv7:
     name: "LinArmv7|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
+    needs: [build-lib-LinuxArmv7, swig_Linux]
     env:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -3083,10 +2893,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3098,15 +2904,12 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
+          name: ${{ needs.build-lib-LinuxArmv7.outputs.cache-key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - uses: ./.github/actions/install-xldd
-        with:
-          target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3124,6 +2927,11 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_15.0.0
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -3141,7 +2949,7 @@ jobs:
   build-python-LinuxAarch64:
     name: "LinAarch64|Build Python bindings"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+    needs: [build-lib-LinuxAarch64, swig_Linux]
     strategy:
       matrix:
         python-version: [3.7]
@@ -3154,7 +2962,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -3162,10 +2971,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3177,18 +2982,15 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: ./.github/actions/install-xldd
-        with:
-          target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3200,6 +3002,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -3213,14 +3020,15 @@ jobs:
   build-nodejs-LinuxAarch64:
     name: "LinAarch64|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+    needs: [build-lib-LinuxAarch64, swig_Linux]
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          submodules: 'recursive'
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -3228,10 +3036,6 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-          mkdir -p ../tensorflow/lite
-          mv libtensorflowlite.so ../tensorflow/lite/
-          ls -hal . ../tensorflow/lite
-          cd ${{ github.workspace }}/
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3243,15 +3047,12 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - uses: ./.github/actions/install-xldd
-        with:
-          target: ${{ env.SYSTEM_TARGET }}
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3269,6 +3070,11 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_15.0.0
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -3313,7 +3119,7 @@ jobs:
   test-cpp-LinuxArm:
     name: "LinArm*|Test C++ binary"
     runs-on: ubuntu-20.04
-    needs: [ build-lib_LinuxArmv7, build-lib_LinuxAarch64, train-test-model-Linux, build-test-chroot ]
+    needs: [ build-lib-LinuxArmv7, build-lib-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -3569,169 +3375,135 @@ jobs:
           cat ${{ env.CI_TMP_DIR }}/xvfb.pid
           sudo kill -9 $(cat ${{ env.CI_TMP_DIR }}/xvfb.pid)
   # Android jobs
-  tensorflow_opt-AndroidArmv7:
-    name: "AndroidArmv7|Check TensorFlow cache"
-    runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "1"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  build-tensorflow-AndroidArmv7:
-    name: "AndroidArmv7|Build TensorFlow (opt)"
-    needs: tensorflow_opt-AndroidArmv7
+  build-lib-AndroidArmv7:
+    name: "AndroidArmv7|Build libstt+client"
     runs-on: ubuntu-20.04
     steps:
-      - run: true
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'found'
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
-      - name: Use Java 8 instead of Java 11
-        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
         with:
-          flavor: "--android-armv7"
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/build-tensorflow
+          arch: "AndroidArmv7"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
         with:
-          flavor: "--android-armv7"
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/package-tensorflow
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
-  build-lib_AndroidArmv7:
-    name: "AndroidArmv7|Build libstt+client"
-    runs-on: ubuntu-20.04
-    needs: [ build-tensorflow-AndroidArmv7, tensorflow_opt-AndroidArmv7 ]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - uses: ./.github/actions/libstt-build
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
         with:
-          arch: android-armv7
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - run: ./ci_scripts/tf-setup.sh --android-armv7
+      - run: ./ci_scripts/tf-configure.sh --android
+      - run: ./ci_scripts/android-armv7-build.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh armeabi-v7a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-  tensorflow_opt-AndroidArm64:
-    name: "AndroidArm64|Check TensorFlow cache"
-    runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.check_artifact_exists.outputs.status }}
-      cache_key: ${{ steps.get_cache_key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          extras: "1"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
+      - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-  build-tensorflow-AndroidArm64:
-    name: "AndroidArm64|Build TensorFlow (opt)"
-    needs: tensorflow_opt-AndroidArm64
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-AndroidArm64:
+    name: "AndroidArm64|Build libstt+client"
     runs-on: ubuntu-20.04
     steps:
-      - run: true
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'found'
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
-      - name: Use Java 8 instead of Java 11
-        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
-      - uses: ./.github/actions/setup-tensorflow
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
         with:
-          flavor: "--android-arm64"
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
-      - uses: ./.github/actions/build-tensorflow
+          arch: "AndroidArm64"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
         with:
-          flavor: "--android-arm64"
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
-      - uses: ./.github/actions/package-tensorflow
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
-  build-lib_AndroidArm64:
-    name: "AndroidArm64|Build libstt+client"
-    runs-on: ubuntu-20.04
-    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - uses: ./.github/actions/libstt-build
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
         with:
-          arch: android-arm64
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - run: ./ci_scripts/tf-setup.sh --android-arm64
+      - run: ./ci_scripts/tf-configure.sh --android
+      - run: ./ci_scripts/android-arm64-build.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh arm64-v8a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.arm64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-  build-lib_Androidx86_64:
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-Androidx86_64:
     name: "Androidx86_64|Build libstt+client"
     runs-on: ubuntu-20.04
-    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "Androidx86_64"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar --skip-old-files -xf tf-cache.tar.xz
+          tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
-      - uses: ./.github/actions/libstt-build
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
         with:
-          arch: android-x86_64
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - run: ./ci_scripts/tf-setup.sh --android-arm64
+      - run: ./ci_scripts/tf-configure.sh --android
+      - run: ./ci_scripts/android-x86_64-build.sh
       - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
@@ -3740,7 +3512,7 @@ jobs:
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04
-    needs: [build-lib_AndroidArmv7, build-lib_AndroidArm64, build-lib_Androidx86_64]
+    needs: [build-lib-AndroidArmv7, build-lib-AndroidArm64, build-lib-Androidx86_64]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -3753,7 +3525,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/armeabi-v7a
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3763,7 +3535,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/arm64-v8a
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3773,7 +3545,7 @@ jobs:
           mkdir -p native_client/java/libstt/libs/x86_64
           cd /tmp/nc
           tar xvf native_client.tar.xz
-          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
           rm -f *
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV

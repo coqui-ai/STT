@@ -24,15 +24,6 @@ download_material()
   ls -hal ${CI_TMP_DIR}/${model_name} ${CI_TMP_DIR}/LDC93S1*.wav
 }
 
-maybe_install_xldd()
-{
-  # -s required to avoid the noisy output like "Entering / Leaving directories"
-  toolchain=$(make -s -C ${DS_DSDIR}/native_client/ TARGET=${SYSTEM_TARGET} TFDIR=${DS_TFDIR} print-toolchain)
-  if [ ! -x "${toolchain}ldd" ]; then
-    cp "${DS_DSDIR}/native_client/xldd" "${toolchain}ldd" && chmod +x "${toolchain}ldd"
-  fi
-}
-
 verify_bazel_rebuild()
 {
   bazel_explain_file="$1"

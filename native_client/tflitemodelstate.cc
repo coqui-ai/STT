@@ -1,6 +1,7 @@
 #include "tflitemodelstate.h"
 #include "workspace_status.h"
 
+#include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/string_util.h"
 #include "tensorflow/lite/tools/evaluation/utils.h"
 

@@ -2,6 +2,13 @@
 
 set -ex
 
+ROOT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)
+CI_TASK_DIR=${CI_TASK_DIR:-${ROOT_DIR}}
+
+# /tmp/artifacts for docker-worker on linux,
+# and task subdir for generic-worker on osx
+export CI_ARTIFACTS_DIR=${CI_ARTIFACTS_DIR:-/tmp/artifacts}
+
 export OS=$(uname)
 if [ "${OS}" = "Linux" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
@@ -9,8 +16,8 @@ if [ "${OS}" = "Linux" ]; then
     BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64
     BAZEL_SHA256=4cb534c52cdd47a6223d4596d530e7c9c785438ab3b0a49ff347e991c210b2cd
 
-    ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r18b-linux-x86_64.zip
-    ANDROID_NDK_SHA256=4f61cbe4bbf6406aa5ef2ae871def78010eed6271af72de83f8bd0b07a9fd3fd
+    ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
+    ANDROID_NDK_SHA256=4c62514ec9c2309315fd84da6d52465651cdb68605058f231f1e480fcf2692e1
 
     ANDROID_SDK_URL=https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
     ANDROID_SDK_SHA256=92ffee5a1d98d856634e8b71132e8a95d96c83a63fde1099be3d86df3106def9
@@ -33,6 +40,9 @@ elif [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     export BAZEL_VC="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC"
     export BAZEL_VC_FULL_VERSION="14.29.30133"
     export MSYS2_ARG_CONV_EXCL='//'
+
+    # Fix to MSYS make to avoid conflicts with mingw32-make in PATH
+    export MAKE="/usr/bin/make"
 
     mkdir -p ${CI_TASK_DIR}/tmp/
     export TEMP=${CI_TASK_DIR}/tmp/
@@ -59,6 +69,7 @@ elif [ "${OS}" = "Darwin" ]; then
     TAR=gtar
 fi;
 
+MAKE=${MAKE:-"make"}
 WGET=${WGET:-"wget"}
 CURL=${CURL:-"curl"}
 TAR=${TAR:-"tar"}
@@ -67,10 +78,6 @@ ZIP=${ZIP:-"zip"}
 UNXZ=${UNXZ:-"xz -T0 -d"}
 UNGZ=${UNGZ:-"gunzip"}
 SHA_SUM=${SHA_SUM:-"sha256sum -c --strict"}
-
-# /tmp/artifacts for docker-worker on linux,
-# and task subdir for generic-worker on osx
-export CI_ARTIFACTS_DIR=${CI_ARTIFACTS_DIR:-/tmp/artifacts}
 
 ### Define variables that needs to be exported to other processes
 
@@ -82,7 +89,7 @@ export PATH
 
 if [ "${OS}" = "Linux" ]; then
     export ANDROID_SDK_HOME=${DS_ROOT_TASK}/STT/Android/SDK/
-    export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r18b/
+    export ANDROID_NDK_HOME=${DS_ROOT_TASK}/STT/Android/android-ndk-r19c/
 fi;
 
 export TF_ENABLE_XLA=0
@@ -109,13 +116,12 @@ export TF_NEED_ROCM=0
 # This should be gcc-5, hopefully. CUDA and TensorFlow might not be happy, otherwise.
 export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
 
+export PYTHON_BIN_PATH=`which python`
 if [ "${OS}" = "Linux" ]; then
     source /etc/os-release
     if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
         export PYTHON_BIN_PATH=/opt/python/cp37-cp37m/bin/python
     fi
-elif [ "${OS}" != "${TC_MSYS_VERSION}" ]; then
-    export PYTHON_BIN_PATH=python
 fi
 
 ## Below, define or export some build variables
@@ -144,15 +150,21 @@ BAZEL_OUTPUT_CACHE_DIR="${DS_ROOT_TASK}/.bazel_cache/"
 BAZEL_OUTPUT_CACHE_INSTANCE="${BAZEL_OUTPUT_CACHE_DIR}/output/"
 mkdir -p ${BAZEL_OUTPUT_CACHE_INSTANCE} || true
 
-# We need both to ensure stable path ; default value for output_base is some
-# MD5 value.
-BAZEL_OUTPUT_USER_ROOT="--output_user_root ${BAZEL_OUTPUT_CACHE_DIR} --output_base ${BAZEL_OUTPUT_CACHE_INSTANCE}"
-export BAZEL_OUTPUT_USER_ROOT
+if [ "$CI" = "true" ]; then
+    BAZEL_CACHE_ROOT="${DS_ROOT_TASK}/STT/bazel-cache"
+    BAZEL_DISK_CACHE_PATH="${BAZEL_CACHE_ROOT}/disk"
+    mkdir -p $BAZEL_DISK_CACHE_PATH || true
+    BAZEL_REPO_CACHE_PATH="${BAZEL_CACHE_ROOT}/repo"
+    mkdir -p $BAZEL_REPO_CACHE_PATH || true
+    BAZEL_CACHE="--disk_cache=${BAZEL_DISK_CACHE_PATH} --repository_cache=${BAZEL_REPO_CACHE_PATH}"
+else
+    BAZEL_CACHE=""
+fi
 
 NVCC_COMPUTE="3.5"
 
-BAZEL_ARM_FLAGS="--config=rpi3_opt"
-BAZEL_ARM64_FLAGS="--config=rpi3-armv8_opt"
+BAZEL_ARM_FLAGS="--config=elinux_armhf"
+BAZEL_ARM64_FLAGS="--config=elinux_aarch64"
 BAZEL_ANDROID_ARM_FLAGS="--config=android_arm"
 BAZEL_ANDROID_ARM64_FLAGS="--config=android_arm64"
 BAZEL_ANDROID_X86_64_FLAGS="--config=android_x86_64"
