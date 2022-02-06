@@ -1957,6 +1957,9 @@ jobs:
       - run: ./ci_scripts/package.sh
       - run: ./ci_scripts/tf-package.sh
         if: steps.check_artifact_exists.outputs.status == 'missing'
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Windows.tar.xz"
