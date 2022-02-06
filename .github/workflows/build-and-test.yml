@@ -2727,6 +2727,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
+      - name: Install chroot
+        uses: ./.github/actions/multistrap
+        with:
+          arch: armv7
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/armv7-build.sh
       - run: ./ci_scripts/package.sh
