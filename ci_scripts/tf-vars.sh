@@ -41,6 +41,9 @@ elif [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     export BAZEL_VC_FULL_VERSION="14.29.30133"
     export MSYS2_ARG_CONV_EXCL='//'
 
+    # Fix to MSYS make to avoid conflicts with mingw32-make in PATH
+    export MAKE="/usr/bin/make"
+
     mkdir -p ${CI_TASK_DIR}/tmp/
     export TEMP=${CI_TASK_DIR}/tmp/
     export TMP=${CI_TASK_DIR}/tmp/
@@ -66,6 +69,7 @@ elif [ "${OS}" = "Darwin" ]; then
     TAR=gtar
 fi;
 
+MAKE=${MAKE:-"make"}
 WGET=${WGET:-"wget"}
 CURL=${CURL:-"curl"}
 TAR=${TAR:-"tar"}

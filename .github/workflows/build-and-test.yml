@@ -1874,11 +1874,6 @@ jobs:
           set -ex
           which link
           rm /usr/bin/link
-      - name: Remove mingw32-make conflicting with MSYS make
-        run: |
-          set -ex
-          which mingw32-make
-          rm /c/ProgramData/Chocolatey/bin/mingw32-make
       - name: Link ds-swig into swig
         run: |
           set -ex
@@ -1917,6 +1912,7 @@ jobs:
             tar
             unzip
             zip
+            make
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -1947,11 +1943,6 @@ jobs:
         run: |
           rm -f /c/msys64/mingw64/clang-cl*
           rm -rf "/c/Program Files/LLVM"
-      - name: Remove mingw32-make conflicting with MSYS make
-        run: |
-          set -ex
-          which mingw32-make
-          rm /c/ProgramData/Chocolatey/bin/mingw32-make
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh

@@ -30,7 +30,7 @@ shutdown_bazel()
 do_stt_binary_build()
 {
   cd ${DS_DSDIR}
-  make -C native_client/ \
+  $MAKE -C native_client/ \
     TARGET=${SYSTEM_TARGET} \
     TFDIR=${DS_TFDIR} \
     RASPBIAN=${SYSTEM_RASPBIAN} \
