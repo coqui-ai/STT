@@ -3480,7 +3480,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          arch: "AndroidArm64"
+          arch: "Androidx86_64"
           extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
