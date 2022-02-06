@@ -1847,6 +1847,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1855,7 +1856,6 @@ jobs:
           install: >-
             git
             make
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -1905,6 +1905,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1939,7 +1940,6 @@ jobs:
           tar -xvf tf-cache.tar.xz
           rm tf-cache.tar.xz
         if: steps.check_artifact_exists.outputs.status == 'found'
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7.9
@@ -1986,6 +1986,7 @@ jobs:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1993,7 +1994,6 @@ jobs:
           update: true
           install: >-
             make
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -2043,6 +2043,7 @@ jobs:
         shell: msys2 {0}
     needs: [build-lib-Windows, swig_Windows_crosscompiled]
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -2051,7 +2052,6 @@ jobs:
           install: >-
             make
             tar
-      - uses: ilammy/msvc-dev-cmd@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
