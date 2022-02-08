@@ -41,6 +41,7 @@ MAYBE_LINK_BZ2  := -lbz2
 endif # MAGIC_LINK_BZ2
 SOX_LDFLAGS     := -L$(ROOT_DIR)/sox-build/lib -lsox
 else ifeq ($(OS),Darwin)
+SOX_CFLAGS              := $(shell pkg-config --cflags sox)
 LIBSOX_PATH             := $(shell echo `pkg-config --libs-only-L sox | sed -e 's/^-L//'`/lib`pkg-config --libs-only-l sox | sed -e 's/^-l//'`.dylib)
 LIBOPUSFILE_PATH        := $(shell echo `pkg-config --libs-only-L opusfile | sed -e 's/^-L//'`/lib`pkg-config --libs-only-l opusfile | sed -e 's/^-l//'`.dylib)
 LIBSOX_STATIC_DEPS      := $(shell echo `otool -L $(LIBSOX_PATH) | tail -n +2 | cut -d' ' -f1 | grep /opt/ | sed -E "s/\.[[:digit:]]+\.dylib/\.a/" | tr '\n' ' '`)
