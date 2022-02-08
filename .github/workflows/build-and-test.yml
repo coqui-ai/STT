@@ -1524,6 +1524,9 @@ jobs:
   build-lib-macOS:
     name: "Mac|Build libstt+client"
     runs-on: macos-10.15
+    strategy:
+      matrix:
+        arch: ["x86_64", "arm64"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1532,7 +1535,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          arch: "macOS"
+          arch: "macOS-${{ matrix.arch }}"
           extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
@@ -1555,23 +1558,30 @@ jobs:
         run:
           brew install coreutils
       - name: Select Xcode version
-        run: sudo xcode-select --switch /Applications/Xcode_12.1.1.app
+        run: |
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
+            # Force set 11.0 SDK for `stt` binary build, xcrun always uses CLT SDK
+            export SDKROOT=/Applications/Xcode_12.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+          else
+            sudo xcode-select --switch /Applications/Xcode_12.1.1.app/Contents/Developer
+          fi
       - run: ./ci_scripts/tf-setup.sh
       - run: |
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
-      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
       - run: ./ci_scripts/package.sh
       - run: ./ci_scripts/tf-package.sh
         if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.tflite.macOS.tar.xz"
+          name: "native_client.tflite.macOS.${{ matrix.arch }}.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.macOS.zip"
+          name: "libstt.tflite.macOS.${{ matrix.arch }}.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
       - uses: ./.github/actions/upload-release-asset
         with:

@@ -137,10 +137,6 @@ ifeq ($(OS),Darwin)
 CXXFLAGS       += -stdlib=libc++
 LDFLAGS_NEEDED := -stdlib=libc++
 LDFLAGS_RPATH  := -Wl,-rpath,@executable_path
-ifeq ($(TARGET),host)
-CXXFLAGS       += -mmacosx-version-min=10.10
-LDFLAGS_NEEDED += -mmacosx-version-min=10.10
-endif
 endif
 
 CFLAGS   += $(EXTRA_CFLAGS)
