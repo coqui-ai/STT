@@ -1140,7 +1140,7 @@ jobs:
     name: "Upload native client artifacts to release assets"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [create-release, build-lib-Windows, build-lib-Linux, build-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
+    needs: [create-release, build-lib-Windows, build-lib-Linux, build-universal-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -1588,10 +1588,71 @@ jobs:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-universal-lib-macOS:
+    name: "Mac|Build universal lib"
+    runs-on: macos-10.15
+    needs: [build-lib-macOS]
+    steps:
+      # Download and extract individual arch packages and create universal binaries
+      - uses: actions/download-artifact@v2
+        with:
+          name: "native_client.tflite.macOS.x86_64.tar.xz"
+      - run: |
+          mkdir nc.x86_64
+          cd nc.x86_64
+          tar xvf ../native_client.tflite.macOS.x86_64.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: "native_client.tflite.macOS.arm64.tar.xz"
+      - run: |
+          mkdir nc.arm64
+          cd nc.arm64
+          tar xvf ../native_client.tflite.macOS.arm64.tar.xz
+      - name: Create universal binaries
+        run: |
+          for binary in "libstt.so" "kenlm.so" "stt"; do
+            lipo -create -output "${binary}" "nc.x86_64/${binary}" "nc.arm64/${binary}"
+            cp "${binary}" "nc.x86_64/${binary}"
+          done
+      - run: |
+          cd nc.x86_64
+          tar cvJf native_client.tflite.macOS.tar.xz .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "native_client.tflite.macOS.tar.xz"
+          path: nc.x86_64/native_client.tflite.macOS.tar.xz
+      # Now do the same, but for libstt.zip
+      - uses: actions/download-artifact@v2
+        with:
+          name: "libstt.tflite.macOS.x86_64.tar.xz"
+      - run: |
+          mkdir libstt.x86_64
+          cd libstt.x86_64
+          tar xvf ../libstt.tflite.macOS.x86_64.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: "libstt.tflite.macOS.arm64.tar.xz"
+      - run: |
+          mkdir libstt.arm64
+          cd libstt.arm64
+          tar xvf ../libstt.tflite.macOS.arm64.tar.xz
+      - name: Create universal binaries
+        run: |
+          for binary in "libstt.so" "kenlm.so"; do
+            lipo -create -output "${binary}" "libstt.x86_64/${binary}" "libstt.arm64/${binary}"
+            cp "${binary}" "libstt.x86_64/${binary}"
+          done
+      - run: |
+          cd libstt.x86_64
+          tar cvJf libstt.tflite.macOS.tar.xz .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.macOS.tar.xz"
+          path: libstt.x86_64/libstt.tflite.macOS.tar.xz
   build-python-macOS:
     name: "Mac|Build Python bindings"
     runs-on: macos-10.15
-    needs: [ build-lib-macOS, swig_macOS ]
+    needs: [build-universal-lib-macOS, swig_macOS]
     strategy:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
@@ -1637,7 +1698,7 @@ jobs:
   build-nodejs-macOS:
     name: "Mac|Build NodeJS and ElectronJS"
     runs-on: macos-10.15
-    needs: [ build-lib-macOS, swig_macOS ]
+    needs: [build-universal-lib-macOS, swig_macOS]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1686,7 +1747,7 @@ jobs:
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
     runs-on: macos-10.15
-    needs: [ build-lib-macOS, train-test-model-macOS ]
+    needs: [build-universal-lib-macOS, train-test-model-macOS]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
