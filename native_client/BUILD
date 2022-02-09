@@ -164,6 +164,7 @@ cc_library(
         "//tensorflow:windows": ["/std:c++14"],
         "//conditions:default": ["-std=c++14", "-fexceptions", "-fwrapv"],
     }),
+<<<<<<< HEAD
 )
 
 cc_library(
@@ -214,6 +215,8 @@ cc_library(
         "//tensorflow/lite/tools/evaluation:utils",
     ],
     srcs = [":libtflitedelegates.so"],
+=======
+>>>>>>> coqui-ai-main
 )
 
 cc_library(
@@ -228,7 +231,11 @@ cc_library(
         "workspace_status.h",
         "tflitemodelstate.h",
         "tflitemodelstate.cc",
+<<<<<<< HEAD
     ] + DECODER_SOURCES,
+=======
+    ],
+>>>>>>> coqui-ai-main
     copts = select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
         "//tensorflow:windows": ["/std:c++14", "/w"],
@@ -252,13 +259,25 @@ cc_library(
         # We simply force the linker option manually here as a hacky fix.
         "//tensorflow:windows": [
             "bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib",
+<<<<<<< HEAD
             "bazel-out/x64_windows-opt/bin/native_client/libtflitedelegates.so.if.lib",
             "bazel-out/x64_windows-opt/bin/tensorflow/lite/libtensorflowlite.so.if.lib",
+=======
+>>>>>>> coqui-ai-main
         ],
         "//conditions:default": [],
     }) + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
+<<<<<<< HEAD
     deps = [":kenlm", ":tflite", ":tflitedelegates", ":flashlight"],
+=======
+    deps = [
+        ":decoder",
+        "//tensorflow/lite:framework_stable",
+        "//tensorflow/lite/kernels:builtin_ops",
+        "//tensorflow/lite/tools/evaluation:utils",
+    ],
+>>>>>>> coqui-ai-main
 )
 
 cc_binary(
@@ -345,7 +364,12 @@ cc_binary(
     name = "trie_load",
     srcs = [
         "trie_load.cc",
+<<<<<<< HEAD
     ] + DECODER_SOURCES,
+=======
+    ],
+    deps = [":decoder"],
+>>>>>>> coqui-ai-main
     copts = select({
         "//tensorflow:windows": ["/std:c++14"],
         "//conditions:default": ["-std=c++14"],

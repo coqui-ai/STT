@@ -214,44 +214,76 @@ assert_correct_multi_ldc93s1()
 
 assert_correct_ldc93s1_prodmodel()
 {
+<<<<<<< HEAD
   if [ -z "$3" -o "$3" = "16k" ]; then
     assert_correct_inference "$1" "she had your dark suit in greasy wash water all year" "$2"
   fi;
 
   if [ "$3" = "8k" ]; then
+=======
+  if [ -z "$3" -o "$3" = "16000" ]; then
+    assert_correct_inference "$1" "she had your dark suit in greasy wash water all year" "$2"
+  fi;
+
+  if [ "$3" = "8000" ]; then
+>>>>>>> coqui-ai-main
     assert_correct_inference "$1" "she had to do suit in greasy wash water all year" "$2"
   fi;
 }
 
 assert_working_ldc93s1_prodmodel()
 {
+<<<<<<< HEAD
   if [ -z "$3" -o "$3" = "16k" ]; then
     assert_working_inference "$1" "she had your dark suit in greasy wash water all year" "$2"
   fi
 
   if [ "$3" = "8k" ]; then
+=======
+  if [ -z "$3" -o "$3" = "16000" ]; then
+    assert_working_inference "$1" "she had your dark suit in greasy wash water all year" "$2"
+  fi
+
+  if [ "$3" = "8000" ]; then
+>>>>>>> coqui-ai-main
     assert_working_inference "$1" "she had to do suit in greasy wash water all year" "$2"
   fi
 }
 
 assert_correct_ldc93s1_prodtflitemodel()
 {
+<<<<<<< HEAD
   if [ -z "$3" -o "$3" = "16k" ]; then
     assert_correct_inference "$1" "she had her dark suit in greasy wash water all year" "$2"
   fi;
 
   if [ "$3" = "8k" ]; then
+=======
+  if [ -z "$3" -o "$3" = "16000" ]; then
+    assert_correct_inference "$1" "she had her dark suit in greasy wash water all year" "$2"
+  fi;
+
+  if [ "$3" = "8000" ]; then
+>>>>>>> coqui-ai-main
     assert_correct_inference "$1" "she had to do so and greasy wash water all year" "$2"
   fi;
 }
 
 assert_working_ldc93s1_prodtflitemodel()
 {
+<<<<<<< HEAD
   if [ -z "$3" -o "$3" = "16k" ]; then
     assert_working_inference "$1" "she had her dark suit in greasy wash water all year" "$2"
   fi;
 
   if [ "$3" = "8k" ]; then
+=======
+  if [ -z "$3" -o "$3" = "16000" ]; then
+    assert_working_inference "$1" "she had her dark suit in greasy wash water all year" "$2"
+  fi;
+
+  if [ "$3" = "8000" ]; then
+>>>>>>> coqui-ai-main
     assert_working_inference "$1" "she had to do so and greasy wash water all year" "$2"
   fi;
 }
@@ -462,7 +494,11 @@ run_prod_concurrent_stream_tests()
   output1=$(echo "${output}" | head -n 1)
   output2=$(echo "${output}" | tail -n 1)
 
+<<<<<<< HEAD
   assert_correct_ldc93s1_prodmodel "${output1}" "${status}" "16k"
+=======
+  assert_correct_ldc93s1_prodmodel "${output1}" "${status}" "16000"
+>>>>>>> coqui-ai-main
   assert_correct_inference "${output2}" "we must find a new home in the stars" "${status}"
 }
 

@@ -1,6 +1,10 @@
 #include "tflitemodelstate.h"
 #include "workspace_status.h"
 
+<<<<<<< HEAD
+=======
+#include "tensorflow/lite/kernels/register.h"
+>>>>>>> coqui-ai-main
 #include "tensorflow/lite/string_util.h"
 #include "tensorflow/lite/tools/evaluation/utils.h"
 

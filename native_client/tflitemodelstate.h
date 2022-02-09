@@ -5,7 +5,10 @@
 #include <vector>
 
 #include "tensorflow/lite/model.h"
+<<<<<<< HEAD
 #include "tensorflow/lite/kernels/register.h"
+=======
+>>>>>>> coqui-ai-main
 
 #include "modelstate.h"
 

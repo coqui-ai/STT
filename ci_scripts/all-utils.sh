@@ -2,6 +2,7 @@
 
 set -xe
 
+<<<<<<< HEAD
 set_ldc_sample_filename()
 {
   local _bitrate=$1
@@ -21,6 +22,8 @@ set_ldc_sample_filename()
   esac
 }
 
+=======
+>>>>>>> coqui-ai-main
 download_model_prod()
 {
   local _model_source_file=$(basename "${model_source}")
@@ -43,6 +46,7 @@ download_material()
   ls -hal ${CI_TMP_DIR}/${model_name} ${CI_TMP_DIR}/LDC93S1*.wav
 }
 
+<<<<<<< HEAD
 maybe_install_xldd()
 {
   # -s required to avoid the noisy output like "Entering / Leaving directories"
@@ -52,6 +56,8 @@ maybe_install_xldd()
   fi
 }
 
+=======
+>>>>>>> coqui-ai-main
 verify_bazel_rebuild()
 {
   bazel_explain_file="$1"

@@ -10,7 +10,11 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+<<<<<<< HEAD
   EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.3.0-14-g4bdd3955115"
+=======
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-5-g0a77b72e379"
+>>>>>>> coqui-ai-main
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
 
   # macOS specific
@@ -266,7 +270,11 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
@@ -286,6 +294,7 @@ jobs:
           pip install coqui_stt_ctcdecoder-*-cp36-cp36m-*_x86_64.whl
           DS_NODECODER=y pip install --upgrade .
       - run: |
+<<<<<<< HEAD
           bits=""
           if [ "${{ matrix.bitrate }}" = "8k" ]; then
             bits=8000
@@ -301,6 +310,15 @@ jobs:
 
           ./bin/run-ci-ldc93s1_new.sh 249 ${bits}
           ./bin/run-ci-ldc93s1_tflite.sh ${bits}
+=======
+          # Easier to rename to that we can exercize the LDC93S1 importer code to
+          # generate the CSV file.
+          echo "Moving ${{ matrix.samplerate }} to LDC93S1.wav"
+          mv data/smoke_test/LDC93S1_pcms16le_1_${{ matrix.samplerate}}.wav data/smoke_test/LDC93S1.wav
+
+          ./bin/run-ci-ldc93s1_new.sh 249 ${{ matrix.samplerate}}
+          ./bin/run-ci-ldc93s1_tflite.sh ${{ matrix.samplerate}}
+>>>>>>> coqui-ai-main
       - run: |
           wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
           unzip temp.zip
@@ -318,6 +336,7 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
@@ -346,17 +365,33 @@ jobs:
     name: "Lin|Build TensorFlow (opt)"
     needs: tensorflow_opt-Linux
     runs-on: ubuntu-20.04
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+          path: ${{ github.workspace }}/tmp/output_graph.tflite
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "test-checkpoint.${{ matrix.samplerate }}.zip"
+          path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
+  build-lib-Linux:
+    name: "Lin|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [libsox3_Linux]
+>>>>>>> coqui-ai-main
     container:
       image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
+<<<<<<< HEAD
       - run: true
         if: needs.tensorflow_opt-Linux.outputs.status == 'found'
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
+<<<<<<< HEAD
         if: needs.tensorflow_opt-Linux.outputs.status == 'missing'
       - name: Install dependencies
         run: |
@@ -397,13 +432,37 @@ jobs:
           name: ${{ needs.tensorflow_opt-Linux.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
+=======
+>>>>>>> coqui-ai-main
       - name: Install dependencies
         run: |
           apt-get update
           apt-get install -y --no-install-recommends xz-utils zip
+<<<<<<< HEAD
       - run: |
           tar --skip-old-files -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
+=======
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "Linux"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+>>>>>>> coqui-ai-main
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
@@ -412,8 +471,16 @@ jobs:
         with:
           name: "libsox3_Linux"
           path: ${{ github.workspace }}/sox-build/
+<<<<<<< HEAD
       - uses: ./.github/actions/libstt-build
       - uses: ./.github/actions/package
+=======
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Linux.tar.xz"
@@ -422,10 +489,22 @@ jobs:
         with:
           name: "libstt.tflite.Linux.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+<<<<<<< HEAD
   build-python-Linux:
     name: "Lin|Build Python bindings"
     runs-on: ubuntu-20.04
     needs: [build-lib_Linux, swig_Linux]
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-python-Linux:
+    name: "Lin|Build Python bindings"
+    runs-on: ubuntu-20.04
+    needs: [build-lib-Linux, swig_Linux]
+>>>>>>> coqui-ai-main
     strategy:
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
@@ -449,10 +528,13 @@ jobs:
         run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -481,7 +563,11 @@ jobs:
   build-nodejs-Linux:
     name: "Lin|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [ build-lib_Linux, swig_Linux ]
+=======
+    needs: [ build-lib-Linux, swig_Linux ]
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
@@ -493,10 +579,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -534,12 +623,20 @@ jobs:
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [ build-lib_Linux, train-test-model-Linux ]
+=======
+    needs: [ build-lib-Linux, train-test-model-Linux ]
+>>>>>>> coqui-ai-main
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -557,7 +654,11 @@ jobs:
           ls -lh
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -566,7 +667,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cpp"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-py-Linux:
     name: "Lin|Test Python bindings"
@@ -577,7 +682,11 @@ jobs:
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -596,7 +705,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -608,7 +721,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-evaluate-export:
     name: "Lin|Test evaluate_export"
@@ -618,7 +735,11 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.6", "3.7"]
+<<<<<<< HEAD
         samplerate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -660,7 +781,11 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -680,7 +805,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -700,7 +829,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs-Linux:
     name: "Lin|Test ElectronJS bindings"
@@ -711,7 +844,11 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -731,7 +868,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -751,7 +892,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   python-notebooks-tests:
@@ -789,7 +934,11 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
+<<<<<<< HEAD
         bitrate: [8k, 16k]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
         pyver: [3.6, 3.7]
     steps:
       - uses: actions/checkout@v2
@@ -809,8 +958,34 @@ jobs:
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - name: Run basic training tests
         run: |
+<<<<<<< HEAD
           python -m pip install coqui_stt_ctcdecoder-*.whl
           ./ci_scripts/train-tests.sh ${{ matrix.bitrate }}
+=======
+          set -ex
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Run twice to test preprocessed features
+          time ./bin/run-ci-ldc93s1_new.sh 249 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_new.sh 1 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_tflite.sh "${{ matrix.samplerate }}"
+
+          tar -cf - \
+              -C /tmp/ckpt/ . \
+              | ${XZ} > ${CI_ARTIFACTS_DIR}/checkpoint.tar.xz
+
+          cp /tmp/train/output_graph.pb ${CI_ARTIFACTS_DIR}
+          cp /tmp/train_tflite/output_graph.tflite ${CI_ARTIFACTS_DIR}
+
+          /tmp/convert_graphdef_memmapped_format \
+            --in_graph=/tmp/train/output_graph.pb \
+            --out_graph=/tmp/train/output_graph.pbmm
+          cp /tmp/train/output_graph.pbmm ${CI_ARTIFACTS_DIR}
+
+          time ./bin/run-ci-ldc93s1_checkpoint.sh
+>>>>>>> coqui-ai-main
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ github.job }}-output_graph.pb
@@ -834,7 +1009,59 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
+<<<<<<< HEAD
         bitrate: [8k, 16k]
+=======
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 libopusfile0 libvorbis-dev sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Test --metrics_files training argument
+          time ./bin/run-ci-ldc93s1_new_metrics.sh 2 "${{ matrix.samplerate }}"
+
+          # Training graph inference
+          time ./bin/run-ci-ldc93s1_singleshotinference.sh
+
+          # Augmentations
+          time ./bin/run-ci-sample_augmentations.sh
+
+          # Test Ogg/Vorbis input
+          time ./bin/run-ci-ldc93s1-vorbis.sh --epochs 1
+
+          # Test WebDataset input
+          time ./bin/run-ci-ldc93s1-webdataset.sh --epochs 1
+  training-sdb-tests:
+    name: "Lin|SDB training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
         pyver: [3.6, 3.7]
     steps:
       - uses: actions/checkout@v2
@@ -854,6 +1081,7 @@ jobs:
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
           sudo apt-get install -y --no-install-recommends libopus0 sox
+<<<<<<< HEAD
       - name: Run extra training tests
         run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl
@@ -874,6 +1102,160 @@ jobs:
         with:
           name: ${{ github.job }}-checkpoint.tar.xz
           path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
+=======
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Testing single SDB source
+          time ./bin/run-ci-ldc93s1_new_sdb.sh 220 "${{ matrix.samplerate }}"
+
+          # Testing interleaved source (SDB+CSV combination) - run twice to test preprocessed features
+          time ./bin/run-ci-ldc93s1_new_sdb_csv.sh 109 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_new_sdb_csv.sh 1 "${{ matrix.samplerate }}"
+
+          # Test resuming from checkpoints created above
+          # SDB, resuming from checkpoint
+          time ./bin/run-ci-ldc93s1_checkpoint_sdb.sh
+  training-bytes-tests:
+    name: "Lin|Bytes output mode training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Test training with bytes output mode
+          time ./bin/run-ci-ldc93s1_new_bytes.sh 200 "${{ matrix.samplerate }}"
+          time ./bin/run-ci-ldc93s1_new_bytes_tflite.sh "${{ matrix.samplerate }}"
+
+          # Bytes output mode, resuming from checkpoint
+          time ./bin/run-ci-ldc93s1_checkpoint_bytes.sh
+  training-python-tests:
+    name: "Lin|Python API training tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # Training with args set via initialize_globals_from_args()
+          time python ./bin/run-ldc93s1.py
+  training-transcribe-tests:
+    name: "Lin|Transcribe module tests"
+    runs-on: ubuntu-20.04
+    needs: [build-ctc-decoder-Linux, training-basic-tests]
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      matrix:
+        samplerate: ["8000", "16000"]
+        pyver: [3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.pyver }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
+      - uses: actions/download-artifact@v2
+        with:
+          name: "training-basic-tests-checkpoint.tar.xz"
+      - name: Extract training checkpoint
+        run: |
+          ls -lh
+          mkdir -p /tmp/ckpt
+          tar xvf checkpoint.tar.xz -C /tmp/ckpt
+          ls -lh /tmp/ckpt
+      - run: |
+          wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.linux.amd64.zip
+          unzip temp.zip
+          rm temp.zip
+          chmod +x convert_graphdef_memmapped_format
+          mv convert_graphdef_memmapped_format /tmp
+      - run: |
+          mkdir -p ${CI_ARTIFACTS_DIR} || true
+      - run: |
+          sudo apt-get install -y --no-install-recommends libopus0 sox
+      - name: Run tests
+        run: |
+          set -xe
+          python -m pip install ".[transcribe]"
+          python -m pip install coqui_stt_ctcdecoder-*.whl
+
+          source ./ci_scripts/train-tests-setup.sh ${{ matrix.samplerate }}
+
+          # transcribe module
+          time python -m coqui_stt_training.transcribe \
+              --checkpoint_dir "/tmp/ckpt" \
+              --src "data/smoke_test/LDC93S1.wav" \
+              --dst ${CI_ARTIFACTS_DIR}/transcribe.log \
+              --scorer_path "data/smoke_test/pruned_lm.scorer"
+
+          mkdir /tmp/transcribe_dir
+          cp data/smoke_test/LDC93S1.wav /tmp/transcribe_dir
+          time python -m coqui_stt_training.transcribe \
+             --checkpoint_dir "/tmp/ckpt" \
+             --src "/tmp/transcribe_dir/" \
+             --scorer_path "data/smoke_test/pruned_lm.scorer"
+
+          for i in /tmp/transcribe_dir/*.tlog; do echo $i; cat $i; echo; done
+>>>>>>> coqui-ai-main
   twine-upload-training:
     name: "Upload STT training packages to PyPI"
     runs-on: ubuntu-20.04
@@ -991,7 +1373,11 @@ jobs:
     name: "Upload native client artifacts to release assets"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+<<<<<<< HEAD
     needs: [create-release, build-lib_Windows, build-lib_Linux, build-lib_macOS, build-lib_LinuxAarch64, build-lib_LinuxArmv7]
+=======
+    needs: [create-release, build-lib-Windows, build-lib-Linux, build-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -1312,7 +1698,11 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1332,6 +1722,7 @@ jobs:
           python -m pip install coqui_stt_ctcdecoder-*.whl
           DS_NODECODER=y python -m pip install --upgrade .
       - run: |
+<<<<<<< HEAD
           bits=""
           if [ "${{ matrix.bitrate }}" = "8k" ]; then
             bits=8000
@@ -1347,6 +1738,15 @@ jobs:
 
           ./bin/run-ci-ldc93s1_new.sh 249 ${bits}
           ./bin/run-ci-ldc93s1_tflite.sh ${bits}
+=======
+          # Easier to rename to that we can exercize the LDC93S1 importer code to
+          # generate the CSV file.
+          echo "Moving ${{ matrix.samplerate }} to LDC93S1.wav"
+          mv data/smoke_test/LDC93S1_pcms16le_1_${{ matrix.samplerate}}.wav data/smoke_test/LDC93S1.wav
+
+          ./bin/run-ci-ldc93s1_new.sh 249 ${{ matrix.samplerate}}
+          ./bin/run-ci-ldc93s1_tflite.sh ${{ matrix.samplerate}}
+>>>>>>> coqui-ai-main
       - run: |
           wget -O temp.zip https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_graphdef_memmapped_format.macOS.amd64.zip
           unzip temp.zip
@@ -1364,6 +1764,7 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
@@ -1395,10 +1796,23 @@ jobs:
     steps:
       - run: true
         if: needs.tensorflow_opt-macOS.outputs.status == 'found'
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+          path: ${{ github.workspace }}/tmp/output_graph.tflite
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "test-checkpoint.${{ matrix.samplerate }}.zip"
+          path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
+  build-lib-macOS:
+    name: "Mac|Build libstt+client"
+    runs-on: macos-10.15
+    steps:
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
+<<<<<<< HEAD
         if: needs.tensorflow_opt-macOS.outputs.status == 'missing'
       - uses: ./.github/actions/select-xcode
         with:
@@ -1443,12 +1857,49 @@ jobs:
       - uses: ./.github/actions/select-xcode
         with:
           version: "12.1.1"
+=======
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "macOS"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install system deps
+        run:
+          brew install coreutils
+      - name: Select Xcode version
+        run: sudo xcode-select --switch /Applications/Xcode_12.1.1.app
+      - run: ./ci_scripts/tf-setup.sh
+>>>>>>> coqui-ai-main
       - run: |
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
+<<<<<<< HEAD
       - uses: ./.github/actions/libstt-build
       - uses: ./.github/actions/package
+=======
+      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.macOS.tar.xz"
@@ -1457,10 +1908,22 @@ jobs:
         with:
           name: "libstt.tflite.macOS.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+<<<<<<< HEAD
   build-python-macOS:
     name: "Mac|Build Python bindings"
     runs-on: macos-10.15
     needs: [ build-lib_macOS, swig_macOS ]
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-python-macOS:
+    name: "Mac|Build Python bindings"
+    runs-on: macos-10.15
+    needs: [ build-lib-macOS, swig_macOS ]
+>>>>>>> coqui-ai-main
     strategy:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
@@ -1475,10 +1938,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_macOS"
@@ -1510,7 +1976,11 @@ jobs:
   build-nodejs-macOS:
     name: "Mac|Build NodeJS and ElectronJS"
     runs-on: macos-10.15
+<<<<<<< HEAD
     needs: [ build-lib_macOS, swig_macOS ]
+=======
+    needs: [ build-lib-macOS, swig_macOS ]
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1522,10 +1992,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_macOS"
@@ -1563,12 +2036,20 @@ jobs:
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
     runs-on: macos-10.15
+<<<<<<< HEAD
     needs: [ build-lib_macOS, train-test-model-macOS ]
+=======
+    needs: [ build-lib-macOS, train-test-model-macOS ]
+>>>>>>> coqui-ai-main
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1585,7 +2066,11 @@ jobs:
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1594,7 +2079,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "cpp"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-py-macOS:
     name: "Mac|Test Python bindings"
@@ -1605,7 +2094,11 @@ jobs:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1622,7 +2115,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1634,7 +2131,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "python"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-nodejs-macOS:
     name: "Mac|Test NodeJS bindings"
@@ -1646,7 +2147,11 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -1664,7 +2169,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1684,7 +2193,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs-macOS:
     name: "Mac|Test ElectronJS bindings"
@@ -1695,7 +2208,11 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1712,7 +2229,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -1732,7 +2253,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   # Windows jobs
@@ -1744,6 +2269,10 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+<<<<<<< HEAD
+=======
+      - uses: ilammy/msvc-dev-cmd@v1
+>>>>>>> coqui-ai-main
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1752,7 +2281,10 @@ jobs:
           install: >-
             git
             make
+<<<<<<< HEAD
       - uses: ilammy/msvc-dev-cmd@v1
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -1771,11 +2303,14 @@ jobs:
           set -ex
           which link
           rm /usr/bin/link
+<<<<<<< HEAD
       - name: Remove mingw32-make conflicting with MSYS make
         run: |
           set -ex
           which mingw32-make
           rm /c/ProgramData/Chocolatey/bin/mingw32-make
+=======
+>>>>>>> coqui-ai-main
       - name: Link ds-swig into swig
         run: |
           set -ex
@@ -1795,6 +2330,7 @@ jobs:
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
       - run: |
           make -C native_client/ctcdecode clean-keep-third-party
+<<<<<<< HEAD
   tensorflow_opt-Windows:
     name: "Win|Check TensorFlow cache"
     runs-on: ubuntu-20.04
@@ -1816,11 +2352,16 @@ jobs:
   build-tensorflow-Windows:
     name: "Win|Build TensorFlow (opt)"
     needs: tensorflow_opt-Windows
+=======
+  build-lib-Windows:
+    name: "Win|Build libstt+client"
+>>>>>>> coqui-ai-main
     runs-on: windows-2019
     defaults:
       run:
         shell: msys2 {0}
     steps:
+<<<<<<< HEAD
       - run: true
         shell: bash
         if: needs.tensorflow_opt-Windows.outputs.status == 'found'
@@ -1829,6 +2370,9 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
+=======
+      - uses: ilammy/msvc-dev-cmd@v1
+>>>>>>> coqui-ai-main
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1840,6 +2384,7 @@ jobs:
             tar
             unzip
             zip
+<<<<<<< HEAD
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
       - uses: ilammy/msvc-dev-cmd@v1
         if: needs.tensorflow_opt-Windows.outputs.status == 'missing'
@@ -1895,12 +2440,52 @@ jobs:
       - run: |
           "C:/Program Files/7-Zip/7z.exe" x tf-cache.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aos -si -snld -ttar -o`pwd`
           rm tf-cache.tar.xz
+=======
+            make
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "Windows"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.9
+>>>>>>> coqui-ai-main
       - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
         run: |
           rm -f /c/msys64/mingw64/clang-cl*
           rm -rf "/c/Program Files/LLVM"
+<<<<<<< HEAD
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
+=======
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/host-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+>>>>>>> coqui-ai-main
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Windows.tar.xz"
@@ -1909,19 +2494,35 @@ jobs:
         with:
           name: "libstt.tflite.Windows.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+<<<<<<< HEAD
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
   build-python-Windows:
     name: "Win|Build Python bindings"
     runs-on: windows-2019
     defaults:
       run:
         shell: msys2 {0}
+<<<<<<< HEAD
     needs: [build-lib_Windows, swig_Windows_crosscompiled]
+=======
+    needs: [build-lib-Windows, swig_Windows_crosscompiled]
+>>>>>>> coqui-ai-main
     strategy:
       matrix:
         # Try to keep Python versions in sync with cached versions to speed things up:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
     steps:
+<<<<<<< HEAD
+=======
+      - uses: ilammy/msvc-dev-cmd@v1
+>>>>>>> coqui-ai-main
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1929,7 +2530,10 @@ jobs:
           update: true
           install: >-
             make
+<<<<<<< HEAD
       - uses: ilammy/msvc-dev-cmd@v1
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -1938,12 +2542,17 @@ jobs:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
+<<<<<<< HEAD
           pushd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so* ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           popd
+=======
+          cd tensorflow/bazel-bin/native_client/
+          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Windows_crosscompiled"
@@ -1981,8 +2590,14 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+<<<<<<< HEAD
     needs: [build-lib_Windows, swig_Windows_crosscompiled]
     steps:
+=======
+    needs: [build-lib-Windows, swig_Windows_crosscompiled]
+    steps:
+      - uses: ilammy/msvc-dev-cmd@v1
+>>>>>>> coqui-ai-main
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MSYS
@@ -1991,7 +2606,10 @@ jobs:
           install: >-
             make
             tar
+<<<<<<< HEAD
       - uses: ilammy/msvc-dev-cmd@v1
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -2000,12 +2618,17 @@ jobs:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
+<<<<<<< HEAD
           pushd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so* ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           popd
+=======
+          cd tensorflow/bazel-bin/native_client/
+          "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Windows_crosscompiled"
@@ -2047,7 +2670,11 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+<<<<<<< HEAD
     needs: [build-lib_Windows, train-test-model-Linux]
+=======
+    needs: [build-lib-Windows, train-test-model-Linux]
+>>>>>>> coqui-ai-main
     if: ${{ github.event_name == 'pull_request' }}
     env:
       CI_TMP_DIR: tmp/
@@ -2078,14 +2705,22 @@ jobs:
       - name: Download trained test model
         uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-16k.zip"
+=======
+          name: "test-model.tflite-16000.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "cppwin"
+<<<<<<< HEAD
           bitrate: "16k"
+=======
+          samplerate: "16000"
+>>>>>>> coqui-ai-main
           model-kind: ""
   test-py-Windows:
     name: "Win|Test Python bindings"
@@ -2101,7 +2736,11 @@ jobs:
         # https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
         python-version: [3.6.8, 3.7.9, 3.8.8, 3.9.4, 3.10.0]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2126,7 +2765,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2138,7 +2781,11 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "python"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-nodejs-Windows:
     name: "Win|Test NodeJS bindings"
@@ -2152,7 +2799,11 @@ jobs:
       matrix:
         nodejs-version: [12, 14, 16]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
@@ -2178,7 +2829,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - name: Get npm cache directory
@@ -2200,7 +2855,11 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "node"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs-Windows:
     name: "Win|Test ElectronJS bindings"
@@ -2214,7 +2873,11 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2239,7 +2902,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2263,7 +2930,11 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "electronjs"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   # Shared jobs (multi-platform dependencies)
@@ -2321,7 +2992,11 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 17]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2341,7 +3016,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - uses: actions/cache@v2
@@ -2361,7 +3040,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs_all-Linux:
     name: "Lin|Test MultiArchPlatform ElectronJS bindings"
@@ -2372,7 +3055,11 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2392,7 +3079,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2412,7 +3103,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   test-nodejs_all-macOS:
@@ -2425,7 +3120,11 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 17]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2443,7 +3142,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - uses: actions/cache@v2
@@ -2463,7 +3166,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "node"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs_all-macOS:
     name: "Mac|Test MultiArchPlatform ElectronJS bindings"
@@ -2474,7 +3181,11 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
@@ -2492,7 +3203,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2512,7 +3227,11 @@ jobs:
       - uses: ./.github/actions/run-tests
         with:
           runtime: "electronjs"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
   test-nodejs_all-Windows:
@@ -2528,7 +3247,11 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 16]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
@@ -2554,7 +3277,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - name: Get npm cache directory
@@ -2576,7 +3303,11 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "node"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs_all-Windows:
     name: "Win|Test MultiArchPlatform ElectronJS bindings"
@@ -2590,7 +3321,11 @@ jobs:
       matrix:
         electronjs-version: [12.0.0, 15.0.0]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: tmp/
@@ -2616,7 +3351,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
       - run: |
@@ -2640,6 +3379,7 @@ jobs:
       - uses: ./.github/actions/win-run-tests
         with:
           runtime: "electronjs"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
@@ -2743,10 +3483,25 @@ jobs:
     env:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+=======
+          samplerate: ${{ matrix.samplerate }}
+          model-kind: ${{ matrix.models }}
+        timeout-minutes: 5
+  # Linux Armv7 and Aarch64 jobs
+  build-lib-LinuxArmv7:
+    name: "LinArmv7|Build libstt+client"
+    runs-on: ubuntu-20.04
+    env:
+      SYSTEM_TARGET: rpi3
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+    outputs:
+      cache-key: ${{ steps.get_cache_key.outputs.key }}
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+<<<<<<< HEAD
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
@@ -2765,6 +3520,40 @@ jobs:
         with:
           arch: armv7
       - uses: ./.github/actions/package
+=======
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "LinuxArmv7"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install chroot
+        uses: ./.github/actions/multistrap
+        with:
+          arch: armv7
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2773,6 +3562,7 @@ jobs:
         with:
           name: "libstt.tflite.linux.armv7.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+<<<<<<< HEAD
   build-lib_LinuxAarch64:
     name: "LinAarch64|Build libstt+client"
     runs-on: ubuntu-20.04
@@ -2780,10 +3570,26 @@ jobs:
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-LinuxAarch64:
+    name: "LinAarch64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    env:
+      SYSTEM_TARGET: rpi3-armv8
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+    outputs:
+      cache-key: ${{ steps.get_cache_key.outputs.key }}
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+<<<<<<< HEAD
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
@@ -2802,6 +3608,40 @@ jobs:
         with:
           arch: aarch64
       - uses: ./.github/actions/package
+=======
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "LinuxAarch64"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install chroot
+        uses: ./.github/actions/multistrap
+        with:
+          arch: aarch64
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -2810,10 +3650,22 @@ jobs:
         with:
           name: "libstt.tflite.linux.aarch64.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+<<<<<<< HEAD
   build-python-LinuxArmv7:
     name: "LinArmv7|Build Python bindings"
     runs-on: ubuntu-20.04
     needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-python-LinuxArmv7:
+    name: "LinArmv7|Build Python bindings"
+    runs-on: ubuntu-20.04
+    needs: [build-lib-LinuxArmv7, swig_Linux]
+>>>>>>> coqui-ai-main
     strategy:
       matrix:
         python-version: [3.7]
@@ -2824,7 +3676,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+<<<<<<< HEAD
           fetch-depth: 1
+=======
+          fetch-depth: 0
+          submodules: 'recursive'
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2832,10 +3689,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -2847,18 +3707,29 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
+<<<<<<< HEAD
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
           tar --skip-old-files -xf tf-cache.tar.xz
+=======
+          name: ${{ needs.build-lib-LinuxArmv7.outputs.cache-key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar -xvf tf-cache.tar.xz
+>>>>>>> coqui-ai-main
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+<<<<<<< HEAD
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+=======
+>>>>>>> coqui-ai-main
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -2870,6 +3741,14 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+<<<<<<< HEAD
+=======
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -2883,14 +3762,23 @@ jobs:
   build-nodejs-LinuxArmv7:
     name: "LinArmv7|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [ build-lib_LinuxArmv7, swig_Linux, tensorflow_opt-LinuxArmv7 ]
+=======
+    needs: [build-lib-LinuxArmv7, swig_Linux]
+>>>>>>> coqui-ai-main
     env:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
     steps:
       - uses: actions/checkout@v2
         with:
+<<<<<<< HEAD
           fetch-depth: 1
+=======
+          fetch-depth: 0
+          submodules: 'recursive'
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2898,10 +3786,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -2913,6 +3804,7 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
+<<<<<<< HEAD
           name: ${{ needs.tensorflow_opt-LinuxArmv7.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
@@ -2922,6 +3814,14 @@ jobs:
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+=======
+          name: ${{ needs.build-lib-LinuxArmv7.outputs.cache-key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+>>>>>>> coqui-ai-main
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -2939,6 +3839,14 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_15.0.0
+<<<<<<< HEAD
+=======
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/armv7-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -2956,7 +3864,11 @@ jobs:
   build-python-LinuxAarch64:
     name: "LinAarch64|Build Python bindings"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+=======
+    needs: [build-lib-LinuxAarch64, swig_Linux]
+>>>>>>> coqui-ai-main
     strategy:
       matrix:
         python-version: [3.7]
@@ -2969,7 +3881,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends
       - uses: actions/checkout@v2
         with:
+<<<<<<< HEAD
           fetch-depth: 1
+=======
+          fetch-depth: 0
+          submodules: 'recursive'
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -2977,10 +3894,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -2992,18 +3912,29 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
+<<<<<<< HEAD
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
           tar --skip-old-files -xf tf-cache.tar.xz
+=======
+          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar -xvf tf-cache.tar.xz
+>>>>>>> coqui-ai-main
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+<<<<<<< HEAD
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+=======
+>>>>>>> coqui-ai-main
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3015,6 +3946,14 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+<<<<<<< HEAD
+=======
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -3028,14 +3967,23 @@ jobs:
   build-nodejs-LinuxAarch64:
     name: "LinAarch64|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+=======
+    needs: [build-lib-LinuxAarch64, swig_Linux]
+>>>>>>> coqui-ai-main
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
     steps:
       - uses: actions/checkout@v2
         with:
+<<<<<<< HEAD
           fetch-depth: 1
+=======
+          fetch-depth: 0
+          submodules: 'recursive'
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -3043,10 +3991,13 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
           mkdir -p ../tensorflow/lite
           mv libtensorflowlite.so ../tensorflow/lite/
           ls -hal . ../tensorflow/lite
           cd ${{ github.workspace }}/
+=======
+>>>>>>> coqui-ai-main
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3058,6 +4009,7 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
+<<<<<<< HEAD
           name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
@@ -3067,6 +4019,14 @@ jobs:
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+=======
+          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+>>>>>>> coqui-ai-main
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3084,6 +4044,14 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_15.0.0
+<<<<<<< HEAD
+=======
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/aarch64-build.sh
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -3128,13 +4096,21 @@ jobs:
   test-cpp-LinuxArm:
     name: "LinArm*|Test C++ binary"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [ build-lib_LinuxArmv7, build-lib_LinuxAarch64, train-test-model-Linux, build-test-chroot ]
+=======
+    needs: [ build-lib-LinuxArmv7, build-lib-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
+>>>>>>> coqui-ai-main
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         arch: [ "armv7", "aarch64" ]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3165,7 +4141,11 @@ jobs:
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3181,7 +4161,11 @@ jobs:
         with:
           runtime: "cpp"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-py-LinuxArm:
     name: "LinArm*|Test Python bindings"
@@ -3193,7 +4177,11 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         python-version: [3.7]
         models: ["test", "prod"]
+<<<<<<< HEAD
         bitrate: ["8k", "16k"]
+=======
+        samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3222,7 +4210,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3240,7 +4232,11 @@ jobs:
         with:
           runtime: "python"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-nodejs-LinuxArm:
     name: "LinArm*|Test NodeJS bindings"
@@ -3253,7 +4249,11 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
@@ -3286,7 +4286,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3302,7 +4306,11 @@ jobs:
         with:
           runtime: "node"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
   test-electronjs-LinuxArm:
     name: "LinArm*|Test ElectronJS bindings"
@@ -3315,7 +4323,11 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
         models: ["test"]
+<<<<<<< HEAD
         bitrate: ["16k"]
+=======
+        samplerate: ["16000"]
+>>>>>>> coqui-ai-main
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3348,7 +4360,11 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
           name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3376,7 +4392,11 @@ jobs:
         with:
           runtime: "electronjs"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
           bitrate: ${{ matrix.bitrate }}
+=======
+          samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
       - name: "Kill X"
@@ -3384,6 +4404,7 @@ jobs:
           cat ${{ env.CI_TMP_DIR }}/xvfb.pid
           sudo kill -9 $(cat ${{ env.CI_TMP_DIR }}/xvfb.pid)
   # Android jobs
+<<<<<<< HEAD
   tensorflow_opt-AndroidArmv7:
     name: "AndroidArmv7|Check TensorFlow cache"
     runs-on: ubuntu-20.04
@@ -3409,10 +4430,17 @@ jobs:
     steps:
       - run: true
         if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'found'
+=======
+  build-lib-AndroidArmv7:
+    name: "AndroidArmv7|Build libstt+client"
+    runs-on: ubuntu-20.04
+    steps:
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
+<<<<<<< HEAD
         if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
@@ -3451,11 +4479,43 @@ jobs:
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-armv7
+=======
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "AndroidArmv7"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - run: ./ci_scripts/tf-setup.sh --android-armv7
+      - run: ./ci_scripts/tf-configure.sh --android
+      - run: ./ci_scripts/android-armv7-build.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
       - run: ./ci_scripts/android-package.sh armeabi-v7a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+<<<<<<< HEAD
   tensorflow_opt-AndroidArm64:
     name: "AndroidArm64|Check TensorFlow cache"
     runs-on: ubuntu-20.04
@@ -3481,10 +4541,22 @@ jobs:
     steps:
       - run: true
         if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'found'
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-AndroidArm64:
+    name: "AndroidArm64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    steps:
+>>>>>>> coqui-ai-main
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
+<<<<<<< HEAD
         if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
@@ -3523,19 +4595,62 @@ jobs:
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-arm64
+=======
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "AndroidArm64"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - run: ./ci_scripts/tf-setup.sh --android-arm64
+      - run: ./ci_scripts/tf-configure.sh --android
+      - run: ./ci_scripts/android-arm64-build.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
       - run: ./ci_scripts/android-package.sh arm64-v8a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.arm64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+<<<<<<< HEAD
   build-lib_Androidx86_64:
     name: "Androidx86_64|Build libstt+client"
     runs-on: ubuntu-20.04
     needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
+=======
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-Androidx86_64:
+    name: "Androidx86_64|Build libstt+client"
+    runs-on: ubuntu-20.04
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+<<<<<<< HEAD
       - uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
@@ -3547,6 +4662,36 @@ jobs:
       - uses: ./.github/actions/libstt-build
         with:
           arch: android-x86_64
+=======
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "Androidx86_64"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - run: ./ci_scripts/tf-setup.sh --android-arm64
+      - run: ./ci_scripts/tf-configure.sh --android
+      - run: ./ci_scripts/android-x86_64-build.sh
+>>>>>>> coqui-ai-main
       - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
@@ -3555,7 +4700,11 @@ jobs:
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
     needs: [build-lib_AndroidArmv7, build-lib_AndroidArm64, build-lib_Androidx86_64]
+=======
+    needs: [build-lib-AndroidArmv7, build-lib-AndroidArm64, build-lib-Androidx86_64]
+>>>>>>> coqui-ai-main
     steps:
       - uses: actions/checkout@v2
         with:
@@ -3568,7 +4717,11 @@ jobs:
           mkdir -p native_client/java/libstt/libs/armeabi-v7a
           cd /tmp/nc
           tar xvf native_client.tar.xz
+<<<<<<< HEAD
           mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+=======
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+>>>>>>> coqui-ai-main
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3578,7 +4731,11 @@ jobs:
           mkdir -p native_client/java/libstt/libs/arm64-v8a
           cd /tmp/nc
           tar xvf native_client.tar.xz
+<<<<<<< HEAD
           mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+=======
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+>>>>>>> coqui-ai-main
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3588,7 +4745,11 @@ jobs:
           mkdir -p native_client/java/libstt/libs/x86_64
           cd /tmp/nc
           tar xvf native_client.tar.xz
+<<<<<<< HEAD
           mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+=======
+          mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+>>>>>>> coqui-ai-main
           rm -f *
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV

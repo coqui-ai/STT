@@ -5,8 +5,6 @@ import random
 import subprocess
 import tarfile
 import unicodedata
-from tqdm import tqdm
-
 from glob import glob
 from multiprocessing import Pool
 from pathlib import Path
@@ -20,6 +18,7 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
+from tqdm import tqdm
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -238,7 +237,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
-
 def _split_sets(rows):
     """
     randomply split the datasets into train, validation, and test sets where the size of the
@@ -261,7 +259,6 @@ def _split_sets(rows):
         rows[dev_beg:dev_end],
         rows[test_beg:test_end],
     )
-
 
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
@@ -317,13 +314,13 @@ def handle_args():
     parser.add_argument(
         "--min_sec",
         type=float,
-        help="[FLOAT] Min audio length in sec (default: 0.85)",
+        help="[FLOAT] Min audio length in sec",
         default=0.85,
     )
     parser.add_argument(
         "--max_sec",
         type=float,
-        help="[FLOAT] Max audio length in sec (default: 15.0)",
+        help="[FLOAT] Max audio length in sec",
         default=10.0,
     )
     return parser.parse_args()
@@ -338,6 +335,8 @@ if __name__ == "__main__":
 
     validate_label = get_validate_label(CLI_ARGS)
 
+    validate_label = get_validate_label(CLI_ARGS)
+    
     def label_filter(label):
         if CLI_ARGS.normalize:
             label = (

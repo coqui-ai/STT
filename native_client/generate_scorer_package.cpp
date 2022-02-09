@@ -16,7 +16,7 @@ using namespace std;
 namespace po = boost::program_options;
 
 int
-create_package(absl::optional<string> alphabet_path,
+create_package(absl::optional<string> checkpoint_path,
                string lm_path,
                string vocab_path,
                string package_path,
@@ -50,7 +50,7 @@ create_package(absl::optional<string> alphabet_path,
              << (vocab_looks_char_based ? "true" : "false") << "\n";
     }
 
-    if (!force_bytes_output_mode.value() && !alphabet_path.has_value()) {
+    if (!force_bytes_output_mode.value() && !checkpoint_path.has_value()) {
         cerr << "No --alphabet file specified, not using bytes output mode, can't continue.\n";
         return 1;
     }
@@ -59,8 +59,9 @@ create_package(absl::optional<string> alphabet_path,
     if (force_bytes_output_mode.value()) {
         scorer.set_alphabet(UTF8Alphabet());
     } else {
+        std::string alphabet_path = checkpoint_path.value() + "/alphabet.txt";
         Alphabet alphabet;
-        alphabet.init(alphabet_path->c_str());
+        alphabet.init(alphabet_path.c_str());
         scorer.set_alphabet(alphabet);
     }
     scorer.set_utf8_mode(force_bytes_output_mode.value());
@@ -97,13 +98,26 @@ main(int argc, char** argv)
     po::options_description desc("Options");
     desc.add_options()
         ("help", "show help message")
-        ("alphabet", po::value<string>(), "Path of alphabet file to use for vocabulary construction. Words with characters not in the alphabet will not be included in the vocabulary. Optional if using bytes output mode.")
-        ("lm", po::value<string>(), "Path of KenLM binary LM file. Must be built without including the vocabulary (use the -v flag). See generate_lm.py for how to create a binary LM.")
-        ("vocab", po::value<string>(), "Path of vocabulary file. Must contain words separated by whitespace.")
+        ("checkpoint", po::value<string>(), "Path to a checkpoint directory "
+            "corresponding to the model this scorer will be used with. The "
+            "alphabet will be loaded from an alphabet.txt file in the "
+            "checkpoint directory. Words with characters not in the alphabet "
+            "will not be included in the vocabulary. Optional if using bytes "
+            "output mode.")
+        ("lm", po::value<string>(), "Path of KenLM binary LM file. Must be "
+            "built without including the vocabulary (use the -v flag). See "
+            "generate_lm.py for how to create a binary LM.")
+        ("vocab", po::value<string>(), "Path of vocabulary file. Must contain "
+            "words separated by whitespace.")
         ("package", po::value<string>(), "Path to save scorer package.")
-        ("default_alpha", po::value<float>(), "Default value of alpha hyperparameter (float).")
-        ("default_beta", po::value<float>(), "Default value of beta hyperparameter (float).")
-        ("force_bytes_output_mode", po::value<bool>(), "Boolean flag, force set or unset bytes output mode in the scorer package. If not set, infers from the vocabulary. See <https://stt.readthedocs.io/en/latest/Decoder.html#bytes-output-mode> for further explanation.")
+        ("default_alpha", po::value<float>(), "Default value of alpha "
+            "hyperparameter (float).")
+        ("default_beta", po::value<float>(), "Default value of beta "
+            "hyperparameter (float).")
+        ("force_bytes_output_mode", po::value<bool>(), "Boolean flag, force "
+            "set or unset bytes output mode in the scorer package. If not set, "
+            "infers from the vocabulary. See <https://stt.readthedocs.io/en/latest/Decoder.html#bytes-output-mode> "
+            "for further explanation.")
     ;
 
     po::variables_map vm;
@@ -129,13 +143,13 @@ main(int argc, char** argv)
         force_bytes_output_mode = vm["force_bytes_output_mode"].as<bool>();
     }
 
-    // Parse optional --alphabet
-    absl::optional<string> alphabet = absl::nullopt;
-    if (vm.count("alphabet")) {
-        alphabet = vm["alphabet"].as<string>();
+    // Parse optional --checkpoint
+    absl::optional<string> checkpoint = absl::nullopt;
+    if (vm.count("checkpoint")) {
+        checkpoint = vm["checkpoint"].as<string>();
     }
 
-    create_package(alphabet,
+    create_package(checkpoint,
                    vm["lm"].as<string>(),
                    vm["vocab"].as<string>(),
                    vm["package"].as<string>(),

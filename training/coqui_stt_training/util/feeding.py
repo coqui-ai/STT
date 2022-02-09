@@ -159,9 +159,21 @@ def create_dataset(
         samples = samples_from_sources(
             sources, buffering=buffering, labeled=True, reverse=reverse
         )
+<<<<<<< HEAD
         num_samples = len(samples)
         if limit > 0:
             num_samples = min(limit, num_samples)
+=======
+        try:
+            num_samples = len(samples)
+        except TypeError:
+            # Dataset doesn't support len
+            num_samples = float("inf")
+
+        if limit > 0:
+            num_samples = min(limit, num_samples)
+
+>>>>>>> coqui-ai-main
         samples = apply_sample_augmentations(
             samples,
             augmentations,
@@ -175,7 +187,11 @@ def create_dataset(
                 break
             clock = (
                 (epoch * num_samples + sample_index) / (epochs * num_samples)
+<<<<<<< HEAD
                 if train_phase and epochs > 0
+=======
+                if train_phase and num_samples and epochs > 0
+>>>>>>> coqui-ai-main
                 else 0.0
             )
             transcript = text_to_char_array(

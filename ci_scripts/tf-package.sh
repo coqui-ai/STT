@@ -18,6 +18,7 @@ do
     fi;
 done
 
+<<<<<<< HEAD
 # It seems that bsdtar and gnutar are behaving a bit differently on the way
 # they deal with --exclude="./public/*" ; this caused ./STT/tensorflow/core/public/
 # to be ditched when we just wanted to get rid of ./public/ on OSX.
@@ -40,6 +41,17 @@ if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     popd
 else
     ${TAR} -C ${DS_ROOT_TASK} ${TAR_EXCLUDE} -cf - . | ${XZ} > ${CI_ARTIFACTS_DIR}/home.tar.xz
+=======
+# Make a tar of bazel caches
+RELATIVE_CACHE_ROOT=$(realpath --relative-to="${DS_ROOT_TASK}" ${BAZEL_CACHE_ROOT})
+if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
+    export PATH=$PATH:'/c/Program Files/7-Zip/'
+    pushd ${DS_ROOT_TASK}
+        7z a -snl -snh -so home.tar ${RELATIVE_CACHE_ROOT} | 7z a -si ${CI_ARTIFACTS_DIR}/home.tar.xz
+    popd
+else
+    ${TAR} -C ${DS_ROOT_TASK} -cf - ${RELATIVE_CACHE_ROOT} | ${XZ} > ${CI_ARTIFACTS_DIR}/home.tar.xz
+>>>>>>> coqui-ai-main
 fi
 
 if [ "${OS}" = "Linux" ]; then

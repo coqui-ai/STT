@@ -24,9 +24,19 @@ AUDIO_TYPE_NP = "application/vnd.mozilla.np"
 AUDIO_TYPE_PCM = "application/vnd.mozilla.pcm"
 AUDIO_TYPE_WAV = "audio/wav"
 AUDIO_TYPE_OPUS = "application/vnd.mozilla.opus"
+<<<<<<< HEAD
 AUDIO_TYPE_OGG_OPUS = "application/vnd.deepspeech.ogg_opus"
+=======
+AUDIO_TYPE_OGG_OPUS = "audio/ogg;codecs=opus"
+AUDIO_TYPE_OGG_VORBIS = "audio/vorbis"
+>>>>>>> coqui-ai-main
 
-SERIALIZABLE_AUDIO_TYPES = [AUDIO_TYPE_WAV, AUDIO_TYPE_OPUS, AUDIO_TYPE_OGG_OPUS]
+SERIALIZABLE_AUDIO_TYPES = [
+    AUDIO_TYPE_WAV,
+    AUDIO_TYPE_OPUS,
+    AUDIO_TYPE_OGG_OPUS,
+    AUDIO_TYPE_OGG_VORBIS,
+]
 
 OPUS_PCM_LEN_SIZE = 4
 OPUS_RATE_SIZE = 4
@@ -171,6 +181,10 @@ def get_loadable_audio_type_from_extension(ext):
     return {
         ".wav": AUDIO_TYPE_WAV,
         ".opus": AUDIO_TYPE_OGG_OPUS,
+<<<<<<< HEAD
+=======
+        ".ogg": AUDIO_TYPE_OGG_VORBIS,
+>>>>>>> coqui-ai-main
     }.get(ext, None)
 
 
@@ -490,6 +504,118 @@ def read_ogg_opus(ogg_file):
     return audio_format, audio_data
 
 
+def get_pyogg_vorbis_callbacks_from_bytesio(bytesio):
+    def read_func_cb(ptr, byte_size, size_to_read, datasource):
+        data_size = size_to_read * byte_size
+        data = bytesio.read(data_size)
+        read_size = len(data)
+        ctypes.memmove(ptr, data, read_size)
+        return read_size
+
+    def seek_func_cb(datasource, offset, whence):
+        pos = bytesio.seek(offset, whence)
+        return pos
+
+    def close_func_cb(datasource):
+        return 0
+
+    def tell_func_cb(datasource):
+        return bytesio.tell()
+
+    read_func = pyogg.vorbis.read_func(read_func_cb)
+    seek_func = pyogg.vorbis.seek_func(seek_func_cb)
+    close_func = pyogg.vorbis.close_func(close_func_cb)
+    tell_func = pyogg.vorbis.tell_func(tell_func_cb)
+
+    return pyogg.vorbis.ov_callbacks(read_func, seek_func, close_func, tell_func)
+
+
+def read_ogg_vorbis(ogg_file):
+    ogg_file.seek(0)
+    vf = pyogg.vorbis.OggVorbis_File()
+    callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
+
+    buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
+    error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
+    if error != 0:
+        raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
+
+    info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
+    channel_count = info.contents.channels
+    sample_rate = info.contents.rate
+    sample_width = 2  # always 16-bit
+    audio_format = AudioFormat(sample_rate, channel_count, sample_width)
+
+    # Extract the total number of PCM samples for the first logical bitstream
+    pcm_length_samples = pyogg.vorbis.ov_pcm_total(
+        ctypes.byref(vf), 0  # to extract the length of the first logical bitstream
+    )
+
+    # Create a memory block to store the entire PCM
+    Buffer = ctypes.c_char * (pcm_length_samples * sample_width * channel_count)
+    buffer = Buffer()
+
+    # Create a pointer to the newly allocated memory.  It
+    # seems we can only do pointer arithmetic on void
+    # pointers.  See
+    # https://mattgwwalker.wordpress.com/2020/05/30/pointer-manipulation-in-python/
+    buf_ptr = ctypes.cast(ctypes.pointer(buffer), ctypes.c_void_p)
+
+    # Storage for the index of the logical bitstream
+    bitstream_previous = None
+    bitstream = ctypes.c_int()
+
+    # Set bytes remaining to read into PCM
+    read_size = len(buffer)
+
+    while True:
+        # Convert buffer pointer to the desired type
+        ptr = ctypes.cast(buf_ptr, ctypes.POINTER(ctypes.c_char))
+
+        # Attempt to decode PCM from the Vorbis file
+        result = pyogg.vorbis.ov_read(
+            ctypes.byref(vf),
+            ptr,
+            read_size,
+            0,  # Little endian
+            sample_width,
+            1,  # Signed samples
+            ctypes.byref(bitstream),
+        )
+
+        # Check for errors
+        if result < 0:
+            raise ValueError(
+                "An error occurred decoding the Vorbis file: " + f"Error code: {result}"
+            )
+
+        # Check that the bitstream hasn't changed as we only
+        # support Vorbis files with a single logical bitstream.
+        if bitstream_previous is None:
+            bitstream_previous = bitstream
+        else:
+            if bitstream_previous != bitstream:
+                raise ValueError(
+                    "PyOgg currently supports Vorbis files "
+                    + "with only one logical stream"
+                )
+
+        # Check for end of file
+        if result == 0:
+            break
+
+        # Calculate the number of bytes remaining to read into PCM
+        read_size -= result
+
+        # Update the pointer into the buffer
+        buf_ptr.value += result
+
+    # Close the file and clean up memory
+    pyogg.vorbis.ov_clear(ctypes.byref(vf))
+
+    return audio_format, buffer
+
+
 def write_wav(wav_file, pcm_data, audio_format=DEFAULT_FORMAT):
     # wav_file is already a file-pointer here
     with wave.open(wav_file, "wb") as wav_file_writer:
@@ -514,6 +640,11 @@ def read_audio(audio_type, audio_file):
         return read_opus(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus(audio_file)
+<<<<<<< HEAD
+=======
+    if audio_type == AUDIO_TYPE_OGG_VORBIS:
+        return read_ogg_vorbis(audio_file)
+>>>>>>> coqui-ai-main
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -564,6 +695,30 @@ def read_ogg_opus_duration(ogg_file):
     return get_pcm_duration(pcm_buffer_size, audio_format)
 
 
+def read_ogg_vorbis_duration(ogg_file):
+    ogg_file.seek(0)
+    vf = pyogg.vorbis.OggVorbis_File()
+    callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
+
+    buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
+    error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
+    if error != 0:
+        raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
+
+    info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
+    channel_count = info.contents.channels
+    sample_rate = info.contents.rate
+    sample_width = 2  # always 16-bit
+    audio_format = AudioFormat(sample_rate, channel_count, sample_width)
+
+    # Extract the total number of PCM samples for the first logical bitstream
+    pcm_length_samples = pyogg.vorbis.ov_pcm_total(
+        ctypes.byref(vf), 0  # to extract the length of the first logical bitstream
+    )
+
+    return get_pcm_duration(pcm_length_samples, audio_format)
+
+
 def read_duration(audio_type, audio_file):
     if audio_type == AUDIO_TYPE_WAV:
         return read_wav_duration(audio_file)
@@ -571,6 +726,11 @@ def read_duration(audio_type, audio_file):
         return read_opus_duration(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus_duration(audio_file)
+<<<<<<< HEAD
+=======
+    if audio_type == AUDIO_TYPE_OGG_VORBIS:
+        return read_ogg_vorbis_duration(audio_file)
+>>>>>>> coqui-ai-main
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -605,6 +765,26 @@ def read_ogg_opus_format(ogg_file):
 
     sample_rate = 48000  # opus files are always 48kHz
     sample_width = 2  # always 16-bit
+<<<<<<< HEAD
+=======
+    return AudioFormat(sample_rate, channel_count, sample_width)
+
+
+def read_ogg_vorbis_format(ogg_file):
+    ogg_file.seek(0)
+    vf = pyogg.vorbis.OggVorbis_File()
+    callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
+
+    buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
+    error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
+    if error != 0:
+        raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
+
+    info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
+    channel_count = info.contents.channels
+    sample_rate = info.contents.rate
+    sample_width = 2  # always 16-bit
+>>>>>>> coqui-ai-main
     return AudioFormat(sample_rate, channel_count, sample_width)
 
 
@@ -615,6 +795,11 @@ def read_format(audio_type, audio_file):
         return read_opus_format(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus_format(audio_file)
+<<<<<<< HEAD
+=======
+    if audio_type == AUDIO_TYPE_OGG_VORBIS:
+        return read_ogg_vorbis_format(audio_file)
+>>>>>>> coqui-ai-main
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 

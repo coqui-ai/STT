@@ -27,6 +27,7 @@ add_library(kenlm-lib SHARED IMPORTED)
 set_target_properties(kenlm-lib PROPERTIES
     IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libkenlm.so)
 
+<<<<<<< HEAD
 add_library(tensorflowlite-lib SHARED IMPORTED)
 set_target_properties(tensorflowlite-lib PROPERTIES
     IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtensorflowlite.so)
@@ -35,6 +36,8 @@ add_library(tflitedelegates-lib SHARED IMPORTED)
 set_target_properties(tflitedelegates-lib PROPERTIES
     IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtflitedelegates.so)
 
+=======
+>>>>>>> coqui-ai-main
 add_custom_command(TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libstt.so
@@ -44,6 +47,7 @@ add_custom_command(TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libkenlm.so
              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libkenlm.so)
+<<<<<<< HEAD
 
 add_custom_command(TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
@@ -54,6 +58,8 @@ add_custom_command(TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtflitedelegates.so
              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtflitedelegates.so)
+=======
+>>>>>>> coqui-ai-main
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

@@ -7,8 +7,13 @@ inputs:
   model-kind:
     description: "Running against CI baked or production model"
     required: true
+<<<<<<< HEAD
   bitrate:
     description: "Bitrate for testing"
+=======
+  samplerate:
+    description: "Sample rate for testing"
+>>>>>>> coqui-ai-main
     required: true
   chroot:
     description: "Run using a chroot"
@@ -31,5 +36,9 @@ runs:
           prefix="${{ inputs.chroot }}"
         fi
 
+<<<<<<< HEAD
         ${prefix}/ci_scripts/${{ inputs.runtime }}${build}-tests${model_kind}.sh ${{ inputs.bitrate }}
+=======
+        ${prefix}/ci_scripts/${{ inputs.runtime }}${build}-tests${model_kind}.sh ${{ inputs.samplerate }}
+>>>>>>> coqui-ai-main
       shell: bash

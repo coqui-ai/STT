@@ -262,6 +262,11 @@ def early_training_checks():
 
 def create_training_datasets(
     epoch_ph: tf.Tensor = None,
+<<<<<<< HEAD
+=======
+    reverse: bool = False,
+    limit: int = 0,
+>>>>>>> coqui-ai-main
 ) -> (tf.data.Dataset, [tf.data.Dataset], [tf.data.Dataset],):
     """Creates training datasets from input flags.
 
@@ -277,8 +282,13 @@ def create_training_datasets(
         cache_path=Config.feature_cache,
         train_phase=True,
         process_ahead=len(Config.available_devices) * Config.train_batch_size * 2,
+<<<<<<< HEAD
         reverse=Config.reverse_train,
         limit=Config.limit_train,
+=======
+        reverse=reverse,
+        limit=limit,
+>>>>>>> coqui-ai-main
         buffering=Config.read_buffer,
         epoch_ph=epoch_ph,
     )
@@ -292,8 +302,13 @@ def create_training_datasets(
                 train_phase=False,
                 augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
                 process_ahead=len(Config.available_devices) * Config.dev_batch_size * 2,
+<<<<<<< HEAD
                 reverse=Config.reverse_dev,
                 limit=Config.limit_dev,
+=======
+                reverse=reverse,
+                limit=limit,
+>>>>>>> coqui-ai-main
                 buffering=Config.read_buffer,
             )
             for source in Config.dev_files
@@ -308,8 +323,13 @@ def create_training_datasets(
                 train_phase=False,
                 augmentations=[NormalizeSampleRate(Config.audio_sample_rate)],
                 process_ahead=len(Config.available_devices) * Config.dev_batch_size * 2,
+<<<<<<< HEAD
                 reverse=Config.reverse_dev,
                 limit=Config.limit_dev,
+=======
+                reverse=reverse,
+                limit=limit,
+>>>>>>> coqui-ai-main
                 buffering=Config.read_buffer,
             )
             for source in Config.metrics_files
@@ -319,6 +339,7 @@ def create_training_datasets(
 
 
 def train():
+<<<<<<< HEAD
     early_training_checks()
 
     tfv1.reset_default_graph()
@@ -326,6 +347,29 @@ def train():
 
     epoch_ph = tf.placeholder(tf.int64, name="epoch_ph")
     train_set, dev_sets, metrics_sets = create_training_datasets(epoch_ph)
+=======
+    log_info("Performing dummy training to check for memory problems.")
+    log_info(
+        "If the following process crashes, you likely have batch sizes "
+        "that are too big for your available system memory (or GPU memory)."
+    )
+    train_impl(epochs=1, reverse=True, limit=Config.train_batch_size * 3, write=False)
+
+    log_info("Dummy run finished without problems, now starting real training process.")
+    train_impl(epochs=Config.epochs, silent_load=True)
+
+
+def train_impl(epochs=0, reverse=False, limit=0, write=True, silent_load=False):
+    early_training_checks()
+
+    tfv1.reset_default_graph()
+    tfv1.set_random_seed(Config.random_seed)
+
+    epoch_ph = tf.placeholder(tf.int64, name="epoch_ph")
+    train_set, dev_sets, metrics_sets = create_training_datasets(
+        epoch_ph, reverse=reverse, limit=limit
+    )
+>>>>>>> coqui-ai-main
 
     iterator = tfv1.data.Iterator.from_structure(
         tfv1.data.get_output_types(train_set),
@@ -384,6 +428,7 @@ def train():
     )
 
     # Summaries
+<<<<<<< HEAD
     step_summaries_op = tfv1.summary.merge_all("step_summaries")
     step_summary_writers = {
         "train": tfv1.summary.FileWriter(
@@ -396,6 +441,26 @@ def train():
             os.path.join(Config.summary_dir, "metrics"), max_queue=120
         ),
     }
+=======
+    step_summaries_op = (
+        tfv1.summary.merge_all("step_summaries") if write else tf.no_op()
+    )
+    step_summary_writers = (
+        {
+            "train": tfv1.summary.FileWriter(
+                os.path.join(Config.summary_dir, "train"), max_queue=120
+            ),
+            "dev": tfv1.summary.FileWriter(
+                os.path.join(Config.summary_dir, "dev"), max_queue=120
+            ),
+            "metrics": tfv1.summary.FileWriter(
+                os.path.join(Config.summary_dir, "metrics"), max_queue=120
+            ),
+        }
+        if write
+        else None
+    )
+>>>>>>> coqui-ai-main
 
     human_readable_set_names = {
         "train": "Training",
@@ -404,10 +469,19 @@ def train():
     }
 
     # Checkpointing
+<<<<<<< HEAD
     checkpoint_saver = tfv1.train.Saver(max_to_keep=Config.max_to_keep)
     checkpoint_path = os.path.join(Config.save_checkpoint_dir, "train")
 
     best_dev_saver = tfv1.train.Saver(max_to_keep=1)
+=======
+    checkpoint_saver = (
+        tfv1.train.Saver(max_to_keep=Config.max_to_keep) if write else None
+    )
+    checkpoint_path = os.path.join(Config.save_checkpoint_dir, "train")
+
+    best_dev_saver = tfv1.train.Saver(max_to_keep=1) if write else None
+>>>>>>> coqui-ai-main
     best_dev_path = os.path.join(Config.save_checkpoint_dir, "best_dev")
 
     with tfv1.Session(config=Config.session_config) as session:
@@ -417,7 +491,7 @@ def train():
         tfv1.get_default_graph().finalize()
 
         # Load checkpoint or initialize variables
-        load_or_init_graph_for_training(session)
+        load_or_init_graph_for_training(session, silent=silent_load)
 
         def run_set(set_name, epoch, init_op, dataset=None):
             is_train = set_name == "train"
@@ -427,10 +501,18 @@ def train():
             total_loss = 0.0
             step_count = 0
 
-            step_summary_writer = step_summary_writers.get(set_name)
             checkpoint_time = time.time()
 
+<<<<<<< HEAD
             if is_train and Config.cache_for_epochs > 0 and Config.feature_cache:
+=======
+            if (
+                write
+                and is_train
+                and Config.cache_for_epochs > 0
+                and Config.feature_cache
+            ):
+>>>>>>> coqui-ai-main
                 feature_cache_index = Config.feature_cache + ".index"
                 if epoch % Config.cache_for_epochs == 0 and os.path.isfile(
                     feature_cache_index
@@ -506,10 +588,18 @@ def train():
 
                 pbar.update(step_count)
 
-                step_summary_writer.add_summary(step_summary, current_step)
+                if write:
+                    step_summary_writers.get(set_name).add_summary(
+                        step_summary, current_step
+                    )
 
                 if (
+<<<<<<< HEAD
                     is_train
+=======
+                    write
+                    and is_train
+>>>>>>> coqui-ai-main
                     and Config.checkpoint_secs > 0
                     and time.time() - checkpoint_time > Config.checkpoint_secs
                 ):
@@ -528,14 +618,25 @@ def train():
         dev_losses = []
         epochs_without_improvement = 0
         try:
+<<<<<<< HEAD
             for epoch in range(Config.epochs):
+=======
+            for epoch in range(epochs):
+>>>>>>> coqui-ai-main
                 # Training
                 log_progress("Training epoch %d..." % epoch)
                 train_loss, _ = run_set("train", epoch, train_init_op)
                 log_progress(
                     "Finished training epoch %d - loss: %f" % (epoch, train_loss)
                 )
+<<<<<<< HEAD
                 checkpoint_saver.save(session, checkpoint_path, global_step=global_step)
+=======
+                if write:
+                    checkpoint_saver.save(
+                        session, checkpoint_path, global_step=global_step
+                    )
+>>>>>>> coqui-ai-main
 
                 if Config.dev_files:
                     # Validation
@@ -562,7 +663,7 @@ def train():
                         epochs_without_improvement = 0
 
                     # Save new best model
-                    if dev_loss < best_dev_loss:
+                    if write and dev_loss < best_dev_loss:
                         best_dev_loss = dev_loss
                         save_path = best_dev_saver.save(
                             session,
@@ -608,6 +709,7 @@ def train():
                         )
 
                         # Overwrite best checkpoint with new learning rate value
+<<<<<<< HEAD
                         save_path = best_dev_saver.save(
                             session,
                             best_dev_path,
@@ -618,6 +720,19 @@ def train():
                             "Saved best validating model with reduced learning rate to: %s"
                             % (save_path)
                         )
+=======
+                        if write:
+                            save_path = best_dev_saver.save(
+                                session,
+                                best_dev_path,
+                                global_step=global_step,
+                                latest_filename="best_dev_checkpoint",
+                            )
+                            log_info(
+                                "Saved best validating model with reduced learning rate to: %s"
+                                % (save_path)
+                            )
+>>>>>>> coqui-ai-main
 
                 if Config.metrics_files:
                     # Read only metrics, not affecting best validation loss tracking
