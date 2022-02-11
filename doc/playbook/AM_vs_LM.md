@@ -12,9 +12,21 @@ At runtime, 🐸STT is made up of two main parts: (1) the acoustic model and (2)
 
 ## Training
 
+<<<<<<< HEAD
+The acoustic model is a neural network trained with Tensorflow, and the training data is a corpus of speech and transcripts.
+
+The language model is a n-gram model trained with kenlm, and the training data is a corpus of text.
+=======
+<<<<<<< HEAD
+The acoustic model is a neural network trained with Tensorflow, and the training data is a corpus of speech and transcripts.
+
+The language model is a n-gram model trained with kenlm, and the training data is a corpus of text.
+=======
 The acoustic model is a neural network trained with TensorFlow, and the training data is a corpus of speech and transcripts.
 
 The language model is a n-gram model trained with KenLM, and the training data is a corpus of text.
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 ---
 

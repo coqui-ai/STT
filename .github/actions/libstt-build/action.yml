@@ -1,0 +1,12 @@
+name: "Build libstt.so"
+description: "Build libstt.so"
+inputs:
+  arch:
+    description: "Target arch for loading script (host/armv7/aarch64)"
+    required: false
+    default: "host"
+runs:
+  using: "composite"
+  steps:
+    - run: ./ci_scripts/${{ inputs.arch }}-build.sh
+      shell: bash

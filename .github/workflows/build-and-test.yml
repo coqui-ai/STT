@@ -2936,12 +2936,28 @@ jobs:
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
+<<<<<<< HEAD
+          key: electron-headers-12.0.0_15.0.0
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+=======
           key: electron-headers-12.0.0_16.0.0
+>>>>>>> 9b7625fe (Add support for Electron 16)
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/armv7-build.sh
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
+<<<<<<< HEAD
+>>>>>>> 94b13b64 (Add support for Electron 16)
+=======
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -2959,7 +2975,15 @@ jobs:
   build-python-LinuxAarch64:
     name: "LinAarch64|Build Python bindings"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
+    needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+=======
+<<<<<<< HEAD
+    needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+=======
     needs: [build-lib-LinuxAarch64, swig_Linux]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     strategy:
       matrix:
         python-version: [3.7]
@@ -2972,8 +2996,16 @@ jobs:
           sudo apt-get install -y --no-install-recommends
       - uses: actions/checkout@v2
         with:
+<<<<<<< HEAD
+          fetch-depth: 1
+=======
+<<<<<<< HEAD
+          fetch-depth: 1
+=======
           fetch-depth: 0
           submodules: 'recursive'
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -2981,6 +3013,19 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
+          cd ${{ github.workspace }}/
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -2992,15 +3037,43 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
+<<<<<<< HEAD
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+=======
+<<<<<<< HEAD
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+=======
           name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
           tar -xvf tf-cache.tar.xz
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+<<<<<<< HEAD
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+=======
+<<<<<<< HEAD
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3012,11 +3085,17 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/aarch64-build.sh
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: ./.github/actions/python-build
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
@@ -3030,15 +3109,31 @@ jobs:
   build-nodejs-LinuxAarch64:
     name: "LinAarch64|Build NodeJS and ElectronJS"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
+    needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+=======
+<<<<<<< HEAD
+    needs: [ build-lib_LinuxAarch64, swig_Linux, tensorflow_opt-LinuxAarch64 ]
+=======
     needs: [build-lib-LinuxAarch64, swig_Linux]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
     steps:
       - uses: actions/checkout@v2
         with:
+<<<<<<< HEAD
+          fetch-depth: 1
+=======
+<<<<<<< HEAD
+          fetch-depth: 1
+=======
           fetch-depth: 0
           submodules: 'recursive'
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -3046,6 +3141,19 @@ jobs:
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+          mkdir -p ../tensorflow/lite
+          mv libtensorflowlite.so ../tensorflow/lite/
+          ls -hal . ../tensorflow/lite
+          cd ${{ github.workspace }}/
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: actions/download-artifact@v2
         with:
           name: "swig_Linux"
@@ -3057,12 +3165,34 @@ jobs:
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
+<<<<<<< HEAD
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
+=======
+<<<<<<< HEAD
+          name: ${{ needs.tensorflow_opt-LinuxAarch64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
       - run: |
-          tar -xvf tf-cache.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+=======
+          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+<<<<<<< HEAD
+      - uses: ./.github/actions/install-xldd
+        with:
+          target: ${{ env.SYSTEM_TARGET }}
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3079,12 +3209,28 @@ jobs:
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
+<<<<<<< HEAD
+          key: electron-headers-12.0.0_15.0.0
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+=======
           key: electron-headers-12.0.0_16.0.0
+>>>>>>> 9b7625fe (Add support for Electron 16)
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/aarch64-build.sh
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
+>>>>>>> coqui-ai-main
+<<<<<<< HEAD
+>>>>>>> 94b13b64 (Add support for Electron 16)
+=======
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
@@ -3129,13 +3275,29 @@ jobs:
   test-cpp-LinuxArm:
     name: "LinArm*|Test C++ binary"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
+    needs: [ build-lib_LinuxArmv7, build-lib_LinuxAarch64, train-test-model-Linux, build-test-chroot ]
+=======
+<<<<<<< HEAD
+    needs: [ build-lib_LinuxArmv7, build-lib_LinuxAarch64, train-test-model-Linux, build-test-chroot ]
+=======
     needs: [ build-lib-LinuxArmv7, build-lib-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
         arch: [ "armv7", "aarch64" ]
         models: ["test", "prod"]
+<<<<<<< HEAD
+        bitrate: ["8k", "16k"]
+=======
+<<<<<<< HEAD
+        bitrate: ["8k", "16k"]
+=======
         samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3166,7 +3328,15 @@ jobs:
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3182,7 +3352,15 @@ jobs:
         with:
           runtime: "cpp"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
           samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           model-kind: ${{ matrix.models }}
   test-py-LinuxArm:
     name: "LinArm*|Test Python bindings"
@@ -3194,7 +3372,15 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         python-version: [3.7]
         models: ["test", "prod"]
+<<<<<<< HEAD
+        bitrate: ["8k", "16k"]
+=======
+<<<<<<< HEAD
+        bitrate: ["8k", "16k"]
+=======
         samplerate: ["8000", "16000"]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3223,7 +3409,15 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3241,7 +3435,15 @@ jobs:
         with:
           runtime: "python"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
           samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           model-kind: ${{ matrix.models }}
   test-nodejs-LinuxArm:
     name: "LinArm*|Test NodeJS bindings"
@@ -3254,7 +3456,15 @@ jobs:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
+<<<<<<< HEAD
+        bitrate: ["16k"]
+=======
+<<<<<<< HEAD
+        bitrate: ["16k"]
+=======
         samplerate: ["16000"]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
@@ -3287,7 +3497,15 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3303,7 +3521,15 @@ jobs:
         with:
           runtime: "node"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
           samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           model-kind: ${{ matrix.models }}
   test-electronjs-LinuxArm:
     name: "LinArm*|Test ElectronJS bindings"
@@ -3316,7 +3542,15 @@ jobs:
         arch: [ "armv7", "aarch64" ]
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
+<<<<<<< HEAD
+        bitrate: ["16k"]
+=======
+<<<<<<< HEAD
+        bitrate: ["16k"]
+=======
         samplerate: ["16000"]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3349,7 +3583,15 @@ jobs:
           path: ${{ env.CI_TMP_DIR }}/
       - uses: actions/download-artifact@v2
         with:
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
+<<<<<<< HEAD
+          name: "test-model.tflite-${{ matrix.bitrate }}.zip"
+=======
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           path: ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
       - run: |
@@ -3377,7 +3619,15 @@ jobs:
         with:
           runtime: "electronjs"
           chroot: "sudo --preserve-env chroot --userspec=runner:docker ${{ env.SYSTEM_RASPBIAN }}/ ${{ github.workspace }}"
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
+<<<<<<< HEAD
+          bitrate: ${{ matrix.bitrate }}
+=======
           samplerate: ${{ matrix.samplerate }}
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           model-kind: ${{ matrix.models }}
         timeout-minutes: 5
       - name: "Kill X"
@@ -3385,48 +3635,196 @@ jobs:
           cat ${{ env.CI_TMP_DIR }}/xvfb.pid
           sudo kill -9 $(cat ${{ env.CI_TMP_DIR }}/xvfb.pid)
   # Android jobs
-  build-lib-AndroidArmv7:
-    name: "AndroidArmv7|Build libstt+client"
+<<<<<<< HEAD
+  tensorflow_opt-AndroidArmv7:
+    name: "AndroidArmv7|Check TensorFlow cache"
+=======
+<<<<<<< HEAD
+  tensorflow_opt-AndroidArmv7:
+    name: "AndroidArmv7|Check TensorFlow cache"
     runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.check_artifact_exists.outputs.status }}
+      cache_key: ${{ steps.get_cache_key.outputs.key }}
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-          submodules: 'recursive'
+          fetch-depth: 1
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          arch: "AndroidArmv7"
-          extras: "0"
+          extras: "1"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
+  build-tensorflow-AndroidArmv7:
+    name: "AndroidArmv7|Build TensorFlow (opt)"
+    needs: tensorflow_opt-AndroidArmv7
+    runs-on: ubuntu-20.04
+    steps:
+      - run: true
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'found'
+=======
+  build-lib-AndroidArmv7:
+    name: "AndroidArmv7|Build libstt+client"
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+    runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.check_artifact_exists.outputs.status }}
+      cache_key: ${{ steps.get_cache_key.outputs.key }}
+    steps:
+>>>>>>> coqui-ai-main
+      - uses: actions/checkout@v2
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "3.7"
+<<<<<<< HEAD
+          fetch-depth: 1
+=======
+          fetch-depth: 0
+          submodules: 'recursive'
+<<<<<<< HEAD
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-armv7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/build-tensorflow
+        with:
+          flavor: "--android-armv7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/package-tensorflow
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+  build-lib_AndroidArmv7:
+    name: "AndroidArmv7|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArmv7, tensorflow_opt-AndroidArmv7 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-armv7
+=======
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          extras: "1"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+  build-tensorflow-AndroidArmv7:
+    name: "AndroidArmv7|Build TensorFlow (opt)"
+    needs: tensorflow_opt-AndroidArmv7
+    runs-on: ubuntu-20.04
+    steps:
+      - run: true
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'found'
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+<<<<<<< HEAD
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-armv7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/build-tensorflow
+        with:
+          flavor: "--android-armv7"
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/package-tensorflow
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: needs.tensorflow_opt-AndroidArmv7.outputs.status == 'missing'
+  build-lib_AndroidArmv7:
+    name: "AndroidArmv7|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArmv7, tensorflow_opt-AndroidArmv7 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArmv7.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-armv7
+=======
       - run: ./ci_scripts/tf-setup.sh --android-armv7
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-armv7-build.sh
       - run: ./ci_scripts/tf-package.sh
         if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - run: ./ci_scripts/android-package.sh armeabi-v7a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+<<<<<<< HEAD
+  tensorflow_opt-AndroidArm64:
+    name: "AndroidArm64|Check TensorFlow cache"
+=======
+<<<<<<< HEAD
+  tensorflow_opt-AndroidArm64:
+    name: "AndroidArm64|Check TensorFlow cache"
+    runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.check_artifact_exists.outputs.status }}
+      cache_key: ${{ steps.get_cache_key.outputs.key }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          extras: "1"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+  build-tensorflow-AndroidArm64:
+    name: "AndroidArm64|Build TensorFlow (opt)"
+    needs: tensorflow_opt-AndroidArm64
+    runs-on: ubuntu-20.04
+    steps:
+      - run: true
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'found'
+=======
       - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
@@ -3434,46 +3832,144 @@ jobs:
         if: steps.check_artifact_exists.outputs.status == 'missing'
   build-lib-AndroidArm64:
     name: "AndroidArm64|Build libstt+client"
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.check_artifact_exists.outputs.status }}
+      cache_key: ${{ steps.get_cache_key.outputs.key }}
+    steps:
+>>>>>>> coqui-ai-main
+      - uses: actions/checkout@v2
+        with:
+<<<<<<< HEAD
+          fetch-depth: 1
+=======
+          fetch-depth: 0
+          submodules: 'recursive'
+<<<<<<< HEAD
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - name: Use Java 8 instead of Java 11
+        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-arm64"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/build-tensorflow
+        with:
+          flavor: "--android-arm64"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/package-tensorflow
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+  build-lib_AndroidArm64:
+    name: "AndroidArm64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          submodules: 'recursive'
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-arm64
+=======
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          arch: "AndroidArm64"
-          extras: "0"
+          extras: "1"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
+  build-tensorflow-AndroidArm64:
+    name: "AndroidArm64|Build TensorFlow (opt)"
+    needs: tensorflow_opt-AndroidArm64
+    runs-on: ubuntu-20.04
+    steps:
+      - run: true
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'found'
+      - uses: actions/checkout@v2
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "3.7"
+          fetch-depth: 0
+          submodules: 'recursive'
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+<<<<<<< HEAD
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/setup-tensorflow
+        with:
+          flavor: "--android-arm64"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/build-tensorflow
+        with:
+          flavor: "--android-arm64"
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/package-tensorflow
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: needs.tensorflow_opt-AndroidArm64.outputs.status == 'missing'
+  build-lib_AndroidArm64:
+    name: "AndroidArm64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-arm64
+=======
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-arm64-build.sh
       - run: ./ci_scripts/tf-package.sh
         if: steps.check_artifact_exists.outputs.status == 'missing'
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - run: ./ci_scripts/android-package.sh arm64-v8a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.arm64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+<<<<<<< HEAD
+  build-lib_Androidx86_64:
+    name: "Androidx86_64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
+=======
+<<<<<<< HEAD
+  build-lib_Androidx86_64:
+    name: "Androidx86_64|Build libstt+client"
+    runs-on: ubuntu-20.04
+    needs: [ build-tensorflow-AndroidArm64, tensorflow_opt-AndroidArm64 ]
+=======
       - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
@@ -3482,10 +3978,27 @@ jobs:
   build-lib-Androidx86_64:
     name: "Androidx86_64|Build libstt+client"
     runs-on: ubuntu-20.04
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+      - run: |
+          tar --skip-old-files -xf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+      - uses: ./.github/actions/libstt-build
+        with:
+          arch: android-x86_64
+=======
           submodules: 'recursive'
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
@@ -3496,24 +4009,28 @@ jobs:
         uses: ./.github/actions/check_artifact_exists
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - uses: ./.github/actions/check_artifact_exists
         with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          name: ${{ needs.tensorflow_opt-AndroidArm64.outputs.cache_key }}.tar.xz
           path: ${{ github.workspace }}/tf-cache.tar.xz
           download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - run: |
-          tar -xvf tf-cache.tar.xz
+          tar --skip-old-files -xf tf-cache.tar.xz
           rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - uses: actions/setup-python@v2
+      - uses: ./.github/actions/libstt-build
         with:
+<<<<<<< HEAD
+          arch: android-x86_64
+=======
           python-version: "3.7"
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-x86_64-build.sh
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
       - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
@@ -3522,7 +4039,15 @@ jobs:
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04
+<<<<<<< HEAD
+    needs: [build-lib_AndroidArmv7, build-lib_AndroidArm64, build-lib_Androidx86_64]
+=======
+<<<<<<< HEAD
+    needs: [build-lib_AndroidArmv7, build-lib_AndroidArm64, build-lib_Androidx86_64]
+=======
     needs: [build-lib-AndroidArmv7, build-lib-AndroidArm64, build-lib-Androidx86_64]
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     steps:
       - uses: actions/checkout@v2
         with:
@@ -3535,7 +4060,15 @@ jobs:
           mkdir -p native_client/java/libstt/libs/armeabi-v7a
           cd /tmp/nc
           tar xvf native_client.tar.xz
+<<<<<<< HEAD
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+=======
+<<<<<<< HEAD
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+=======
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3545,7 +4078,15 @@ jobs:
           mkdir -p native_client/java/libstt/libs/arm64-v8a
           cd /tmp/nc
           tar xvf native_client.tar.xz
+<<<<<<< HEAD
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+=======
+<<<<<<< HEAD
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+=======
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           rm -f *
       - uses: actions/download-artifact@v2
         with:
@@ -3555,7 +4096,15 @@ jobs:
           mkdir -p native_client/java/libstt/libs/x86_64
           cd /tmp/nc
           tar xvf native_client.tar.xz
+<<<<<<< HEAD
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+=======
+<<<<<<< HEAD
+          mv libstt.so libtensorflowlite.so libkenlm.so libtflitedelegates.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+=======
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
           rm -f *
       - name: Use Java 8 instead of Java 11
         run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV

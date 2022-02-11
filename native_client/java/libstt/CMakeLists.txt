@@ -27,6 +27,23 @@ add_library(kenlm-lib SHARED IMPORTED)
 set_target_properties(kenlm-lib PROPERTIES
     IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libkenlm.so)
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+add_library(tensorflowlite-lib SHARED IMPORTED)
+set_target_properties(tensorflowlite-lib PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtensorflowlite.so)
+
+add_library(tflitedelegates-lib SHARED IMPORTED)
+set_target_properties(tflitedelegates-lib PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtflitedelegates.so)
+
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 add_custom_command(TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libstt.so
@@ -36,6 +53,29 @@ add_custom_command(TARGET stt-jni POST_BUILD
              COMMAND ${CMAKE_COMMAND} -E copy
              ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libkenlm.so
              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libkenlm.so)
+<<<<<<< HEAD
+
+add_custom_command(TARGET stt-jni POST_BUILD
+             COMMAND ${CMAKE_COMMAND} -E copy
+             ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtensorflowlite.so
+             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtensorflowlite.so)
+
+add_custom_command(TARGET stt-jni POST_BUILD
+             COMMAND ${CMAKE_COMMAND} -E copy
+             ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtflitedelegates.so
+             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtflitedelegates.so)
+=======
+>>>>>>> coqui-ai-main
+
+add_custom_command(TARGET stt-jni POST_BUILD
+             COMMAND ${CMAKE_COMMAND} -E copy
+             ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtensorflowlite.so
+             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtensorflowlite.so)
+
+add_custom_command(TARGET stt-jni POST_BUILD
+             COMMAND ${CMAKE_COMMAND} -E copy
+             ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libtflitedelegates.so
+             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtflitedelegates.so)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

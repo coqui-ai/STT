@@ -18,9 +18,15 @@ from .audio import (
 from .helpers import GIGABYTE, KILOBYTE, MEGABYTE, Interleaved, LenMap
 from .io import is_remote_path, open_remote
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 import webdataset as wds
 
 
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 BIG_ENDIAN = "big"
 INT_SIZE = 4
 BIGINT_SIZE = 2 * INT_SIZE
@@ -574,6 +580,10 @@ class CSV:
         return len(self.samples)
 
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 class WebDatasetSource:
     """Sample collection reader for reading a WebDataset source"""
 
@@ -642,6 +652,8 @@ class WebDatasetSource:
         return WrappedIterator(iter(self._dataset))
 
 
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 def samples_from_source(
     sample_source, buffering=BUFFER_SIZE, labeled=None, reverse=False
 ):
@@ -667,6 +679,10 @@ def samples_from_source(
     iterable of util.sample_collections.LabeledSample or util.audio.Sample instances
     """
     ext = os.path.splitext(sample_source)[1].lower()
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
     if (
         any(
             sample_source.startswith(p)
@@ -675,6 +691,8 @@ def samples_from_source(
         or ext == ".tar"
     ):
         return WebDatasetSource(sample_source, labeled=labeled)
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     if ext == ".sdb":
         return SDB(sample_source, buffering=buffering, labeled=labeled, reverse=reverse)
     if ext == ".csv":

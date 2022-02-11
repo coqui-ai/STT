@@ -20,7 +20,15 @@
 
 A scorer is a _language model_ and it is used by 🐸STT to improve the accuracy of transcription. A _language model_ predicts which words are more likely to follow each other. For example, the word `chicken` might be frequently followed by the words `nuggets`, `soup` or `rissoles`, but is unlikely to be followed by the word `purple`. The scorer identifies probabilities of words occurring together.
 
+<<<<<<< HEAD
+The default scorer used by 🐸STT is trained on the LibriSpeech dataset. The LibriSpeech dataset is based on [LibriVox](https://librivox.org/) - an open collection of out-of-copyright and public domain works.
+=======
+<<<<<<< HEAD
+The default scorer used by 🐸STT is trained on the LibriSpeech dataset. The LibriSpeech dataset is based on [LibriVox](https://librivox.org/) - an open collection of out-of-copyright and public domain works.
+=======
 The default scorer used by 🐸STT is trained on [the English text from the Multilingual LibriSpeech dataset](https://dl.fbaipublicfiles.com/mls/mls_lm_english.tar.gz) (44G).
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 You may need to build your own scorer - your own _language model_ if:
 
@@ -38,7 +46,15 @@ _This section assumes that you have already trained a model and have a set of **
 
 🐸STT uses an algorithm called [_connectionist temporal classification_](https://distill.pub/2017/ctc/) or CTC for short, to map between _input_ sequences of audio and _output_ sequences of characters. The mapping between _inputs_ and _outputs_ is called an _alignment_. The alignment between _inputs_ and _outputs_ is not one-to-one; many _inputs_ may make up an _output_. CTC is therefore a _probabilistic_ algorithm. This means that for each _input_ there are many possible _outputs_ that can be selected. A process call _beam search_ is used to identify the possible _outputs_ and select the one with the highest probability. A [language model](AM_vs_LM.md) or _scorer_ helps the _beam search_ algorithm select the most optimal _output_ value. This is why building your own _scorer_ is necessary for training a model on a narrow domain - otherwise the _beam search_ algorithm would probably select the wrong _output_.
 
+<<<<<<< HEAD
+The default _scorer_ used with 🐸STT is trained on Librivox. It's a general model. But let's say that you want to train a speech recognition model for agriculture. If you have the phrase `tomatoes are ...`, a general scorer might identify `red` as the most likely next word - but an agricultural model might identify `ready` as the most likely next word.
+=======
+<<<<<<< HEAD
+The default _scorer_ used with 🐸STT is trained on Librivox. It's a general model. But let's say that you want to train a speech recognition model for agriculture. If you have the phrase `tomatoes are ...`, a general scorer might identify `red` as the most likely next word - but an agricultural model might identify `ready` as the most likely next word.
+=======
 The default English _scorer_ released with 🐸STT is trained on [Multilingual LibriSpeech](https://dl.fbaipublicfiles.com/mls/mls_lm_english.tar.gz). It's a general model. But let's say that you want to train a speech recognition model for agriculture. If you have the phrase `tomatoes are ...`, a general scorer might identify `red` as the most likely next word - but an agricultural model might identify `ready` as the most likely next word.
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 The _scorer_ is only used during the _test_ stage of [training](TRAINING.md) (rather than at the _train_ or _validate_ stages) because this is where the _beam search_ decdoder determines which words are formed from the identified characters.
 
@@ -237,7 +253,15 @@ You can now generate a KenLM scorer file.
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \
+<<<<<<< HEAD
+  --alphabet ../alphabet.txt  \
+=======
+<<<<<<< HEAD
+  --alphabet ../alphabet.txt  \
+=======
   --checkpoint ../stt-data/checkpoints-newscorer-id  \
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
   --lm ../../stt-data/indonesian-scorer/lm.binary
   --vocab ../../stt-data/indonesian-scorer/vocab-500000.txt \
   --package kenlm-indonesian.scorer \
@@ -263,7 +287,15 @@ then you should add the parameter `--force_bytes_output_mode` when calling `gene
 
 ```
 root@dcb62aada58b:/STT/data/lm# ./generate_scorer_package \
+<<<<<<< HEAD
+  --alphabet ../alphabet.txt  \
+=======
+<<<<<<< HEAD
+  --alphabet ../alphabet.txt  \
+=======
   --checkpoint ../../checkpoints-newscorer-id  \
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
   --lm ../../stt-data/indonesian-scorer/lm.binary
   --vocab ../../stt-data/indonesian-scorer/vocab-500000.txt \
   --package kenlm-indonesian.scorer \

@@ -58,14 +58,26 @@ def print_import_report(counter, sample_rate, max_secs):
             secs_to_hours(counter["total_time"] / sample_rate),
         )
     )
+<<<<<<< HEAD
 
 
+def get_importers_parser(description):
+    parser = argparse.ArgumentParser(description=description)
+=======
+
+
+<<<<<<< HEAD
+def get_importers_parser(description):
+    parser = argparse.ArgumentParser(description=description)
+=======
 def get_importers_parser(description, **kwargs):
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         **kwargs
     )
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     parser.add_argument(
         "--validate_label_locale",
         help="Path to a Python file defining a |validate_label| function for your locale.",

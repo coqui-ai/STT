@@ -12,7 +12,13 @@ download_ldc("data/smoke_test")
 
 initialize_globals_from_args(
     load_train="init",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
     checkpoint_dir="ldc93s1_ckpt",
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     alphabet_config_path="data/alphabet.txt",
     train_files=["data/smoke_test/ldc93s1.csv"],
     dev_files=["data/smoke_test/ldc93s1.csv"],

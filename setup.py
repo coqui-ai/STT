@@ -23,6 +23,14 @@ def main():
         "pandas",
         "progressbar2",
         "pyogg >= 0.6.14a1",
+<<<<<<< HEAD
+        "pyxdg",
+=======
+<<<<<<< HEAD
+        "pyxdg",
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         "resampy >= 0.2.2",
         "requests",
         "semver",
@@ -30,7 +38,13 @@ def main():
         "sox",
         "soundfile",
         "tqdm",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
         "webdataset",
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     ]
 
     decoder_pypi_dep = ["coqui_stt_ctcdecoder == {}".format(version)]
@@ -70,7 +84,15 @@ def main():
         install_requires=install_requires,
         include_package_data=True,
         extras_require={
+<<<<<<< HEAD
+            "transcribe": ["webrtcvad"],
+=======
+<<<<<<< HEAD
+            "transcribe": ["webrtcvad"],
+=======
             "transcribe": ["webrtcvad == 2.0.10"],
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         },
     )
 

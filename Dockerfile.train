@@ -30,6 +30,19 @@ RUN cd /code/kenlm && \
 FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+# We need to purge python3-xdg because
+# it's breaking STT install later with
+# errors about setuptools
+#
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         git \
@@ -39,6 +52,14 @@ RUN apt-get update && \
         libsndfile1 \
         sox \
         libsox-fmt-mp3 && \
+<<<<<<< HEAD
+    apt-get purge -y python3-xdg && \
+=======
+<<<<<<< HEAD
+    apt-get purge -y python3-xdg && \
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     rm -rf /var/lib/apt/lists/*
 
 # Make sure pip and its dependencies are up-to-date

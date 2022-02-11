@@ -12,6 +12,14 @@ import tensorflow.compat.v1 as tfv1
 from attrdict import AttrDict
 from coqpit import MISSING, Coqpit, check_argument
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
+<<<<<<< HEAD
+from xdg import BaseDirectory as xdg
+=======
+<<<<<<< HEAD
+from xdg import BaseDirectory as xdg
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 from .augmentations import NormalizeSampleRate, parse_augmentations
 from .auto_input import create_alphabet_from_sources, create_datasets_from_auto_input
@@ -78,11 +86,37 @@ class BaseSttConfig(Coqpit):
         if self.dropout_rate6 < 0:
             self.dropout_rate6 = self.dropout_rate
 
+<<<<<<< HEAD
+        # Checkpoint dir logic #
+=======
+<<<<<<< HEAD
+        # Checkpoint dir logic #
+=======
         # Checkpoint dir logic
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         if self.checkpoint_dir:
             # checkpoint_dir always overrides {save,load}_checkpoint_dir
             self.save_checkpoint_dir = self.checkpoint_dir
             self.load_checkpoint_dir = self.checkpoint_dir
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+        else:
+            if not self.save_checkpoint_dir:
+                self.save_checkpoint_dir = xdg.save_data_path(
+                    os.path.join("stt", "checkpoints")
+                )
+            if not self.load_checkpoint_dir:
+                self.load_checkpoint_dir = xdg.save_data_path(
+                    os.path.join("stt", "checkpoints")
+                )
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
         if self.load_train not in ["last", "best", "init", "auto"]:
             self.load_train = "auto"
@@ -92,7 +126,15 @@ class BaseSttConfig(Coqpit):
 
         # Set default summary dir
         if not self.summary_dir:
+<<<<<<< HEAD
+            self.summary_dir = xdg.save_data_path(os.path.join("stt", "summaries"))
+=======
+<<<<<<< HEAD
+            self.summary_dir = xdg.save_data_path(os.path.join("stt", "summaries"))
+=======
             self.summary_dir = os.path.join(self.save_checkpoint_dir, "summaries")
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
         # Standard session configuration that'll be used for all new sessions.
         self.session_config = tfv1.ConfigProto(
@@ -203,22 +245,15 @@ class BaseSttConfig(Coqpit):
                 self.alphabet = alphabet
                 self.effective_alphabet_path = saved_checkpoint_alphabet_file
         else:
-            if not os.path.isdir(self.load_checkpoint_dir):
-                raise RuntimeError(
-                    "Missing checkpoint directory (--checkpoint_dir or --load_checkpoint_dir)"
-                )
-
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
             raise RuntimeError(
                 "Missing --alphabet_config_path flag. Couldn't find an alphabet file "
                 "alongside checkpoint, and input datasets are not fully specified "
                 "(--train_files, --dev_files, --test_files), so can't generate an alphabet. "
                 "Either specify an alphabet file or fully specify the dataset, so one will "
                 "be generated automatically."
-            )
-
-        if not self.save_checkpoint_dir:
-            raise RuntimeError(
-                "Missing checkpoint directory (--checkpoint_dir or --save_checkpoint_dir)"
             )
 
         # Save flags next to checkpoints
@@ -233,30 +268,6 @@ class BaseSttConfig(Coqpit):
         if not os.path.exists(saved_checkpoint_alphabet_file):
             with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
                 fout.write(self.alphabet.SerializeText())
-
-        # If we have an existing checkpoint with a flags file, load its n_hidden value
-        prev_flags_file = os.path.join(self.load_checkpoint_dir, "flags.txt")
-        self.prev_n_hidden = None
-        if os.path.exists(prev_flags_file):
-            try:
-                with open(prev_flags_file) as fin:
-                    parsed = json.load(fin)
-                prev_n_hidden = parsed["n_hidden"]
-
-                if prev_n_hidden != self.n_hidden:
-                    print(
-                        f"W WARNING: --n_hidden value ({self.n_hidden}) is different "
-                        f"from value found in checkpoint ({prev_n_hidden})."
-                    )
-                    print(
-                        "W WARNING: This would result in an error when loading the "
-                        "checkpoint, so n_hidden has been overriden with the "
-                        "checkpoint value."
-                    )
-                    self.n_hidden = prev_n_hidden
-            except json.JSONDecodeError:
-                # File exists but is not JSON (older checkpoint), ignore error
-                pass
 
         # Geometric Constants
         # ===================
@@ -273,6 +284,8 @@ class BaseSttConfig(Coqpit):
         )
 
         # Number of units in hidden layers
+        self.n_hidden = self.n_hidden
+
         self.n_hidden_1 = self.n_hidden
 
         self.n_hidden_2 = self.n_hidden
@@ -306,6 +319,85 @@ class BaseSttConfig(Coqpit):
             self.feature_win_len / 1000
         )
 
+=======
+            if not os.path.isdir(self.load_checkpoint_dir):
+                raise RuntimeError(
+                    "Missing checkpoint directory (--checkpoint_dir or --load_checkpoint_dir)"
+                )
+
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+            raise RuntimeError(
+                "Missing --alphabet_config_path flag. Couldn't find an alphabet file "
+                "alongside checkpoint, and input datasets are not fully specified "
+                "(--train_files, --dev_files, --test_files), so can't generate an alphabet. "
+                "Either specify an alphabet file or fully specify the dataset, so one will "
+                "be generated automatically."
+            )
+
+        # Save flags next to checkpoints
+        if not is_remote_path(self.save_checkpoint_dir):
+            os.makedirs(self.save_checkpoint_dir, exist_ok=True)
+        flags_file = os.path.join(self.save_checkpoint_dir, "flags.txt")
+        if not os.path.exists(flags_file):
+            with open_remote(flags_file, "w") as fout:
+                json.dump(self.serialize(), fout, indent=2)
+
+        # Serialize alphabet alongside checkpoint
+        if not os.path.exists(saved_checkpoint_alphabet_file):
+            with open_remote(saved_checkpoint_alphabet_file, "wb") as fout:
+                fout.write(self.alphabet.SerializeText())
+
+        # Geometric Constants
+        # ===================
+
+        # For an explanation of the meaning of the geometric constants
+        # please refer to doc/Geometry.md
+
+        # Number of MFCC features
+        self.n_input = 26  # TODO: Determine this programmatically from the sample rate
+
+        # The number of frames in the context
+        self.n_context = (
+            9  # TODO: Determine the optimal value using a validation data set
+        )
+
+        # Number of units in hidden layers
+        self.n_hidden = self.n_hidden
+
+        self.n_hidden_1 = self.n_hidden
+
+        self.n_hidden_2 = self.n_hidden
+
+        self.n_hidden_5 = self.n_hidden
+
+        # LSTM cell state dimension
+        self.n_cell_dim = self.n_hidden
+
+        # The number of units in the third layer, which feeds in to the LSTM
+        self.n_hidden_3 = self.n_cell_dim
+
+        # Dims in last layer = number of characters in alphabet plus one
+        # +1 for CTC blank label
+        self.n_hidden_6 = self.alphabet.GetSize() + 1
+
+        # Size of audio window in samples
+        if (self.feature_win_len * self.audio_sample_rate) % 1000 != 0:
+            raise RuntimeError(
+                "--feature_win_len value ({}) in milliseconds ({}) multiplied "
+                "by --audio_sample_rate value ({}) must be an integer value. Adjust "
+                "your --feature_win_len value or resample your audio accordingly."
+                "".format(
+                    self.feature_win_len,
+                    self.feature_win_len / 1000,
+                    self.audio_sample_rate,
+                )
+            )
+
+        self.audio_window_samples = self.audio_sample_rate * (
+            self.feature_win_len / 1000
+        )
+
+>>>>>>> coqui-ai-main
         # Stride for feature computations in samples
         if (self.feature_win_step * self.audio_sample_rate) % 1000 != 0:
             raise RuntimeError(
@@ -541,6 +633,27 @@ class BaseSttConfig(Coqpit):
     )
 
     # Sample limits
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+    limit_train: int = field(
+        default=0,
+        metadata=dict(
+            help="maximum number of elements to use from train set - 0 means no limit"
+        ),
+    )
+    limit_dev: int = field(
+        default=0,
+        metadata=dict(
+            help="maximum number of elements to use from validation set - 0 means no limit"
+        ),
+    )
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     limit_test: int = field(
         default=0,
         metadata=dict(
@@ -549,6 +662,21 @@ class BaseSttConfig(Coqpit):
     )
 
     # Sample order
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+    reverse_train: bool = field(
+        default=False, metadata=dict(help="if to reverse sample order of the train set")
+    )
+    reverse_dev: bool = field(
+        default=False, metadata=dict(help="if to reverse sample order of the dev set")
+    )
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     reverse_test: bool = field(
         default=False, metadata=dict(help="if to reverse sample order of the test set")
     )
@@ -557,16 +685,48 @@ class BaseSttConfig(Coqpit):
     checkpoint_dir: str = field(
         default="",
         metadata=dict(
+<<<<<<< HEAD
+            help='directory from which checkpoints are loaded and to which they are saved - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+=======
+<<<<<<< HEAD
+            help='directory from which checkpoints are loaded and to which they are saved - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+=======
             help="directory from which checkpoints are loaded and to which they are saved"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         ),
     )
     load_checkpoint_dir: str = field(
         default="",
+<<<<<<< HEAD
+        metadata=dict(
+            help='directory in which checkpoints are stored - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+        ),
+    )
+    save_checkpoint_dir: str = field(
+        default="",
+        metadata=dict(
+            help='directory to which checkpoints are saved - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+        ),
+=======
+<<<<<<< HEAD
+        metadata=dict(
+            help='directory in which checkpoints are stored - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+        ),
+    )
+    save_checkpoint_dir: str = field(
+        default="",
+        metadata=dict(
+            help='directory to which checkpoints are saved - defaults to directory "stt/checkpoints" within user\'s data home specified by the XDG Base Directory Specification'
+        ),
+=======
         metadata=dict(help="directory in which checkpoints are stored"),
     )
     save_checkpoint_dir: str = field(
         default="",
         metadata=dict(help="directory to which checkpoints are saved"),
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     )
     checkpoint_secs: int = field(
         default=600, metadata=dict(help="checkpoint saving interval in seconds")
@@ -708,7 +868,15 @@ class BaseSttConfig(Coqpit):
     summary_dir: str = field(
         default="",
         metadata=dict(
+<<<<<<< HEAD
+            help='target directory for TensorBoard summaries - defaults to directory "stt/summaries" within user\'s data home specified by the XDG Base Directory Specification'
+=======
+<<<<<<< HEAD
+            help='target directory for TensorBoard summaries - defaults to directory "stt/summaries" within user\'s data home specified by the XDG Base Directory Specification'
+=======
             help='target directory for TensorBoard summaries - defaults to directory "summaries" within the checkpoint folder'
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         ),
     )
 
@@ -872,7 +1040,17 @@ def initialize_globals_from_args(**override_args):
 
 
 def initialize_globals_from_instance(config):
+<<<<<<< HEAD
+    """ Initialize Config singleton from an existing Config instance (or subclass) """
+    assert isinstance(config, BaseSttConfig)
+=======
+<<<<<<< HEAD
+    """ Initialize Config singleton from an existing Config instance (or subclass) """
+    assert isinstance(config, BaseSttConfig)
+=======
     """ Initialize Config singleton from an existing instance """
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     _ConfigSingleton._config = config  # pylint: disable=protected-access
 
 

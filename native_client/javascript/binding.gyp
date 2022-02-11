@@ -27,12 +27,32 @@
                         "libraries": [
                             "../../../tensorflow/bazel-bin/native_client/libstt.so.if.lib",
                             "../../../tensorflow/bazel-bin/native_client/libkenlm.so.if.lib",
+<<<<<<< HEAD
+                            "../../../tensorflow/bazel-bin/native_client/libtflitedelegates.so.if.lib",
+                            "../../../tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib",
+=======
+<<<<<<< HEAD
+                            "../../../tensorflow/bazel-bin/native_client/libtflitedelegates.so.if.lib",
+                            "../../../tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib",
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
                         ],
                     },
                     {
                         "libraries": [
                             "../../../tensorflow/bazel-bin/native_client/libstt.so",
                             "../../../tensorflow/bazel-bin/native_client/libkenlm.so",
+<<<<<<< HEAD
+                            "../../../tensorflow/bazel-bin/native_client/libtflitedelegates.so",
+                            "../../../tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so",
+=======
+<<<<<<< HEAD
+                            "../../../tensorflow/bazel-bin/native_client/libtflitedelegates.so",
+                            "../../../tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so",
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
                         ],
                     },
                 ],

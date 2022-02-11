@@ -8,7 +8,13 @@ import os
 import random
 import sys
 from dataclasses import dataclass, field
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 from typing import List
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 from coqui_stt_training.util.audio import (
     AUDIO_TYPE_PCM,
@@ -30,7 +36,13 @@ from coqui_stt_training.util.sample_collections import (
     LabeledSample,
     samples_from_source,
 )
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 from coqpit import Coqpit
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 
 def get_samples_in_play_order():
@@ -90,7 +102,15 @@ def play_collection():
 
 
 @dataclass
+<<<<<<< HEAD
+class PlayConfig(BaseSttConfig):
+=======
+<<<<<<< HEAD
+class PlayConfig(BaseSttConfig):
+=======
 class PlayConfig(Coqpit):
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     source: str = field(
         default="",
         metadata=dict(
@@ -135,12 +155,18 @@ class PlayConfig(Coqpit):
             help="No info logging to console",
         ),
     )
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
     augment: List[str] = field(
         default=None,
         metadata=dict(
             help='space-separated list of augmenations for training samples. Format is "--augment operation1[param1=value1, ...] operation2[param1=value1, ...] ..."'
         ),
     )
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
     def __post_init__(self):
         if not self.pipe:
@@ -151,6 +177,21 @@ class PlayConfig(Coqpit):
                     'Unless using --pipe true, play.py requires Python package "simpleaudio" for playing samples'
                 )
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+        super().__post_init__()
+
+        # Disable automatic insertion of NormalizeSampleRate augmentation
+        # TODO move training config into its own child class so this behavior
+        # is not inherited from BaseSttConfig
+        self.normalize_sample_rate = False
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         self.augmentations = parse_augmentations(self.augment)
 
 

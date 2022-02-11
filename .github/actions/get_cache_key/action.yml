@@ -1,6 +1,20 @@
 name: "get cache key for submodule"
 description: "Compute a cache key based on git submodule"
 inputs:
+<<<<<<< HEAD
+  extras:
+    description: "Extra cache key value"
+    required: true
+  osarch:
+    description: "Override automatic OSARCH value"
+=======
+<<<<<<< HEAD
+  extras:
+    description: "Extra cache key value"
+    required: true
+  osarch:
+    description: "Override automatic OSARCH value"
+=======
   submodule:
     description: "Name of submodule"
     default: "tensorflow"
@@ -15,6 +29,8 @@ inputs:
   extras:
     description: "Extra cache key value"
     default: "0"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     required: false
 outputs:
   key:
@@ -26,8 +42,33 @@ runs:
     - id: compute_cache_key
       run: |
         set -xe
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+        JOB=${{ github.job }}
+        SUBMODULE=$(echo $JOB | cut -d'-' -f1 | cut -d'_' -f1)
+        FLAVOR=$(echo $JOB | cut -d'-' -f1 | cut -d'_' -f2)
+
+        if [ -z "${{ inputs.osarch }}" ]; then
+          OSARCH=$(echo $JOB | cut -d'-' -f2)
+        else
+          OSARCH=${{ inputs.osarch }}
+        fi
+
+<<<<<<< HEAD
+        SHA=$(git submodule status ${SUBMODULE} | sed -e 's/^-//g' -e 's/^+//g' -e 's/^U//g' | awk '{ print $1 }')
+
+        KEY=${SUBMODULE}-${FLAVOR}_${OSARCH}_${SHA}_${{ inputs.extras }}
+=======
+        SHA=$(git submodule status ${SUBMODULE} | sed -e 's/^-//g' -e 's/^+//g' -e 's/^U//g' | awk '{ print $1 }')
+
+        KEY=${SUBMODULE}-${FLAVOR}_${OSARCH}_${SHA}_${{ inputs.extras }}
+=======
         SUBMODULE=${{ inputs.submodule }}
         SHA=$(git submodule status ${SUBMODULE} | sed -e 's/^-//g' -e 's/^+//g' -e 's/^U//g' | awk '{ print $1 }')
         KEY=${SUBMODULE}-${{ inputs.flavor }}_${{ inputs.arch }}_${SHA}_${{ inputs.extras }}
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         echo "::set-output name=key::${KEY}"
       shell: bash

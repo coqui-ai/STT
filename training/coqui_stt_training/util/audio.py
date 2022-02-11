@@ -24,8 +24,16 @@ AUDIO_TYPE_NP = "application/vnd.mozilla.np"
 AUDIO_TYPE_PCM = "application/vnd.mozilla.pcm"
 AUDIO_TYPE_WAV = "audio/wav"
 AUDIO_TYPE_OPUS = "application/vnd.mozilla.opus"
+<<<<<<< HEAD
+AUDIO_TYPE_OGG_OPUS = "application/vnd.deepspeech.ogg_opus"
+=======
+<<<<<<< HEAD
+AUDIO_TYPE_OGG_OPUS = "application/vnd.deepspeech.ogg_opus"
+=======
 AUDIO_TYPE_OGG_OPUS = "audio/ogg;codecs=opus"
 AUDIO_TYPE_OGG_VORBIS = "audio/vorbis"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 SERIALIZABLE_AUDIO_TYPES = [
     AUDIO_TYPE_WAV,
@@ -177,7 +185,13 @@ def get_loadable_audio_type_from_extension(ext):
     return {
         ".wav": AUDIO_TYPE_WAV,
         ".opus": AUDIO_TYPE_OGG_OPUS,
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
         ".ogg": AUDIO_TYPE_OGG_VORBIS,
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     }.get(ext, None)
 
 
@@ -633,8 +647,14 @@ def read_audio(audio_type, audio_file):
         return read_opus(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus(audio_file)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
     if audio_type == AUDIO_TYPE_OGG_VORBIS:
         return read_ogg_vorbis(audio_file)
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -716,8 +736,14 @@ def read_duration(audio_type, audio_file):
         return read_opus_duration(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus_duration(audio_file)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
     if audio_type == AUDIO_TYPE_OGG_VORBIS:
         return read_ogg_vorbis_duration(audio_file)
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -752,9 +778,13 @@ def read_ogg_opus_format(ogg_file):
 
     sample_rate = 48000  # opus files are always 48kHz
     sample_width = 2  # always 16-bit
+<<<<<<< HEAD
+=======
     return AudioFormat(sample_rate, channel_count, sample_width)
 
 
+<<<<<<< HEAD
+=======
 def read_ogg_vorbis_format(ogg_file):
     ogg_file.seek(0)
     vf = pyogg.vorbis.OggVorbis_File()
@@ -769,9 +799,11 @@ def read_ogg_vorbis_format(ogg_file):
     channel_count = info.contents.channels
     sample_rate = info.contents.rate
     sample_width = 2  # always 16-bit
+>>>>>>> coqui-ai-main
     return AudioFormat(sample_rate, channel_count, sample_width)
 
 
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 def read_format(audio_type, audio_file):
     if audio_type == AUDIO_TYPE_WAV:
         return read_wav_format(audio_file)
@@ -779,8 +811,14 @@ def read_format(audio_type, audio_file):
         return read_opus_format(audio_file)
     if audio_type == AUDIO_TYPE_OGG_OPUS:
         return read_ogg_opus_format(audio_file)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
     if audio_type == AUDIO_TYPE_OGG_VORBIS:
         return read_ogg_vorbis_format(audio_file)
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 

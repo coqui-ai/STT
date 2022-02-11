@@ -21,7 +21,15 @@ endif
 
 STT_BIN       := stt$(PLATFORM_EXE_SUFFIX)
 CFLAGS_STT    := -std=c++11 -o $(STT_BIN)
+<<<<<<< HEAD
+LINK_STT      := -lstt -lkenlm -ltflitedelegates -ltensorflowlite
+=======
+<<<<<<< HEAD
+LINK_STT      := -lstt -lkenlm -ltflitedelegates -ltensorflowlite
+=======
 LINK_STT      := -lstt -lkenlm
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 LINK_PATH_STT := -L${TFDIR}/bazel-bin/native_client -L${TFDIR}/bazel-bin/tensorflow/lite
 
 ifeq ($(TARGET),host)
@@ -61,7 +69,15 @@ TOOL_CC     := cl.exe
 TOOL_CXX    := cl.exe
 TOOL_LD     := link.exe
 TOOL_LIBEXE := lib.exe
+<<<<<<< HEAD
+LINK_STT      := $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libstt.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libkenlm.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libtflitedelegates.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib")
+=======
+<<<<<<< HEAD
+LINK_STT      := $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libstt.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libkenlm.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libtflitedelegates.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/tensorflow/lite/libtensorflowlite.so.if.lib")
+=======
 LINK_STT      := $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libstt.so.if.lib") $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libkenlm.so.if.lib")
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 LINK_PATH_STT :=
 CFLAGS_STT    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
@@ -70,11 +86,27 @@ PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 endif
 
 ifeq ($(TARGET),rpi3)
+<<<<<<< HEAD
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroArmGcc72/bin
+TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/arm-linux-gnueabihf-
+RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian-buster)
+# -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
+CFLAGS      := -march=armv7-a -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 --sysroot $(RASPBIAN)
+=======
+<<<<<<< HEAD
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroArmGcc72/bin
+TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/arm-linux-gnueabihf-
+RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian-buster)
+# -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
+CFLAGS      := -march=armv7-a -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 --sysroot $(RASPBIAN)
+=======
 TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/armhf_linux_toolchain
 TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/arm-linux-gnueabihf-
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian-buster)
 # -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
 CFLAGS      := -march=armv7-a -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 -isystem $(TOOLCHAIN_DIR)/lib/gcc/arm-linux-gnueabihf/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/arm-linux-gnueabihf/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/arm-linux-gnueabihf/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/arm-linux-gnueabihf/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include -no-canonical-prefixes -fno-canonical-system-headers
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 CXXFLAGS    := $(CFLAGS)
 LDFLAGS     := -Wl,-rpath-link,$(RASPBIAN)/lib/arm-linux-gnueabihf/ -Wl,-rpath-link,$(RASPBIAN)/usr/lib/arm-linux-gnueabihf/
 
@@ -92,8 +124,18 @@ TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
 endif # ($(TARGET),rpi3)
 
 ifeq ($(TARGET),rpi3-armv8)
+<<<<<<< HEAD
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroAarch64Gcc72/bin
+TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/aarch64-linux-gnu-
+=======
+<<<<<<< HEAD
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/LinaroAarch64Gcc72/bin
+TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/aarch64-linux-gnu-
+=======
 TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/aarch64_linux_toolchain
 TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/aarch64-linux-gnu-
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian64-buster)
 CFLAGS      := -march=armv8-a -mtune=cortex-a53 -D_GLIBCXX_USE_CXX11_ABI=0 -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include/ -no-canonical-prefixes -fno-canonical-system-headers
 CXXFLAGS    := $(CFLAGS)
@@ -185,7 +227,15 @@ define copy_missing_libs
             new_missing="$$( (for f in $$(otool -L $$lib 2>/dev/null | tail -n +2 | awk '{ print $$1 }' | grep -v '$$lib'); do ls -hal $$f; done;) 2>&1 | grep 'No such' | cut -d':' -f2 | xargs basename -a)"; \
             missing_libs="$$missing_libs $$new_missing"; \
         elif [ "$(OS)" = "${CI_MSYS_VERSION}" ]; then \
+<<<<<<< HEAD
+            missing_libs="libstt.so libkenlm.so libtflitedelegates.so libtensorflowlite.so"; \
+=======
+<<<<<<< HEAD
+            missing_libs="libstt.so libkenlm.so libtflitedelegates.so libtensorflowlite.so"; \
+=======
             missing_libs="libstt.so libkenlm.so"; \
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         else \
             missing_libs="$$missing_libs $$($(LDD) $$lib | grep 'not found' | awk '{ print $$1 }')"; \
         fi; \

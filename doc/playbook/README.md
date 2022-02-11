@@ -26,6 +26,19 @@ Before you can train a model, you will need to collect and format your _corpus_ 
 
 If you are training a model that uses a different alphabet to English, for example a language with diacritical marks, then you will need to modify the `alphabet.txt` file.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+## [Building your own scorer](SCORER.md)
+
+Learn what the scorer does, and how you can go about building your own.
+
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 ## [Acoustic model and language model](AM_vs_LM.md)
 
 Learn about the differences between STT's _acoustic_ model and _language_ model and how they combine to provide end to end speech recognition.
@@ -38,10 +51,16 @@ This section walks you through building a Docker image, and spawning STT in a Do
 
 Once you have your training data formatted, and your training environment established, this section will show you how to train a model, and provide guidance for overcoming common pitfalls.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 ## [Building your own scorer](SCORER.md)
 
 Learn what the scorer does, and how you can go about building your own.
 
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 ## [Testing a model](TESTING.md)
 
 Once you've trained a model, you will need to validate that it works for the context it's been designed for. This section walks you through this process.

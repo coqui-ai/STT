@@ -41,8 +41,14 @@ if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     SUFFIX=".exe"
 fi
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 $PYTHON_BIN_PATH -m pip install numpy==1.19.5
 
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 cp ${DS_ROOT_TASK}/dls/${BAZEL_INSTALL_FILENAME} ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 chmod +x ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 
@@ -57,14 +63,33 @@ if [ ! -z "${install_android}" ]; then
     ANDROID_SDK_FILE=`basename ${ANDROID_SDK_URL}`
 
     pushd ${DS_ROOT_TASK}/STT/Android
-        no | unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
+<<<<<<< HEAD
+        unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
+=======
+<<<<<<< HEAD
+        unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
     popd
 
     pushd ${DS_ROOT_TASK}/STT/Android/SDK
-        no | unzip ${DS_ROOT_TASK}/dls/${ANDROID_SDK_FILE}
+        unzip ${DS_ROOT_TASK}/dls/${ANDROID_SDK_FILE}
         yes | ./tools/bin/sdkmanager --licenses
         ./tools/bin/sdkmanager --update
+        ./tools/bin/sdkmanager --install "platforms;android-16" "build-tools;28.0.3"
+=======
+        no | unzip ${DS_ROOT_TASK}/dls/${ANDROID_NDK_FILE}
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+    popd
+
+    pushd ${DS_ROOT_TASK}/STT/Android/SDK
+        unzip ${DS_ROOT_TASK}/dls/${ANDROID_SDK_FILE}
+        yes | ./tools/bin/sdkmanager --licenses
+        ./tools/bin/sdkmanager --update
+<<<<<<< HEAD
+        ./tools/bin/sdkmanager --install "platforms;android-16" "build-tools;28.0.3"
+=======
         ./tools/bin/sdkmanager --install "platforms;android-16" "build-tools;32.0.0"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     popd
 fi
 

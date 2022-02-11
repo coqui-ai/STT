@@ -2,6 +2,34 @@
 
 set -xe
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+set_ldc_sample_filename()
+{
+  local _bitrate=$1
+
+  if [ -z "${_bitrate}" ]; then
+    echo "Bitrate should not be empty"
+    exit 1
+  fi;
+
+  case "${_bitrate}" in
+    8k)
+      ldc93s1_sample_filename='LDC93S1_pcms16le_1_8000.wav'
+    ;;
+    16k)
+      ldc93s1_sample_filename='LDC93S1_pcms16le_1_16000.wav'
+    ;;
+  esac
+}
+
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 download_model_prod()
 {
   local _model_source_file=$(basename "${model_source}")
@@ -24,6 +52,24 @@ download_material()
   ls -hal ${CI_TMP_DIR}/${model_name} ${CI_TMP_DIR}/LDC93S1*.wav
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+maybe_install_xldd()
+{
+  # -s required to avoid the noisy output like "Entering / Leaving directories"
+  toolchain=$(make -s -C ${DS_DSDIR}/native_client/ TARGET=${SYSTEM_TARGET} TFDIR=${DS_TFDIR} print-toolchain)
+  if [ ! -x "${toolchain}ldd" ]; then
+    cp "${DS_DSDIR}/native_client/xldd" "${toolchain}ldd" && chmod +x "${toolchain}ldd"
+  fi
+}
+
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 verify_bazel_rebuild()
 {
   bazel_explain_file="$1"

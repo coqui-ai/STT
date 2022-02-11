@@ -23,7 +23,15 @@ runs:
         EXTRA_CFLAGS=${{ inputs.local_cflags }} \
         EXTRA_LDFLAGS=${{ inputs.local_ldflags }} \
         EXTRA_LIBS=${{ inputs.local_libs }} \
+<<<<<<< HEAD
+          make -C native_client/python/ \
+=======
+<<<<<<< HEAD
+          make -C native_client/python/ \
+=======
           /usr/bin/make -C native_client/python/ \
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
             TARGET=${{ inputs.target }} \
             RASPBIAN=${{ inputs.chroot }} \
             SETUP_FLAGS="--project_name ${PROJECT_NAME}" \

@@ -9,13 +9,27 @@ do_bazel_build()
   cd ${DS_TFDIR}
   eval "export ${BAZEL_ENV_FLAGS}"
 
+<<<<<<< HEAD
+  bazel ${BAZEL_OUTPUT_USER_ROOT} build \
+=======
+<<<<<<< HEAD
+  bazel ${BAZEL_OUTPUT_USER_ROOT} build \
+=======
   bazel build ${BAZEL_CACHE} \
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     -s --explain bazel_explain.log --verbose_explanations \
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
   ls -lh bazel-bin/native_client
 
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
   if [ "${_opt_or_dbg}" = "opt" ]; then
     verify_bazel_rebuild "${DS_ROOT_TASK}/tensorflow/bazel_explain.log"
   fi
@@ -24,13 +38,29 @@ do_bazel_build()
 shutdown_bazel()
 {
   cd ${DS_TFDIR}
+<<<<<<< HEAD
+  bazel ${BAZEL_OUTPUT_USER_ROOT} shutdown
+=======
+<<<<<<< HEAD
+  bazel ${BAZEL_OUTPUT_USER_ROOT} shutdown
+=======
   bazel shutdown
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 }
 
 do_stt_binary_build()
 {
   cd ${DS_DSDIR}
+<<<<<<< HEAD
+  make -C native_client/ \
+=======
+<<<<<<< HEAD
+  make -C native_client/ \
+=======
   $MAKE -C native_client/ \
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     TARGET=${SYSTEM_TARGET} \
     TFDIR=${DS_TFDIR} \
     RASPBIAN=${SYSTEM_RASPBIAN} \

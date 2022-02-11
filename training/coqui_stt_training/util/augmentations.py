@@ -245,6 +245,16 @@ def apply_sample_augmentations(
                 yield sample, clock
         else:
             for sample_index, sample in enumerate(samples):
+<<<<<<< HEAD
+                sample_clock = clock + (final_clock - clock) * (
+                    sample_index / len(samples)
+                )
+=======
+<<<<<<< HEAD
+                sample_clock = clock + (final_clock - clock) * (
+                    sample_index / len(samples)
+                )
+=======
                 try:
                     sample_clock = clock + (final_clock - clock) * (
                         sample_index / len(samples)
@@ -252,6 +262,8 @@ def apply_sample_augmentations(
                 except TypeError:
                     # Dataset has no len
                     sample_clock = 0.0
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
                 yield sample, sample_clock
 
     assert 0.0 <= clock <= 1.0

@@ -7,6 +7,20 @@ import tensorflow as tf
 from .config import Config, log_error, log_info, log_warn
 
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+def _load_checkpoint(
+    session,
+    checkpoint_path,
+    allow_drop_layers,
+    allow_lr_init=True,
+<<<<<<< HEAD
+    silent: bool = False,
+=======
+    silent: bool = False,
+=======
 def _load_checkpoint_impl(
     session: tfv1.Session,
     checkpoint_path: str,
@@ -14,6 +28,8 @@ def _load_checkpoint_impl(
     allow_lr_init: bool = True,
     silent: bool = False,
     load_cudnn: bool = False,
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 ):
     # Load the checkpoint and put all variables into loading list
     # we will exclude variables we do not wish to load and then
@@ -34,7 +50,15 @@ def _load_checkpoint_impl(
         load_vars -= lr_var
         init_vars |= lr_var
 
+<<<<<<< HEAD
+    if Config.load_cudnn:
+=======
+<<<<<<< HEAD
+    if Config.load_cudnn:
+=======
     if load_cudnn:
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         # Initialize training from a CuDNN RNN checkpoint
         # Identify the variables which we cannot load, and set them
         # for initialization
@@ -110,6 +134,10 @@ def _initialize_all_variables(session):
         session.run(v.initializer)
 
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
 def _load_checkpoint(
     session: tfv1.Session,
     checkpoint_path: str,
@@ -148,6 +176,8 @@ def _load_checkpoint(
         )
 
 
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 def _load_or_init_impl(
     session, method_order, allow_drop_layers, allow_lr_init=True, silent: bool = False
 ):

@@ -1,0 +1,12 @@
+name: "Setup TensorFlow"
+description: "Setup TensorFlow Build"
+inputs:
+  flavor:
+    description: "Target flavor for setup script (empty/android-armv7/android-arm64)"
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - run: ./ci_scripts/tf-setup.sh ${{ inputs.flavor }}
+      shell: bash
