@@ -18,6 +18,10 @@ do
     fi;
 done
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 # It seems that bsdtar and gnutar are behaving a bit differently on the way
 # they deal with --exclude="./public/*" ; this caused ./STT/tensorflow/core/public/
 # to be ditched when we just wanted to get rid of ./public/ on OSX.
@@ -33,6 +37,8 @@ fi;
 #  - /Users/build-user/TaskCluster/HeavyTasks/X/ (OSX)
 #  - C:\builds\tc-workdir\ (windows)
 
+<<<<<<< HEAD
+=======
 if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     export PATH=$PATH:'/c/Program Files/7-Zip/'
     pushd ${DS_ROOT_TASK}
@@ -40,6 +46,22 @@ if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     popd
 else
     ${TAR} -C ${DS_ROOT_TASK} ${TAR_EXCLUDE} -cf - . | ${XZ} > ${CI_ARTIFACTS_DIR}/home.tar.xz
+=======
+# Make a tar of bazel caches
+RELATIVE_CACHE_ROOT=$(realpath --relative-to="${DS_ROOT_TASK}" ${BAZEL_CACHE_ROOT})
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
+if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
+    export PATH=$PATH:'/c/Program Files/7-Zip/'
+    pushd ${DS_ROOT_TASK}
+        7z a '-xr!.\dls\' '-xr!.\tmp\' '-xr!.\msys64\' -snl -snh -so home.tar . | 7z a -si ${CI_ARTIFACTS_DIR}/home.tar.xz
+    popd
+else
+<<<<<<< HEAD
+    ${TAR} -C ${DS_ROOT_TASK} ${TAR_EXCLUDE} -cf - . | ${XZ} > ${CI_ARTIFACTS_DIR}/home.tar.xz
+=======
+    ${TAR} -C ${DS_ROOT_TASK} -cf - ${RELATIVE_CACHE_ROOT} | ${XZ} > ${CI_ARTIFACTS_DIR}/home.tar.xz
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 fi
 
 if [ "${OS}" = "Linux" ]; then
