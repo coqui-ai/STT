@@ -184,7 +184,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
             print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
     if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-        save_sentences_to_txt(excluded, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+        save_sentences_to_txt(excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
 
 
 def handle_args():
