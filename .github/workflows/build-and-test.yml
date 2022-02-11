@@ -466,11 +466,11 @@ jobs:
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-12.0.0_15.0.0
+          key: electron-headers-12.0.0_16.0.0
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
-          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0"
       - uses: actions/upload-artifact@v2
         with:
           name: "nodewrapper-tflite-Linux_amd64.tar.gz"
@@ -657,7 +657,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
       fail-fast: false
@@ -1650,11 +1650,11 @@ jobs:
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-12.0.0_15.0.0
+          key: electron-headers-12.0.0_16.0.0
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
-          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0"
       - uses: actions/upload-artifact@v2
         with:
           name: "nodewrapper-tflite-macOS_amd64.tar.gz"
@@ -1796,7 +1796,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
     env:
@@ -2079,7 +2079,7 @@ jobs:
       - uses: ./.github/actions/win-node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
-          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0"
       - uses: actions/upload-artifact@v2
         with:
           name: "nodewrapper-tflite-Windows_amd64.tar.gz"
@@ -2259,7 +2259,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
     env:
@@ -2417,7 +2417,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [12.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 16.0.0]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
       fail-fast: false
@@ -2519,7 +2519,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [12.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 16.0.0]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
       fail-fast: false
@@ -2635,7 +2635,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        electronjs-version: [12.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 16.0.0]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
       fail-fast: false
@@ -2926,7 +2926,7 @@ jobs:
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-12.0.0_15.0.0
+          key: electron-headers-12.0.0_16.0.0
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/armv7-build.sh
       - uses: ./.github/actions/install-xldd
@@ -2935,7 +2935,7 @@ jobs:
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
-          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
@@ -3069,7 +3069,7 @@ jobs:
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
-          key: electron-headers-12.0.0_15.0.0
+          key: electron-headers-12.0.0_16.0.0
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/aarch64-build.sh
       - uses: ./.github/actions/install-xldd
@@ -3078,7 +3078,7 @@ jobs:
       - uses: ./.github/actions/node-build
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
-          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0"
+          electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
       - uses: actions/upload-artifact@v2
@@ -3304,7 +3304,7 @@ jobs:
     strategy:
       matrix:
         arch: [ "armv7", "aarch64" ]
-        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0]
+        electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
     env:
