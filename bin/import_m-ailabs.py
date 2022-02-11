@@ -38,6 +38,9 @@ def _download_and_preprocess_data(target_dir):
     # Produce CSV files
     _maybe_convert_sets(target_dir, ARCHIVE_DIR_NAME)
 
+    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+        save_sentences_to_txt(_excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
     # If target_dir/extracted_data does not exist, extract archive in target_dir
@@ -53,10 +56,9 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         print('Found directory "%s" - not extracting it from archive.' % archive_path)
 
 
-def save_excluded_transcript_to_disk(transcript, to_disk):
-    with open(to_disk, "a") as f:
-        f.write(f"{transcript}\n")
-        f.close()
+def save_sentences_to_txt(sentences, text_file):
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
 
 
 def one_sample(sample):
@@ -105,7 +107,7 @@ def one_sample(sample):
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
         if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-            save_excluded_transcript_to_disk(label, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+            _excluded_sentences.append(str(label))
     else:
         # This one is good - keep it for the target CSV
         rows.append((wav_filename, file_size, label))
@@ -224,8 +226,8 @@ def handle_args():
     )
     parser.add_argument(
         "--save_excluded_max_sec_to_disk",
-        help="Save excluded sentences (too long) to disk so you can add them to the scorer",
-        default=None,
+        type=str,
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
     )
     return parser.parse_args()
 
