@@ -13,7 +13,7 @@ from six.moves import zip
 
 import tensorflow as tf
 
-from .deepspeech_model import create_model
+from .deepspeech_model import create_model, reset_default_graph
 from .util.augmentations import NormalizeSampleRate
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import (
@@ -174,7 +174,7 @@ def evaluate(test_csvs, create_model):
 
 
 def test():
-    tfv1.reset_default_graph()
+    reset_default_graph()
 
     samples = evaluate(Config.test_files, create_model)
     if Config.test_output_file:

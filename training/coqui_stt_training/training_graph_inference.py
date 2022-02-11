@@ -14,14 +14,18 @@ import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 
 from coqui_stt_ctcdecoder import ctc_beam_search_decoder, Scorer
-from .deepspeech_model import create_inference_graph, create_overlapping_windows
+from .deepspeech_model import (
+    create_inference_graph,
+    create_overlapping_windows,
+    reset_default_graph,
+)
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import Config, initialize_globals_from_cli, log_error
 from .util.feeding import audiofile_to_features
 
 
 def do_single_file_inference(input_file_path):
-    tfv1.reset_default_graph()
+    reset_default_graph()
 
     with tfv1.Session(config=Config.session_config) as session:
         inputs, outputs, _ = create_inference_graph(batch_size=1, n_steps=-1)
@@ -75,7 +79,6 @@ def main():
     initialize_globals_from_cli()
 
     if Config.one_shot_infer:
-        tfv1.reset_default_graph()
         do_single_file_inference(Config.one_shot_infer)
     else:
         raise RuntimeError(

@@ -401,3 +401,8 @@ def create_inference_graph(batch_size=1, n_steps=16, tflite=False):
     }
 
     return inputs, outputs, layers
+
+
+def reset_default_graph():
+    tfv1.reset_default_graph()
+    rnn_impl_cudnn_rnn.cell = None
