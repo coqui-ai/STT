@@ -1249,8 +1249,7 @@ jobs:
           set -ex
           declare -a tag_args=()
           for tag in "${{ steps.compute-tag.outputs.tags }}"; do
-            tag_args+="-t"
-            tag_args+="ghcr.io/coqui-ai/stt-train:${tag}"
+            tag_args+=("-t" "ghcr.io/coqui-ai/stt-train:${tag}")
           done
           docker build -f Dockerfile.train . "${tag_args[@]}"
       - name: Push
