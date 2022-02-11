@@ -531,6 +531,7 @@ def one_sample(sample):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
 =======
 <<<<<<< HEAD
@@ -551,6 +552,9 @@ def one_sample(sample):
 =======
     elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
 >>>>>>> d5c2ccb5 (+115%)
+=======
+    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
+>>>>>>> coqui-ai-main
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
@@ -681,6 +685,7 @@ def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     with open(
         target_csv_template.format("train"), "w"
     ) as train_csv_file, open(
@@ -688,6 +693,11 @@ def write_general_csv(target_dir, _rows, _counter):
 <<<<<<< HEAD
     with open(target_csv_template.format("train"), "w") as train_csv_file, open(
 >>>>>>> a1b0b7c5 (update data distribution)
+=======
+    with open(
+        target_csv_template.format("train"), "w"
+    ) as train_csv_file, open(
+>>>>>>> coqui-ai-main
         target_csv_template.format("dev"), "w"
     ) as dev_csv_file, open(
         target_csv_template.format("test"), "w"
@@ -721,6 +731,7 @@ def write_general_csv(target_dir, _rows, _counter):
                         }
                     )
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
         dev_bar = progressbar.ProgressBar(
@@ -785,7 +796,6 @@ def write_general_csv(target_dir, _rows, _counter):
                         }
                     )
 
->>>>>>> a1b0b7c5 (update data distribution)
                 test_bar = progressbar.ProgressBar(max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set")
                 for item in test_bar(test_set):
                     test_writer.writerow(
@@ -795,13 +805,6 @@ def write_general_csv(target_dir, _rows, _counter):
                             "transcript": item[2],
                         }
                     )
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 966a5751 (update data distribution)
->>>>>>> a1b0b7c5 (update data distribution)
-=======
->>>>>>> 0a7d97a3 (exclude sample too short to fit the transcript)
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
