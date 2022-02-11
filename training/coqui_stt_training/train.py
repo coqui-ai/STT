@@ -38,6 +38,7 @@ from .deepspeech_model import (
     create_model,
     rnn_impl_lstmblockfusedcell,
     rnn_impl_cudnn_rnn,
+    reset_default_graph,
 )
 from .util.augmentations import NormalizeSampleRate
 from .util.checkpoints import (
@@ -335,7 +336,7 @@ def train():
 def train_impl(epochs=0, reverse=False, limit=0, write=True, silent_load=False):
     early_training_checks()
 
-    tfv1.reset_default_graph()
+    reset_default_graph()
     tfv1.set_random_seed(Config.random_seed)
 
     epoch_ph = tf.placeholder(tf.int64, name="epoch_ph")

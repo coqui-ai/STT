@@ -14,7 +14,7 @@ import tensorflow as tf
 import tensorflow.compat.v1 as tfv1
 import shutil
 
-from .deepspeech_model import create_inference_graph, create_model
+from .deepspeech_model import create_inference_graph, create_model, reset_default_graph
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import Config, initialize_globals_from_cli, log_error, log_info
 from .util.feeding import wavfile_bytes_to_features
@@ -40,7 +40,7 @@ def export():
     if Config.export_savedmodel:
         return export_savedmodel()
 
-    tfv1.reset_default_graph()
+    reset_default_graph()
 
     inputs, outputs, _ = create_inference_graph(
         batch_size=Config.export_batch_size,
@@ -178,7 +178,7 @@ def export():
 
 
 def export_savedmodel():
-    tfv1.reset_default_graph()
+    reset_default_graph()
 
     with tfv1.Session(config=Config.session_config) as session:
         input_wavfile_contents = tf.placeholder(
