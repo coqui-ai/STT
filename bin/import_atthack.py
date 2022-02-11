@@ -34,6 +34,8 @@ ARCHIVE_URL_txt = f"{BASE_SLR_URL}/{ARCHIVE_NAME_txt}{ARCHIVE_EXT}"
 ARCHIVE_URL_wav = f"{BASE_SLR_URL}/{ARCHIVE_NAME_wav}{ARCHIVE_EXT}"
 ARCHIVE_ROOT_PATH = "Volumes/CLEM_HDD/IRCAM/Open_SLR"
 
+_excluded_sentences = []
+
 
 def _download_and_preprocess_data(target_dir):
     # Making path absolute
@@ -55,6 +57,9 @@ def _download_and_preprocess_data(target_dir):
     # Produce CSV files
     _maybe_convert_sets(target_dir, ARCHIVE_ROOT_PATH)
 
+    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+        save_sentences_to_txt(excluded, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
     # If target_dir/extracted_data does not exist, extract archive in target_dir
@@ -72,6 +77,11 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar = tarfile.open(archive_path)
         tar.extractall(target_dir)
         tar.close()
+
+
+def save_sentences_to_txt(sentences, text_file):
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
 
 
 def one_sample(sample):
@@ -108,6 +118,8 @@ def one_sample(sample):
     elif float(frames / SAMPLE_RATE) > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
+        if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+            _excluded_sentences.append(str(label))
     else:
         # This one is good - keep it for the target CSV
         rows.append((wav_filename, file_size, label))
@@ -238,6 +250,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
 
         print_import_report(counter, SAMPLE_RATE, MAX_SECS)
 
+
 def _split_sets(rows):
     """
     randomply split the datasets into train, validation, and test sets where the size of the
@@ -261,18 +274,19 @@ def _split_sets(rows):
         rows[test_beg:test_end],
     )
 
+
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
     margin_of_error = 0.01
     fraction_picking = 0.50
     z_score = 2.58  # Corresponds to confidence level 99%
-    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-        margin_of_error ** 2
+    numerator = (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+        margin_of_error**2
     )
     sample_size = 0
     for train_size in range(population_size, 0, -1):
-        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-            margin_of_error ** 2 * train_size
+        denominator = 1 + (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+            margin_of_error**2 * train_size
         )
         sample_size = int(numerator / denominator)
         if 2 * sample_size + train_size <= population_size:
@@ -324,6 +338,11 @@ def handle_args():
         help="[FLOAT] Max audio length in sec (default: 15.0)",
         default=10.0,
     )
+    parser.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        type=str,
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
+    )
     return parser.parse_args()
 
 
@@ -334,10 +353,10 @@ if __name__ == "__main__":
     MAX_SECS = CLI_ARGS.max_sec
     MIN_SECS = CLI_ARGS.min_sec
 
-    validate_label = get_validate_label(CLI_ARGS)
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = CLI_ARGS.save_excluded_max_sec_to_disk
 
     validate_label = get_validate_label(CLI_ARGS)
-    
+
     def label_filter(label):
         if CLI_ARGS.normalize:
             label = (

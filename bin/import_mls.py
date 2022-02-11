@@ -105,14 +105,16 @@ def read_ogg_opus_duration(ogg_file_path):
     pyogg.opus.op_free(opusfile)
     return pcm_buffer_size / sample_rate
 
+
 def save_sentences_to_txt(sentences, text_file):
-    with open(text_file,'w') as f:
-        f.write('\n'.join(sentences))
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
+
 
 def _maybe_convert_sets(target_dir, extracted_data):
     extracted_dir = os.path.join(target_dir, extracted_data)
     excluded_sentences = []
-    
+
     for subset in (
         "train",
         "dev",
@@ -184,6 +186,7 @@ def _maybe_convert_sets(target_dir, extracted_data):
     if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
         save_sentences_to_txt(excluded, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
 
+
 def handle_args():
     parser = get_importers_parser(
         description="Importer for MLS dataset. More information on http://www.openslr.org/94/."
@@ -223,7 +226,7 @@ def handle_args():
     parser.add_argument(
         "--save_excluded_max_sec_to_disk",
         type=str,
-        help="Text file path to save excluded (max length) sentences to add them to the language model"
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
     )
 
     return parser.parse_args()
