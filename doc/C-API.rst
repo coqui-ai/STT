@@ -55,6 +55,12 @@ See also the list of error codes including descriptions for each error in :ref:`
 .. doxygenfunction:: STT_IntermediateDecodeWithMetadata
    :project: stt-c
 
+.. doxygenfunction:: STT_IntermediateDecodeFlushBuffers
+   :project: stt-c
+
+.. doxygenfunction:: STT_IntermediateDecodeWithMetadataFlushBuffers
+   :project: stt-c
+
 .. doxygenfunction:: STT_FinishStream
    :project: stt-c
 

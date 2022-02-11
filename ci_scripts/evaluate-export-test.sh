@@ -20,6 +20,10 @@ python -m pip install --upgrade . | cat
 set +o pipefail
 
 # Prepare correct arguments for training
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 case "${samplerate}" in
     8k)
         sample_rate=8000
@@ -30,6 +34,12 @@ case "${samplerate}" in
         sample_name='LDC93S1_pcms16le_1_16000.wav'
     ;;
 esac
+<<<<<<< HEAD
+=======
+=======
+sample_name="LDC93S1_pcms16le_1_${samplerate}.wav"
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 
 # Easier to rename to that we can exercize the LDC93S1 importer code to
 # generate the CSV file.

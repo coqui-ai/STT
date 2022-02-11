@@ -18,14 +18,18 @@ from coqui_stt_ctcdecoder import (
     Scorer,
     FlashlightDecoderState,
 )
-from .deepspeech_model import create_inference_graph, create_overlapping_windows
+from .deepspeech_model import (
+    create_inference_graph,
+    create_overlapping_windows,
+    reset_default_graph,
+)
 from .util.checkpoints import load_graph_for_evaluation
 from .util.config import Config, initialize_globals_from_cli, log_error
 from .util.feeding import audiofile_to_features
 
 
 def do_single_file_inference(input_file_path):
-    tfv1.reset_default_graph()
+    reset_default_graph()
 
     with open(Config.vocab_file) as fin:
         vocab = [w.encode("utf-8") for w in [l.strip() for l in fin]]
@@ -84,7 +88,6 @@ def main():
     initialize_globals_from_cli()
 
     if Config.one_shot_infer:
-        tfv1.reset_default_graph()
         do_single_file_inference(Config.one_shot_infer)
     else:
         raise RuntimeError(

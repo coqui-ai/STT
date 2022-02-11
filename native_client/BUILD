@@ -228,7 +228,15 @@ cc_library(
         "workspace_status.h",
         "tflitemodelstate.h",
         "tflitemodelstate.cc",
+<<<<<<< HEAD
     ] + DECODER_SOURCES,
+=======
+<<<<<<< HEAD
+    ] + DECODER_SOURCES,
+=======
+    ],
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     copts = select({
         # -fvisibility=hidden is not required on Windows, MSCV hides all declarations by default
         "//tensorflow:windows": ["/std:c++14", "/w"],
@@ -252,13 +260,34 @@ cc_library(
         # We simply force the linker option manually here as a hacky fix.
         "//tensorflow:windows": [
             "bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib",
+<<<<<<< HEAD
             "bazel-out/x64_windows-opt/bin/native_client/libtflitedelegates.so.if.lib",
             "bazel-out/x64_windows-opt/bin/tensorflow/lite/libtensorflowlite.so.if.lib",
+=======
+<<<<<<< HEAD
+            "bazel-out/x64_windows-opt/bin/native_client/libtflitedelegates.so.if.lib",
+            "bazel-out/x64_windows-opt/bin/tensorflow/lite/libtensorflowlite.so.if.lib",
+=======
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
         ],
         "//conditions:default": [],
     }) + DECODER_LINKOPTS,
     includes = DECODER_INCLUDES,
+<<<<<<< HEAD
     deps = [":kenlm", ":tflite", ":tflitedelegates", ":flashlight"],
+=======
+<<<<<<< HEAD
+    deps = [":kenlm", ":tflite", ":tflitedelegates", ":flashlight"],
+=======
+    deps = [
+        ":decoder",
+        "//tensorflow/lite:framework_stable",
+        "//tensorflow/lite/kernels:builtin_ops",
+        "//tensorflow/lite/tools/evaluation:utils",
+    ],
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
 )
 
 cc_binary(
@@ -345,7 +374,16 @@ cc_binary(
     name = "trie_load",
     srcs = [
         "trie_load.cc",
+<<<<<<< HEAD
     ] + DECODER_SOURCES,
+=======
+<<<<<<< HEAD
+    ] + DECODER_SOURCES,
+=======
+    ],
+    deps = [":decoder"],
+>>>>>>> coqui-ai-main
+>>>>>>> 94b13b64c30dd1349c6e325dba22877620ef914b
     copts = select({
         "//tensorflow:windows": ["/std:c++14"],
         "//conditions:default": ["-std=c++14"],

@@ -42,8 +42,9 @@ RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 # Install Bazel
-RUN curl -LO "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel_3.1.0-linux-x86_64.deb"
-RUN dpkg -i bazel_*.deb
+RUN curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64" && \
+    mv bazelisk-linux-amd64 /usr/bin/bazel && \
+    chmod +x /usr/bin/bazel
 
 # Try and free some space
 RUN rm -rf /var/lib/apt/lists/*
