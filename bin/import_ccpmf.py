@@ -215,6 +215,8 @@ DATASET_RELEASE_SHA = [
     ),
 ]
 
+_excluded_sentences = []
+
 
 def _download_and_preprocess_data(csv_url, target_dir):
     dataset_sources = os.path.join(
@@ -478,10 +480,9 @@ def maybe_normalize(label):
     return label
 
 
-def save_excluded_transcript_to_disk(transcript, to_disk):
-    with open(to_disk, "a") as f:
-        f.write(f"{transcript}\n")
-        f.close()
+def save_sentences_to_txt(sentences, text_file):
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
 
 
 def one_sample(sample):
@@ -534,7 +535,10 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         _counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
+    elif (
+        int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label))
+        or file_size / len(str(label)) > 1400
+    ):
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
@@ -544,7 +548,7 @@ def one_sample(sample):
         # Excluding very long samples to keep a reasonable batch-size
         _counter["too_long"] += 1
         if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-            save_excluded_transcript_to_disk(label, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+            _excluded_sentences.append(str(label))
     else:
         # This one is good - keep it for the target CSV
         _rows.append((os.path.join(dataset_basename, _wav_filename), file_size, label))
@@ -666,51 +670,53 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
 
-    with open(
-        target_csv_template.format("train"), "w"
-    ) as train_csv_file, open(
+    with open(target_csv_template.format("train"), "w") as train_csv_file, open(
         target_csv_template.format("dev"), "w"
-    ) as dev_csv_file, open(
-        target_csv_template.format("test"), "w"
-    ) as test_csv_file:
-                train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
-                train_writer.writeheader()
-                dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
-                dev_writer.writeheader()
-                test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
-                test_writer.writeheader()
+    ) as dev_csv_file, open(target_csv_template.format("test"), "w") as test_csv_file:
+        train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
+        train_writer.writeheader()
+        dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
+        dev_writer.writeheader()
+        test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
+        test_writer.writeheader()
 
-                train_set, dev_set, test_set = _split_sets(_rows)
+        train_set, dev_set, test_set = _split_sets(_rows)
 
-                train_bar = progressbar.ProgressBar(max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set")
-                for item in train_bar(train_set):
-                    train_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
-                
-                dev_bar = progressbar.ProgressBar(max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set")
-                for item in dev_bar(dev_set):
-                    dev_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
+        train_bar = progressbar.ProgressBar(
+            max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set"
+        )
+        for item in train_bar(train_set):
+            train_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
 
-                test_bar = progressbar.ProgressBar(max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set")
-                for item in test_bar(test_set):
-                    test_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
+        dev_bar = progressbar.ProgressBar(
+            max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set"
+        )
+        for item in dev_bar(dev_set):
+            dev_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
+
+        test_bar = progressbar.ProgressBar(
+            max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set"
+        )
+        for item in test_bar(test_set):
+            test_writer.writerow(
+                {
+                    "wav_filename": item[0],
+                    "wav_filesize": item[1],
+                    "transcript": item[2],
+                }
+            )
 
     print("")
     print("~~~~ FINAL STATISTICS ~~~~")
@@ -742,18 +748,19 @@ def _split_sets(rows):
         rows[test_beg:test_end],
     )
 
+
 def get_sample_size(population_size):
     """calculates the sample size for a 99% confidence and 1% margin of error"""
     margin_of_error = 0.01
     fraction_picking = 0.50
     z_score = 2.58  # Corresponds to confidence level 99%
-    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-        margin_of_error ** 2
+    numerator = (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+        margin_of_error**2
     )
     sample_size = 0
     for train_size in range(population_size, 0, -1):
-        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-            margin_of_error ** 2 * train_size
+        denominator = 1 + (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+            margin_of_error**2 * train_size
         )
         sample_size = int(numerator / denominator)
         if 2 * sample_size + train_size <= population_size:
@@ -775,10 +782,10 @@ if __name__ == "__main__":
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
-    PARSER.add_argument(
+    parser.add_argument(
         "--save_excluded_max_sec_to_disk",
-        help="Save excluded sentences (too long) to disk so you can add them to the scorer",
-        default=None,
+        type=str,
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
     )
     PARAMS = PARSER.parse_args()
 
@@ -828,3 +835,6 @@ if __name__ == "__main__":
             all_counter += counter
             all_rows += rows
     write_general_csv(sources_root_dir, _counter=all_counter, _rows=all_rows)
+
+    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+        save_sentences_to_txt(excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
