@@ -1229,6 +1229,7 @@ jobs:
       - name: Check VERSION matches Git tag and compute Docker tag
         id: compute-tag
         run: |
+          set -ex
           if [[ "${{ github.ref }}" = "refs/heads/main" ]]; then
             # Push to main
             tags="main"
