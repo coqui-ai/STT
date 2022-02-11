@@ -1229,27 +1229,37 @@ jobs:
       - name: Check VERSION matches Git tag and compute Docker tag
         id: compute-tag
         run: |
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
+          if [[ "${{ gihub.ref }}" = "refs/heads/main" ]]; then
+            # Push to main
+            tags="main"
+          elif [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
             # PR build
-            echo "::set-output name=tag::dev"
+            tags="dev"
           else
             VERSION="v$(cat VERSION)"
             if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
               echo "Pushed tag does not match VERSION file. Aborting push."
               exit 1
             fi
-            echo "::set-output name=tag::${VERSION}"
+            tags="${VERSION} latest"
           fi
+          echo "::set-output name=tags::${tags}"
       - name: Build
         run: |
-          DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
-          docker build -f Dockerfile.train . -t ghcr.io/coqui-ai/stt-train:latest -t "ghcr.io/coqui-ai/stt-train:${DOCKER_TAG}"
+          set -ex
+          declare -a tag_args=()
+          for tag in "${{ steps.compute-tag.outputs.tags }}"; do
+            tag_args+="-t"
+            tag_args+="ghcr.io/coqui-ai/stt-train:${tag}"
+          done
+          docker build -f Dockerfile.train . "${tag_args[@]}"
       - name: Push
         run: |
-          DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
-          docker push "ghcr.io/coqui-ai/stt-train:${DOCKER_TAG}"
-          docker push ghcr.io/coqui-ai/stt-train:latest
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+          set -ex
+          for tag in "${{ steps.compute-tag.outputs.tags }}"; do
+            docker push "ghcr.io/coqui-ai/stt-train:${tag}"
+          done
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
   twine-upload-decoder:
     name: "Upload coqui_stt_ctcdecoder packages to PyPI"
     runs-on: ubuntu-20.04
