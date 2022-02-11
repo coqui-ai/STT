@@ -527,34 +527,7 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         _counter["invalid_label"] += 1
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
-=======
-<<<<<<< HEAD
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < int(len(str(label)) * 1.15):
-=======
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) and file_size / len(transcript) > 1400:
->>>>>>> 0be94dbf (exclude sample too short to fit the transcript)
->>>>>>> 0a7d97a3 (exclude sample too short to fit the transcript)
-=======
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) and file_size / len(transcript) > 1400:
->>>>>>> 74f12326 (exclude sample too short to fit the transcript)
-=======
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) and file_size / len(transcript) > 1400:
-=======
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
->>>>>>> 3b169c91 (and != or)
->>>>>>> eac3c3e8 (and != or)
-=======
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
->>>>>>> d5c2ccb5 (+115%)
-=======
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)) or file_size / len(str(label)) > 1400:
->>>>>>> coqui-ai-main
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
@@ -683,83 +656,7 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    with open(
-        target_csv_template.format("train"), "w"
-    ) as train_csv_file, open(
-=======
-<<<<<<< HEAD
-    with open(target_csv_template.format("train"), "w") as train_csv_file, open(
->>>>>>> a1b0b7c5 (update data distribution)
-=======
-    with open(
-        target_csv_template.format("train"), "w"
-    ) as train_csv_file, open(
->>>>>>> coqui-ai-main
-        target_csv_template.format("dev"), "w"
-    ) as dev_csv_file, open(
-        target_csv_template.format("test"), "w"
-    ) as test_csv_file:
-                train_writer = csv.DictWriter(train_csv_file, fieldnames=FIELDNAMES)
-                train_writer.writeheader()
-                dev_writer = csv.DictWriter(dev_csv_file, fieldnames=FIELDNAMES)
-                dev_writer.writeheader()
-                test_writer = csv.DictWriter(test_csv_file, fieldnames=FIELDNAMES)
-                test_writer.writeheader()
 
-                train_set, dev_set, test_set = _split_sets(_rows)
-
-                train_bar = progressbar.ProgressBar(max_value=len(train_set), widgets=SIMPLE_BAR, description="Saving train set")
-                for item in train_bar(train_set):
-                    train_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
-                
-                dev_bar = progressbar.ProgressBar(max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set")
-                for item in dev_bar(dev_set):
-                    dev_writer.writerow(
-                        {
-                            "wav_filename": item[0],
-                            "wav_filesize": item[1],
-                            "transcript": item[2],
-                        }
-                    )
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        dev_bar = progressbar.ProgressBar(
-            max_value=len(dev_set), widgets=SIMPLE_BAR, description="Saving dev set"
-        )
-        for item in dev_bar(dev_set):
-            dev_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
-
-        test_bar = progressbar.ProgressBar(
-            max_value=len(test_set), widgets=SIMPLE_BAR, description="Saving test set"
-        )
-        for item in test_bar(test_set):
-            test_writer.writerow(
-                {
-                    "wav_filename": item[0],
-                    "wav_filesize": item[1],
-                    "transcript": item[2],
-                }
-            )
-=======
-=======
->>>>>>> 0a7d97a3 (exclude sample too short to fit the transcript)
     with open(
         target_csv_template.format("train"), "w"
     ) as train_csv_file, open(
