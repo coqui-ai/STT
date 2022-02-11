@@ -1229,7 +1229,7 @@ jobs:
       - name: Check VERSION matches Git tag and compute Docker tag
         id: compute-tag
         run: |
-          if [[ "${{ gihub.ref }}" = "refs/heads/main" ]]; then
+          if [[ "${{ github.ref }}" = "refs/heads/main" ]]; then
             # Push to main
             tags="main"
           elif [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
