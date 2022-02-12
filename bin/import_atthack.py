@@ -58,7 +58,7 @@ def _download_and_preprocess_data(target_dir):
     _maybe_convert_sets(target_dir, ARCHIVE_ROOT_PATH)
 
     if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-        save_sentences_to_txt(excluded, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+        save_sentences_to_txt(_excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
 
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
