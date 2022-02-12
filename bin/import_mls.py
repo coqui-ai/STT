@@ -106,8 +106,15 @@ def read_ogg_opus_duration(ogg_file_path):
     return pcm_buffer_size / sample_rate
 
 
+def save_sentences_to_txt(sentences, text_file):
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
+
+
 def _maybe_convert_sets(target_dir, extracted_data):
     extracted_dir = os.path.join(target_dir, extracted_data)
+    excluded_sentences = []
+
     for subset in (
         "train",
         "dev",
@@ -118,7 +125,6 @@ def _maybe_convert_sets(target_dir, extracted_data):
             subset_entries = []
             # Keep track of how many samples are good vs. problematic
             counter = get_counter()
-
             for i, line in tqdm(enumerate(fin)):
                 file_size = -1
                 audio_id, transcript = line.split("\t")
@@ -152,6 +158,8 @@ def _maybe_convert_sets(target_dir, extracted_data):
                 elif audio_duration > MAX_SECS:
                     # Excluding very long samples to keep a reasonable batch-size
                     counter["too_long"] += 1
+                    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+                        excluded_sentences.append(str(transcript))
                 else:
                     subset_entries.append(
                         (
@@ -174,6 +182,9 @@ def _maybe_convert_sets(target_dir, extracted_data):
             print("Wrote {}".format(csv_name))
 
             print_import_report(counter, SAMPLE_RATE, MAX_SECS)
+
+    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+        save_sentences_to_txt(excluded, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
 
 
 def handle_args():
@@ -212,6 +223,12 @@ def handle_args():
         default=15.0,
     )
 
+    parser.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        type=str,
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
+    )
+
     return parser.parse_args()
 
 
@@ -230,6 +247,8 @@ if __name__ == "__main__":
 
     MAX_SECS = CLI_ARGS.max_sec  # float
     MIN_SECS = CLI_ARGS.min_sec  # float
+
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = CLI_ARGS.save_excluded_max_sec_to_disk
 
     validate_label = get_validate_label(CLI_ARGS)
 
