@@ -15,6 +15,7 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
+import zipfile38 as zipfile
 from glob import glob
 from multiprocessing import Pool
 
@@ -213,6 +214,8 @@ DATASET_RELEASE_SHA = [
         "transcriptionsxml_audiomp3_mefr_ccpmf_2012-2020_2.zip.040",
     ),
 ]
+
+_excluded_sentences = []
 
 
 def _download_and_preprocess_data(csv_url, target_dir):
@@ -454,7 +457,7 @@ def maybe_normalize_for_specials_chars(label):
         "[end]", ""
     )  # broken tag in 20150123_Entretiens_Tresor_PGM_wmv_0_fre_minefi.xml
     label = label.replace(
-        u"\xB8c", " ç"
+        "\xB8c", " ç"
     )  # strange cedilla in 20150417_Printemps_Economie_2_wmv_0_fre_minefi.xml
     label = label.replace(
         "C0²", "CO 2"
@@ -475,6 +478,11 @@ def maybe_normalize(label):
     label = maybe_normalize_for_anglicisms(label)
     label = maybe_normalize_for_digits(label)
     return label
+
+
+def save_sentences_to_txt(sentences, text_file):
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
 
 
 def one_sample(sample):
@@ -527,7 +535,10 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         _counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < int(len(str(label)) * 1.15):
+    elif (
+        int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label))
+        or file_size / len(str(label)) > 1400
+    ):
         # Excluding samples that are too short to fit the transcript
         _counter["too_short"] += 1
     elif frames / SAMPLE_RATE < MIN_SECS:
@@ -536,6 +547,8 @@ def one_sample(sample):
     elif frames / SAMPLE_RATE > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         _counter["too_long"] += 1
+        if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+            _excluded_sentences.append(str(label))
     else:
         # This one is good - keep it for the target CSV
         _rows.append((os.path.join(dataset_basename, _wav_filename), file_size, label))
@@ -656,6 +669,7 @@ def _maybe_convert_wav(mp3_filename, _wav_filename):
 
 def write_general_csv(target_dir, _rows, _counter):
     target_csv_template = os.path.join(target_dir, "ccpmf_{}.csv")
+
     with open(target_csv_template.format("train"), "w") as train_csv_file, open(
         target_csv_template.format("dev"), "w"
     ) as dev_csv_file, open(target_csv_template.format("test"), "w") as test_csv_file:
@@ -740,13 +754,13 @@ def get_sample_size(population_size):
     margin_of_error = 0.01
     fraction_picking = 0.50
     z_score = 2.58  # Corresponds to confidence level 99%
-    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-        margin_of_error ** 2
+    numerator = (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+        margin_of_error**2
     )
     sample_size = 0
     for train_size in range(population_size, 0, -1):
-        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-            margin_of_error ** 2 * train_size
+        denominator = 1 + (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+            margin_of_error**2 * train_size
         )
         sample_size = int(numerator / denominator)
         if 2 * sample_size + train_size <= population_size:
@@ -768,8 +782,15 @@ if __name__ == "__main__":
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
-
+    parser.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        type=str,
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
+    )
     PARAMS = PARSER.parse_args()
+
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = PARAMS.save_excluded_max_sec_to_disk
+
     validate_label = get_validate_label(PARAMS)
     ALPHABET = Alphabet(PARAMS.filter_alphabet) if PARAMS.filter_alphabet else None
 
@@ -814,3 +835,6 @@ if __name__ == "__main__":
             all_counter += counter
             all_rows += rows
     write_general_csv(sources_root_dir, _counter=all_counter, _rows=all_rows)
+
+    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+        save_sentences_to_txt(excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
