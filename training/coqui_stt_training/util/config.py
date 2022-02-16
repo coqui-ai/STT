@@ -857,6 +857,12 @@ class BaseSttConfig(Coqpit):
             help="the number of trials to run during hyperparameter optimization."
         ),
     )
+    save_ctc_val: str = field(
+        default=None,
+        metadata=dict(
+            help="Path to YAML file to save best alpha and beta CTC decoder values"
+        ),
+    )
     # sphinx-doc: training_ref_flags_end
 
 
@@ -872,7 +878,7 @@ def initialize_globals_from_args(**override_args):
 
 
 def initialize_globals_from_instance(config):
-    """ Initialize Config singleton from an existing instance """
+    """Initialize Config singleton from an existing instance"""
     _ConfigSingleton._config = config  # pylint: disable=protected-access
 
 

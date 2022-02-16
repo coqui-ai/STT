@@ -4,6 +4,8 @@ from __future__ import absolute_import, print_function
 
 import sys
 
+import yaml
+
 import optuna
 import tensorflow.compat.v1 as tfv1
 from coqui_stt_ctcdecoder import Scorer
@@ -51,6 +53,11 @@ def objective(trial):
     return cer if is_character_based else wer
 
 
+def save_best_val(dict_to_save_as_yaml, path_to_yaml):
+    with open(path_to_yaml, "w") as f:
+        yaml.dump(dict_to_save_as_yaml, f)
+
+
 def main():
     initialize_globals_from_cli()
     early_training_checks()
@@ -81,6 +88,14 @@ def main():
             study.best_value,
         )
     )
+
+    if Config.save_ctc_val:
+        struct = {}
+        struct["lm_alpha"] = study.best_params.get("lm_alpha")
+        struct["lm_beta"] = study.best_params.get("lm_beta")
+        struct["wer"] = study.best_value
+
+        save_best_val(struct, Config.save_ctc_val)
 
 
 if __name__ == "__main__":
