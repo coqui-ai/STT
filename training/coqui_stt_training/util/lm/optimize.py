@@ -51,37 +51,15 @@ def objective(trial):
     return cer if is_character_based else wer
 
 
-def main():
-    initialize_globals_from_cli()
-    early_training_checks()
-
-    if not Config.scorer_path:
-        log_error(
-            "Missing --scorer_path: can't optimize scorer alpha and beta "
-            "parameters without a scorer!"
-        )
-        sys.exit(1)
-
-    if not Config.test_files:
-        log_error(
-            "You need to specify what files to use for evaluation via "
-            "the --test_files flag."
-        )
-        sys.exit(1)
-
+def compute_lm_optimization() -> dict:
     is_character_based = character_based()
 
     study = optuna.create_study()
     study.set_user_attr("is_character_based", is_character_based)
     study.optimize(objective, n_jobs=1, n_trials=Config.n_trials)
-    print(
-        "Best params: lm_alpha={} and lm_beta={} with WER={}".format(
-            study.best_params["lm_alpha"],
-            study.best_params["lm_beta"],
-            study.best_value,
-        )
-    )
-
-
-if __name__ == "__main__":
-    main()
+    
+    return {
+        "lm_alpha": study.best_params.get("lm_alpha"),
+        "lm_beta": study.best_params.get("lm_beta"),
+        "wer": study.best_value,
+    }
