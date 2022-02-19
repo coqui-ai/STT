@@ -140,7 +140,7 @@ def evaluate(test_csvs, create_model):
                     cutoff_prob=Config.cutoff_prob,
                     cutoff_top_n=Config.cutoff_top_n,
                 )
-                predictions.extend(d[0][1] for d in decoded)
+                predictions.extend(d[0].transcript for d in decoded)
                 ground_truths.extend(
                     sparse_tensor_value_to_texts(batch_transcripts, Config.alphabet)
                 )

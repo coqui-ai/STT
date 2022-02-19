@@ -1,4 +1,5 @@
 import enum
+from collections import namedtuple
 
 from . import swigwrapper  # pylint: disable=import-self
 
@@ -113,6 +114,11 @@ class Scorer(swigwrapper.Scorer):
             self.reset_params(alpha, beta)
 
 
+DecodeResult = namedtuple(
+    "DecodeResult", ["confidence", "transcript", "tokens", "timesteps"]
+)
+
+
 def ctc_beam_search_decoder(
     probs_seq,
     alphabet,
@@ -161,7 +167,13 @@ def ctc_beam_search_decoder(
         num_results,
     )
     beam_results = [
-        (res.confidence, alphabet.Decode(res.tokens)) for res in beam_results
+        DecodeResult(
+            res.confidence,
+            alphabet.Decode(res.tokens),
+            [int(t) for t in res.tokens],
+            [int(t) for t in res.timesteps],
+        )
+        for res in beam_results
     ]
     return beam_results
 
@@ -222,7 +234,15 @@ def ctc_beam_search_decoder_batch(
         num_results,
     )
     batch_beam_results = [
-        [(res.confidence, alphabet.Decode(res.tokens)) for res in beam_results]
+        [
+            DecodeResult(
+                res.confidence,
+                alphabet.Decode(res.tokens),
+                [int(t) for t in res.tokens],
+                [int(t) for t in res.timesteps],
+            )
+            for res in beam_results
+        ]
         for beam_results in batch_beam_results
     ]
     return batch_beam_results

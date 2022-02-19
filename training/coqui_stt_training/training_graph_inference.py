@@ -67,8 +67,8 @@ def do_single_file_inference(input_file_path):
             cutoff_prob=Config.cutoff_prob,
             cutoff_top_n=Config.cutoff_top_n,
         )
-        # Print highest probability result
-        print(decoded[0][1])
+        # Print highest probability transcript
+        print(decoded[0].transcript)
 
 
 def main():
