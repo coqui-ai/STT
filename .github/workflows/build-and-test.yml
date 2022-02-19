@@ -1571,6 +1571,9 @@ jobs:
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
+      - name: Workaround problems with mixing headers from Xcode and CommandLineTools by removing the latter
+        run: |
+          sudo rm -r /Library/Developer/CommandLineTools
       - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
       - run: ./ci_scripts/package.sh
       - run: ./ci_scripts/tf-package.sh
