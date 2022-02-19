@@ -1603,14 +1603,16 @@ jobs:
       - run: |
           mkdir nc.x86_64
           cd nc.x86_64
-          tar xvf ../native_client.tflite.macOS.x86_64.tar.xz
+          tar xvf ../native_client.tar.xz
+          rm ../native_client.tar.xz
       - uses: actions/download-artifact@v2
         with:
           name: "native_client.tflite.macOS.arm64.tar.xz"
       - run: |
           mkdir nc.arm64
           cd nc.arm64
-          tar xvf ../native_client.tflite.macOS.arm64.tar.xz
+          tar xvf ../native_client.tar.xz
+          rm ../native_client.tar.xz
       - name: Create universal binaries
         run: |
           for binary in "libstt.so" "kenlm.so" "stt"; do
@@ -1619,7 +1621,7 @@ jobs:
           done
       - run: |
           cd nc.x86_64
-          tar cvJf native_client.tflite.macOS.tar.xz .
+          tar cvJf native_client.tar.xz .
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.macOS.tar.xz"
@@ -1631,14 +1633,16 @@ jobs:
       - run: |
           mkdir libstt.x86_64
           cd libstt.x86_64
-          tar xvf ../libstt.tflite.macOS.x86_64.tar.xz
+          tar xvf ../libstt.tar.xz
+          rm ../libstt.tar.xz
       - uses: actions/download-artifact@v2
         with:
           name: "libstt.tflite.macOS.arm64.tar.xz"
       - run: |
           mkdir libstt.arm64
           cd libstt.arm64
-          tar xvf ../libstt.tflite.macOS.arm64.tar.xz
+          tar xvf ../libstt.tar.xz
+          rm ../libstt.tar.xz
       - name: Create universal binaries
         run: |
           for binary in "libstt.so" "kenlm.so"; do
@@ -1647,7 +1651,7 @@ jobs:
           done
       - run: |
           cd libstt.x86_64
-          tar cvJf libstt.tflite.macOS.tar.xz .
+          tar cvJf libstt.tar.xz .
       - uses: actions/upload-artifact@v2
         with:
           name: "libstt.tflite.macOS.tar.xz"
