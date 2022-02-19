@@ -5,6 +5,8 @@ import random
 import subprocess
 import tarfile
 import unicodedata
+from tqdm import tqdm
+
 from glob import glob
 from multiprocessing import Pool
 from pathlib import Path
@@ -18,7 +20,6 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
-from tqdm import tqdm
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -32,6 +33,8 @@ BASE_SLR_URL = "http://www.openslr.org/resources/88"
 ARCHIVE_URL_txt = f"{BASE_SLR_URL}/{ARCHIVE_NAME_txt}{ARCHIVE_EXT}"
 ARCHIVE_URL_wav = f"{BASE_SLR_URL}/{ARCHIVE_NAME_wav}{ARCHIVE_EXT}"
 ARCHIVE_ROOT_PATH = "Volumes/CLEM_HDD/IRCAM/Open_SLR"
+
+_excluded_sentences = []
 
 
 def _download_and_preprocess_data(target_dir):
@@ -54,6 +57,9 @@ def _download_and_preprocess_data(target_dir):
     # Produce CSV files
     _maybe_convert_sets(target_dir, ARCHIVE_ROOT_PATH)
 
+    if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+        save_sentences_to_txt(_excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
     # If target_dir/extracted_data does not exist, extract archive in target_dir
@@ -71,6 +77,11 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
         tar = tarfile.open(archive_path)
         tar.extractall(target_dir)
         tar.close()
+
+
+def save_sentences_to_txt(sentences, text_file):
+    with open(text_file, "w") as f:
+        f.write("\n".join(sentences))
 
 
 def one_sample(sample):
@@ -107,6 +118,8 @@ def one_sample(sample):
     elif float(frames / SAMPLE_RATE) > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
+        if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
+            _excluded_sentences.append(str(label))
     else:
         # This one is good - keep it for the target CSV
         rows.append((wav_filename, file_size, label))
@@ -267,13 +280,13 @@ def get_sample_size(population_size):
     margin_of_error = 0.01
     fraction_picking = 0.50
     z_score = 2.58  # Corresponds to confidence level 99%
-    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-        margin_of_error ** 2
+    numerator = (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+        margin_of_error**2
     )
     sample_size = 0
     for train_size in range(population_size, 0, -1):
-        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
-            margin_of_error ** 2 * train_size
+        denominator = 1 + (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
+            margin_of_error**2 * train_size
         )
         sample_size = int(numerator / denominator)
         if 2 * sample_size + train_size <= population_size:
@@ -316,14 +329,19 @@ def handle_args():
     parser.add_argument(
         "--min_sec",
         type=float,
-        help="[FLOAT] Min audio length in sec",
+        help="[FLOAT] Min audio length in sec (default: 0.85)",
         default=0.85,
     )
     parser.add_argument(
         "--max_sec",
         type=float,
-        help="[FLOAT] Max audio length in sec",
+        help="[FLOAT] Max audio length in sec (default: 15.0)",
         default=10.0,
+    )
+    parser.add_argument(
+        "--save_excluded_max_sec_to_disk",
+        type=str,
+        help="Text file path to save excluded (max length) sentences to add them to the language model",
     )
     return parser.parse_args()
 
@@ -334,6 +352,8 @@ if __name__ == "__main__":
 
     MAX_SECS = CLI_ARGS.max_sec
     MIN_SECS = CLI_ARGS.min_sec
+
+    SAVE_EXCLUDED_MAX_SEC_TO_DISK = CLI_ARGS.save_excluded_max_sec_to_disk
 
     validate_label = get_validate_label(CLI_ARGS)
 
