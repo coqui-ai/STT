@@ -389,7 +389,7 @@ GetAudioBuffer(const char* path, int desired_sample_rate)
   fclose(wave);
 #endif // NO_SOX
 
-#if TARGET_OS_OSX
+#if TARGET_OS_OSX && !defined(NO_SOX)
   res.buffer_size = (size_t)(output->olength * 2);
   res.buffer = (char*)malloc(sizeof(char) * res.buffer_size);
   FILE* output_file = fopen(output_name, "rb");
