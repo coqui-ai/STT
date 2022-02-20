@@ -3,12 +3,12 @@ import csv
 import os
 import re
 import subprocess
-
-from multiprocessing import Pool
-from pathlib import Path
 import random
 import progressbar
 import sox
+
+from multiprocessing import Pool
+from pathlib import Path
 
 try:
     import zipfile38 as zipfile
@@ -70,13 +70,12 @@ def one_sample(sample):
     _maybe_convert_wav(orig_filename, wav_filename)
     file_size = -1
     frames = 0
+    duration = 0
     if os.path.exists(wav_filename):
         file_size = os.path.getsize(wav_filename)
-        frames = int(
-            subprocess.check_output(
-                ["soxi", "-s", wav_filename], stderr=subprocess.STDOUT
-            )
-        )
+        file_info = sox.file_info.info(wav_filename)
+        frames = int(file_info.get('num_samples', frames))
+        duration = int(file_info.get('duration', duration))
     label = sample["text"]
 
     rows = []
@@ -89,10 +88,10 @@ def one_sample(sample):
     elif label is None:
         # Excluding samples that failed on label validation
         counter["invalid_label"] += 1
-    elif int(frames / SAMPLE_RATE * 1000 / 10 / 2) < len(str(label)):
+    elif int(duration * 1000 / 10 / 2) < len(str(label)):
         # Excluding samples that are too short to fit the transcript
         counter["too_short"] += 1
-    elif frames / SAMPLE_RATE > MAX_SECS:
+    elif duration > MAX_SECS:
         # Excluding very long samples to keep a reasonable batch-size
         counter["too_long"] += 1
     else:
@@ -237,13 +236,13 @@ def get_sample_size(population_size):
     margin_of_error = 0.01
     fraction_picking = 0.50
     z_score = 2.58  # Corresponds to confidence level 99%
-    numerator = (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
-        margin_of_error**2
+    numerator = (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
+        margin_of_error ** 2
     )
     sample_size = 0
     for train_size in range(population_size, 0, -1):
-        denominator = 1 + (z_score**2 * fraction_picking * (1 - fraction_picking)) / (
-            margin_of_error**2 * train_size
+        denominator = 1 + (z_score ** 2 * fraction_picking * (1 - fraction_picking)) / (
+            margin_of_error ** 2 * train_size
         )
         sample_size = int(numerator / denominator)
         if 2 * sample_size + train_size <= population_size:
