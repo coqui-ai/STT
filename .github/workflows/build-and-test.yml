@@ -1625,24 +1625,24 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.macOS.tar.xz"
-          path: nc.x86_64/native_client.tflite.macOS.tar.xz
+          path: nc.x86_64/native_client.tar.xz
       # Now do the same, but for libstt.zip
       - uses: actions/download-artifact@v2
         with:
-          name: "libstt.tflite.macOS.x86_64.tar.xz"
+          name: "libstt.tflite.macOS.x86_64.zip"
       - run: |
           mkdir libstt.x86_64
           cd libstt.x86_64
-          tar xvf ../libstt.tar.xz
-          rm ../libstt.tar.xz
+          tar xvf ../libstt.zip
+          rm ../libstt.zip
       - uses: actions/download-artifact@v2
         with:
-          name: "libstt.tflite.macOS.arm64.tar.xz"
+          name: "libstt.tflite.macOS.arm64.zip"
       - run: |
           mkdir libstt.arm64
           cd libstt.arm64
-          tar xvf ../libstt.tar.xz
-          rm ../libstt.tar.xz
+          tar xvf ../libstt.zip
+          rm ../libstt.zip
       - name: Create universal binaries
         run: |
           for binary in "libstt.so" "libkenlm.so"; do
@@ -1650,12 +1650,11 @@ jobs:
             cp -f "${binary}" "libstt.x86_64/${binary}"
           done
       - run: |
-          cd libstt.x86_64
-          tar cvJf libstt.tar.xz .
+          zip -r9 --junk-paths libstt.zip libstt.x86_64/*
       - uses: actions/upload-artifact@v2
         with:
           name: "libstt.tflite.macOS.tar.xz"
-          path: libstt.x86_64/libstt.tflite.macOS.tar.xz
+          path: libstt.zip
   build-python-macOS:
     name: "Mac|Build Python bindings"
     runs-on: macos-10.15
