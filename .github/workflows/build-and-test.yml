@@ -1140,7 +1140,7 @@ jobs:
     name: "Upload native client artifacts to release assets"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [create-release, build-lib-Windows, build-lib-Linux, build-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
+    needs: [create-release, build-lib-Windows, build-lib-Linux, build-universal-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -1524,6 +1524,9 @@ jobs:
   build-lib-macOS:
     name: "Mac|Build libstt+client"
     runs-on: macos-10.15
+    strategy:
+      matrix:
+        arch: ["x86_64", "arm64"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1532,7 +1535,7 @@ jobs:
       - id: get_cache_key
         uses: ./.github/actions/get_cache_key
         with:
-          arch: "macOS"
+          arch: "macOS-${{ matrix.arch }}"
           extras: "0"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
@@ -1555,33 +1558,107 @@ jobs:
         run:
           brew install coreutils
       - name: Select Xcode version
-        run: sudo xcode-select --switch /Applications/Xcode_12.1.1.app
+        run: |
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
+            # Force set 11.0 SDK for `stt` binary build, xcrun always uses CLT SDK
+            export SDKROOT=/Applications/Xcode_12.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+          else
+            sudo xcode-select --switch /Applications/Xcode_12.1.1.app/Contents/Developer
+          fi
       - run: ./ci_scripts/tf-setup.sh
       - run: |
           # Taken from https://www.tensorflow.org/install/source
           # Only future is needed for our builds, as we don't build the Python package
           python -m pip install -U --user future==0.17.1 || true
-      - run: ./ci_scripts/host-build.sh
+      - name: Workaround problems with mixing headers from Xcode and CommandLineTools by removing the latter
+        run: |
+          sudo rm -r /Library/Developer/CommandLineTools
+      - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
       - run: ./ci_scripts/package.sh
       - run: ./ci_scripts/tf-package.sh
         if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
-          name: "native_client.tflite.macOS.tar.xz"
+          name: "native_client.tflite.macOS.${{ matrix.arch }}.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.macOS.zip"
+          name: "libstt.tflite.macOS.${{ matrix.arch }}.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
       - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
           path: ${{ github.workspace }}/artifacts/home.tar.xz
         if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-universal-lib-macOS:
+    name: "Mac|Build universal lib"
+    runs-on: macos-10.15
+    needs: [build-lib-macOS]
+    steps:
+      # Download and extract individual arch packages and create universal binaries
+      - uses: actions/download-artifact@v2
+        with:
+          name: "native_client.tflite.macOS.x86_64.tar.xz"
+      - run: |
+          mkdir nc.x86_64
+          cd nc.x86_64
+          tar xvf ../native_client.tar.xz
+          rm ../native_client.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: "native_client.tflite.macOS.arm64.tar.xz"
+      - run: |
+          mkdir nc.arm64
+          cd nc.arm64
+          tar xvf ../native_client.tar.xz
+          rm ../native_client.tar.xz
+      - name: Create universal binaries
+        run: |
+          for binary in "libstt.so" "libkenlm.so" "stt"; do
+            lipo -create -output "${binary}" "nc.x86_64/${binary}" "nc.arm64/${binary}"
+            cp -f "${binary}" "nc.x86_64/${binary}"
+          done
+      - run: |
+          cd nc.x86_64
+          tar cvJf native_client.tar.xz .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "native_client.tflite.macOS.tar.xz"
+          path: nc.x86_64/native_client.tar.xz
+      # Now do the same, but for libstt.zip
+      - uses: actions/download-artifact@v2
+        with:
+          name: "libstt.tflite.macOS.x86_64.zip"
+      - run: |
+          mkdir libstt.x86_64
+          cd libstt.x86_64
+          tar xvf ../libstt.zip
+          rm ../libstt.zip
+      - uses: actions/download-artifact@v2
+        with:
+          name: "libstt.tflite.macOS.arm64.zip"
+      - run: |
+          mkdir libstt.arm64
+          cd libstt.arm64
+          tar xvf ../libstt.zip
+          rm ../libstt.zip
+      - name: Create universal binaries
+        run: |
+          for binary in "libstt.so" "libkenlm.so"; do
+            lipo -create -output "${binary}" "libstt.x86_64/${binary}" "libstt.arm64/${binary}"
+            cp -f "${binary}" "libstt.x86_64/${binary}"
+          done
+      - run: |
+          zip -r9 --junk-paths libstt.zip libstt.x86_64/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.macOS.tar.xz"
+          path: libstt.zip
   build-python-macOS:
     name: "Mac|Build Python bindings"
     runs-on: macos-10.15
-    needs: [ build-lib-macOS, swig_macOS ]
+    needs: [build-universal-lib-macOS, swig_macOS]
     strategy:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
@@ -1627,7 +1704,7 @@ jobs:
   build-nodejs-macOS:
     name: "Mac|Build NodeJS and ElectronJS"
     runs-on: macos-10.15
-    needs: [ build-lib-macOS, swig_macOS ]
+    needs: [build-universal-lib-macOS, swig_macOS]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -1676,7 +1753,7 @@ jobs:
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
     runs-on: macos-10.15
-    needs: [ build-lib-macOS, train-test-model-macOS ]
+    needs: [build-universal-lib-macOS, train-test-model-macOS]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -3514,11 +3591,18 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-x86_64-build.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.x86_64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04

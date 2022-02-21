@@ -136,15 +136,18 @@ fi
 # See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for targetting specific CPUs
 
 if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
-    OPT_FLAGS="/arch:AVX"
+    BAZEL_OPT_FLAGS="--copt=/arch:AVX"
+elif [ "${OS}" = "Darwin" ]; then
+    if [ "$(uname -m)" = "arm64" ]; then
+        # clang on M1 Macs doesn't support -march=x86-64
+        BAZEL_OPT_FLAGS_MACOS_X86_64=""
+    else
+        BAZEL_OPT_FLAGS_MACOS_X86_64="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
+    fi
+    BAZEL_OPT_FLAGS_MACOS_ARM64="--xcode_version 12.2"
 else
-    OPT_FLAGS="-mtune=generic -march=x86-64 -msse -msse2 -msse3 -msse4.1 -msse4.2 -mavx"
+    BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
 fi
-BAZEL_OPT_FLAGS=""
-for flag in ${OPT_FLAGS};
-do
-    BAZEL_OPT_FLAGS="${BAZEL_OPT_FLAGS} --copt=${flag}"
-done;
 
 BAZEL_OUTPUT_CACHE_DIR="${DS_ROOT_TASK}/.bazel_cache/"
 BAZEL_OUTPUT_CACHE_INSTANCE="${BAZEL_OUTPUT_CACHE_DIR}/output/"
@@ -176,7 +179,12 @@ if [ "${OS}" != "${CI_MSYS_VERSION}" ]; then
 fi
 
 if [ "${OS}" = "Darwin" ]; then
-    BAZEL_EXTRA_FLAGS="${BAZEL_EXTRA_FLAGS} --macos_minimum_os 10.10 --macos_sdk_version 10.15"
+    BAZEL_EXTRA_FLAGS_MACOS_X86_64="${BAZEL_EXTRA_FLAGS}"
+    BAZEL_EXTRA_FLAGS_MACOS_ARM64="${BAZEL_EXTRA_FLAGS} --config=macos_arm64"
+    if [ "${CI}" = true ]; then
+        BAZEL_EXTRA_FLAGS_MACOS_X86_64="${BAZEL_EXTRA_FLAGS_MACOS_X86_64} --macos_minimum_os 10.10 --macos_sdk_version 10.15"
+        BAZEL_EXTRA_FLAGS_MACOS_ARM64="${BAZEL_EXTRA_FLAGS_MACOS_ARM64} --macos_minimum_os 11.0 --macos_sdk_version 11.0"
+    fi
 fi
 
 ### Define build targets that we will re-ues in sourcing scripts.
