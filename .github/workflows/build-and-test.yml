@@ -1615,7 +1615,7 @@ jobs:
           rm ../native_client.tar.xz
       - name: Create universal binaries
         run: |
-          for binary in "libstt.so" "kenlm.so" "stt"; do
+          for binary in "libstt.so" "libkenlm.so" "stt"; do
             lipo -create -output "${binary}" "nc.x86_64/${binary}" "nc.arm64/${binary}"
             cp -f "${binary}" "nc.x86_64/${binary}"
           done
@@ -1645,7 +1645,7 @@ jobs:
           rm ../libstt.tar.xz
       - name: Create universal binaries
         run: |
-          for binary in "libstt.so" "kenlm.so"; do
+          for binary in "libstt.so" "libkenlm.so"; do
             lipo -create -output "${binary}" "libstt.x86_64/${binary}" "libstt.arm64/${binary}"
             cp -f "${binary}" "libstt.x86_64/${binary}"
           done
