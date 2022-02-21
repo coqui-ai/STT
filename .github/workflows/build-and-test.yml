@@ -3591,11 +3591,18 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-x86_64-build.sh
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.x86_64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04
