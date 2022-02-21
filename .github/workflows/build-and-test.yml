@@ -1617,7 +1617,7 @@ jobs:
         run: |
           for binary in "libstt.so" "kenlm.so" "stt"; do
             lipo -create -output "${binary}" "nc.x86_64/${binary}" "nc.arm64/${binary}"
-            cp "${binary}" "nc.x86_64/${binary}"
+            cp -f "${binary}" "nc.x86_64/${binary}"
           done
       - run: |
           cd nc.x86_64
@@ -1647,7 +1647,7 @@ jobs:
         run: |
           for binary in "libstt.so" "kenlm.so"; do
             lipo -create -output "${binary}" "libstt.x86_64/${binary}" "libstt.arm64/${binary}"
-            cp "${binary}" "libstt.x86_64/${binary}"
+            cp -f "${binary}" "libstt.x86_64/${binary}"
           done
       - run: |
           cd libstt.x86_64
