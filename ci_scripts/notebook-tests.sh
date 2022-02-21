@@ -4,6 +4,6 @@ set -xe
 source $(dirname "$0")/all-vars.sh
 source $(dirname "$0")/all-utils.sh
 
-for python_notebook in ./notebooks/*.ipynb; do
-    time jupyter nbconvert --to notebook --execute $python_notebook
-done
+time jupyter nbconvert --to notebook --execute notebooks/easy_transfer_learning.ipynb
+time jupyter nbconvert --to notebook --execute notebooks/train_your_first_coqui_STT_model.ipynb
+time jupyter nbconvert --to notebook --execute notebooks/train_with_common_voice.ipynb
