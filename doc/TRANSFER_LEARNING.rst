@@ -5,6 +5,9 @@ Bootstrap from a pre-trained model
 
 If you don't have thousands of hours of training data, you will probably find that bootstrapping from a pre-trained model is a critical step in training a production-ready STT model. Even in the case you do have thousands of hours of data, you will find that bootstrapping from a pre-trained model can significantly decrease training time. Unless you want to experiment with new neural architectures, you probably want to bootstrap from a pre-trained model.
 
+.. warning::
+    In order to perform fine-tuning or transfer-learning you will need existing checkpoint files like ``<INSERT EXAMPLE FILE NAMES HERE>``. Note that not all models released on `coqui.ai/models <https://coqui.ai/models>`_ provide those files. As such you will not be able to apply fine-tuning and transfer-learning to such models.
+
 There are currently two supported approaches to bootstrapping from a pre-trained 🐸STT model: fine-tuning or transfer-learning. Choosing which one to use depends on your target dataset. Does your data use the same alphabet as the release model? If "Yes", then you fine-tune. If "No", then you use transfer-learning.
 
 If your own data uses the *extact* same alphabet as the English release model (i.e. ``a-z`` plus ``'``) then the release model's output layer will match your data, and you can just fine-tune the existing parameters. However, if you want to use a new alphabet (e.g. Cyrillic ``а``, ``б``, ``д``), the output layer of an English model will *not* match your data. In this case, you should use transfer-learning (i.e. reinitialize a new output layer that matches your target character set.
