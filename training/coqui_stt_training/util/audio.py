@@ -9,6 +9,7 @@ from collections import namedtuple
 
 import numpy as np
 import pyogg
+import miniaudio
 
 from .helpers import LimitingPool
 from .io import copy_remote, is_remote_path, open_remote, remove_remote
@@ -26,12 +27,14 @@ AUDIO_TYPE_WAV = "audio/wav"
 AUDIO_TYPE_OPUS = "application/vnd.mozilla.opus"
 AUDIO_TYPE_OGG_OPUS = "audio/ogg;codecs=opus"
 AUDIO_TYPE_OGG_VORBIS = "audio/vorbis"
+AUDIO_TYPE_FLAC = "audio/flac"
 
 SERIALIZABLE_AUDIO_TYPES = [
     AUDIO_TYPE_WAV,
     AUDIO_TYPE_OPUS,
     AUDIO_TYPE_OGG_OPUS,
     AUDIO_TYPE_OGG_VORBIS,
+    AUDIO_TYPE_FLAC,
 ]
 
 OPUS_PCM_LEN_SIZE = 4
@@ -178,6 +181,7 @@ def get_loadable_audio_type_from_extension(ext):
         ".wav": AUDIO_TYPE_WAV,
         ".opus": AUDIO_TYPE_OGG_OPUS,
         ".ogg": AUDIO_TYPE_OGG_VORBIS,
+        ".flac": AUDIO_TYPE_FLAC,
     }.get(ext, None)
 
 
@@ -626,6 +630,20 @@ def read_wav(wav_file):
         return audio_format, pcm_data
 
 
+def read_flac(flac_file):
+    audio_format = read_flac_format(flac_file)
+    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+    decoded = miniaudio.decode(
+        flac_buffer, nchannels=audio_format.channels, sample_rate=audio_format.rate
+    )
+    # print(len(decoded.samples))
+    # print(decoded.sample_format)
+    asnp = np.frombuffer(decoded.samples, np.int16)
+    return audio_format, asnp.reshape(
+        asnp.shape[0] // audio_format.channels, audio_format.channels
+    )
+
+
 def read_audio(audio_type, audio_file):
     if audio_type == AUDIO_TYPE_WAV:
         return read_wav(audio_file)
@@ -635,6 +653,8 @@ def read_audio(audio_type, audio_file):
         return read_ogg_opus(audio_file)
     if audio_type == AUDIO_TYPE_OGG_VORBIS:
         return read_ogg_vorbis(audio_file)
+    if audio_type == AUDIO_TYPE_FLAC:
+        return read_flac(audio_file)
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -709,6 +729,12 @@ def read_ogg_vorbis_duration(ogg_file):
     return get_pcm_duration(pcm_length_samples, audio_format)
 
 
+def read_flac_duration(flac_file):
+    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+    info = miniaudio.flac_get_info(flac_buffer)
+    return info.duration
+
+
 def read_duration(audio_type, audio_file):
     if audio_type == AUDIO_TYPE_WAV:
         return read_wav_duration(audio_file)
@@ -718,6 +744,8 @@ def read_duration(audio_type, audio_file):
         return read_ogg_opus_duration(audio_file)
     if audio_type == AUDIO_TYPE_OGG_VORBIS:
         return read_ogg_vorbis_duration(audio_file)
+    if audio_type == AUDIO_TYPE_FLAC:
+        return read_flac_duration(audio_file)
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
@@ -772,6 +800,25 @@ def read_ogg_vorbis_format(ogg_file):
     return AudioFormat(sample_rate, channel_count, sample_width)
 
 
+def read_flac_format(flac_file):
+    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+    info = miniaudio.flac_get_info(flac_buffer)
+
+    if info.sample_format == miniaudio.SampleFormat.UNKNOWN:
+        raise ValueError("Unsupported FLAC file with unknown sample format")
+
+    sample_width = {
+        miniaudio.SampleFormat.UNSIGNED8: 1,
+        miniaudio.SampleFormat.SIGNED16: 2,
+        miniaudio.SampleFormat.SIGNED24: 3,
+        miniaudio.SampleFormat.SIGNED32: 4,
+        miniaudio.SampleFormat.FLOAT32: 4,
+    }.get(info.sample_format)
+
+    audio_format = AudioFormat(info.sample_rate, info.nchannels, sample_width)
+    return audio_format
+
+
 def read_format(audio_type, audio_file):
     if audio_type == AUDIO_TYPE_WAV:
         return read_wav_format(audio_file)
@@ -781,6 +828,8 @@ def read_format(audio_type, audio_file):
         return read_ogg_opus_format(audio_file)
     if audio_type == AUDIO_TYPE_OGG_VORBIS:
         return read_ogg_vorbis_format(audio_file)
+    if audio_type == AUDIO_TYPE_FLAC:
+        return read_flac_format(audio_file)
     raise ValueError("Unsupported audio type: {}".format(audio_type))
 
 
