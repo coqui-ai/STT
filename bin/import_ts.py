@@ -74,8 +74,8 @@ def one_sample(sample):
     if os.path.exists(wav_filename):
         file_size = os.path.getsize(wav_filename)
         file_info = sox.file_info.info(wav_filename)
-        frames = int(file_info.get('num_samples', frames))
-        duration = int(file_info.get('duration', duration))
+        frames = int(file_info.get("num_samples", frames))
+        duration = int(file_info.get("duration", duration))
     label = sample["text"]
 
     rows = []
