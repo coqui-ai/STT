@@ -844,6 +844,9 @@ jobs:
 
           # Test WebDataset input
           time ./bin/run-ci-ldc93s1-webdataset.sh --epochs 1
+
+          # Test FLAC input
+          time ./bin/run-ci-ldc93s1-flac.sh --epochs 1
   training-sdb-tests:
     name: "Lin|SDB training tests"
     runs-on: ubuntu-20.04
