@@ -1,0 +1,5 @@
+module STTNative {
+    header "coqui-stt.h"
+    link "stt"
+    export *
+}

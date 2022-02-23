@@ -3,6 +3,7 @@
 load("@org_tensorflow//tensorflow:tensorflow.bzl", "lrt_if_needed")
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_static_framework")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_c_module", "swift_library")
 
 
 config_setting(
@@ -72,8 +73,8 @@ LINUX_LINKOPTS = [
     "-Wl,-export-dynamic",
 ]
 
-cc_binary(
-    name = "libkenlm.so",
+cc_library(
+    name = "kenlm_static",
     srcs = glob([
         "kenlm/lm/*.hh",
         "kenlm/lm/*.cc",
@@ -92,9 +93,14 @@ cc_binary(
     }),
     defines = ["KENLM_MAX_ORDER=6"],
     includes = ["kenlm"],
-    linkshared = 1,
+)
+
+cc_binary(
+    name = "libkenlm.so",
+    deps = [":kenlm_static"],
     linkopts = select({
         "//tensorflow:ios": [
+            "-fembed-bitcode",
             "-Wl,-install_name,@rpath/libkenlm.so",
         ],
         "//tensorflow:macos": [
@@ -105,15 +111,22 @@ cc_binary(
             "-Wl,-soname,libkenlm.so",
         ],
     }),
+    linkshared = 1,
+)
+
+cc_import(
+    name = "kenlm_import",
+    shared_library = ":libkenlm.so",
+    tags = ["manual"],
 )
 
 cc_library(
-    name="kenlm",
+    name = "kenlm_lib",
     hdrs = glob([
         "kenlm/lm/*.hh",
         "kenlm/util/*.hh",
     ]),
-    srcs = [":libkenlm.so"],
+    deps = [":kenlm_import"],
     copts = ["-std=c++14"],
     defines = ["KENLM_MAX_ORDER=6"],
     includes = [".", "kenlm"],
@@ -151,14 +164,14 @@ cc_library(
         "ctcdecode/third_party/flashlight/flashlight/lib/text/dictionary/Utils.cpp",
     ],
     includes = ["ctcdecode/third_party/flashlight"],
-    deps = [":kenlm"],
+    deps = [":kenlm_lib"],
 )
 
 cc_library(
     name = "decoder",
     srcs = DECODER_SOURCES,
     includes = DECODER_INCLUDES,
-    deps = [":kenlm", ":flashlight"],
+    deps = [":kenlm_lib", ":flashlight"],
     linkopts = DECODER_LINKOPTS,
     copts = select({
         "//tensorflow:windows": ["/std:c++14"],
@@ -168,9 +181,11 @@ cc_library(
 
 cc_library(
     name = "coqui_stt_bundle",
+    hdrs = [
+        "coqui-stt.h",
+    ],
     srcs = [
         "stt.cc",
-        "coqui-stt.h",
         "stt_errors.cc",
         "modelstate.cc",
         "modelstate.h",
@@ -232,9 +247,36 @@ cc_binary(
     }),
 )
 
+swift_c_module(
+    name = "stt_swift_native",
+    module_name = "STTNative",
+    module_map = "swift.modulemap",
+    deps = [":coqui_stt_bundle"],
+)
+
+swift_library(
+    name = "stt_swift",
+    deps = [":stt_swift_native"],
+    module_name = "STT",
+    srcs = [
+        "swift/Bindings.swift",
+    ],
+)
+
 ios_static_framework(
     name = "stt_ios",
+    bundle_name = "STT",
+    hdrs = ["coqui-stt.h"],
     deps = [":coqui_stt_bundle"],
+    families = ["iphone", "ipad"],
+    minimum_os_version = "9.0",
+    linkopts = ["-lstdc++"],
+)
+
+ios_static_framework(
+    name = "kenlm_ios",
+    bundle_name = "KenLM",
+    deps = [":kenlm_static"],
     families = ["iphone", "ipad"],
     minimum_os_version = "9.0",
     linkopts = ["-lstdc++"],
@@ -260,7 +302,7 @@ cc_binary(
     }),
     deps = [
         ":decoder",
-        ":kenlm",
+        ":kenlm_lib",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/types:optional",
@@ -287,7 +329,7 @@ cc_binary(
     srcs = [
         "enumerate_kenlm_vocabulary.cpp",
     ],
-    deps = [":kenlm"],
+    deps = [":kenlm_lib"],
     copts = select({
         "//tensorflow:windows": ["/std:c++14"],
         "//conditions:default": ["-std=c++14"],

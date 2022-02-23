@@ -4,9 +4,10 @@
 //
 //  Created by Reuben Morais on 14.06.20.
 //  Copyright © 2020 Mozilla
-//  Copyright © 2021 Coqui GmbH
+//  Copyright © 2021-2022 Coqui GmbH
 
-import stt_ios.libstt_Private
+import Foundation
+import STTNative
 
 public enum STTError: Error {
     // Should be kept in sync with coqui-stt.h
