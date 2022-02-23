@@ -145,6 +145,7 @@ elif [ "${OS}" = "Darwin" ]; then
         BAZEL_OPT_FLAGS_MACOS_X86_64="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
     fi
     BAZEL_OPT_FLAGS_MACOS_ARM64="--xcode_version 12.2"
+    BAZEL_OPT_FLAGS="--xcode_version 12.2"
 else
     BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
 fi

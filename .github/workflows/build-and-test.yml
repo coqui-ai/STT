@@ -10,7 +10,7 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-5-g0a77b72e379"
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-6-ga9d74436645"
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
 
   # macOS specific
@@ -1586,6 +1586,72 @@ jobs:
         with:
           name: "libstt.tflite.macOS.${{ matrix.arch }}.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/artifacts/home.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+  build-lib-iOS:
+    name: "iOS|Build libstt+client"
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - id: get_cache_key
+        uses: ./.github/actions/get_cache_key
+        with:
+          arch: "iOS"
+          extras: "0"
+      - id: check_artifact_exists
+        uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+      - uses: ./.github/actions/check_artifact_exists
+        with:
+          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
+          path: ${{ github.workspace }}/tf-cache.tar.xz
+          download: true
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - run: |
+          tar -xvf tf-cache.tar.xz
+          rm tf-cache.tar.xz
+        if: steps.check_artifact_exists.outputs.status == 'found'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install system deps
+        run:
+          brew install coreutils
+      - name: Select Xcode version
+        run: |
+          sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
+      - run: ./ci_scripts/tf-setup.sh
+      - run: |
+          # Taken from https://www.tensorflow.org/install/source
+          # Only future is needed for our builds, as we don't build the Python package
+          python -m pip install -U --user future==0.17.1 || true
+      - name: Workaround problems with mixing headers from Xcode and CommandLineTools by removing the latter
+        run: |
+          sudo rm -r /Library/Developer/CommandLineTools
+      - run: ./ci_scripts/ios-build.sh
+      - run: |
+          zip -r9 --junk-paths ${CI_ARTIFACTS_DIR}/ios_artifacts.zip \
+            tensorflow/bazel-bin/native_client/STT.swiftdoc \
+            tensorflow/bazel-bin/native_client/STT.swiftmodule \
+            tensorflow/bazel-bin/native_client/STT.swiftsourceinfo \
+            tensorflow/bazel-bin/native_client/coqui_stt_bundle.swift.modulemap \
+            tensorflow/bazel-bin/native_client/libkenlm.so \
+            tensorflow/bazel-bin/native_client/libstt.so \
+            tensorflow/bazel-out/applebin_ios*/bin/native_client/stt_ios.zip \
+            tensorflow/bazel-out/applebin_ios*/bin/native_client/kenlm_ios.zip
+      - run: ./ci_scripts/tf-package.sh
+        if: steps.check_artifact_exists.outputs.status == 'missing'
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "ios_artifacts.zip"
+          path: ${{ github.workspace }}/artifacts/ios_artifacts.zip
       - uses: ./.github/actions/upload-release-asset
         with:
           name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
