@@ -9,38 +9,61 @@
 import SwiftUI
 
 struct ContentView: View {
-    private var stt = SpeechRecognitionImpl()
     @State var isRecognizingMicrophone = false
+    @State var partialResult = ""
+    @State var result = ""
+    @State var stt: SpeechRecognitionImpl? = nil
+
+    func setup() {
+        stt = SpeechRecognitionImpl(
+            onPartialResult: { nextPartialResult in
+                partialResult = nextPartialResult
+            },
+            onResult: { nextResult in
+                result = nextResult
+            }
+        )
+    }
 
     var body: some View {
         VStack {
             Text("Coqui STT iOS Demo")
                 .font(.system(size: 30))
-            Button("Recognize files", action: recognizeFiles)
-                .padding(30)
-            Button(
-                isRecognizingMicrophone
-                    ? "Stop Microphone Recognition"
-                    : "Start Microphone Recognition",
-                action: isRecognizingMicrophone
-                    ? stopMicRecognition
-                    : startMicRecognition)
-                .padding(30)
+
+            if (stt != nil) {
+                Button("Recognize files", action: recognizeFiles)
+                    .padding(30)
+                Button(
+                    isRecognizingMicrophone
+                        ? "Stop Microphone Recognition"
+                        : "Start Microphone Recognition",
+                    action: isRecognizingMicrophone
+                        ? stopMicRecognition
+                        : startMicRecognition)
+                    .padding(30)
+                Text("Partial result")
+                Text(partialResult)
+                Text("Result")
+                Text(result)
+            } else {
+                Button("Setup", action: setup)
+                    .padding(30)
+            }
         }
     }
 
     func recognizeFiles() {
-        self.stt.recognizeFiles()
+        stt?.recognizeFiles()
     }
 
     func startMicRecognition() {
         isRecognizingMicrophone = true
-        self.stt.startMicrophoneRecognition()
+        stt?.startMicrophoneRecognition()
     }
 
     func stopMicRecognition() {
         isRecognizingMicrophone = false
-        self.stt.stopMicrophoneRecognition()
+        stt?.stopMicrophoneRecognition()
     }
 }
 
