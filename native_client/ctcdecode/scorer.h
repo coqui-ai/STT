@@ -51,6 +51,8 @@ public:
                            bool bos = false,
                            bool eos = false);
 
+  double get_unk_log_cond_prob();
+
   // return the max order
   size_t get_max_order() const { return max_order_; }
 

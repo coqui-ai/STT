@@ -8,14 +8,16 @@
 
 #include "decoder_utils.h"
 
-PathTrie::PathTrie() {
+PathTrie::PathTrie()
+{
   log_prob_b_prev = -NUM_FLT_INF;
   log_prob_nb_prev = -NUM_FLT_INF;
   log_prob_b_cur = -NUM_FLT_INF;
   log_prob_nb_cur = -NUM_FLT_INF;
   log_prob_c = -NUM_FLT_INF;
   score = -NUM_FLT_INF;
-
+  oov_word = false;
+  first_time_oov = false;
   ROOT_ = -1;
   character = ROOT_;
   exists_ = true;
@@ -28,21 +30,28 @@ PathTrie::PathTrie() {
   matcher_ = nullptr;
 }
 
-PathTrie::~PathTrie() {
-  for (auto child : children_) {
+PathTrie::~PathTrie()
+{
+  for (auto child : children_)
+  {
     delete child.second;
   }
 }
 
-PathTrie* PathTrie::get_path_trie(unsigned int new_char, float cur_log_prob_c, bool reset) {
+PathTrie *PathTrie::get_path_trie(unsigned int new_char, float cur_log_prob_c, bool reset, bool is_scoring_boundary)
+{
   auto child = children_.begin();
-  for (; child != children_.end(); ++child) {
-    if (child->first == new_char) {
+  for (; child != children_.end(); ++child)
+  {
+    if (child->first == new_char)
+    {
       break;
     }
   }
-  if (child != children_.end()) {
-    if (!child->second->exists_) {
+  if (child != children_.end())
+  {
+    if (!child->second->exists_)
+    {
       child->second->exists_ = true;
       child->second->log_prob_b_prev = -NUM_FLT_INF;
       child->second->log_prob_nb_prev = -NUM_FLT_INF;
@@ -50,46 +59,82 @@ PathTrie* PathTrie::get_path_trie(unsigned int new_char, float cur_log_prob_c, b
       child->second->log_prob_nb_cur = -NUM_FLT_INF;
     }
     return child->second;
-  } else {
-    if (has_dictionary_) {
-      matcher_->SetState(dictionary_state_);
-      bool found = matcher_->Find(new_char + 1);
-      if (!found) {
-        // Adding this character causes word outside dictionary
-        auto FSTZERO = fst::TropicalWeight::Zero();
-        auto final_weight = dictionary_->Final(dictionary_state_);
-        bool is_final = (final_weight != FSTZERO);
-        if (is_final && reset) {
-          dictionary_state_ = dictionary_->Start();
+  }
+  else
+  {
+    if (has_dictionary_)
+    {
+      if (!first_time_oov)
+      {
+        matcher_->SetState(dictionary_state_);
+        bool found = matcher_->Find(new_char + 1);
+        if (!found)
+        {
+          PathTrie *new_path = new PathTrie;
+          new_path->character = new_char;
+          new_path->parent = this;
+          new_path->log_prob_c = cur_log_prob_c;
+          new_path->oov_word = true;
+          new_path->first_time_oov = true;
+          children_.push_back(std::make_pair(new_char, new_path));
+          return new_path;
         }
-        return nullptr;
-      } else {
-        PathTrie* new_path = new PathTrie;
+        else
+        {
+          PathTrie *new_path = new PathTrie;
+          new_path->character = new_char;
+          new_path->parent = this;
+          new_path->dictionary_ = dictionary_;
+          new_path->has_dictionary_ = true;
+          new_path->matcher_ = matcher_;
+          new_path->log_prob_c = cur_log_prob_c;
+          new_path->oov_word = false;
+
+          // set spell checker state
+          // check to see if next state is final
+          auto FSTZERO = fst::TropicalWeight::Zero();
+          auto final_weight = dictionary_->Final(dictionary_state_);
+          if (found)
+          {
+            final_weight = dictionary_->Final(matcher_->Value().nextstate);
+          }
+          bool is_final = (final_weight != FSTZERO);
+          if (is_final && reset)
+          {
+            // restart spell checker at the start state
+            new_path->dictionary_state_ = dictionary_->Start();
+          }
+          else
+          {
+            // go to next state
+            new_path->dictionary_state_ = matcher_->Value().nextstate;
+          }
+
+          children_.push_back(std::make_pair(new_char, new_path));
+          return new_path;
+        }
+      }
+      else
+      {
+        PathTrie *new_path = new PathTrie;
         new_path->character = new_char;
         new_path->parent = this;
-        new_path->dictionary_ = dictionary_;
-        new_path->has_dictionary_ = true;
-        new_path->matcher_ = matcher_;
         new_path->log_prob_c = cur_log_prob_c;
-
-        // set spell checker state
-        // check to see if next state is final
-        auto FSTZERO = fst::TropicalWeight::Zero();
-        auto final_weight = dictionary_->Final(matcher_->Value().nextstate);
-        bool is_final = (final_weight != FSTZERO);
-        if (is_final && reset) {
+        new_path->oov_word = true;
+        new_path->first_time_oov = false;
+        if (is_scoring_boundary)
+        {
           // restart spell checker at the start state
           new_path->dictionary_state_ = dictionary_->Start();
-        } else {
-          // go to next state
-          new_path->dictionary_state_ = matcher_->Value().nextstate;
+          new_path->oov_word = false;
         }
-
         children_.push_back(std::make_pair(new_char, new_path));
         return new_path;
       }
-    } else {
-      PathTrie* new_path = new PathTrie;
+    }
+    else
+    {
+      PathTrie *new_path = new PathTrie;
       new_path->character = new_char;
       new_path->parent = this;
       new_path->log_prob_c = cur_log_prob_c;
@@ -99,27 +144,32 @@ PathTrie* PathTrie::get_path_trie(unsigned int new_char, float cur_log_prob_c, b
   }
 }
 
-void PathTrie::get_path_vec(std::vector<unsigned int>& output) {
+void PathTrie::get_path_vec(std::vector<unsigned int> &output)
+{
   // Recursive call: recurse back until stop condition, then append data in
   // correct order as we walk back down the stack in the lines below.
-  if (parent != nullptr) {
+  if (parent != nullptr)
+  {
     parent->get_path_vec(output);
   }
-  if (character != ROOT_) {
+  if (character != ROOT_)
+  {
     output.push_back(character);
   }
 }
 
-PathTrie* PathTrie::get_prev_grapheme(std::vector<unsigned int>& output,
-                                      const Alphabet& alphabet)
+PathTrie *PathTrie::get_prev_grapheme(std::vector<unsigned int> &output,
+                                      const Alphabet &alphabet)
 {
-  PathTrie* stop = this;
-  if (character == ROOT_) {
+  PathTrie *stop = this;
+  if (character == ROOT_)
+  {
     return stop;
   }
   // Recursive call: recurse back until stop condition, then append data in
   // correct order as we walk back down the stack in the lines below.
-  if (!byte_is_codepoint_boundary(alphabet.DecodeSingle(character)[0])) {
+  if (!byte_is_codepoint_boundary(alphabet.DecodeSingle(character)[0]))
+  {
     stop = parent->get_prev_grapheme(output, alphabet);
   }
   output.push_back(character);
@@ -127,42 +177,49 @@ PathTrie* PathTrie::get_prev_grapheme(std::vector<unsigned int>& output,
 }
 
 int PathTrie::distance_to_codepoint_boundary(unsigned char *first_byte,
-                                             const Alphabet& alphabet)
+                                             const Alphabet &alphabet)
 {
-  if (byte_is_codepoint_boundary(alphabet.DecodeSingle(character)[0])) {
+  if (byte_is_codepoint_boundary(alphabet.DecodeSingle(character)[0]))
+  {
     *first_byte = (unsigned char)character + 1;
     return 1;
   }
-  if (parent != nullptr && parent->character != ROOT_) {
+  if (parent != nullptr && parent->character != ROOT_)
+  {
     return 1 + parent->distance_to_codepoint_boundary(first_byte, alphabet);
   }
   assert(false); // unreachable
   return 0;
 }
 
-PathTrie* PathTrie::get_prev_word(std::vector<unsigned int>& output,
-                                  const Alphabet& alphabet)
+PathTrie *PathTrie::get_prev_word(std::vector<unsigned int> &output,
+                                  const Alphabet &alphabet)
 {
-  PathTrie* stop = this;
-  if (character == alphabet.GetSpaceLabel() || character == ROOT_) {
+  PathTrie *stop = this;
+  if (character == alphabet.GetSpaceLabel() || character == ROOT_)
+  {
     return stop;
   }
   // Recursive call: recurse back until stop condition, then append data in
   // correct order as we walk back down the stack in the lines below.
-  if (parent != nullptr) {
+  if (parent != nullptr)
+  {
     stop = parent->get_prev_word(output, alphabet);
   }
   output.push_back(character);
   return stop;
 }
 
-void PathTrie::iterate_to_vec(std::vector<PathTrie*>& output) {
+void PathTrie::iterate_to_vec(std::vector<PathTrie *> &output)
+{
   // previous_timesteps might point to ancestors' timesteps
   // therefore, children must be uptaded first
-  for (auto child : children_) {
+  for (auto child : children_)
+  {
     child.second->iterate_to_vec(output);
   }
-  if (exists_) {
+  if (exists_)
+  {
     log_prob_b_prev = log_prob_b_cur;
     log_prob_nb_prev = log_prob_nb_cur;
 
@@ -171,16 +228,20 @@ void PathTrie::iterate_to_vec(std::vector<PathTrie*>& output) {
 
     score = log_sum_exp(log_prob_b_prev, log_prob_nb_prev);
 
-    if (previous_timesteps != nullptr) {
+    if (previous_timesteps != nullptr)
+    {
       timesteps = nullptr;
-      for (auto const& child : previous_timesteps->children) {
-        if (child->data == new_timestep) {
-            timesteps = child.get();
-            break;
+      for (auto const &child : previous_timesteps->children)
+      {
+        if (child->data == new_timestep)
+        {
+          timesteps = child.get();
+          break;
         }
       }
-      if (timesteps == nullptr) {
-          timesteps = add_child(previous_timesteps, new_timestep);
+      if (timesteps == nullptr)
+      {
+        timesteps = add_child(previous_timesteps, new_timestep);
       }
     }
     previous_timesteps = nullptr;
@@ -189,18 +250,23 @@ void PathTrie::iterate_to_vec(std::vector<PathTrie*>& output) {
   }
 }
 
-void PathTrie::remove() {
+void PathTrie::remove()
+{
   exists_ = false;
 
-  if (children_.size() == 0) {
-    for (auto child = parent->children_.begin(); child != parent->children_.end(); ++child) {
-      if (child->first == character) {
+  if (children_.size() == 0)
+  {
+    for (auto child = parent->children_.begin(); child != parent->children_.end(); ++child)
+    {
+      if (child->first == character)
+      {
         parent->children_.erase(child);
         break;
       }
     }
 
-    if (parent->children_.size() == 0 && !parent->exists_) {
+    if (parent->children_.size() == 0 && !parent->exists_)
+    {
       parent->remove();
     }
 
@@ -208,37 +274,45 @@ void PathTrie::remove() {
   }
 }
 
-void PathTrie::set_dictionary(std::shared_ptr<PathTrie::FstType> dictionary) {
+void PathTrie::set_dictionary(std::shared_ptr<PathTrie::FstType> dictionary)
+{
   dictionary_ = dictionary;
   dictionary_state_ = dictionary_->Start();
   has_dictionary_ = true;
 }
 
-void PathTrie::set_matcher(std::shared_ptr<fst::SortedMatcher<FstType>> matcher) {
+void PathTrie::set_matcher(std::shared_ptr<fst::SortedMatcher<FstType>> matcher)
+{
   matcher_ = matcher;
 }
 
 #ifdef DEBUG
-void PathTrie::vec(std::vector<PathTrie*>& out) {
-  if (parent != nullptr) {
+void PathTrie::vec(std::vector<PathTrie *> &out)
+{
+  if (parent != nullptr)
+  {
     parent->vec(out);
   }
   out.push_back(this);
 }
 
-void PathTrie::print(const Alphabet& a) {
-  std::vector<PathTrie*> chain;
+void PathTrie::print(const Alphabet &a)
+{
+  std::vector<PathTrie *> chain;
   vec(chain);
   std::string tr;
   printf("characters:\t ");
-  for (PathTrie* el : chain) {
+  for (PathTrie *el : chain)
+  {
     printf("%X ", (unsigned char)(el->character));
-    if (el->character != ROOT_) {
+    if (el->character != ROOT_)
+    {
       tr.append(a.DecodeSingle(el->character));
     }
   }
   printf("\ntimesteps:\t ");
-  for (unsigned int timestep : get_history(timesteps)) {
+  for (unsigned int timestep : get_history(timesteps))
+  {
     printf("%d ", timestep);
   }
   printf("\n");

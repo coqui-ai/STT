@@ -27,6 +27,12 @@ class DecoderState
   TimestepTreeNode timestep_tree_root_{nullptr, 0};
   std::unordered_map<std::string, float> hot_words_;
 
+#ifdef DEBUG
+  void drawdot(const char* format, ...) const;
+#else
+  void drawdot(...) const {};
+#endif
+
 public:
   DecoderState() = default;
   ~DecoderState() = default;

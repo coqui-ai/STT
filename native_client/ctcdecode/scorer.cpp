@@ -209,7 +209,9 @@ bool Scorer::is_scoring_boundary(PathTrie* prefix, size_t new_label)
       return false;
     }
     unsigned char first_byte;
-    int distance_to_boundary = prefix->distance_to_codepoint_boundary(&first_byte, alphabet_);
+    // The distance from new prefix (ie after adding new_label) to the first
+    // byte of the grapheme is the distance from current prefix plus one (new_label).
+    int distance_to_first_byte = prefix->distance_to_codepoint_boundary(&first_byte, alphabet_) + 1;
     int needed_bytes;
     if ((first_byte >> 3) == 0x1E) {
       needed_bytes = 4;
@@ -223,7 +225,7 @@ bool Scorer::is_scoring_boundary(PathTrie* prefix, size_t new_label)
       assert(false); // invalid byte sequence. should be unreachable, disallowed by vocabulary/trie
       return false;
     }
-    return distance_to_boundary == needed_bytes;
+    return distance_to_first_byte == needed_bytes;
   } else {
     return new_label == SPACE_ID_;
   }
@@ -255,12 +257,6 @@ double Scorer::get_log_cond_prob(const std::vector<std::string>::const_iterator&
   double cond_prob = 0.0;
   for (auto it = begin; it != end; ++it) {
     lm::WordIndex word_index = vocab.Index(*it);
-
-    // encounter OOV
-    if (word_index == lm::kUNK) {
-      return OOV_SCORE;
-    }
-
     cond_prob = language_model_->BaseScore(in_state, word_index, out_state);
     std::swap(in_state, out_state);
   }
@@ -268,6 +264,26 @@ double Scorer::get_log_cond_prob(const std::vector<std::string>::const_iterator&
   if (eos) {
     cond_prob = language_model_->BaseScore(in_state, vocab.EndSentence(), out_state);
   }
+
+  // return loge prob
+  return cond_prob/NUM_FLT_LOGE;
+}
+
+double Scorer::get_unk_log_cond_prob()
+{
+  const auto& vocab = language_model_->BaseVocabulary();
+  lm::ngram::State state_vec[2];
+  lm::ngram::State *in_state = &state_vec[0];
+  lm::ngram::State *out_state = &state_vec[1];
+
+
+ language_model_->BeginSentenceWrite(in_state);
+
+  double cond_prob = 0.0;
+  lm::WordIndex word_index = lm::kUNK;
+  cond_prob = language_model_->BaseScore(in_state, word_index, out_state);
+  std::swap(in_state, out_state);
+  cond_prob = language_model_->BaseScore(in_state, vocab.EndSentence(), out_state);
 
   // return loge prob
   return cond_prob/NUM_FLT_LOGE;

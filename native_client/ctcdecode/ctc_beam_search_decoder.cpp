@@ -19,13 +19,12 @@
 
 namespace flt = fl::lib::text;
 
-int
-DecoderState::init(const Alphabet& alphabet,
-                   size_t beam_size,
-                   double cutoff_prob,
-                   size_t cutoff_top_n,
-                   std::shared_ptr<Scorer> ext_scorer,
-                   std::unordered_map<std::string, float> hot_words)
+int DecoderState::init(const Alphabet &alphabet,
+                       size_t beam_size,
+                       double cutoff_prob,
+                       size_t cutoff_top_n,
+                       std::shared_ptr<Scorer> ext_scorer,
+                       std::unordered_map<std::string, float> hot_words)
 {
   // assign special ids
   abs_time_step_ = 0;
@@ -57,10 +56,9 @@ DecoderState::init(const Alphabet& alphabet,
   return 0;
 }
 
-void
-DecoderState::next(const double *probs,
-                   int time_dim,
-                   int class_dim)
+void DecoderState::next(const double *probs,
+                        int time_dim,
+                        int class_dim)
 {
   // prefix search over time
   for (size_t rel_time_step = 0; rel_time_step < time_dim; ++rel_time_step, ++abs_time_step_) {
@@ -73,7 +71,6 @@ DecoderState::next(const double *probs,
     if (prob[blank_id_] < 0.999) {
       start_expanding_ = true;
     }
-
     // If not expanding yet, just continue to next timestep.
     if (!start_expanding_) {
       continue;
@@ -92,14 +89,12 @@ DecoderState::next(const double *probs,
                    std::log(prob[blank_id_]) - std::max(0.0, ext_scorer_->beta);
       full_beam = (num_prefixes == beam_size_);
     }
-
     std::vector<std::pair<size_t, float>> log_prob_idx =
         get_pruned_log_probs(prob, class_dim, cutoff_prob_, cutoff_top_n_);
     // loop over class dim
     for (size_t index = 0; index < log_prob_idx.size(); index++) {
       auto c = log_prob_idx[index].first;
       auto log_prob_c = log_prob_idx[index].second;
-
       for (size_t i = 0; i < prefixes_.size() && i < beam_size_; ++i) {
         auto prefix = prefixes_[i];
         if (full_beam && log_prob_c + prefix->score < min_cutoff) {
@@ -141,7 +136,10 @@ DecoderState::next(const double *probs,
         }
 
         // get new prefix
-        auto prefix_new = prefix->get_path_trie(c, log_prob_c);
+        const bool is_scoring_boundary =
+            ext_scorer_ && ext_scorer_->is_scoring_boundary(prefix, c);
+        auto prefix_new = prefix->get_path_trie(c, log_prob_c, is_scoring_boundary);
+        bool is_oov = prefix_new->first_time_oov;
 
         if (prefix_new != nullptr) {
           // compute probability of current path
@@ -155,6 +153,9 @@ DecoderState::next(const double *probs,
           }
 
           if (ext_scorer_) {
+            if (is_oov) {
+            log_p += -10; // ext_scorer_->get_unk_log_cond_prob();
+           }
             // skip scoring the space in word based LMs
             PathTrie* prefix_to_score;
             if (ext_scorer_->is_utf8_mode()) {
@@ -164,7 +165,7 @@ DecoderState::next(const double *probs,
             }
 
             // language model scoring
-            if (ext_scorer_->is_scoring_boundary(prefix_to_score, c)) {
+            if (is_scoring_boundary) {
               float score = 0.0;
               std::vector<std::string> ngram;
               ngram = ext_scorer_->make_ngram(prefix_to_score);
@@ -176,7 +177,7 @@ DecoderState::next(const double *probs,
                 // that matches a word in the hot-words list
                 for (std::string word : ngram) {
                   iter = hot_words_.find(word);
-                  if ( iter != hot_words_.end() ) {
+                  if (iter != hot_words_.end()) {
                     // increase the log_cond_prob(prefix|LM)
                     hot_boost += iter->second;
                   }
@@ -184,7 +185,20 @@ DecoderState::next(const double *probs,
               }
 
               bool bos = ngram.size() < ext_scorer_->get_max_order();
-              score = ( ext_scorer_->get_log_cond_prob(ngram, bos) + hot_boost ) * ext_scorer_->alpha;
+              float raw_score = ext_scorer_->get_log_cond_prob(ngram, bos);
+              score = (raw_score + hot_boost) * ext_scorer_->alpha;
+              #ifdef DEBUG
+              if (abs_time_step_ > 40 && abs_time_step_ <= 40)
+              {
+                printf("[%03d],  p_i = %02d, ngram = ", abs_time_step_, i);
+                for (const std::string &word : ngram)
+                {
+                  printf("%s ", word.c_str());
+                }
+                printf("= %.2f (scaled = %.2f). prefix change: %.2f --> %.2f\n", raw_score, score, log_p, log_p + score + ext_scorer_->beta);
+              }
+              #endif
+
               log_p += score;
               log_p += ext_scorer_->beta;
             }
@@ -199,9 +213,23 @@ DecoderState::next(const double *probs,
           }
           prefix_new->log_prob_nb_cur =
               log_sum_exp(prefix_new->log_prob_nb_cur, log_p);
-        }
-      }  // end of loop over prefix
-    }    // end of loop over alphabet
+         }
+          #ifdef DEBUG
+         if (abs_time_step_ > 40 && abs_time_step_ <= 40 && c != 0)
+         {
+
+          std::vector<std::string> ngram;
+          ngram = ext_scorer_->make_ngram(prefix_new);
+          printf("[%03d], c= %02d, p_i = %02d, scoring ngram = ", abs_time_step_, c, i);
+          for (const std::string &word : ngram)
+          {
+            printf("%s ", word.c_str());
+          }
+          printf(", new_score= %.3f\n", log_sum_exp(prefix_new->log_prob_b_cur, prefix_new->log_prob_nb_cur));
+         }
+           #endif
+        } // end of loop over prefix
+    }   // end of loop over alphabet
 
     // update log probs
     prefixes_.clear();
@@ -226,18 +254,18 @@ DecoderState::next(const double *probs,
 std::vector<Output>
 DecoderState::decode(size_t num_results) const
 {
-  std::vector<PathTrie*> prefixes_copy = prefixes_;
-  std::unordered_map<const PathTrie*, float> scores;
-  for (PathTrie* prefix : prefixes_copy) {
+  std::vector<PathTrie *> prefixes_copy = prefixes_;
+  std::unordered_map<const PathTrie *, float> scores;
+  for (PathTrie *prefix : prefixes_copy)
+  {
     scores[prefix] = prefix->score;
   }
 
   // score the last word of each prefix that doesn't end with space
   if (ext_scorer_) {
     for (size_t i = 0; i < beam_size_ && i < prefixes_copy.size(); ++i) {
-      PathTrie* prefix = prefixes_copy[i];
-      PathTrie* prefix_boundary = ext_scorer_->is_utf8_mode() ? prefix : prefix->parent;
-      if (prefix_boundary && !ext_scorer_->is_scoring_boundary(prefix_boundary, prefix->character)) {
+      PathTrie *prefix = prefixes_copy[i];
+      if (prefix->parent && !ext_scorer_->is_scoring_boundary(prefix->parent, prefix->character)) {
         float score = 0.0;
         std::vector<std::string> ngram = ext_scorer_->make_ngram(prefix);
         bool bos = ngram.size() < ext_scorer_->get_max_order();
@@ -261,7 +289,7 @@ DecoderState::decode(size_t num_results) const
   for (size_t i = 0; i < num_returned; ++i) {
     Output output;
     prefixes_copy[i]->get_path_vec(output.tokens);
-    output.timesteps  = get_history(prefixes_copy[i]->timesteps, &timestep_tree_root_);
+    output.timesteps = get_history(prefixes_copy[i]->timesteps, &timestep_tree_root_);
     assert(output.tokens.size() == output.timesteps.size());
     output.confidence = scores[prefixes_copy[i]];
     outputs.push_back(output);
@@ -272,18 +300,18 @@ DecoderState::decode(size_t num_results) const
 
 int
 FlashlightDecoderState::init(
-  const Alphabet& alphabet,
-  size_t beam_size,
-  double beam_threshold,
-  size_t cutoff_top_n,
-  std::shared_ptr<Scorer> ext_scorer,
-  FlashlightDecoderState::LMTokenType token_type,
-  flt::Dictionary lm_tokens,
-  FlashlightDecoderState::DecoderType decoder_type,
-  double silence_score,
-  bool merge_with_log_add,
-  FlashlightDecoderState::CriterionType criterion_type,
-  std::vector<float> transitions)
+    const Alphabet &alphabet,
+    size_t beam_size,
+    double beam_threshold,
+    size_t cutoff_top_n,
+    std::shared_ptr<Scorer> ext_scorer,
+    FlashlightDecoderState::LMTokenType token_type,
+    flt::Dictionary lm_tokens,
+    FlashlightDecoderState::DecoderType decoder_type,
+    double silence_score,
+    bool merge_with_log_add,
+    FlashlightDecoderState::CriterionType criterion_type,
+    std::vector<float> transitions)
 {
   // Lexicon-free decoder must use single-token based LM
   if (decoder_type == LexiconFree) {
@@ -299,17 +327,20 @@ FlashlightDecoderState::init(
 
   // Convert our criterion type to Flashlight type
   flt::CriterionType flt_criterion;
-  switch (criterion_type) {
-    case ASG: flt_criterion = flt::CriterionType::ASG; break;
-    case CTC: flt_criterion = flt::CriterionType::CTC; break;
-    case S2S: flt_criterion = flt::CriterionType::S2S; break;
-    default: assert(false);
+  switch (criterion_type){
+  case ASG: flt_criterion = flt::CriterionType::ASG;
+    break;
+  case CTC: flt_criterion = flt::CriterionType::CTC;
+    break;
+  case S2S: flt_criterion = flt::CriterionType::S2S;
+    break;
+  default: assert(false);
   }
 
   // Build Trie
   std::shared_ptr<flt::Trie> trie = nullptr;
   auto startState = ext_scorer->start(false);
-  if (token_type == Aggregate || decoder_type == LexiconBased) {
+  if (token_type == Aggregate || decoder_type == LexiconBased)  {
     trie = std::make_shared<flt::Trie>(lm_tokens.indexSize(), alphabet.GetSpaceLabel());
     for (int i = 0; i < lm_tokens.entrySize(); ++i) {
       const std::string entry = lm_tokens.getEntry(i);
@@ -333,16 +364,18 @@ FlashlightDecoderState::init(
   // Query unknown token score
   int unknown_word_index = lm_tokens.getIndex("<unk>");
   float unknown_score = -std::numeric_limits<float>::infinity();
-  if (token_type == Aggregate) {
+  if (token_type == Aggregate)
+  {
     std::tie(std::ignore, unknown_score) =
-      ext_scorer->score(startState, unknown_word_index);
+        ext_scorer->score(startState, unknown_word_index);
   }
 
   // Make sure conversions from uint to int below don't trip us
   assert(beam_size < INT_MAX);
   assert(cutoff_top_n < INT_MAX);
 
-  if (decoder_type == LexiconBased) {
+  if (decoder_type == LexiconBased)
+  {
     flt::LexiconDecoderOptions opts;
     opts.beamSize = static_cast<int>(beam_size);
     opts.beamSizeToken = static_cast<int>(cutoff_top_n);
@@ -354,16 +387,17 @@ FlashlightDecoderState::init(
     opts.logAdd = merge_with_log_add;
     opts.criterionType = flt_criterion;
     decoder_impl_.reset(new flt::LexiconDecoder(
-      opts,
-      trie,
-      ext_scorer,
-      alphabet.GetSpaceLabel(), // silence index
-      alphabet.GetSize(), // blank index
-      unknown_word_index,
-      transitions,
-      token_type == Single)
-    );
-  } else {
+        opts,
+        trie,
+        ext_scorer,
+        alphabet.GetSpaceLabel(), // silence index
+        alphabet.GetSize(),       // blank index
+        unknown_word_index,
+        transitions,
+        token_type == Single));
+  }
+  else
+  {
     flt::LexiconFreeDecoderOptions opts;
     opts.beamSize = static_cast<int>(beam_size);
     opts.beamSizeToken = static_cast<int>(cutoff_top_n);
@@ -373,12 +407,11 @@ FlashlightDecoderState::init(
     opts.logAdd = merge_with_log_add;
     opts.criterionType = flt_criterion;
     decoder_impl_.reset(new flt::LexiconFreeDecoder(
-      opts,
-      ext_scorer,
-      alphabet.GetSpaceLabel(), // silence index
-      alphabet.GetSize(), // blank index
-      transitions)
-    );
+        opts,
+        ext_scorer,
+        alphabet.GetSpaceLabel(), // silence index
+        alphabet.GetSize(),       // blank index
+        transitions));
   }
 
   // Init decoder for stream
@@ -387,11 +420,10 @@ FlashlightDecoderState::init(
   return 0;
 }
 
-void
-FlashlightDecoderState::next(
-  const double *probs,
-  int time_dim,
-  int class_dim)
+void FlashlightDecoderState::next(
+    const double *probs,
+    int time_dim,
+    int class_dim)
 {
   std::vector<float> probs_f(probs, probs + (time_dim * class_dim) + 1);
   decoder_impl_->decodeStep(probs_f.data(), time_dim, class_dim);
@@ -402,8 +434,10 @@ FlashlightDecoderState::intermediate(bool prune)
 {
   flt::DecodeResult result = decoder_impl_->getBestHypothesis();
   std::vector<int> valid_words;
-  for (int w : result.words) {
-    if (w != -1) {
+  for (int w : result.words)
+  {
+    if (w != -1)
+    {
       valid_words.push_back(w);
     }
   }
@@ -413,7 +447,8 @@ FlashlightDecoderState::intermediate(bool prune)
   ret.language_model_score = result.lmScore;
   ret.words = lm_tokens_.mapIndicesToEntries(valid_words); // how does this interact with token-based decoding
   ret.tokens = result.tokens;
-  if (prune) {
+  if (prune)
+  {
     decoder_impl_->prune();
   }
   return ret;
@@ -425,10 +460,13 @@ FlashlightDecoderState::decode(size_t num_results)
   decoder_impl_->decodeEnd();
   std::vector<flt::DecodeResult> flt_results = decoder_impl_->getAllFinalHypothesis();
   std::vector<FlashlightOutput> ret;
-  for (auto result : flt_results) {
+  for (auto result : flt_results)
+  {
     std::vector<int> valid_words;
-    for (int w : result.words) {
-      if (w != -1) {
+    for (int w : result.words)
+    {
+      if (w != -1)
+      {
         valid_words.push_back(w);
       }
     }
@@ -456,7 +494,7 @@ std::vector<Output> ctc_beam_search_decoder(
     std::unordered_map<std::string, float> hot_words,
     size_t num_results)
 {
-  VALID_CHECK_EQ(alphabet.GetSize()+1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
+  VALID_CHECK_EQ(alphabet.GetSize() + 1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
   DecoderState state;
   state.init(alphabet, beam_size, cutoff_prob, cutoff_top_n, ext_scorer, hot_words);
   state.next(probs, time_dim, class_dim);
@@ -469,7 +507,7 @@ ctc_beam_search_decoder_batch(
     int batch_size,
     int time_dim,
     int class_dim,
-    const int* seq_lengths,
+    const int *seq_lengths,
     int seq_lengths_size,
     const Alphabet &alphabet,
     size_t beam_size,
@@ -487,9 +525,10 @@ ctc_beam_search_decoder_batch(
 
   // enqueue the tasks of decoding
   std::vector<std::future<std::vector<Output>>> res;
-  for (size_t i = 0; i < batch_size; ++i) {
+  for (size_t i = 0; i < batch_size; ++i)
+  {
     res.emplace_back(pool.enqueue(ctc_beam_search_decoder,
-                                  &probs[i*time_dim*class_dim],
+                                  &probs[i * time_dim * class_dim],
                                   seq_lengths[i],
                                   class_dim,
                                   alphabet,
@@ -503,7 +542,8 @@ ctc_beam_search_decoder_batch(
 
   // get decoding results
   std::vector<std::vector<Output>> batch_results;
-  for (size_t i = 0; i < batch_size; ++i) {
+  for (size_t i = 0; i < batch_size; ++i)
+  {
     batch_results.emplace_back(res[i].get());
   }
   return batch_results;
@@ -511,16 +551,16 @@ ctc_beam_search_decoder_batch(
 
 std::vector<FlashlightOutput>
 flashlight_beam_search_decoder(
-    const double* probs,
+    const double *probs,
     int time_dim,
     int class_dim,
-    const Alphabet& alphabet,
+    const Alphabet &alphabet,
     size_t beam_size,
     double beam_threshold,
     size_t cutoff_top_n,
     std::shared_ptr<Scorer> ext_scorer,
     FlashlightDecoderState::LMTokenType token_type,
-    const std::vector<std::string>& lm_tokens,
+    const std::vector<std::string> &lm_tokens,
     FlashlightDecoderState::DecoderType decoder_type,
     double silence_score,
     bool merge_with_log_add,
@@ -528,25 +568,26 @@ flashlight_beam_search_decoder(
     std::vector<float> transitions,
     size_t num_results)
 {
-  VALID_CHECK_EQ(alphabet.GetSize()+1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
+  VALID_CHECK_EQ(alphabet.GetSize() + 1, class_dim, "Number of output classes in acoustic model does not match number of labels in the alphabet file. Alphabet file must be the same one that was used to train the acoustic model.");
   flt::Dictionary tokens_dict;
-  for (auto str : lm_tokens) {
+  for (auto str : lm_tokens)
+  {
     tokens_dict.addEntry(str);
   }
   FlashlightDecoderState state;
   state.init(
-    alphabet,
-    beam_size,
-    beam_threshold,
-    cutoff_top_n,
-    ext_scorer,
-    token_type,
-    tokens_dict,
-    decoder_type,
-    silence_score,
-    merge_with_log_add,
-    criterion_type,
-    transitions);
+      alphabet,
+      beam_size,
+      beam_threshold,
+      cutoff_top_n,
+      ext_scorer,
+      token_type,
+      tokens_dict,
+      decoder_type,
+      silence_score,
+      merge_with_log_add,
+      criterion_type,
+      transitions);
   state.next(probs, time_dim, class_dim);
   return state.decode(num_results);
 }
@@ -557,15 +598,15 @@ flashlight_beam_search_decoder_batch(
     int batch_size,
     int time_dim,
     int class_dim,
-    const int* seq_lengths,
+    const int *seq_lengths,
     int seq_lengths_size,
-    const Alphabet& alphabet,
+    const Alphabet &alphabet,
     size_t beam_size,
     double beam_threshold,
     size_t cutoff_top_n,
     std::shared_ptr<Scorer> ext_scorer,
     FlashlightDecoderState::LMTokenType token_type,
-    const std::vector<std::string>& lm_tokens,
+    const std::vector<std::string> &lm_tokens,
     FlashlightDecoderState::DecoderType decoder_type,
     double silence_score,
     bool merge_with_log_add,
@@ -581,9 +622,10 @@ flashlight_beam_search_decoder_batch(
 
   // enqueue the tasks of decoding
   std::vector<std::future<std::vector<FlashlightOutput>>> res;
-  for (size_t i = 0; i < batch_size; ++i) {
+  for (size_t i = 0; i < batch_size; ++i)
+  {
     res.emplace_back(pool.enqueue(flashlight_beam_search_decoder,
-                                  &probs[i*time_dim*class_dim],
+                                  &probs[i * time_dim * class_dim],
                                   seq_lengths[i],
                                   class_dim,
                                   alphabet,
@@ -603,7 +645,8 @@ flashlight_beam_search_decoder_batch(
 
   // get decoding results
   std::vector<std::vector<FlashlightOutput>> batch_results;
-  for (size_t i = 0; i < batch_size; ++i) {
+  for (size_t i = 0; i < batch_size; ++i)
+  {
     batch_results.emplace_back(res[i].get());
   }
 
