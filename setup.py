@@ -31,6 +31,7 @@ def main():
         "soundfile",
         "tqdm",
         "webdataset",
+        "miniaudio",
     ]
 
     decoder_pypi_dep = ["coqui_stt_ctcdecoder == {}".format(version)]
