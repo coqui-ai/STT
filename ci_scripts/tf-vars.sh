@@ -135,19 +135,36 @@ fi
 # Build for generic amd64 platforms, no device-specific optimization
 # See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for targetting specific CPUs
 
+if [ "${OS}" != "${CI_MSYS_VERSION}" ]; then
+    BAZEL_EXTRA_FLAGS="--config=noaws --config=nogcp --config=nohdfs --config=nonccl"
+fi
+
 if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     BAZEL_OPT_FLAGS="--copt=/arch:AVX"
 elif [ "${OS}" = "Darwin" ]; then
-    if [ "$(uname -m)" = "arm64" ]; then
-        # clang on M1 Macs doesn't support -march=x86-64
-        BAZEL_OPT_FLAGS_MACOS_X86_64=""
+    FROM="$(uname | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+    if [ "$SYSTEM_TARGET" = "host" ]; then
+        TO="$FROM"
     else
-        BAZEL_OPT_FLAGS_MACOS_X86_64="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
+        TO="$SYSTEM_TARGET"
     fi
-    BAZEL_OPT_FLAGS_MACOS_ARM64="--xcode_version 12.2"
-    BAZEL_OPT_FLAGS="--xcode_version 12.2"
-else
-    BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
+
+    if [ "$FROM" = "darwin-x86_64" -a "$TO" = "darwin-x86_64" ]; then
+        BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
+        if [ "${CI}" = true ]; then
+            BAZEL_EXTRA_FLAGS="${BAZEL_EXTRA_FLAGS} --macos_minimum_os 10.10 --macos_sdk_version 10.15"
+        fi
+    elif [ "$FROM" = "darwin-x86_64" -a "$TO" = "darwin-arm64" ]; then
+        BAZEL_OPT_FLAGS=""
+        if [ "${CI}" = true ]; then
+            BAZEL_EXTRA_FLAGS="--config=macos_arm64 --xcode_version 12.2 --macos_minimum_os 11.0 --macos_sdk_version 11.0"
+        fi
+    elif [ "$FROM" = "darwin-arm64" -a "$TO" = "darwin-arm64" ]; then
+        BAZEL_OPT_FLAGS=""
+    elif [ "$FROM" = "darwin-arm64" -a "$TO" = "darwin-x86_64" ]; then
+        echo "TensorFlow does not support building for x86_64 on arm64" 1>&2
+        exit 1
+    fi
 fi
 
 BAZEL_OUTPUT_CACHE_DIR="${DS_ROOT_TASK}/.bazel_cache/"
@@ -174,19 +191,6 @@ BAZEL_ANDROID_ARM64_FLAGS="--config=android_arm64"
 BAZEL_ANDROID_X86_64_FLAGS="--config=android_x86_64"
 BAZEL_IOS_ARM64_FLAGS="--config=ios_arm64"
 BAZEL_IOS_X86_64_FLAGS="--config=ios_x86_64"
-
-if [ "${OS}" != "${CI_MSYS_VERSION}" ]; then
-    BAZEL_EXTRA_FLAGS="--config=noaws --config=nogcp --config=nohdfs --config=nonccl"
-fi
-
-if [ "${OS}" = "Darwin" ]; then
-    BAZEL_EXTRA_FLAGS_MACOS_X86_64="${BAZEL_EXTRA_FLAGS}"
-    BAZEL_EXTRA_FLAGS_MACOS_ARM64="${BAZEL_EXTRA_FLAGS} --config=macos_arm64"
-    if [ "${CI}" = true ]; then
-        BAZEL_EXTRA_FLAGS_MACOS_X86_64="${BAZEL_EXTRA_FLAGS_MACOS_X86_64} --macos_minimum_os 10.10 --macos_sdk_version 10.15"
-        BAZEL_EXTRA_FLAGS_MACOS_ARM64="${BAZEL_EXTRA_FLAGS_MACOS_ARM64} --macos_minimum_os 11.0 --macos_sdk_version 11.0"
-    fi
-fi
 
 ### Define build targets that we will re-ues in sourcing scripts.
 BUILD_TARGET_LIB_CPP_API="//tensorflow:tensorflow_cc"
