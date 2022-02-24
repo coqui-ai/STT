@@ -1539,7 +1539,7 @@ jobs:
         uses: ./.github/actions/get_cache_key
         with:
           arch: "macOS-${{ matrix.arch }}"
-          extras: "0"
+          extras: "1"
       - id: check_artifact_exists
         uses: ./.github/actions/check_artifact_exists
         with:
@@ -1569,6 +1569,41 @@ jobs:
           else
             sudo xcode-select --switch /Applications/Xcode_12.1.1.app/Contents/Developer
           fi
+      - uses: actions/cache@v2
+        id: cache
+        if: matrix.arch == 'arm64'
+        with:
+          path: ~/arm-target
+          key: ${{ runner.os }}-arm-brew-cache
+      - name: Install arm64 deps
+        if: matrix.arch == 'arm64' && steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -xe
+          mkdir -p ~/arm-target/bin
+          mkdir -p ~/arm-target/brew-cache
+          export PATH="$HOME/arm-target/bin:$PATH"
+
+          cd ~/arm-target
+          mkdir arm-brew && curl -L https://github.com/Homebrew/brew/tarball/77359472938971510506cb2337a665db1d46534d | tar xz --strip 1 -C arm-brew
+
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          export HOMEBREW_CACHE=~/arm-target/brew-cache
+          export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+          ~/arm-target/arm-brew/bin/brew fetch --deps --bottle-tag=arm64_big_sur sox opusfile |\
+             grep -E "(Downloaded to:|Already downloaded:)" |\
+             grep -v pkg-config |\
+             awk '{ print $3 }' |\
+             xargs -n 1 ~/arm-target/arm-brew/bin/brew install --ignore-dependencies --force-bottle
+
+          # Install host version of pkg-config so we can call it in the build system
+          ~/arm-target/arm-brew/bin/brew install pkg-config
+          ln -s ~/arm-target/arm-homebrew/bin/pkg-config ~/arm-target/bin/arm-pkg-config
+      - run: |
+          echo "$HOME/arm-target/bin" >> $GITHUB_PATH
+        if: matrix.arch == 'arm64'
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: matrix.arch == 'arm64'
       - run: ./ci_scripts/tf-setup.sh
       - run: |
           # Taken from https://www.tensorflow.org/install/source
