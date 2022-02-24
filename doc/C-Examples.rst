@@ -8,10 +8,13 @@ Creating a model instance and loading model
 
 .. literalinclude:: ../native_client/client.cc
    :language: c
-   :linenos:
-   :lineno-match:
-   :start-after: sphinx-doc: c_ref_model_start
-   :end-before: sphinx-doc: c_ref_model_stop
+   :start-after: sphinx-doc: c_ref_model_1_start
+   :end-before: sphinx-doc: c_ref_model_1_stop
+
+.. literalinclude:: ../native_client/client.cc
+   :language: c
+   :start-after: sphinx-doc: c_ref_model_2_start
+   :end-before: sphinx-doc: c_ref_model_2_stop
 
 Transcribing audio with the loaded model
 ----------------------------------------

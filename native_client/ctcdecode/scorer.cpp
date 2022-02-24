@@ -1,22 +1,22 @@
 #ifdef _MSC_VER
-  #include <stdlib.h>
-  #include <io.h>
-  #define NOMINMAX
-  #include <windows.h>
+#include <io.h>
+#include <stdlib.h>
+#define NOMINMAX
+#include <windows.h>
 
-  #define R_OK    4       /* Read permission.  */
-  #define W_OK    2       /* Write permission.  */
-  #define F_OK    0       /* Existence.  */
+#define R_OK 4 /* Read permission.  */
+#define W_OK 2 /* Write permission.  */
+#define F_OK 0 /* Existence.  */
 
-  #define access _access
+#define access _access
 
-#else          /* _MSC_VER  */
-  #include <unistd.h>
+#else /* _MSC_VER  */
+#include <unistd.h>
 #endif
 
 #include "scorer.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 #include "kenlm/lm/config.hh"
 #include "kenlm/lm/model.hh"
@@ -27,36 +27,53 @@
 #include "decoder_utils.h"
 
 using namespace fl::lib::text;
+using namespace std;
 
 static const int32_t MAGIC = 'TRIE';
 static const int32_t FILE_VERSION = 6;
 
-Scorer::Scorer()
-{
-}
+Scorer::Scorer() {}
 
-Scorer::~Scorer()
-{
-}
+Scorer::~Scorer() {}
 
 int
-Scorer::init(const std::string& lm_path,
-             const Alphabet& alphabet)
+Scorer::init_from_filepath(const string& lm_path, const Alphabet& alphabet)
 {
   set_alphabet(alphabet);
-  return load_lm(lm_path);
+  return load_lm_filepath(lm_path);
 }
 
 int
-Scorer::init(const std::string& lm_path,
-             const std::string& alphabet_config_path)
+Scorer::init_from_filepath(const string& lm_path,
+                           const string& alphabet_config_path)
 {
-  int err = alphabet_.init(alphabet_config_path.c_str());
+  Alphabet a;
+  int err = a.init(alphabet_config_path.c_str());
   if (err != 0) {
     return err;
   }
-  setup_char_map();
-  return load_lm(lm_path);
+  set_alphabet(a);
+  return load_lm_filepath(lm_path);
+}
+
+int
+Scorer::init_from_buffer(const string& buffer, const Alphabet& alphabet)
+{
+  set_alphabet(alphabet);
+  return load_lm_buffer(buffer);
+}
+
+int
+Scorer::init_from_buffer(const string& buffer,
+                         const string& alphabet_config_path)
+{
+  Alphabet a;
+  int err = a.init(alphabet_config_path.c_str());
+  if (err != 0) {
+    return err;
+  }
+  set_alphabet(a);
+  return load_lm_buffer(buffer);
 }
 
 void
@@ -66,7 +83,8 @@ Scorer::set_alphabet(const Alphabet& alphabet)
   setup_char_map();
 }
 
-void Scorer::setup_char_map()
+void
+Scorer::setup_char_map()
 {
   // (Re-)Initialize character map
   char_map_.clear();
@@ -81,10 +99,11 @@ void Scorer::setup_char_map()
   }
 }
 
-int Scorer::load_lm(const std::string& lm_path)
+int
+Scorer::load_lm_filepath(const string& path)
 {
   // Check if file is readable to avoid KenLM throwing an exception
-  const char* filename = lm_path.c_str();
+  const char* filename = path.c_str();
   if (access(filename, R_OK) != 0) {
     return STT_ERR_SCORER_UNREADABLE;
   }
@@ -99,101 +118,142 @@ int Scorer::load_lm(const std::string& lm_path)
   lm::ngram::Config config;
   config.load_method = util::LoadMethod::LAZY;
   language_model_.reset(lm::ngram::LoadVirtual(filename, config));
+
   max_order_ = language_model_->Order();
+  uint64_t trie_offset = language_model_->GetEndOfSearchOffset();
 
   uint64_t package_size;
   {
     util::scoped_fd fd(util::OpenReadOrThrow(filename));
     package_size = util::SizeFile(fd.get());
   }
-  uint64_t trie_offset = language_model_->GetEndOfSearchOffset();
+
   if (package_size <= trie_offset) {
     // File ends without a trie structure
     return STT_ERR_SCORER_NO_TRIE;
   }
 
   // Read metadata and trie from file
-  std::ifstream fin(lm_path, std::ios::binary);
+  ifstream fin(filename, ios::binary);
   fin.seekg(trie_offset);
-  return load_trie(fin, lm_path);
+  return load_trie_mmap(fin, path);
 }
 
-int Scorer::load_trie(std::ifstream& fin, const std::string& file_path)
+int
+Scorer::load_lm_buffer(const string& buffer)
+{
+  // Load the LM
+  lm::ngram::Config config;
+  config.load_method = util::LoadMethod::LAZY;
+  language_model_.reset(
+    lm::ngram::LoadVirtual(buffer.c_str(), buffer.size(), config));
+
+  max_order_ = language_model_->Order();
+
+  uint64_t trie_offset = language_model_->GetEndOfSearchOffset();
+  stringstream stst(buffer);
+  stst.seekg(trie_offset);
+  return load_trie_buffer(stst);
+}
+
+int
+Scorer::load_trie_buffer(stringstream& stream)
+{
+  return load_trie_impl(stream, "", true);
+}
+
+int
+Scorer::load_trie_mmap(ifstream& stream, const string& file_path)
+{
+  return load_trie_impl(stream, file_path, false);
+}
+
+int
+Scorer::load_trie_impl(basic_istream<char>& stream,
+                       const string& file_path,
+                       bool load_from_bytes)
 {
   int magic;
-  fin.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+  stream.read(reinterpret_cast<char*>(&magic), sizeof(magic));
   if (magic != MAGIC) {
-    std::cerr << "Error: Can't parse scorer file, invalid header. Try updating "
-                 "your scorer file." << std::endl;
+    cerr << "Error: Can't parse scorer file, invalid header. Try updating "
+            "your scorer file."
+         << endl;
     return STT_ERR_SCORER_INVALID_TRIE;
   }
 
   int version;
-  fin.read(reinterpret_cast<char*>(&version), sizeof(version));
+  stream.read(reinterpret_cast<char*>(&version), sizeof(version));
   if (version != FILE_VERSION) {
-    std::cerr << "Error: Scorer file version mismatch (" << version
-              << " instead of expected " << FILE_VERSION
-              << "). ";
+    cerr << "Error: Scorer file version mismatch (" << version
+         << " instead of expected " << FILE_VERSION << "). ";
     if (version < FILE_VERSION) {
-      std::cerr << "Update your scorer file.";
+      cerr << "Update your scorer file.";
     } else {
-      std::cerr << "Downgrade your scorer file or update your version of Coqui STT.";
+      cerr << "Downgrade your scorer file or update your version of Coqui STT.";
     }
-    std::cerr << std::endl;
+    cerr << endl;
     return STT_ERR_SCORER_VERSION_MISMATCH;
   }
 
-  fin.read(reinterpret_cast<char*>(&is_utf8_mode_), sizeof(is_utf8_mode_));
+  stream.read(reinterpret_cast<char*>(&is_utf8_mode_), sizeof(is_utf8_mode_));
 
   // Read hyperparameters from header
   double alpha, beta;
-  fin.read(reinterpret_cast<char*>(&alpha), sizeof(alpha));
-  fin.read(reinterpret_cast<char*>(&beta), sizeof(beta));
+  stream.read(reinterpret_cast<char*>(&alpha), sizeof(alpha));
+  stream.read(reinterpret_cast<char*>(&beta), sizeof(beta));
   reset_params(alpha, beta);
 
   fst::FstReadOptions opt;
-  opt.mode = fst::FstReadOptions::MAP;
-  opt.source = file_path;
-  dictionary.reset(FstType::Read(fin, opt));
+  if (load_from_bytes) {
+    dictionary.reset(fst::ConstFst<fst::StdArc>::Read(stream, opt));
+  } else {
+    opt.mode = fst::FstReadOptions::MAP;
+    opt.source = file_path;
+    dictionary.reset(FstType::Read(stream, opt));
+  }
   return STT_ERR_OK;
 }
 
-bool Scorer::save_dictionary(const std::string& path, bool append_instead_of_overwrite)
+bool
+Scorer::save_dictionary(const string& path, bool append_instead_of_overwrite)
 {
-  std::ios::openmode om;
+  ios::openmode om;
   if (append_instead_of_overwrite) {
-    om = std::ios::in|std::ios::out|std::ios::binary|std::ios::ate;
+    om = ios::in | ios::out | ios::binary | ios::ate;
   } else {
-    om = std::ios::out|std::ios::binary;
+    om = ios::out | ios::binary;
   }
-  std::fstream fout(path, om);
-  if (!fout ||fout.bad()) {
-    std::cerr << "Error opening '" << path << "'" << std::endl;
+  fstream fout(path, om);
+  if (!fout || fout.bad()) {
+    cerr << "Error opening '" << path << "'" << endl;
     return false;
   }
   fout.write(reinterpret_cast<const char*>(&MAGIC), sizeof(MAGIC));
   if (fout.bad()) {
-    std::cerr << "Error writing MAGIC '" << path << "'" << std::endl;
+    cerr << "Error writing MAGIC '" << path << "'" << endl;
     return false;
   }
-  fout.write(reinterpret_cast<const char*>(&FILE_VERSION), sizeof(FILE_VERSION));
+  fout.write(reinterpret_cast<const char*>(&FILE_VERSION),
+             sizeof(FILE_VERSION));
   if (fout.bad()) {
-    std::cerr << "Error writing FILE_VERSION '" << path << "'" << std::endl;
+    cerr << "Error writing FILE_VERSION '" << path << "'" << endl;
     return false;
   }
-  fout.write(reinterpret_cast<const char*>(&is_utf8_mode_), sizeof(is_utf8_mode_));
+  fout.write(reinterpret_cast<const char*>(&is_utf8_mode_),
+             sizeof(is_utf8_mode_));
   if (fout.bad()) {
-    std::cerr << "Error writing is_utf8_mode '" << path << "'" << std::endl;
+    cerr << "Error writing is_utf8_mode '" << path << "'" << endl;
     return false;
   }
   fout.write(reinterpret_cast<const char*>(&alpha), sizeof(alpha));
   if (fout.bad()) {
-    std::cerr << "Error writing alpha '" << path << "'" << std::endl;
+    cerr << "Error writing alpha '" << path << "'" << endl;
     return false;
   }
   fout.write(reinterpret_cast<const char*>(&beta), sizeof(beta));
   if (fout.bad()) {
-    std::cerr << "Error writing beta '" << path << "'" << std::endl;
+    cerr << "Error writing beta '" << path << "'" << endl;
     return false;
   }
   fst::FstWriteOptions opt;
@@ -202,14 +262,16 @@ bool Scorer::save_dictionary(const std::string& path, bool append_instead_of_ove
   return dictionary->Write(fout, opt);
 }
 
-bool Scorer::is_scoring_boundary(PathTrie* prefix, size_t new_label)
+bool
+Scorer::is_scoring_boundary(PathTrie* prefix, size_t new_label)
 {
   if (is_utf8_mode()) {
     if (prefix->character == -1) {
       return false;
     }
     unsigned char first_byte;
-    int distance_to_boundary = prefix->distance_to_codepoint_boundary(&first_byte, alphabet_);
+    int distance_to_boundary =
+      prefix->distance_to_codepoint_boundary(&first_byte, alphabet_);
     int needed_bytes;
     if ((first_byte >> 3) == 0x1E) {
       needed_bytes = 4;
@@ -220,7 +282,8 @@ bool Scorer::is_scoring_boundary(PathTrie* prefix, size_t new_label)
     } else if ((first_byte >> 7) == 0x00) {
       needed_bytes = 1;
     } else {
-      assert(false); // invalid byte sequence. should be unreachable, disallowed by vocabulary/trie
+      assert(false); // invalid byte sequence. should be unreachable, disallowed
+                     // by vocabulary/trie
       return false;
     }
     return distance_to_boundary == needed_bytes;
@@ -229,22 +292,22 @@ bool Scorer::is_scoring_boundary(PathTrie* prefix, size_t new_label)
   }
 }
 
-double Scorer::get_log_cond_prob(const std::vector<std::string>& words,
-                                 bool bos,
-                                 bool eos)
+double
+Scorer::get_log_cond_prob(const vector<string>& words, bool bos, bool eos)
 {
   return get_log_cond_prob(words.begin(), words.end(), bos, eos);
 }
 
-double Scorer::get_log_cond_prob(const std::vector<std::string>::const_iterator& begin,
-                                 const std::vector<std::string>::const_iterator& end,
-                                 bool bos,
-                                 bool eos)
+double
+Scorer::get_log_cond_prob(const vector<string>::const_iterator& begin,
+                          const vector<string>::const_iterator& end,
+                          bool bos,
+                          bool eos)
 {
   const auto& vocab = language_model_->BaseVocabulary();
   lm::ngram::State state_vec[2];
-  lm::ngram::State *in_state = &state_vec[0];
-  lm::ngram::State *out_state = &state_vec[1];
+  lm::ngram::State* in_state = &state_vec[0];
+  lm::ngram::State* out_state = &state_vec[1];
 
   if (bos) {
     language_model_->BeginSentenceWrite(in_state);
@@ -262,29 +325,33 @@ double Scorer::get_log_cond_prob(const std::vector<std::string>::const_iterator&
     }
 
     cond_prob = language_model_->BaseScore(in_state, word_index, out_state);
-    std::swap(in_state, out_state);
+    swap(in_state, out_state);
   }
 
   if (eos) {
-    cond_prob = language_model_->BaseScore(in_state, vocab.EndSentence(), out_state);
+    cond_prob =
+      language_model_->BaseScore(in_state, vocab.EndSentence(), out_state);
   }
 
   // return loge prob
-  return cond_prob/NUM_FLT_LOGE;
+  return cond_prob / NUM_FLT_LOGE;
 }
 
-void Scorer::reset_params(float alpha, float beta)
+void
+Scorer::reset_params(float alpha, float beta)
 {
   this->alpha = alpha;
   this->beta = beta;
 }
 
-std::vector<std::string> Scorer::split_labels_into_scored_units(const std::vector<unsigned int>& labels)
+vector<string>
+Scorer::split_labels_into_scored_units(const vector<unsigned int>& labels)
 {
-  if (labels.empty()) return {};
+  if (labels.empty())
+    return {};
 
-  std::string s = alphabet_.Decode(labels);
-  std::vector<std::string> words;
+  string s = alphabet_.Decode(labels);
+  vector<string> words;
   if (is_utf8_mode_) {
     words = split_into_codepoints(s);
   } else {
@@ -293,9 +360,10 @@ std::vector<std::string> Scorer::split_labels_into_scored_units(const std::vecto
   return words;
 }
 
-std::vector<std::string> Scorer::make_ngram(PathTrie* prefix)
+vector<string>
+Scorer::make_ngram(PathTrie* prefix)
 {
-  std::vector<std::string> ngram;
+  vector<string> ngram;
   PathTrie* current_node = prefix;
   PathTrie* new_node = nullptr;
 
@@ -304,7 +372,7 @@ std::vector<std::string> Scorer::make_ngram(PathTrie* prefix)
       break;
     }
 
-    std::vector<unsigned int> prefix_vec;
+    vector<unsigned int> prefix_vec;
 
     if (is_utf8_mode_) {
       new_node = current_node->get_prev_grapheme(prefix_vec, alphabet_);
@@ -314,14 +382,15 @@ std::vector<std::string> Scorer::make_ngram(PathTrie* prefix)
     current_node = new_node->parent;
 
     // reconstruct word
-    std::string word = alphabet_.Decode(prefix_vec);
+    string word = alphabet_.Decode(prefix_vec);
     ngram.push_back(word);
   }
-  std::reverse(ngram.begin(), ngram.end());
+  reverse(ngram.begin(), ngram.end());
   return ngram;
 }
 
-void Scorer::fill_dictionary(const std::unordered_set<std::string>& vocabulary)
+void
+Scorer::fill_dictionary(const unordered_set<string>& vocabulary)
 {
   // ConstFst is immutable, so we need to use a MutableFst to create the trie,
   // and then we convert to a ConstFst for the decoder and for storing on disk.
@@ -329,7 +398,8 @@ void Scorer::fill_dictionary(const std::unordered_set<std::string>& vocabulary)
   // For each unigram convert to ints and put in trie
   for (const auto& word : vocabulary) {
     if (word != START_TOKEN && word != UNK_TOKEN && word != END_TOKEN) {
-      add_word_to_dictionary(word, char_map_, is_utf8_mode_, SPACE_ID_ + 1, &dictionary);
+      add_word_to_dictionary(
+        word, char_map_, is_utf8_mode_, SPACE_ID_ + 1, &dictionary);
     }
   }
 
@@ -341,7 +411,7 @@ void Scorer::fill_dictionary(const std::unordered_set<std::string>& vocabulary)
    * can greatly increase the size of the FST
    */
   fst::RmEpsilon(&dictionary);
-  std::unique_ptr<fst::StdVectorFst> new_dict(new fst::StdVectorFst);
+  unique_ptr<fst::StdVectorFst> new_dict(new fst::StdVectorFst);
 
   /* This makes the FST deterministic, meaning for any string input there's
    * only one possible state the FST could be in.  It is assumed our
@@ -356,14 +426,14 @@ void Scorer::fill_dictionary(const std::unordered_set<std::string>& vocabulary)
   fst::Minimize(new_dict.get());
 
   // Now we convert the MutableFst to a ConstFst (Scorer::FstType) via its ctor
-  std::unique_ptr<FstType> converted(new FstType(*new_dict));
-  this->dictionary = std::move(converted);
+  unique_ptr<FstType> converted(new FstType(*new_dict));
+  this->dictionary = move(converted);
 }
 
 LMStatePtr
 Scorer::start(bool startWithNothing)
 {
-  auto outState = std::make_shared<KenLMState>();
+  auto outState = make_shared<KenLMState>();
   if (startWithNothing) {
     language_model_->NullContextWrite(outState->ken());
   } else {
@@ -373,32 +443,30 @@ Scorer::start(bool startWithNothing)
   return outState;
 }
 
-std::pair<LMStatePtr, float>
-Scorer::score(const LMStatePtr& state,
-              const int usrTokenIdx)
+pair<LMStatePtr, float>
+Scorer::score(const LMStatePtr& state, const int usrTokenIdx)
 {
   if (usrTokenIdx < 0 || usrTokenIdx >= usrToLmIdxMap_.size()) {
-    throw std::runtime_error(
-        "[Scorer] Invalid user token index: " + std::to_string(usrTokenIdx));
+    throw runtime_error("[Scorer] Invalid user token index: " +
+                        to_string(usrTokenIdx));
   }
-  auto inState = std::static_pointer_cast<KenLMState>(state);
+  auto inState = static_pointer_cast<KenLMState>(state);
   auto outState = inState->child<KenLMState>(usrTokenIdx);
   float score = language_model_->BaseScore(
-      inState->ken(), usrToLmIdxMap_[usrTokenIdx], outState->ken());
-  return std::make_pair(std::move(outState), score);
+    inState->ken(), usrToLmIdxMap_[usrTokenIdx], outState->ken());
+  return make_pair(move(outState), score);
 }
 
-std::pair<LMStatePtr, float>
+pair<LMStatePtr, float>
 Scorer::finish(const LMStatePtr& state)
 {
-  auto inState = std::static_pointer_cast<KenLMState>(state);
+  auto inState = static_pointer_cast<KenLMState>(state);
   auto outState = inState->child<KenLMState>(-1);
-  float score = language_model_->BaseScore(
-                  inState->ken(),
-                  language_model_->BaseVocabulary().EndSentence(),
-                  outState->ken()
-                );
-  return std::make_pair(std::move(outState), score);
+  float score =
+    language_model_->BaseScore(inState->ken(),
+                               language_model_->BaseVocabulary().EndSentence(),
+                               outState->ken());
+  return make_pair(move(outState), score);
 }
 
 void

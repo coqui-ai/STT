@@ -49,7 +49,7 @@ template <class Search, class VocabularyT> class GenericModel : public base::Mod
      * lm/binary_format.hh.
      */
     explicit GenericModel(const char *file, const Config &config = Config());
-
+    explicit GenericModel(const char *file_data, const uint64_t file_data_size, const Config &config = Config());
     /* Score p(new_word | in_state) and incorporate new_word into out_state.
      * Note that in_state and out_state must be different references:
      * &in_state != &out_state.
@@ -133,7 +133,9 @@ template <class Search, class VocabularyT> class GenericModel : public base::Mod
 class name : public from {\
   public:\
     name(const char *file, const Config &config = Config()) : from(file, config) {}\
-};
+    name(const char *file_data, size_t file_data_size, const Config &config = Config()) : from(file_data, file_data_size, config) {}\
+  };
+
 
 LM_NAME_MODEL(ProbingModel, detail::GenericModel<detail::HashedSearch<BackoffValue> LM_COMMA() ProbingVocabulary>);
 LM_NAME_MODEL(RestProbingModel, detail::GenericModel<detail::HashedSearch<RestValue> LM_COMMA() ProbingVocabulary>);
@@ -145,11 +147,11 @@ LM_NAME_MODEL(QuantArrayTrieModel, detail::GenericModel<trie::TrieSearch<Separat
 // Default implementation.  No real reason for it to be the default.
 typedef ::lm::ngram::ProbingVocabulary Vocabulary;
 typedef ProbingModel Model;
-
 /* Autorecognize the file type, load, and return the virtual base class.  Don't
  * use the virtual base class if you can avoid it.  Instead, use the above
  * classes as template arguments to your own virtual feature function.*/
 KENLM_EXPORT base::Model *LoadVirtual(const char *file_name, const Config &config = Config(), ModelType if_arpa = PROBING);
+KENLM_EXPORT base::Model *LoadVirtual(const char *file_data, const uint64_t file_data_size, const Config &config = Config(), ModelType if_arpa = PROBING);
 
 } // namespace ngram
 } // namespace lm

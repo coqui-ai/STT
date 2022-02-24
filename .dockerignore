@@ -1,5 +1,14 @@
 .git/lfs
+.git/lost-found
 native_client/ds-swig
 native_client/python/dist/*.whl
 native_client/ctcdecode/*.a
 native_client/javascript/build/
+native_client/javascript/headers/
+native_client/javascript/lib/
+native_client/java/libstt/build/
+native_client/java/libstt/libs/
+*.scorer
+*.pbmm
+*.pb
+*.tflite

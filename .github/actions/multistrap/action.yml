@@ -29,7 +29,12 @@ runs:
           multistrap_conf=multistrap_armbian64_buster.conf
         fi
 
-        multistrap -d ${{ env.SYSTEM_RASPBIAN }} -f ${{ github.workspace }}/native_client/${multistrap_conf}
+        # Retry 2 times because Rasbian mirrors are often failing
+        if ! multistrap -d ${{ env.SYSTEM_RASPBIAN }} -f ${{ github.workspace }}/native_client/${multistrap_conf}; then
+          if ! multistrap -d ${{ env.SYSTEM_RASPBIAN }} -f ${{ github.workspace }}/native_client/${multistrap_conf}; then
+            multistrap -d ${{ env.SYSTEM_RASPBIAN }} -f ${{ github.workspace }}/native_client/${multistrap_conf}
+          fi
+        fi
 
         if [ ! -z "${{ inputs.packages }}" ]; then
           TO_MOUNT=${{ github.workspace }}

@@ -33,6 +33,8 @@
 #include <unistd.h>
 #endif // NO_DIR
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 #include "coqui-stt.h"
 #include "args.h"
@@ -40,7 +42,7 @@
 typedef struct {
   const char* string;
   double cpu_time_overall;
-} ds_result;
+} stt_result;
 
 struct meta_word {
   std::string word;
@@ -158,13 +160,13 @@ MetadataToJSON(Metadata* result)
   return strdup(out_string.str().c_str());
 }
 
-ds_result
+stt_result
 LocalDsSTT(ModelState* aCtx, const short* aBuffer, size_t aBufferSize,
            bool extended_output, bool json_output)
 {
-  ds_result res = {0};
+  stt_result res = {0};
 
-  clock_t ds_start_time = clock();
+  clock_t stt_start_time = clock();
 
   // sphinx-doc: c_ref_inference_start
   if (extended_output) {
@@ -242,10 +244,10 @@ LocalDsSTT(ModelState* aCtx, const short* aBuffer, size_t aBufferSize,
   }
   // sphinx-doc: c_ref_inference_stop
 
-  clock_t ds_end_infer = clock();
+  clock_t stt_end_infer = clock();
 
   res.cpu_time_overall =
-    ((double) (ds_end_infer - ds_start_time)) / CLOCKS_PER_SEC;
+    ((double) (stt_end_infer - stt_start_time)) / CLOCKS_PER_SEC;
 
   return res;
 }
@@ -253,12 +255,12 @@ LocalDsSTT(ModelState* aCtx, const short* aBuffer, size_t aBufferSize,
 typedef struct {
   char*  buffer;
   size_t buffer_size;
-} ds_audio_buffer;
+} stt_audio_buffer;
 
-ds_audio_buffer
+stt_audio_buffer
 GetAudioBuffer(const char* path, int desired_sample_rate)
 {
-  ds_audio_buffer res = {0};
+  stt_audio_buffer res = {0};
 
 #ifndef NO_SOX
   sox_format_t* input = sox_open_read(path, NULL, NULL, NULL);
@@ -404,12 +406,12 @@ GetAudioBuffer(const char* path, int desired_sample_rate)
 void
 ProcessFile(ModelState* context, const char* path, bool show_times)
 {
-  ds_audio_buffer audio = GetAudioBuffer(path, STT_GetModelSampleRate(context));
+  stt_audio_buffer audio = GetAudioBuffer(path, STT_GetModelSampleRate(context));
 
   // Pass audio to STT
   // We take half of buffer_size because buffer is a char* while
   // LocalDsSTT() expected a short*
-  ds_result result = LocalDsSTT(context,
+  stt_result result = LocalDsSTT(context,
                                 (const short*)audio.buffer,
                                 audio.buffer_size / 2,
                                 extended_metadata,
@@ -452,38 +454,76 @@ main(int argc, char **argv)
 
   // Initialise STT
   ModelState* ctx;
-  // sphinx-doc: c_ref_model_start
-  int status = STT_CreateModel(model, &ctx);
-  if (status != 0) {
-    char* error = STT_ErrorCodeToErrorMessage(status);
-    fprintf(stderr, "Could not create model: %s\n", error);
-    free(error);
-    return 1;
+  std::string am_buffer_raii_holder;
+
+  if (!init_from_array_of_bytes) {
+    // sphinx-doc: c_ref_model_1_start
+    ModelState* modelctx;
+    int status = STT_CreateModel(model, &modelctx);
+
+    if (status != STT_ERR_OK) {
+      char* error = STT_ErrorCodeToErrorMessage(status);
+      fprintf(stderr, "Could not create model: %s\n", error);
+      STT_FreeString(error);
+      return 1;
+    }
+    // sphinx-doc: c_ref_model_1_end
+    ctx = modelctx;
+  } else {
+    // Reading model file to a char * buffer
+    std::ifstream is_model(model, std::ios::binary);
+    std::stringstream buffer_model;
+    buffer_model << is_model.rdbuf();
+    std::string buffer_model_str = buffer_model.str();
+    int status = STT_CreateModelFromBuffer(buffer_model_str.c_str(), buffer_model_str.size(), &ctx);
+    if (status != STT_ERR_OK) {
+      char* error = STT_ErrorCodeToErrorMessage(status);
+      fprintf(stderr, "Could not create model: %s\n", error);
+      STT_FreeString(error);
+      return 1;
+    }
+    am_buffer_raii_holder = std::move(buffer_model_str);
   }
 
+  int status = 0;
   if (set_beamwidth) {
     status = STT_SetModelBeamWidth(ctx, beam_width);
-    if (status != 0) {
+    if (status != STT_ERR_OK) {
       fprintf(stderr, "Could not set model beam width.\n");
       return 1;
     }
   }
 
   if (scorer) {
-    status = STT_EnableExternalScorer(ctx, scorer);
-    if (status != 0) {
-      fprintf(stderr, "Could not enable external scorer.\n");
+    if (!init_from_array_of_bytes) {
+      // sphinx-doc: c_ref_model_2_start
+      status = STT_EnableExternalScorer(ctx, scorer);
+      // sphinx-doc: c_ref_model_2_end
+    } else {
+      // Reading scorer file to a string buffer
+      std::ifstream is_scorer(scorer, std::ios::binary );
+      std::stringstream buffer_scorer;
+      buffer_scorer << is_scorer.rdbuf();
+      std::string tmp_str_scorer = buffer_scorer.str();
+      status = STT_EnableExternalScorerFromBuffer(ctx, tmp_str_scorer.c_str(), tmp_str_scorer.size());
+    }
+
+    // sphinx-doc: c_ref_model_3_start
+    if (status != STT_ERR_OK) {
+      char* error = STT_ErrorCodeToErrorMessage(status);
+      fprintf(stderr, "Could not enable external scorer: %s\n", error);
+      STT_FreeString(error);
       return 1;
     }
+    // sphinx-doc: c_ref_model_3_end
     if (set_alphabeta) {
       status = STT_SetScorerAlphaBeta(ctx, lm_alpha, lm_beta);
-      if (status != 0) {
+      if (status != STT_ERR_OK) {
         fprintf(stderr, "Error setting scorer alpha and beta.\n");
         return 1;
       }
     }
   }
-  // sphinx-doc: c_ref_model_stop
 
   if (hot_words) {
     std::vector<std::string> hot_words_ = SplitStringOnDelim(hot_words, ",");
@@ -495,7 +535,7 @@ main(int argc, char **argv)
       bool boost_is_valid = (pair_[1].find_first_not_of("-.0123456789") == std::string::npos);
       float boost = strtof((pair_[1]).c_str(),0);
       status = STT_AddHotWord(ctx, word, boost);
-      if (status != 0 || !boost_is_valid) {
+      if (status != STT_ERR_OK || !boost_is_valid) {
         fprintf(stderr, "Could not enable hot-word.\n");
         return 1;
       }

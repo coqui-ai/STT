@@ -66,7 +66,7 @@ create_package(absl::optional<string> checkpoint_path,
     }
     scorer.set_utf8_mode(force_bytes_output_mode.value());
     scorer.reset_params(default_alpha, default_beta);
-    int err = scorer.load_lm(lm_path);
+    int err = scorer.load_lm_filepath(lm_path);
     if (err != STT_ERR_SCORER_NO_TRIE) {
         cerr << "Error loading language model file: "
              << (err == STT_ERR_SCORER_UNREADABLE ? "Can't open binary LM file." : STT_ErrorCodeToErrorMessage(err))

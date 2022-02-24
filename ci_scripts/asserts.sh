@@ -595,6 +595,12 @@ run_cpp_only_inference_tests()
   status=$?
   set -e
   assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm_intermediate_decode}" "$status"
+
+  set +e
+  phrase_pbmodel_withlm_intermediate_decode=$(stt --model ${CI_TMP_DIR}/${model_name} --scorer ${CI_TMP_DIR}/kenlm.scorer --audio ${CI_TMP_DIR}/${ldc93s1_sample_filename} --init_from_bytes 2>${CI_TMP_DIR}/stderr | tail -n 1)
+  status=$?
+  set -e
+  assert_correct_ldc93s1_lm "${phrase_pbmodel_withlm_intermediate_decode}" "$status"
 }
 
 run_js_streaming_inference_tests()
