@@ -452,10 +452,9 @@ main(int argc, char **argv)
     return 1;
   }
 
-
-
   // Initialise STT
   ModelState* ctx;
+  std::string am_buffer_raii_holder;
 
   if (!init_from_array_of_bytes) {
     // sphinx-doc: c_ref_model_1_start
@@ -483,6 +482,7 @@ main(int argc, char **argv)
       STT_FreeString(error);
       return 1;
     }
+    am_buffer_raii_holder = std::move(buffer_model_str);
   }
 
   int status = 0;
