@@ -1578,6 +1578,7 @@ jobs:
       - name: Install arm64 deps
         if: matrix.arch == 'arm64' && steps.cache.outputs.cache-hit != 'true'
         run: |
+          set -xe
           mkdir -p ~/arm-target/bin
           mkdir -p ~/arm-target/brew-cache
           export PATH="$HOME/arm-target/bin:$PATH"
@@ -1600,6 +1601,9 @@ jobs:
           ln -s ~/arm-target/arm-homebrew/bin/pkg-config ~/arm-target/bin/arm-pkg-config
       - run: |
           echo "$HOME/arm-target/bin" >> $GITHUB_PATH
+        if: matrix.arch == 'arm64'
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
         if: matrix.arch == 'arm64'
       - run: ./ci_scripts/tf-setup.sh
       - run: |

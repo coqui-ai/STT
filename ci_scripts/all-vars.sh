@@ -27,24 +27,7 @@ if [ "${OS}" = "Darwin" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
     export DS_CPU_COUNT=$(sysctl hw.ncpu |cut -d' ' -f2)
     export PYENV_ROOT="${DS_ROOT_TASK}/pyenv-root"
-
-    export HOMEBREW_NO_AUTO_UPDATE=1
-    export BREW_URL=https://github.com/Homebrew/brew/tarball/2.2.17
-
-    export BUILDS_BREW="${CI_TASK_DIR}/homebrew-builds"
-    export TESTS_BREW="${CI_TASK_DIR}/homebrew-tests"
-
-    export NVM_DIR=$TESTS_BREW/.nvm/ && mkdir -p $NVM_DIR
-    export PKG_CONFIG_PATH="${BUILDS_BREW}/lib/pkgconfig"
-
-    if [ -f "${BUILDS_BREW}/bin/brew" ]; then
-        export PATH=${BUILDS_BREW}/bin/:${BUILDS_BREW}/opt/node@12/bin:$PATH
-    fi;
-
-    if [ -f "${TESTS_BREW}/bin/brew" ]; then
-        export PATH=${TESTS_BREW}/bin/:$PATH
-    fi;
-fi;
+fi
 
 export CI_ARTIFACTS_DIR=${CI_ARTIFACTS_DIR:-${CI_TASK_DIR}/artifacts}
 export CI_TMP_DIR=${CI_TMP_DIR:-/tmp}
