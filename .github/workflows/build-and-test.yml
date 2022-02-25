@@ -1252,15 +1252,15 @@ jobs:
         run: |
           set -ex
           declare -a tag_args=()
-          for tag in "${{ steps.compute-tag.outputs.tags }}"; do
+          for tag in ${{ steps.compute-tag.outputs.tags }}; do
             tag_args+=("-t" "ghcr.io/coqui-ai/stt-train:${tag}")
           done
-          docker build -f Dockerfile.train . "${tag_args[@]}"
+          docker build -f Dockerfile.train . ${tag_args[@]}
       - name: Push
         run: |
           set -ex
-          for tag in "${{ steps.compute-tag.outputs.tags }}"; do
-            docker push "ghcr.io/coqui-ai/stt-train:${tag}"
+          for tag in ${{ steps.compute-tag.outputs.tags }}; do
+            docker push ghcr.io/coqui-ai/stt-train:${tag}
           done
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
   twine-upload-decoder:
