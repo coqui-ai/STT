@@ -1331,6 +1331,9 @@ jobs:
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
+      - name: Wait for PyPI index to refresh
+        run: |
+          sleep 60
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
@@ -1757,7 +1760,7 @@ jobs:
           zip -r9 --junk-paths libstt.zip libstt.x86_64/*
       - uses: actions/upload-artifact@v2
         with:
-          name: "libstt.tflite.macOS.tar.xz"
+          name: "libstt.tflite.macOS.zip"
           path: libstt.zip
   build-python-macOS:
     name: "Mac|Build Python bindings"
