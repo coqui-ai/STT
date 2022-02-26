@@ -1597,12 +1597,9 @@ jobs:
 
           # Install host version of pkg-config so we can call it in the build system
           ~/arm-target/arm-brew/bin/brew install pkg-config
-          ln -s ~/arm-target/arm-homebrew/bin/pkg-config ~/arm-target/bin/arm-pkg-config
+          ln -s ~/arm-target/arm-brew/bin/pkg-config ~/arm-target/bin/arm-pkg-config
       - run: |
           echo "$HOME/arm-target/bin" >> $GITHUB_PATH
-        if: matrix.arch == 'arm64'
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
         if: matrix.arch == 'arm64'
       - run: ./ci_scripts/tf-setup.sh
       - run: |
@@ -1613,6 +1610,9 @@ jobs:
         run: |
           sudo rm -r /Library/Developer/CommandLineTools
       - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: matrix.arch == 'arm64' && failure()
       - run: ./ci_scripts/package.sh
       - run: ./ci_scripts/tf-package.sh
         if: steps.check_artifact_exists.outputs.status == 'missing'
