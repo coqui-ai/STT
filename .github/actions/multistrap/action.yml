@@ -1,8 +1,8 @@
 name: "multistrap install"
 description: "Install a system root using multistrap"
 inputs:
-  arch:
-    description: "Target arch"
+  multistrap-config:
+    description: "Multistrap config file to use"
     required: true
   packages:
     description: "Extra packages to install"
@@ -20,13 +20,11 @@ runs:
       run: |
         set -xe
 
-        multistrap_conf=""
-        if [ "${{ inputs.arch }}" = "armv7" ]; then
-          multistrap_conf=multistrap_raspbian_buster.conf
+        multistrap_conf="${{ inputs.multistrap-config }}"
+        if [ "$multistrap_conf" = "multistrap_raspbian_buster.conf" ]; then
           wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb && sudo dpkg -i raspbian-archive-keyring_20120528.2_all.deb
-        fi
-        if [ "${{ inputs.arch }}" = "aarch64" ]; then
-          multistrap_conf=multistrap_armbian64_buster.conf
+        elif [ "$multistrap_conf" = "multistrap_raspbian_bullseye.conf" ]; then
+          wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb && sudo dpkg -i raspbian-archive-keyring_20120528.2_all.deb
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing

@@ -6,7 +6,7 @@ FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 # >> START Install base software
 
 # Get basic packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-broken \
         apt-utils \
         bash-completion \
         build-essential \
@@ -159,6 +159,7 @@ RUN make NUM_PROCESSES=$(nproc) stt
 
 WORKDIR /STT
 RUN cd native_client/python && make NUM_PROCESSES=$(nproc) bindings
+RUN pip3 install --upgrade pip
 RUN pip3 install -U pip setuptools wheel
 RUN pip3 install --upgrade native_client/python/dist/*.whl
 
