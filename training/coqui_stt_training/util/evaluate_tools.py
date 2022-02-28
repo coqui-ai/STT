@@ -95,7 +95,7 @@ def calculate_and_print_report(
 
 
 def print_report(samples, losses, wer, cer, dataset_name, report_count=5):
-    """ Print a report summary and samples of best, median and worst results """
+    """Print a report summary and samples of best, median and worst results"""
 
     # Print summary
     mean_loss = np.mean(losses)

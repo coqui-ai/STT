@@ -59,7 +59,7 @@ def init_worker(params):
 
 
 def one_sample(sample):
-    """ Take an audio file, and optionally convert it to 16kHz WAV """
+    """Take an audio file, and optionally convert it to 16kHz WAV"""
     mp3_filename = sample[0]
     if not os.path.splitext(mp3_filename.lower())[1] == ".mp3":
         mp3_filename += ".mp3"

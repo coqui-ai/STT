@@ -872,7 +872,7 @@ def initialize_globals_from_args(**override_args):
 
 
 def initialize_globals_from_instance(config):
-    """ Initialize Config singleton from an existing instance """
+    """Initialize Config singleton from an existing instance"""
     _ConfigSingleton._config = config  # pylint: disable=protected-access
 
 

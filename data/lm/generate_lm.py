@@ -9,7 +9,7 @@ import progressbar
 
 
 def convert_and_filter_topk(args):
-    """ Convert to lowercase, count word occurrences and save top-k words to a file """
+    """Convert to lowercase, count word occurrences and save top-k words to a file"""
 
     counter = Counter()
     data_lower = os.path.join(args.output_dir, "lower.txt.gz")

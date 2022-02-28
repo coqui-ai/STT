@@ -57,7 +57,7 @@ def compute_lm_optimization() -> dict:
     study = optuna.create_study()
     study.set_user_attr("is_character_based", is_character_based)
     study.optimize(objective, n_jobs=1, n_trials=Config.n_trials)
-    
+
     return {
         "lm_alpha": study.best_params.get("lm_alpha"),
         "lm_beta": study.best_params.get("lm_beta"),

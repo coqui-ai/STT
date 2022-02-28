@@ -51,7 +51,7 @@ import semver
 
 # -- Project information -----------------------------------------------------
 
-project = u"Coqui STT"
+project = "Coqui STT"
 copyright = "2021 Coqui GmbH, 2020 DeepSpeech authors, 2019-2020 Mozilla Corporation"
 author = "Coqui GmbH"
 
@@ -179,7 +179,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "STT.tex", u"Coqui STT Documentation", u"Coqui GmbH", "manual"),
+    (master_doc, "STT.tex", "Coqui STT Documentation", "Coqui GmbH", "manual"),
 ]
 
 
@@ -187,7 +187,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "stt", u"Coqui STT Documentation", [author], 1)]
+man_pages = [(master_doc, "stt", "Coqui STT Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -199,7 +199,7 @@ texinfo_documents = [
     (
         master_doc,
         "STT",
-        u"Coqui STT Documentation",
+        "Coqui STT Documentation",
         author,
         "STT",
         "One line description of project.",

@@ -57,7 +57,7 @@ def _maybe_extract(target_dir, extracted_data, archive_path):
 
 
 def one_sample(sample):
-    """ Take a audio file, and optionally convert it to 16kHz WAV """
+    """Take a audio file, and optionally convert it to 16kHz WAV"""
     ogg_filename = sample[0]
     # Storing wav files next to the ogg ones - just with a different suffix
     wav_filename = os.path.splitext(ogg_filename)[0] + ".wav"
