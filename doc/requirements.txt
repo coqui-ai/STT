@@ -8,3 +8,5 @@ docutils>=0.12,<=0.17.1
 #FIXME: switch to stable after C# changes have been merged: https://github.com/djungelorm/sphinx-csharp/pull/8
 git+https://github.com/reuben/sphinx-csharp.git@9dc6202f558e3d3fa14ec7f5f1e36a8e66e6d622
 recommonmark==0.7.1
+# MarkupSafe>2.0.1 is incompatible with version of Jinja2 we depend on
+MarkupSafe==2.0.1
