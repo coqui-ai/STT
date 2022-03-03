@@ -1235,7 +1235,7 @@ jobs:
           set -ex
           if [[ "${{ github.ref }}" = "refs/heads/main" ]]; then
             # Push to main
-            tags="main"
+            tags="main ${{ github.sha }}"
           elif [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
             # PR build
             tags="dev"
@@ -1245,7 +1245,7 @@ jobs:
               echo "Pushed tag does not match VERSION file. Aborting push."
               exit 1
             fi
-            tags="${VERSION} latest"
+            tags="${VERSION} latest ${{ github.sha }}"
           fi
           echo "::set-output name=tags::${tags}"
       - name: Build
