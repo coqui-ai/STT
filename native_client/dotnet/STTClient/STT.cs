@@ -188,7 +188,7 @@ namespace STTClient
         /// </summary>
         /// <param name="stream">Instance of the stream to feed the data.</param>
         /// <param name="aBuffer">An array of 16-bit, mono raw audio samples at the appropriate sample rate (matching what the model was trained on).</param>
-        public unsafe void FeedAudioContent(Stream stream, short[] aBuffer, uint aBufferSize)
+        public unsafe void FeedAudioContent(STTStream stream, short[] aBuffer, uint aBufferSize)
         {
             NativeImp.STT_FeedAudioContent(stream.GetNativePointer(), aBuffer, aBufferSize);
         }
@@ -198,7 +198,7 @@ namespace STTClient
         /// </summary>
         /// <param name="stream">Instance of the stream to finish.</param>
         /// <returns>The STT result.</returns>
-        public unsafe string FinishStream(Stream stream)
+        public unsafe string FinishStream(STTStream stream)
         {
             return NativeImp.STT_FinishStream(stream.GetNativePointer()).PtrToString();
         }
@@ -209,7 +209,7 @@ namespace STTClient
         /// <param name="stream">Instance of the stream to finish.</param>
         /// <param name="aNumResults">Maximum number of candidate transcripts to return. Returned list might be smaller than this.</param>
         /// <returns>The extended metadata result.</returns>
-        public unsafe Metadata FinishStreamWithMetadata(Stream stream, uint aNumResults)
+        public unsafe Metadata FinishStreamWithMetadata(STTStream stream, uint aNumResults)
         {
             return NativeImp.STT_FinishStreamWithMetadata(stream.GetNativePointer(), aNumResults).PtrToMetadata();
         }
@@ -219,7 +219,7 @@ namespace STTClient
         /// </summary>
         /// <param name="stream">Instance of the stream to decode.</param>
         /// <returns>The STT intermediate result.</returns>
-        public unsafe string IntermediateDecode(Stream stream)
+        public unsafe string IntermediateDecode(STTStream stream)
         {
             return NativeImp.STT_IntermediateDecode(stream.GetNativePointer()).PtrToString();
         }
@@ -230,7 +230,7 @@ namespace STTClient
         /// <param name="stream">Instance of the stream to decode.</param>
         /// <param name="aNumResults">Maximum number of candidate transcripts to return. Returned list might be smaller than this.</param>
         /// <returns>The STT intermediate result.</returns>
-        public unsafe Metadata IntermediateDecodeWithMetadata(Stream stream, uint aNumResults)
+        public unsafe Metadata IntermediateDecodeWithMetadata(STTStream stream, uint aNumResults)
         {
             return NativeImp.STT_IntermediateDecodeWithMetadata(stream.GetNativePointer(), aNumResults).PtrToMetadata();
         }
@@ -247,7 +247,7 @@ namespace STTClient
         /// <summary>
         /// Creates a new streaming inference state.
         /// </summary>
-        public unsafe Stream CreateStream()
+        public unsafe STTStream CreateStream()
         {
             IntPtr** streamingStatePointer = null;
             var resultCode = NativeImp.STT_CreateStream(_modelStatePP, ref streamingStatePointer);
@@ -260,7 +260,7 @@ namespace STTClient
         /// This can be used if you no longer need the result of an ongoing streaming
         /// inference and don't want to perform a costly decode operation.
         /// </summary>
-        public unsafe void FreeStream(Stream stream)
+        public unsafe void FreeStream(STTStream stream)
         {
             NativeImp.STT_FreeStream(stream.GetNativePointer());
             stream.Dispose();

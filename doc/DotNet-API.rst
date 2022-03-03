@@ -9,10 +9,10 @@ STT Class
    :project: stt-dotnet
    :members:
 
-Stream Class
+STTStream Class
 ----------------------
 
-.. doxygenclass:: STTClient::Models::Stream
+.. doxygenclass:: STTClient::Models::STTStream
    :project: stt-dotnet
    :members:
 
