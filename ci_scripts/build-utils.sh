@@ -7,7 +7,6 @@ do_bazel_build()
   local _opt_or_dbg=${1:-"opt"}
 
   cd ${DS_TFDIR}
-  eval "export ${BAZEL_ENV_FLAGS}"
 
   bazel build ${BAZEL_CACHE} \
     -s --explain bazel_explain.log --verbose_explanations \

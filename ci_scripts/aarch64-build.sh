@@ -13,8 +13,7 @@ BAZEL_TARGETS="
 //native_client:generate_scorer_package
 "
 
-BAZEL_BUILD_FLAGS="${BAZEL_ARM64_FLAGS} ${BAZEL_EXTRA_FLAGS}"
-BAZEL_ENV_FLAGS="TF_NEED_CUDA=0"
+BAZEL_BUILD_FLAGS="--config=elinux_aarch64 ${BAZEL_EXTRA_FLAGS}"
 
 do_bazel_build
 
