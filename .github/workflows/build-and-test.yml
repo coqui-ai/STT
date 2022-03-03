@@ -1496,7 +1496,7 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+          name: "test-model.mac.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
         with:
@@ -1772,7 +1772,7 @@ jobs:
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
     runs-on: macos-10.15
-    needs: [build-universal-lib-macOS, train-test-model-macOS]
+    needs: [build-universal-lib-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1808,7 +1808,7 @@ jobs:
   test-py-macOS:
     name: "Mac|Test Python bindings"
     runs-on: macos-10.15
-    needs: [ build-python-macOS, train-test-model-macOS ]
+    needs: [build-python-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1848,7 +1848,7 @@ jobs:
   test-nodejs-macOS:
     name: "Mac|Test NodeJS bindings"
     runs-on: macos-10.15
-    needs: [ build-nodejs-macOS, train-test-model-macOS ]
+    needs: [build-nodejs-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1898,7 +1898,7 @@ jobs:
   test-electronjs-macOS:
     name: "Mac|Test ElectronJS bindings"
     runs-on: macos-10.15
-    needs: [ build-nodejs-macOS, train-test-model-macOS ]
+    needs: [build-nodejs-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -2542,7 +2542,7 @@ jobs:
   test-nodejs_all-macOS:
     name: "Mac|Test MultiArchPlatform NodeJS bindings"
     runs-on: macos-10.15
-    needs: [ repackage-nodejs-allplatforms, train-test-model-macOS ]
+    needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -2592,7 +2592,7 @@ jobs:
   test-electronjs_all-macOS:
     name: "Mac|Test MultiArchPlatform ElectronJS bindings"
     runs-on: macos-10.15
-    needs: [ repackage-nodejs-allplatforms, train-test-model-macOS ]
+    needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
