@@ -11,7 +11,7 @@ from coqui_stt_training.util.config import (
     log_error,
 )
 
-from coqui_stt_training.util.lm import optimize as lm_opt
+from coqui_stt_training.util import lm_optimize as lm_opt
 
 
 def main():
