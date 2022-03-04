@@ -67,7 +67,8 @@ RUN curl -L https://github.com/coqui-ai/STT/releases/download/v0.9.3/convert_gra
     chmod +x convert_graphdef_memmapped_format
 
 # Pre-built native client tools
-RUN curl -L https://github.com/coqui-ai/STT/releases/download/v1.1.0/native_client.tflite.Linux.tar.xz | tar -xJvf -
+RUN LATEST_STABLE_RELEASE=$(curl "https://api.github.com/repos/coqui-ai/STT/releases/latest" | python -c 'import sys; import json; print(json.load(sys.stdin)["tag_name"])') \
+ bash -c 'curl -L https://github.com/coqui-ai/STT/releases/download/${LATEST_STABLE_RELEASE}/native_client.tflite.Linux.tar.xz | tar -xJvf -'
 
 # Install STT
 # No need for the decoder since we did it earlier

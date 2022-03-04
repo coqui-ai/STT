@@ -12,3 +12,4 @@ native_client/java/libstt/libs/
 *.pbmm
 *.pb
 *.tflite
+kenlm/build/

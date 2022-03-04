@@ -10,11 +10,11 @@ source $(dirname "$0")/tf-vars.sh
 
 BAZEL_TARGETS="
 //native_client:libstt.so
+//native_client:libkenlm.so
 //native_client:generate_scorer_package
 "
 
-BAZEL_BUILD_FLAGS="${BAZEL_ANDROID_X86_64_FLAGS} ${BAZEL_EXTRA_FLAGS}"
-BAZEL_ENV_FLAGS="TF_NEED_CUDA=0"
+BAZEL_BUILD_FLAGS="--config=android_x86_64 ${BAZEL_EXTRA_FLAGS}"
 SYSTEM_TARGET=
 SYSTEM_RASPBIAN=
 

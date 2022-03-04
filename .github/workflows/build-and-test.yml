@@ -10,8 +10,9 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-6-ga9d74436645"
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-8-g06c8fea58fd"
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
+  BAZEL_CACHE: ${{ secrets.BAZEL_CACHE }}
 
   # macOS specific
   MACOSX_DEPLOYMENT_TARGET: "10.10"
@@ -333,25 +334,6 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends xz-utils zip liblzma-dev libbz2-dev
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "Linux"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
@@ -363,8 +345,6 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Linux.tar.xz"
@@ -373,11 +353,6 @@ jobs:
         with:
           name: "libstt.tflite.Linux.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-Linux:
     name: "Lin|Build Python bindings"
     runs-on: ubuntu-20.04
@@ -1235,7 +1210,7 @@ jobs:
           set -ex
           if [[ "${{ github.ref }}" = "refs/heads/main" ]]; then
             # Push to main
-            tags="main"
+            tags="main ${{ github.sha }}"
           elif [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
             # PR build
             tags="dev"
@@ -1245,7 +1220,7 @@ jobs:
               echo "Pushed tag does not match VERSION file. Aborting push."
               exit 1
             fi
-            tags="${VERSION} latest"
+            tags="${VERSION} latest ${{ github.sha }}"
           fi
           echo "::set-output name=tags::${tags}"
       - name: Build
@@ -1521,7 +1496,7 @@ jobs:
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
       - uses: actions/upload-artifact@v2
         with:
-          name: "test-model.tflite-${{ matrix.samplerate }}.zip"
+          name: "test-model.mac.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
       - uses: actions/upload-artifact@v2
         with:
@@ -1538,25 +1513,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "macOS-${{ matrix.arch }}"
-          extras: "1"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -1605,20 +1561,11 @@ jobs:
           echo "$HOME/arm-target/bin" >> $GITHUB_PATH
         if: matrix.arch == 'arm64'
       - run: ./ci_scripts/tf-setup.sh
-      - run: |
-          # Taken from https://www.tensorflow.org/install/source
-          # Only future is needed for our builds, as we don't build the Python package
-          python -m pip install -U --user future==0.17.1 || true
       - name: Workaround problems with mixing headers from Xcode and CommandLineTools by removing the latter
         run: |
           sudo rm -r /Library/Developer/CommandLineTools
       - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: matrix.arch == 'arm64' && failure()
       - run: ./ci_scripts/package.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.macOS.${{ matrix.arch }}.tar.xz"
@@ -1627,11 +1574,6 @@ jobs:
         with:
           name: "libstt.tflite.macOS.${{ matrix.arch }}.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-lib-iOS:
     name: "iOS|Build libstt+client"
     runs-on: macos-10.15
@@ -1640,25 +1582,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "iOS"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -1669,10 +1592,6 @@ jobs:
         run: |
           sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
       - run: ./ci_scripts/tf-setup.sh
-      - run: |
-          # Taken from https://www.tensorflow.org/install/source
-          # Only future is needed for our builds, as we don't build the Python package
-          python -m pip install -U --user future==0.17.1 || true
       - name: Workaround problems with mixing headers from Xcode and CommandLineTools by removing the latter
         run: |
           sudo rm -r /Library/Developer/CommandLineTools
@@ -1687,17 +1606,10 @@ jobs:
             tensorflow/bazel-bin/native_client/libstt.so \
             tensorflow/bazel-out/applebin_ios*/bin/native_client/stt_ios.zip \
             tensorflow/bazel-out/applebin_ios*/bin/native_client/kenlm_ios.zip
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "ios_artifacts.zip"
           path: ${{ github.workspace }}/artifacts/ios_artifacts.zip
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-universal-lib-macOS:
     name: "Mac|Build universal lib"
     runs-on: macos-10.15
@@ -1860,7 +1772,7 @@ jobs:
   test-cpp-macOS:
     name: "Mac|Test C++ binary"
     runs-on: macos-10.15
-    needs: [build-universal-lib-macOS, train-test-model-macOS]
+    needs: [build-universal-lib-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1896,7 +1808,7 @@ jobs:
   test-py-macOS:
     name: "Mac|Test Python bindings"
     runs-on: macos-10.15
-    needs: [ build-python-macOS, train-test-model-macOS ]
+    needs: [build-python-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1936,7 +1848,7 @@ jobs:
   test-nodejs-macOS:
     name: "Mac|Test NodeJS bindings"
     runs-on: macos-10.15
-    needs: [ build-nodejs-macOS, train-test-model-macOS ]
+    needs: [build-nodejs-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -1986,7 +1898,7 @@ jobs:
   test-electronjs-macOS:
     name: "Mac|Test ElectronJS bindings"
     runs-on: macos-10.15
-    needs: [ build-nodejs-macOS, train-test-model-macOS ]
+    needs: [build-nodejs-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -2111,25 +2023,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "Windows"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: 3.7.9
@@ -2140,11 +2033,6 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
-      - name: Setup tmate session
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.Windows.tar.xz"
@@ -2153,11 +2041,6 @@ jobs:
         with:
           name: "libstt.tflite.Windows.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-Windows:
     name: "Win|Build Python bindings"
     runs-on: windows-2019
@@ -2659,7 +2542,7 @@ jobs:
   test-nodejs_all-macOS:
     name: "Mac|Test MultiArchPlatform NodeJS bindings"
     runs-on: macos-10.15
-    needs: [ repackage-nodejs-allplatforms, train-test-model-macOS ]
+    needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -2709,7 +2592,7 @@ jobs:
   test-electronjs_all-macOS:
     name: "Mac|Test MultiArchPlatform ElectronJS bindings"
     runs-on: macos-10.15
-    needs: [ repackage-nodejs-allplatforms, train-test-model-macOS ]
+    needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -2891,32 +2774,11 @@ jobs:
     env:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
-    outputs:
-      cache-key: ${{ steps.get_cache_key.outputs.key }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "LinuxArmv7"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -2927,8 +2789,6 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/armv7-build.sh
       - run: ./ci_scripts/package.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
@@ -2937,43 +2797,17 @@ jobs:
         with:
           name: "libstt.tflite.linux.armv7.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-lib-LinuxAarch64:
     name: "LinAarch64|Build libstt+client"
     runs-on: ubuntu-20.04
     env:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
-    outputs:
-      cache-key: ${{ steps.get_cache_key.outputs.key }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "LinuxAarch64"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -2984,8 +2818,6 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/aarch64-build.sh
       - run: ./ci_scripts/package.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
@@ -2994,11 +2826,6 @@ jobs:
         with:
           name: "libstt.tflite.linux.aarch64.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-python-LinuxArmv7:
     name: "LinArmv7|Build Python bindings"
     runs-on: ubuntu-20.04
@@ -3031,14 +2858,6 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ needs.build-lib-LinuxArmv7.outputs.cache-key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -3053,8 +2872,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
-      - run: ./ci_scripts/tf-setup.sh
-      - run: ./ci_scripts/armv7-build.sh
+      - name: Download cross-build toolchain
+        run: |
+          cd tensorflow
+          bazel build --cpu=armhf @local_config_embedded_arm//:toolchain
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -3096,14 +2917,6 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ needs.build-lib-LinuxArmv7.outputs.cache-key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3121,8 +2934,10 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_16.0.0
-      - run: ./ci_scripts/tf-setup.sh
-      - run: ./ci_scripts/armv7-build.sh
+      - name: Download cross-build toolchain
+        run: |
+          cd tensorflow
+          bazel build --cpu=armhf @local_config_embedded_arm//:toolchain
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -3174,14 +2989,6 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -3196,8 +3003,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools wheel
-      - run: ./ci_scripts/tf-setup.sh
-      - run: ./ci_scripts/aarch64-build.sh
+      - name: Download cross-build toolchain
+        run: |
+          cd tensorflow
+          bazel build --cpu=aarch64 @local_config_embedded_arm//:toolchain
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -3239,14 +3048,6 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ needs.build-lib-LinuxAarch64.outputs.cache-key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
@@ -3264,8 +3065,10 @@ jobs:
         with:
           path: native_client/javascript/headers/electronjs/
           key: electron-headers-12.0.0_16.0.0
-      - run: ./ci_scripts/tf-setup.sh
-      - run: ./ci_scripts/aarch64-build.sh
+      - name: Download cross-build toolchain
+        run: |
+          cd tensorflow
+          bazel build --cpu=aarch64 @local_config_embedded_arm//:toolchain
       - uses: ./.github/actions/install-xldd
         with:
           target: ${{ env.SYSTEM_TARGET }}
@@ -3577,25 +3380,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "AndroidArmv7"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -3604,18 +3388,11 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh --android-armv7
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-armv7-build.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh armeabi-v7a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-lib-AndroidArm64:
     name: "AndroidArm64|Build libstt+client"
     runs-on: ubuntu-20.04
@@ -3624,25 +3401,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "AndroidArm64"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -3651,18 +3409,11 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-arm64-build.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh arm64-v8a
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.arm64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-lib-Androidx86_64:
     name: "Androidx86_64|Build libstt+client"
     runs-on: ubuntu-20.04
@@ -3671,25 +3422,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - id: get_cache_key
-        uses: ./.github/actions/get_cache_key
-        with:
-          arch: "Androidx86_64"
-          extras: "0"
-      - id: check_artifact_exists
-        uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-      - uses: ./.github/actions/check_artifact_exists
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/tf-cache.tar.xz
-          download: true
-        if: steps.check_artifact_exists.outputs.status == 'found'
-      - run: |
-          tar -xvf tf-cache.tar.xz
-          rm tf-cache.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'found'
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
@@ -3698,18 +3430,11 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-x86_64-build.sh
-      - run: ./ci_scripts/tf-package.sh
-        if: steps.check_artifact_exists.outputs.status == 'missing'
       - run: ./ci_scripts/android-package.sh x86_64
       - uses: actions/upload-artifact@v2
         with:
           name: "native_client.tflite.android.x86_64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: ./.github/actions/upload-release-asset
-        with:
-          name: ${{ steps.get_cache_key.outputs.key }}.tar.xz
-          path: ${{ github.workspace }}/artifacts/home.tar.xz
-        if: steps.check_artifact_exists.outputs.status == 'missing'
   build-android-apk-aar:
     name: "Android|Build AAR+APK"
     runs-on: ubuntu-20.04

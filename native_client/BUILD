@@ -6,20 +6,6 @@ load("@build_bazel_rules_apple//apple:ios.bzl", "ios_static_framework")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_c_module", "swift_library")
 
 
-config_setting(
-    name = "rpi3",
-    define_values = {
-        "target_system": "rpi3"
-    },
-)
-
-config_setting(
-    name = "rpi3-armv8",
-    define_values = {
-        "target_system": "rpi3-armv8"
-    },
-)
-
 genrule(
     name = "workspace_status",
     outs = ["workspace_status.cc"],
@@ -108,6 +94,7 @@ cc_binary(
         ],
         "//tensorflow:windows": [],
         "//conditions:default": [
+            "-Wl,-rpath,$$ORIGIN/",
             "-Wl,-soname,libkenlm.so",
         ],
     }),
@@ -210,8 +197,8 @@ cc_library(
         "//tensorflow:macos": [],
         "//tensorflow:ios": ["-fembed-bitcode"],
         "//tensorflow:linux_x86_64": LINUX_LINKOPTS,
-        "//native_client:rpi3": LINUX_LINKOPTS,
-        "//native_client:rpi3-armv8": LINUX_LINKOPTS,
+        "//tensorflow:linux_armhf": LINUX_LINKOPTS,
+        "//tensorflow:linux_aarch64": LINUX_LINKOPTS,
         # Bazel is has too strong opinions about static linking, so it's
         # near impossible to get it to link a DLL against another DLL on Windows.
         # We simply force the linker option manually here as a hacky fix.
@@ -302,25 +289,25 @@ cc_binary(
     }),
     deps = [
         ":decoder",
-        ":kenlm_lib",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/types:optional",
         "@boost//:program_options",
     ],
     linkstatic = 1,
-    linkopts = [
-        "-lm",
-        "-ldl",
-        "-pthread",
-    ] + select({
+    linkopts = select({
         # ARMv7: error: Android 5.0 and later only support position-independent executables (-fPIE).
         "//tensorflow:android": ["-fPIE -pie"],
         # Bazel is has too strong opinions about static linking, so it's
         # near impossible to get it to link a DLL against another DLL on Windows.
         # We simply force the linker option manually here as a hacky fix.
         "//tensorflow:windows": ["bazel-out/x64_windows-opt/bin/native_client/libkenlm.so.if.lib"],
-        "//conditions:default": [],
+        "//conditions:default": [
+            "-lm",
+            "-ldl",
+            "-pthread",
+            "-Wl,-rpath,$$ORIGIN/",
+        ],
     }),
 )
 

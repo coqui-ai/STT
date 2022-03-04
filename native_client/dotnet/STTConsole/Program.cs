@@ -54,7 +54,7 @@ namespace CSharpExamples
                 Console.WriteLine("Loading model...");
                 stopwatch.Start();
                 // sphinx-doc: csharp_ref_model_start
-                using (ISTT sttClient = new STT(model ?? "output_graph.pbmm"))
+                using (ISTT sttClient = new STT(model ?? "model.tflite"))
                 {
                 // sphinx-doc: csharp_ref_model_stop
                     stopwatch.Stop();
@@ -64,7 +64,7 @@ namespace CSharpExamples
                     if (scorer != null)
                     {
                         Console.WriteLine("Loading scorer...");
-                        sttClient.EnableExternalScorer(scorer ?? "kenlm.scorer");
+                        sttClient.EnableExternalScorer(scorer ?? "huge-vocabulary.scorer");
                     }
 
                     if(hotwords != null)

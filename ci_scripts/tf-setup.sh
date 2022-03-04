@@ -41,8 +41,6 @@ if [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
     SUFFIX=".exe"
 fi
 
-$PYTHON_BIN_PATH -m pip install numpy==1.19.5
-
 cp ${DS_ROOT_TASK}/dls/${BAZEL_INSTALL_FILENAME} ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 chmod +x ${DS_ROOT_TASK}/bin/bazel${SUFFIX}
 

@@ -61,7 +61,10 @@ create_package(absl::optional<string> checkpoint_path,
     } else {
         std::string alphabet_path = checkpoint_path.value() + "/alphabet.txt";
         Alphabet alphabet;
-        alphabet.init(alphabet_path.c_str());
+        if (alphabet.init(alphabet_path.c_str()) != 0) {
+            cerr << "Alphabet initialization failed (missing file?) - loading from path: " << alphabet_path << "\n";
+            return 1;
+        }
         scorer.set_alphabet(alphabet);
     }
     scorer.set_utf8_mode(force_bytes_output_mode.value());

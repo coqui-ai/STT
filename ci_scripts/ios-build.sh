@@ -14,9 +14,7 @@ BAZEL_TARGETS="
 //native_client:stt_swift
 "
 
-BAZEL_BUILD_FLAGS="${BAZEL_OPT_FLAGS} ${BAZEL_EXTRA_FLAGS}"
-
-BAZEL_ENV_FLAGS="TF_NEED_CUDA=0"
+BAZEL_BUILD_FLAGS="--config=ios_arm64 ${BAZEL_EXTRA_FLAGS}"
 SYSTEM_TARGET=
 
 do_bazel_build

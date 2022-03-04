@@ -253,12 +253,14 @@ def early_training_checks():
         log_warn(
             "WARNING: You specified different values for --load_checkpoint_dir "
             "and --save_checkpoint_dir, but you are running training and testing "
-            "in a single invocation. The testing step will respect --load_checkpoint_dir, "
-            "and thus WILL NOT TEST THE CHECKPOINT CREATED BY THE TRAINING STEP. "
-            "Train and test in two separate invocations, specifying the correct "
-            "--load_checkpoint_dir in both cases, or use the same location "
-            "for loading and saving."
+            "in a single invocation. The testing phase has been disable to prevent "
+            "unexpected behavior of testing on the base checkpoint rather than the "
+            "trained one. You should train and evaluate in two separate commands, "
+            "specifying the correct --load_checkpoint_dir in both cases.\nFor training, "
+            "use: python -m coqui_stt_training.train\n"
+            "For evaluation, use python -m coqui_stt_training.evaluate"
         )
+        Config.test_files = []
 
 
 def create_training_datasets(

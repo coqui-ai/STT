@@ -93,47 +93,13 @@ if [ "${OS}" = "Linux" ]; then
 fi;
 
 export TF_ENABLE_XLA=0
-if [ "${OS}" = "Linux" ]; then
-    TF_NEED_JEMALLOC=1
-elif [ "${OS}" = "${CI_MSYS_VERSION}" ]; then
-    TF_NEED_JEMALLOC=0
-elif [ "${OS}" = "Darwin" ]; then
-    TF_NEED_JEMALLOC=0
-fi;
-export TF_NEED_JEMALLOC
-export TF_NEED_OPENCL_SYCL=0
-export TF_NEED_MKL=0
-export TF_NEED_VERBS=0
-export TF_NEED_MPI=0
-export TF_NEED_IGNITE=0
-export TF_NEED_GDR=0
-export TF_NEED_NGRAPH=0
 export TF_DOWNLOAD_CLANG=0
 export TF_SET_ANDROID_WORKSPACE=0
 export TF_NEED_TENSORRT=0
 export TF_NEED_ROCM=0
-
-# This should be gcc-5, hopefully. CUDA and TensorFlow might not be happy, otherwise.
-export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
-
-export PYTHON_BIN_PATH=`which python`
-if [ "${OS}" = "Linux" ]; then
-    source /etc/os-release
-    if [ "${ID}" = "debian" -a "${VERSION_ID}" = "9" ]; then
-        export PYTHON_BIN_PATH=/opt/python/cp37-cp37m/bin/python
-    fi
-fi
+export TF_NEED_CUDA=0
 
 ## Below, define or export some build variables
-
-# Enable some SIMD support. Limit ourselves to what Tensorflow needs.
-# Also ensure to not require too recent CPU: AVX2/FMA introduced by:
-#  - Intel with Haswell (2013)
-#  - AMD with Excavator (2015)
-# For better compatibility, AVX ony might be better.
-#
-# Build for generic amd64 platforms, no device-specific optimization
-# See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for targetting specific CPUs
 
 if [ "${OS}" != "${CI_MSYS_VERSION}" ]; then
     BAZEL_EXTRA_FLAGS="--config=noaws --config=nogcp --config=nohdfs --config=nonccl"
@@ -165,34 +131,18 @@ elif [ "${OS}" = "Darwin" ]; then
         echo "TensorFlow does not support building for x86_64 on arm64" 1>&2
         exit 1
     fi
+else
+    # Enable some SIMD support. Limit ourselves to what Tensorflow needs.
+    # Also ensure to not require too recent CPU: AVX2/FMA introduced by:
+    #  - Intel with Haswell (2013)
+    #  - AMD with Excavator (2015)
+    # For better compatibility, AVX ony might be better.
+    #
+    # Build for generic amd64 platforms, no device-specific optimization
+    # See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for targetting specific CPUs
+    BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
 fi
 
-BAZEL_OUTPUT_CACHE_DIR="${DS_ROOT_TASK}/.bazel_cache/"
-BAZEL_OUTPUT_CACHE_INSTANCE="${BAZEL_OUTPUT_CACHE_DIR}/output/"
-mkdir -p ${BAZEL_OUTPUT_CACHE_INSTANCE} || true
-
-if [ "$CI" = "true" ]; then
-    BAZEL_CACHE_ROOT="${DS_ROOT_TASK}/STT/bazel-cache"
-    BAZEL_DISK_CACHE_PATH="${BAZEL_CACHE_ROOT}/disk"
-    mkdir -p $BAZEL_DISK_CACHE_PATH || true
-    BAZEL_REPO_CACHE_PATH="${BAZEL_CACHE_ROOT}/repo"
-    mkdir -p $BAZEL_REPO_CACHE_PATH || true
-    BAZEL_CACHE="--disk_cache=${BAZEL_DISK_CACHE_PATH} --repository_cache=${BAZEL_REPO_CACHE_PATH}"
-else
+if [ "$CI" != "true" ]; then
     BAZEL_CACHE=""
 fi
-
-NVCC_COMPUTE="3.5"
-
-BAZEL_ARM_FLAGS="--config=elinux_armhf"
-BAZEL_ARM64_FLAGS="--config=elinux_aarch64"
-BAZEL_ANDROID_ARM_FLAGS="--config=android_arm"
-BAZEL_ANDROID_ARM64_FLAGS="--config=android_arm64"
-BAZEL_ANDROID_X86_64_FLAGS="--config=android_x86_64"
-BAZEL_IOS_ARM64_FLAGS="--config=ios_arm64"
-BAZEL_IOS_X86_64_FLAGS="--config=ios_x86_64"
-
-### Define build targets that we will re-ues in sourcing scripts.
-BUILD_TARGET_LIB_CPP_API="//tensorflow:tensorflow_cc"
-BUILD_TARGET_LITE_LIB="//tensorflow/lite:libtensorflowlite.so"
-BUILD_TARGET_LIBSTT="//native_client:libstt.so"

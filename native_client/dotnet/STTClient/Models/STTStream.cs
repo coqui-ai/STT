@@ -5,15 +5,15 @@ namespace STTClient.Models
     /// <summary>
     /// Wrapper of the pointer used for the decoding stream.
     /// </summary>
-    public class Stream : IDisposable
+    public class STTStream : IDisposable
     {
         private unsafe IntPtr** _streamingStatePp;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="Stream"/>.
+        /// Initializes a new instance of <see cref="STTStream"/>.
         /// </summary>
         /// <param name="streamingStatePP">Native pointer of the native stream.</param>
-        public unsafe Stream(IntPtr** streamingStatePP)
+        public unsafe STTStream(IntPtr** streamingStatePP)
         {
             _streamingStatePp = streamingStatePP;
         }
