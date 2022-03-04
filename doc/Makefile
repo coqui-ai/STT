@@ -8,7 +8,7 @@ SPHINXPROJ    = "Coqui STT"
 SOURCEDIR     = .
 BUILDDIR      = .build
 
-PIP_INSTALL   ?= python3 -m pip install
+PIP_INSTALL   ?= python -m pip install
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -24,8 +24,8 @@ submodule:
 
 # Add submodule update dependency to Sphinx's "html" target
 html: Makefile submodule python-reqs
-	@PATH=$$HOME/.local/bin:`pwd`/../node_modules/.bin/:$$PATH \
-	     $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	PATH=$$HOME/.local/bin:`pwd`/../node_modules/.bin/:$$PATH \
+	     $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) -v
 
 dist: html
 	cd $(BUILDDIR)/html/ && zip -r9 ../../html.zip *
