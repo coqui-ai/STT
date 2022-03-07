@@ -104,26 +104,26 @@ namespace STTClient.Interfaces
         /// This can be used if you no longer need the result of an ongoing streaming
         /// inference and don't want to perform a costly decode operation.
         /// </summary>
-        unsafe void FreeStream(Stream stream);
+        unsafe void FreeStream(STTStream stream);
 
         /// <summary>
         /// Creates a new streaming inference state.
         /// </summary>
-        unsafe Stream CreateStream();
+        unsafe STTStream CreateStream();
 
         /// <summary>
         /// Feeds audio samples to an ongoing streaming inference.
         /// </summary>
         /// <param name="stream">Instance of the stream to feed the data.</param>
         /// <param name="aBuffer">An array of 16-bit, mono raw audio samples at the appropriate sample rate (matching what the model was trained on).</param>
-        unsafe void FeedAudioContent(Stream stream, short[] aBuffer, uint aBufferSize);
+        unsafe void FeedAudioContent(STTStream stream, short[] aBuffer, uint aBufferSize);
 
         /// <summary>
         /// Computes the intermediate decoding of an ongoing streaming inference.
         /// </summary>
         /// <param name="stream">Instance of the stream to decode.</param>
         /// <returns>The STT intermediate result.</returns>
-        unsafe string IntermediateDecode(Stream stream);
+        unsafe string IntermediateDecode(STTStream stream);
 
         /// <summary>
         /// Computes the intermediate decoding of an ongoing streaming inference, including metadata.
@@ -131,14 +131,14 @@ namespace STTClient.Interfaces
         /// <param name="stream">Instance of the stream to decode.</param>
         /// <param name="aNumResults">Maximum number of candidate transcripts to return. Returned list might be smaller than this.</param>
         /// <returns>The extended metadata result.</returns>
-        unsafe Metadata IntermediateDecodeWithMetadata(Stream stream, uint aNumResults);
+        unsafe Metadata IntermediateDecodeWithMetadata(STTStream stream, uint aNumResults);
 
         /// <summary>
         /// Closes the ongoing streaming inference, returns the STT result over the whole audio signal.
         /// </summary>
         /// <param name="stream">Instance of the stream to finish.</param>
         /// <returns>The STT result.</returns>
-        unsafe string FinishStream(Stream stream);
+        unsafe string FinishStream(STTStream stream);
 
         /// <summary>
         /// Closes the ongoing streaming inference, returns the STT result over the whole audio signal, including metadata.
@@ -146,6 +146,6 @@ namespace STTClient.Interfaces
         /// <param name="stream">Instance of the stream to finish.</param>
         /// <param name="aNumResults">Maximum number of candidate transcripts to return. Returned list might be smaller than this.</param>
         /// <returns>The extended metadata result.</returns>
-        unsafe Metadata FinishStreamWithMetadata(Stream stream, uint aNumResults);
+        unsafe Metadata FinishStreamWithMetadata(STTStream stream, uint aNumResults);
     }
 }

@@ -252,7 +252,7 @@ namespace STTClient
             IntPtr** streamingStatePointer = null;
             var resultCode = NativeImp.STT_CreateStream(_modelStatePP, ref streamingStatePointer);
             EvaluateResultCode(resultCode);
-            return new Stream(streamingStatePointer);
+            return new STTStream(streamingStatePointer);
         }
 
         /// <summary>
