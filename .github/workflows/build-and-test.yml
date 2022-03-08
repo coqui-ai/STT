@@ -3383,8 +3383,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
-      - name: Use Java 8 instead of Java 11
-        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: actions/setup-java@v2
+        with:
+          distribution: "temurin"
+          java-version: "8"
       - run: ./ci_scripts/tf-setup.sh --android-armv7
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-armv7-build.sh
@@ -3404,8 +3406,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
-      - name: Use Java 8 instead of Java 11
-        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: actions/setup-java@v2
+        with:
+          distribution: "temurin"
+          java-version: "8"
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-arm64-build.sh
@@ -3425,8 +3429,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.7"
-      - name: Use Java 8 instead of Java 11
-        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: actions/setup-java@v2
+        with:
+          distribution: "temurin"
+          java-version: "8"
       - run: ./ci_scripts/tf-setup.sh --android-arm64
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-x86_64-build.sh
@@ -3473,8 +3479,12 @@ jobs:
           tar xvf native_client.tar.xz
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
           rm -f *
-      - name: Use Java 8 instead of Java 11
-        run: echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
+      - uses: actions/setup-java@v2
+        with:
+          distribution: "temurin"
+          java-version: "8"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
       # This particular version of CMake confuses Gradle by not being semver.
       # We're fine with 3.10.2 which is also installed. Keep an eye on the
       # virtual environments though:
