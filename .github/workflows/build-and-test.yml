@@ -3483,6 +3483,7 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "8"
+          cache: "gradle"
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
       # This particular version of CMake confuses Gradle by not being semver.
