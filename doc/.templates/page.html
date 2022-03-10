@@ -1,0 +1,23 @@
+{% extends "!page.html" %}
+{% block scripts %}
+    {{ super() }}
+    <!-- DocsQA integration start -->
+    <script src="https://cdn.jsdelivr.net/npm/qabot@0.4"></script>
+
+    <qa-bot
+        token="gT0-ntzb6UlK7q_hrhJd8a2u6BBf9_Go9UkQ-rO48kxfsLay71wQ_7U="
+        title="🐸 STT Bot"
+        description="Training and deploying speech-to-text models."
+        style="bottom: calc(1.25em + 80px);"
+    >
+    <template>
+        <dl>
+            <dt>You can ask questions about STT. Try</dt>
+            <dd>What is a deployment?</dd>
+            <dd>How to install STT?</dd>
+            <dd>How to speed up training?</dd>
+        </dl>
+    </template>
+    </qa-bot>
+    <!-- DocsQA integration end -->
+{% endblock %}
