@@ -62,7 +62,9 @@ class TranscriptionPool(PoolBase):
 
         no_dropout = [None] * 6
         logits, _ = create_model(
-            batch_x=self.batch_x_ph, seq_length=self.batch_x_len_ph, dropout=no_dropout
+            batch_x=self.batch_x_ph,
+            seq_length=self.batch_x_len_ph,
+            dropout=no_dropout,
         )
         self.transposed = tf.nn.softmax(tf.transpose(logits, [1, 0, 2]))
         tfv1.train.get_or_create_global_step()
@@ -88,7 +90,12 @@ class TranscriptionPool(PoolBase):
                 outlier_batch_size=Config.outlier_batch_size,
             )
             iterator = tfv1.data.make_one_shot_iterator(data_set)
-            batch_time_start, batch_time_end, batch_x, batch_x_len = iterator.get_next()
+            (
+                batch_time_start,
+                batch_time_end,
+                batch_x,
+                batch_x_len,
+            ) = iterator.get_next()
 
             transcripts = []
             while True:
@@ -126,7 +133,7 @@ class TranscriptionPool(PoolBase):
                 json.dump(transcripts, tlog_file, default=float)
 
 
-def transcribe_many(src_paths, dst_paths):
+def transcribe_many(src_paths, dst_paths, mpctx=multiprocessing):
     # Create list of items to be processed: [(i, src_path[i], dst_paths[i])]
     jobs = zip(itertools.count(), src_paths, dst_paths)
 
@@ -136,7 +143,7 @@ def transcribe_many(src_paths, dst_paths):
     else:
         num_processes = min(cpu_count(), len(src_paths))
 
-    with TranscriptionPool.create(processes=num_processes) as pool:
+    with TranscriptionPool.create(processes=num_processes, context=mpctx) as pool:
         process_iterable = tqdm(
             pool.imap_unordered(jobs),
             desc="Transcribing files",
@@ -211,7 +218,7 @@ def get_tasks_from_dir(src_dir: Path, recursive: bool) -> Tuple[List[Path], List
     return src_paths, dst_paths
 
 
-def transcribe():
+def transcribe(mpctx=multiprocessing):
     initialize_transcribe_config()
 
     src_path = Path(Config.src).resolve()
@@ -241,16 +248,16 @@ def transcribe():
                 if not dst_path.parent.is_dir():
                     raise RuntimeError("Missing destination directory")
 
-                transcribe_many([src_path], [dst_path])
+                transcribe_many([src_path], [dst_path], mpctx)
             else:
                 # Transcribe from .catalog input
                 src_paths, dst_paths = get_tasks_from_catalog(src_path)
-                transcribe_many(src_paths, dst_paths)
+                transcribe_many(src_paths, dst_paths, mpctx)
         elif src_path.is_dir():
             # Transcribe from dir input
             print(f"Transcribing all files in --src directory {src_path}")
             src_paths, dst_paths = get_tasks_from_dir(src_path, Config.recursive)
-            transcribe_many(src_paths, dst_paths)
+            transcribe_many(src_paths, dst_paths, mpctx)
 
 
 @dataclass
@@ -331,9 +338,6 @@ def initialize_transcribe_config():
 
 
 def main():
-    # Set start method to spawn on all platforms to avoid issues with TensorFlow
-    multiprocessing.set_start_method("spawn")
-
     try:
         import webrtcvad
     except ImportError:
@@ -343,7 +347,9 @@ def main():
         sys.exit(1)
 
     check_ctcdecoder_version()
-    transcribe()
+    # Set start method to spawn on all platforms to avoid issues with TensorFlow
+    mpctx = multiprocessing.get_context("spawn")
+    transcribe(mpctx)
 
 
 if __name__ == "__main__":
