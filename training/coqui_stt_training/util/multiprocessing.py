@@ -69,20 +69,24 @@ class PoolBase:
 
     @classmethod
     @contextmanager
-    def create(cls, processes=None, *args, **kwargs):
+    def create(cls, processes=None, context=None, *args, **kwargs):
         if processes is None:
             processes = os.cpu_count()
 
-        queue = multiprocessing.Queue()
+        if context is None:
+            context = multiprocessing
+
+        queue = context.Queue()
         for i in range(processes):
             queue.put(i)
 
-        lock = multiprocessing.Lock()
+        lock = context.Lock()
         parent_env = os.environ.copy()
         pool = cls()
-        pool._inner_pool = multiprocessing.Pool(
+        pool._inner_pool = multiprocessing.pool.Pool(
             initializer=init_fn,
             initargs=(cls, lock, parent_env, queue),
+            context=context,
             *args,
             **kwargs,
         )
