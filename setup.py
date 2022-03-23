@@ -30,7 +30,7 @@ def main():
         "sox",
         "soundfile",
         "tqdm",
-        "webdataset",
+        "webdataset==0.1.103",
         "miniaudio",
     ]
 
