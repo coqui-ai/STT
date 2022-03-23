@@ -35,6 +35,7 @@ RUN apt-get update && \
         git \
         wget \
         libopus0 \
+        libvorbisfile3 \
         libopusfile0 \
         libsndfile1 \
         sox \
