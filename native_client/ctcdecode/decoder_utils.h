@@ -52,13 +52,6 @@ T log_sum_exp(const T &x, const T &y) {
   return std::log(std::exp(x - xmax) + std::exp(y - xmax)) + xmax;
 }
 
-// Get pruned probability vector for each time step's beam search
-std::vector<std::pair<size_t, float>> get_pruned_log_probs(
-    const double *prob_step,
-    size_t class_dim,
-    double cutoff_prob,
-    size_t cutoff_top_n);
-
 // Functor for prefix comparsion
 bool prefix_compare(const PathTrie *x, const PathTrie *y);
 

@@ -4,40 +4,6 @@
 #include <cmath>
 #include <limits>
 
-std::vector<std::pair<size_t, float>> get_pruned_log_probs(
-    const double *prob_step,
-    size_t class_dim,
-    double cutoff_prob,
-    size_t cutoff_top_n) {
-  std::vector<std::pair<int, double>> prob_idx;
-  for (size_t i = 0; i < class_dim; ++i) {
-    prob_idx.push_back(std::pair<int, double>(i, prob_step[i]));
-  }
-  // pruning of vacobulary
-  size_t cutoff_len = class_dim;
-  if (cutoff_prob < 1.0 || cutoff_top_n < cutoff_len) {
-    std::sort(
-        prob_idx.begin(), prob_idx.end(), pair_comp_second_rev<int, double>);
-    if (cutoff_prob < 1.0) {
-      double cum_prob = 0.0;
-      cutoff_len = 0;
-      for (size_t i = 0; i < prob_idx.size(); ++i) {
-        cum_prob += prob_idx[i].second;
-        cutoff_len += 1;
-        if (cum_prob >= cutoff_prob || cutoff_len >= cutoff_top_n) break;
-      }
-    }
-    prob_idx = std::vector<std::pair<int, double>>(
-        prob_idx.begin(), prob_idx.begin() + cutoff_len);
-  }
-  std::vector<std::pair<size_t, float>> log_prob_idx;
-  for (size_t i = 0; i < cutoff_len; ++i) {
-    log_prob_idx.push_back(std::pair<int, float>(
-        prob_idx[i].first, log(prob_idx[i].second + NUM_FLT_MIN)));
-  }
-  return log_prob_idx;
-}
-
 size_t get_utf8_str_len(const std::string &str) {
   size_t str_len = 0;
   for (char c : str) {

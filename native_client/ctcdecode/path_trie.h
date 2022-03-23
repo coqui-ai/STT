@@ -78,10 +78,10 @@ public:
   // remove current path from root
   void remove();
 
-#ifdef DEBUG
+// #ifdef DEBUG
   void vec(std::vector<PathTrie*>& out);
   void print(const Alphabet& a);
-#endif // DEBUG
+// #endif // DEBUG
 
   float log_prob_b_prev;
   float log_prob_nb_prev;

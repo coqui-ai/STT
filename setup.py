@@ -32,6 +32,7 @@ def main():
         "tqdm",
         "webdataset==0.1.103",
         "miniaudio",
+        "clearml",
     ]
 
     decoder_pypi_dep = ["coqui_stt_ctcdecoder == {}".format(version)]
@@ -67,11 +68,12 @@ def main():
         ],
         package_dir={"": "training"},
         packages=find_packages(where="training"),
-        python_requires=">=3.6, <3.9",
+        python_requires=">=3.7, <3.9",
         install_requires=install_requires,
         include_package_data=True,
         extras_require={
             "transcribe": ["webrtcvad == 2.0.10"],
+            "onnxruntime": ["onnxruntime==1.11.0"],
         },
     )
 

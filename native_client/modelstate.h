@@ -9,7 +9,7 @@
 #include "ctcdecode/scorer.h"
 #include "ctcdecode/output.h"
 
-class DecoderState;
+struct DecoderState;
 
 struct ModelState {
   //TODO: infer batch size from model/use dynamic batch size

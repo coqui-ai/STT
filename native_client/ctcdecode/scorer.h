@@ -79,6 +79,8 @@ public:
 
   void set_alphabet(const Alphabet& alphabet);
 
+  const Alphabet& get_alphabet() const;
+
   // save dictionary in file
   bool save_dictionary(const std::string& path,
                        bool append_instead_of_overwrite = false);

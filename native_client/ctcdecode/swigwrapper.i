@@ -27,7 +27,11 @@ namespace std {
     %template(FlashlightOutputVector) vector<FlashlightOutput>;
     %template(FlashlightOutputVectorVector) vector<vector<FlashlightOutput>>;
     %template(Map) unordered_map<string, float>;
+    %template(PathTriePtrVector) vector<PathTrie*>;
 }
+
+%ignore DecoderState::timestep_tree_root_;
+%ignore DecoderState::prefix_root_;
 
 %shared_ptr(Scorer);
 
@@ -35,7 +39,7 @@ namespace std {
 %apply (double* IN_ARRAY2, int DIM1, int DIM2) {(const double *probs, int time_dim, int class_dim)};
 %apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(const double *probs, int batch_size, int time_dim, int class_dim)};
 %apply (int* IN_ARRAY1, int DIM1) {(const int *seq_lengths, int seq_lengths_size)};
-%apply (unsigned int* IN_ARRAY1, int DIM1) {(const unsigned int *input, int length)};
+%apply (unsigned int* IN_ARRAY1, int DIM1) {(const unsigned int *indices, int length)};
 
 %ignore Scorer::dictionary;
 
@@ -43,6 +47,7 @@ namespace std {
 %include "../alphabet.h"
 %include "output.h"
 %include "scorer.h"
+%include "path_trie.h"
 %include "ctc_beam_search_decoder.h"
 
 %constant const char* __version__ = ds_version();

@@ -5,48 +5,68 @@ import argparse
 import csv
 import os
 import sys
-import wave
 import io
 from functools import partial
 from multiprocessing import JoinableQueue, Manager, Process, cpu_count
 
 import numpy as np
+import onnxruntime
+import soundfile as sf
+from clearml import Task
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
-from coqui_stt_training.util.audio import read_ogg_opus
-from six.moves import range, zip
-
-r"""
-This module requires the inference package to be installed:
-    - pip install stt
-Then run using `python -m coqui_stt_training.evaluate_export` with a TFLite model and a CSV test file, and optionally a scorer.
-"""
+from coqui_stt_ctcdecoder import (
+    Alphabet,
+    Scorer,
+    ctc_beam_search_decoder_for_wav2vec2am,
+)
 
 
-def tflite_worker(model, scorer, queue_in, queue_out, gpu_mask):
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_mask)
-    try:
-        from stt import Model
-    except ModuleNotFoundError:
-        raise RuntimeError('ImportError: No module named stt, use "pip install stt"')
-    ds = Model(model)
-    if scorer:
-        ds.enableExternalScorer(scorer)
+def evaluation_worker(model, scorer_path, queue_in, queue_out, beam_width):
+    sess_options = onnxruntime.SessionOptions()
+    sess_options.graph_optimization_level = (
+        onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+    )
+    session = onnxruntime.InferenceSession(model, sess_options)
+
+    am_alphabet = Alphabet()
+    am_alphabet.InitFromLabels("ABCD etaonihsrdlumwcfgypbvk'xjqz")
+
+    scorer = None
+    if scorer_path:
+        scorer_alphabet = Alphabet()
+        scorer_alphabet.InitFromLabels(" abcdefghijklmnopqrstuvwxyz'")
+
+        scorer = Scorer()
+        scorer.init_from_filepath(scorer_path.encode("utf-8"), scorer_alphabet)
 
     while True:
         try:
             msg = queue_in.get()
-
             filename = msg["filename"]
-            filetype = filename.split("/")[-1].split(".")[-1]
-            if filetype == "wav":
-                fin = wave.open(filename, "rb")
-                audio = np.frombuffer(fin.readframes(fin.getnframes()), np.int16)
-                fin.close()
-            elif filetype == "opus":
-                with open(filename, "rb") as fin:
-                    audio_format, audio = read_ogg_opus(io.BytesIO(fin.read()))
 
-            decoded = ds.stt(audio)
+            speech_array, sr = sf.read(filename)
+            max_length = 250000
+            speech_array = speech_array.astype(np.float32)
+            features = speech_array[:max_length]
+
+            def norm(wav, db_level=-27):
+                r = 10 ** (db_level / 20)
+                a = np.sqrt((len(wav) * (r**2)) / np.sum(wav**2))
+                return wav * a
+
+            features = norm(features)
+
+            onnx_outputs = session.run(
+                None, {session.get_inputs()[0].name: [features]}
+            )[0].squeeze()
+            decoded = ctc_beam_search_decoder_for_wav2vec2am(
+                onnx_outputs,
+                am_alphabet,
+                beam_size=beam_width,
+                scorer=scorer,
+                blank_id=0,
+                ignored_symbols=[1, 2, 3],
+            )[0].transcript.strip()
 
             queue_out.put(
                 {
@@ -71,10 +91,10 @@ def main():
     processes = []
     for i in range(args.proc):
         worker_process = Process(
-            target=tflite_worker,
-            args=(args.model, args.scorer, work_todo, work_done, i),
+            target=evaluation_worker,
+            args=(args.model, args.scorer, work_todo, work_done, args.beam_width),
             daemon=True,
-            name="tflite_process_{}".format(i),
+            name="evaluate_process_{}".format(i),
         )
         worker_process.start()  # Launch reader() as a separate python process
         processes.append(worker_process)
@@ -83,7 +103,6 @@ def main():
     ground_truths = []
     predictions = []
     losses = []
-    wav_filenames = []
 
     with open(args.csv, "r") as csvfile:
         csvreader = csv.DictReader(csvfile)
@@ -98,11 +117,10 @@ def main():
             work_todo.put(
                 {"filename": row["wav_filename"], "transcript": row["transcript"]}
             )
-            wav_filenames.extend(row["wav_filename"])
 
-    print("Totally %d wav entries found in csv\n" % count)
+    print("%d wav entries found in csv" % count)
     work_todo.join()
-    print("\nTotally %d wav file transcripted" % work_done.qsize())
+    print("%d wav file transcribed" % work_done.qsize())
 
     while not work_done.empty():
         msg = work_done.get()
@@ -113,7 +131,7 @@ def main():
 
     # Print test summary
     _ = calculate_and_print_report(
-        wav_filenames, ground_truths, predictions, losses, args.csv
+        wavlist, ground_truths, predictions, losses, args.csv
     )
 
     if args.dump:
@@ -128,9 +146,11 @@ def main():
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Computing TFLite accuracy")
+    parser = argparse.ArgumentParser(
+        description="Evaluation report using Wav2vec2 ONNX AM"
+    )
     parser.add_argument(
-        "--model", required=True, help="Path to the model (protocol buffer binary file)"
+        "--model", required=True, help="Path to the model (ONNX export)"
     )
     parser.add_argument("--csv", required=True, help="Path to the CSV source file")
     parser.add_argument(
@@ -151,7 +171,28 @@ def parse_args():
         required=False,
         help='Path to dump the results as text file, with one line for each wav: "wav transcription".',
     )
-    args, unknown = parser.parse_known_args()
+    parser.add_argument(
+        "--beam_width",
+        required=False,
+        default=8,
+        type=int,
+        help="Beam width to use when decoding.",
+    )
+    parser.add_argument(
+        "--clearml_project",
+        required=False,
+        default="STT/wav2vec2 decoding",
+    )
+    parser.add_argument(
+        "--clearml_task",
+        required=False,
+        default="evaluation report",
+    )
+    args = parser.parse_args()
+    try:
+        task = Task.init(project_name=args.clearml_project, task_name=args.clearml_task)
+    except:
+        pass
     return args
 
 
