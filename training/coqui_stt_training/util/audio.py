@@ -632,10 +632,14 @@ def read_wav(wav_file):
 
 def read_flac(flac_file):
     audio_format = read_flac_format(flac_file)
-    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
-    decoded = miniaudio.decode(
-        flac_buffer, nchannels=audio_format.channels, sample_rate=audio_format.rate
-    )
+    if not isinstance(flac_file, str):
+        flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+        decoded = miniaudio.decode(
+            flac_buffer, nchannels=audio_format.channels, sample_rate=audio_format.rate
+        )
+    else:
+        # if flac_file is a string path
+        decoded = miniaudio.decode_file(flac_file)
     asnp = np.frombuffer(decoded.samples, np.int16)
     return audio_format, asnp.reshape(
         asnp.shape[0] // audio_format.channels, audio_format.channels
