@@ -2,7 +2,7 @@
 # You can train "acoustic models" with audio + Tensorflow, and
 # you can create "scorers" with text + KenLM.
 
-FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3 AS kenlm-build
+FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3 AS kenlm-build
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
@@ -27,7 +27,7 @@ RUN cd /code/kenlm && \
     exit 1; )
 
 
-FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
+FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
@@ -38,11 +38,16 @@ RUN apt-get update && \
         libopusfile0 \
         libsndfile1 \
         sox \
-        libsox-fmt-mp3 && \
+        libsox-fmt-mp3 \
+        python3-venv && \
     rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m venv --system-site-packages /venv
+ENV VIRTUAL_ENV=/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 # Make sure pip and its dependencies are up-to-date
-RUN pip3 install --upgrade pip wheel setuptools
+RUN pip install --upgrade pip wheel setuptools
 
 WORKDIR /code
 
@@ -53,7 +58,7 @@ COPY training/coqui_stt_training/GRAPH_VERSION /code/training/coqui_stt_training
 
 # Build CTC decoder first, to avoid clashes on incompatible versions upgrades
 RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
-RUN pip3 install --upgrade native_client/ctcdecode/dist/*.whl
+RUN pip install --upgrade native_client/ctcdecode/dist/*.whl
 
 COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
@@ -74,7 +79,7 @@ RUN LATEST_STABLE_RELEASE=$(curl "https://api.github.com/repos/coqui-ai/STT/rele
 # No need for the decoder since we did it earlier
 # TensorFlow GPU should already be installed on the base image,
 # and we don't want to break that
-RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
+RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip install --upgrade -e .
 
 # Copy rest of the code and test training
 COPY . /code

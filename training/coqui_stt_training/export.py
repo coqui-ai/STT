@@ -122,11 +122,23 @@ def export():
                 Config.export_dir, output_filename.replace(".pb", ".tflite")
             )
 
-            converter = tf.lite.TFLiteConverter(
-                frozen_graph,
-                input_tensors=inputs.values(),
-                output_tensors=outputs.values(),
-            )
+            try:
+                converter = tf.lite.TFLiteConverter(
+                    frozen_graph,
+                    input_tensors=inputs.values(),
+                    output_tensors=outputs.values(),
+                )
+            except AttributeError:
+                log_error(
+                    "Couldn't access TFLite API in TensorFlow package. "
+                    "The NVIDIA TF1 docker image removes the TFLite API, so you'll need "
+                    "to save the checkpoint outside of Docker and then export it using "
+                    "the training package directly: \n"
+                    "    pip install coqui_stt_training\n"
+                    "    python -m coqui_stt_training.export --checkpoint_dir ... --export_dir ...\n"
+                    "This should work without needing any special CUDA setup, even for CUDA checkpoints."
+                )
+                sys.exit(1)
 
             if Config.export_quantize:
                 converter.optimizations = [tf.lite.Optimize.DEFAULT]

@@ -67,7 +67,7 @@ def main():
         ],
         package_dir={"": "training"},
         packages=find_packages(where="training"),
-        python_requires=">=3.6, <3.8",
+        python_requires=">=3.6, <3.9",
         install_requires=install_requires,
         include_package_data=True,
         extras_require={
