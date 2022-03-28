@@ -2,7 +2,7 @@
 # You can train "acoustic models" with audio + Tensorflow, and
 # you can create "scorers" with text + KenLM.
 
-FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3 AS kenlm-build
+FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3 AS kenlm-build
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
@@ -27,7 +27,7 @@ RUN cd /code/kenlm && \
     exit 1; )
 
 
-FROM nvcr.io/nvidia/tensorflow:20.06-tf1-py3
+FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
