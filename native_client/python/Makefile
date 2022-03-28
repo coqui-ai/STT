@@ -8,9 +8,9 @@ bindings-clean:
 
 # Enforce PATH here because swig calls from build_ext looses track of some
 # variables over several runs
-bindings-build: ds-swig
+bindings-build:
 	pip3 install --quiet $(PYTHON_PACKAGES) wheel setuptools
-	DISTUTILS_USE_SDK=1 PATH=$(TOOLCHAIN_DIR):$(DS_SWIG_BIN_PATH):$$PATH SWIG_LIB="$(SWIG_LIB)" AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS_NEEDED) $(RPATH_PYTHON)" MODEL_LDFLAGS="$(LDFLAGS_DIRS)" MODEL_LIBS="$(LIBS)" $(PYTHON_PATH) $(PYTHON_SYSCONFIGDATA) $(NUMPY_INCLUDE) python3 ./setup.py build_ext $(PYTHON_PLATFORM_NAME)
+	DISTUTILS_USE_SDK=1 PATH=$(TOOLCHAIN_DIR):$$PATH AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS_NEEDED) $(RPATH_PYTHON)" MODEL_LDFLAGS="$(LDFLAGS_DIRS)" MODEL_LIBS="$(LIBS)" $(PYTHON_PATH) $(PYTHON_SYSCONFIGDATA) $(NUMPY_INCLUDE) python3 ./setup.py build_ext $(PYTHON_PLATFORM_NAME)
 
 MANIFEST.in: bindings-build
 	> $@

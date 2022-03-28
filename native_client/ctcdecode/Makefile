@@ -3,7 +3,6 @@
 include ../definitions.mk
 
 NUM_PROCESSES ?= 1
-DS_SWIG_DEP ?= ds-swig # Allow to disable the ds-swig dependency, useful for GitHub Actions move
 
 # ARM64 can't find the proper libm.so without this
 ifeq ($(TARGET),rpi3-armv8)
@@ -44,16 +43,16 @@ workspace_status.cc:
 
 # Enforce PATH here because swig calls from build_ext looses track of some
 # variables over several runs
-bindings: clean-keep-third-party workspace_status.cc $(DS_SWIG_DEP)
+bindings: clean-keep-third-party workspace_status.cc
 	python -m pip install --quiet $(PYTHON_PACKAGES) wheel setuptools
-	DISTUTILS_USE_SDK=1 PATH=$(DS_SWIG_BIN_PATH):$(TOOLCHAIN_DIR):$$PATH SWIG_LIB="$(SWIG_LIB)" AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) LIBEXE=$(LIBEXE) CFLAGS="$(CFLAGS) $(CXXFLAGS)" LDFLAGS="$(LDFLAGS_NEEDED)" $(PYTHON_PATH) $(NUMPY_INCLUDE) python ./setup.py build_ext --num_processes $(NUM_PROCESSES) $(SETUP_FLAGS)
+	DISTUTILS_USE_SDK=1 PATH=$(TOOLCHAIN_DIR):$$PATH AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) LIBEXE=$(LIBEXE) CFLAGS="$(CFLAGS) $(CXXFLAGS)" LDFLAGS="$(LDFLAGS_NEEDED)" $(PYTHON_PATH) $(NUMPY_INCLUDE) python ./setup.py build_ext --num_processes $(NUM_PROCESSES) $(SETUP_FLAGS)
 	find temp_build -type f -name "*.o" -delete
 	DISTUTILS_USE_SDK=1 AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) LIBEXE=$(LIBEXE) CFLAGS="$(CFLAGS) $(CXXFLAGS)" LDFLAGS="$(LDFLAGS_NEEDED)" $(PYTHON_PATH) $(NUMPY_INCLUDE) python ./setup.py bdist_wheel $(SETUP_FLAGS)
 	rm -rf temp_build
 
-bindings-debug: clean-keep-third-party workspace_status.cc $(DS_SWIG_DEP)
+bindings-debug: clean-keep-third-party workspace_status.cc
 	python -m pip install --quiet $(PYTHON_PACKAGES) wheel setuptools
-	DISTUTILS_USE_SDK=1 PATH=$(DS_SWIG_BIN_PATH):$(TOOLCHAIN_DIR):$$PATH SWIG_LIB="$(SWIG_LIB)" AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) LIBEXE=$(LIBEXE) CFLAGS="$(CFLAGS) $(CXXFLAGS) -DDEBUG" LDFLAGS="$(LDFLAGS_NEEDED)" $(PYTHON_PATH) $(NUMPY_INCLUDE) python ./setup.py build_ext --debug --num_processes $(NUM_PROCESSES) $(SETUP_FLAGS)
+	DISTUTILS_USE_SDK=1 PATH=$(TOOLCHAIN_DIR):$$PATH AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) LIBEXE=$(LIBEXE) CFLAGS="$(CFLAGS) $(CXXFLAGS) -DDEBUG" LDFLAGS="$(LDFLAGS_NEEDED)" $(PYTHON_PATH) $(NUMPY_INCLUDE) python ./setup.py build_ext --debug --num_processes $(NUM_PROCESSES) $(SETUP_FLAGS)
 	$(GENERATE_DEBUG_SYMS)
 	find temp_build -type f -name "*.o" -delete
 	DISTUTILS_USE_SDK=1 AS=$(AS) CC=$(CC) CXX=$(CXX) LD=$(LD) LIBEXE=$(LIBEXE) CFLAGS="$(CFLAGS) $(CXXFLAGS) -DDEBUG" LDFLAGS="$(LDFLAGS_NEEDED)" $(PYTHON_PATH) $(NUMPY_INCLUDE) python ./setup.py bdist_wheel $(SETUP_FLAGS)

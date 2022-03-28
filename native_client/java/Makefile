@@ -27,5 +27,5 @@ maven-bundle: apk
 	$(GRADLE) uploadArchives
 	$(GRADLE) zipMavenArtifacts
 
-bindings: clean ds-swig
-	$(DS_SWIG_ENV) swig -c++ -java -package ai.coqui.libstt -outdir libstt/src/main/java/ai/coqui/libstt/ -o jni/stt_wrap.cpp jni/stt.i
+bindings: clean
+	swig -c++ -java -package ai.coqui.libstt -outdir libstt/src/main/java/ai/coqui/libstt/ -o jni/stt_wrap.cpp jni/stt.i

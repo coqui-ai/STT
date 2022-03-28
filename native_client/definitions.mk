@@ -214,38 +214,3 @@ define copy_missing_libs
         done; \
     fi;
 endef
-
-SWIG_DIST_URL ?=
-ifeq ($(SWIG_DIST_URL),)
-ifeq ($(findstring Linux,$(OS)),Linux)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.linux.amd64.tar.gz"
-else ifeq ($(findstring Darwin,$(OS)),Darwin)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.darwin.amd64.tar.gz"
-else ifeq ($(findstring _NT,$(OS)),_NT)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.win.amd64.tar.gz"
-else
-$(error There is no prebuilt SWIG available for your platform. Please produce one and set SWIG_DIST_URL.)
-endif # findstring()
-endif # ($(SWIG_DIST_URL),)
-
-# Should point to native_client/ subdir by default
-SWIG_ROOT ?= $(abspath $(shell dirname "$(lastword $(MAKEFILE_LIST))"))/ds-swig
-ifeq ($(findstring _NT,$(OS)),_NT)
-SWIG_ROOT ?= $(shell cygpath -u "$(SWIG_ROOT)")
-endif
-SWIG_LIB ?= $(SWIG_ROOT)/share/swig/4.1.0/
-
-SWIG_BIN := swig$(PLATFORM_EXE_SUFFIX)
-DS_SWIG_BIN := ds-swig$(PLATFORM_EXE_SUFFIX)
-DS_SWIG_BIN_PATH := $(SWIG_ROOT)/bin
-
-DS_SWIG_ENV := SWIG_LIB="$(SWIG_LIB)" PATH="$(DS_SWIG_BIN_PATH):${PATH}"
-
-$(DS_SWIG_BIN_PATH)/swig:
-	mkdir -p $(SWIG_ROOT)
-	curl -sSL "$(SWIG_DIST_URL)" | tar -C $(SWIG_ROOT) -zxf -
-	ln -s $(DS_SWIG_BIN) $(DS_SWIG_BIN_PATH)/$(SWIG_BIN)
-
-ds-swig: $(DS_SWIG_BIN_PATH)/swig
-	$(DS_SWIG_ENV) swig -version
-	$(DS_SWIG_ENV) swig -swiglib

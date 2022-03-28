@@ -15,13 +15,9 @@ If you would still like to build the 🐸STT binaries yourself, you'll need the 
 
 It is required to use our fork of TensorFlow since it includes fixes for common problems encountered when building the native client files.
 
-If you'd like to build the language bindings or the decoder package, you'll also need:
+If you'd like to build the language bindings or the decoder package, you'll also need to install:
 
-* `SWIG master <https://github.com/swig/swig>`_.
-  Unfortunately, NodeJS / ElectronJS after 10.x support on SWIG is a bit behind, and while there are fixes merged on master, they have not been released.
-  Prebuilt patched versions (covering Linux, Windows and macOS) of SWIG should get installed under `native_client/ <native_client/>`_ automatically as soon as you build any bindings that requires it.
-
-* `node-pre-gyp <https://github.com/mapbox/node-pre-gyp>`_ (for Node.JS bindings only)
+* `SWIG v4.0.2 <https://github.com/swig/swig>`_.
 
 For information on building on Windows, please refer to: :ref:`Windows Building <build-native-client-dotnet>`.
 
