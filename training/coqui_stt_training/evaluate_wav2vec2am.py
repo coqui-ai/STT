@@ -21,7 +21,9 @@ from coqui_stt_ctcdecoder import (
 )
 
 
-def evaluation_worker(model, scorer_path, queue_in, queue_out, beam_width):
+def evaluation_worker(
+    model, scorer_path, queue_in, queue_out, beam_width, lm_alpha, lm_beta
+):
     sess_options = onnxruntime.SessionOptions()
     sess_options.graph_optimization_level = (
         onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
@@ -38,6 +40,8 @@ def evaluation_worker(model, scorer_path, queue_in, queue_out, beam_width):
 
         scorer = Scorer()
         scorer.init_from_filepath(scorer_path.encode("utf-8"), scorer_alphabet)
+        if lm_alpha and lm_beta:
+            scorer.reset_params(lm_alpha, lm_beta)
 
     while True:
         try:
@@ -82,17 +86,25 @@ def evaluation_worker(model, scorer_path, queue_in, queue_out, beam_width):
         queue_in.task_done()
 
 
-def main():
-    args = parse_args()
+def evaluate_wav2vec2am(
+    model,
+    csv_file,
+    scorer,
+    num_processes,
+    dump_to_file,
+    beam_width,
+    lm_alpha=None,
+    lm_beta=None,
+):
     manager = Manager()
     work_todo = JoinableQueue()  # this is where we are going to store input data
     work_done = manager.Queue()  # this where we are gonna push them out
 
     processes = []
-    for i in range(args.proc):
+    for i in range(num_processes):
         worker_process = Process(
             target=evaluation_worker,
-            args=(args.model, args.scorer, work_todo, work_done, args.beam_width),
+            args=(model, scorer, work_todo, work_done, beam_width, lm_alpha, lm_beta),
             daemon=True,
             name="evaluate_process_{}".format(i),
         )
@@ -104,7 +116,7 @@ def main():
     predictions = []
     losses = []
 
-    with open(args.csv, "r") as csvfile:
+    with open(csv_file, "r") as csvfile:
         csvreader = csv.DictReader(csvfile)
         count = 0
         for row in csvreader:
@@ -112,7 +124,7 @@ def main():
             # Relative paths are relative to the folder the CSV file is in
             if not os.path.isabs(row["wav_filename"]):
                 row["wav_filename"] = os.path.join(
-                    os.path.dirname(args.csv), row["wav_filename"]
+                    os.path.dirname(csv_file), row["wav_filename"]
                 )
             work_todo.put(
                 {"filename": row["wav_filename"], "transcript": row["transcript"]}
@@ -130,19 +142,21 @@ def main():
         wavlist.append(msg["wav"])
 
     # Print test summary
-    _ = calculate_and_print_report(
-        wavlist, ground_truths, predictions, losses, args.csv
+    samples = calculate_and_print_report(
+        wavlist, ground_truths, predictions, losses, csv_file
     )
 
-    if args.dump:
-        with open(args.dump + ".txt", "w") as ftxt, open(
-            args.dump + ".out", "w"
+    if dump_to_file:
+        with open(dump_to_file + ".txt", "w") as ftxt, open(
+            dump_to_file + ".out", "w"
         ) as fout:
             for wav, txt, out in zip(wavlist, ground_truths, predictions):
                 ftxt.write("%s %s\n" % (wav, txt))
                 fout.write("%s %s\n" % (wav, out))
-            print("Reference texts dumped to %s.txt" % args.dump)
-            print("Transcription   dumped to %s.out" % args.dump)
+            print("Reference texts dumped to %s.txt" % dump_to_file)
+            print("Transcription   dumped to %s.out" % dump_to_file)
+
+    return samples
 
 
 def parse_args():
@@ -189,11 +203,18 @@ def parse_args():
         default="evaluation report",
     )
     args = parser.parse_args()
+    return args
+
+
+def main():
+    args = parse_args()
     try:
         task = Task.init(project_name=args.clearml_project, task_name=args.clearml_task)
     except:
         pass
-    return args
+    evaluate_wav2vec2am(
+        args.model, args.csv, args.scorer, args.proc, args.dump, args.beam_width
+    )
 
 
 if __name__ == "__main__":

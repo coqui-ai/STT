@@ -2,19 +2,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function
 
+import os
 import sys
+from dataclasses import dataclass, field
 
 import optuna
-import tensorflow.compat.v1 as tfv1
+from clearml import Task
 from coqui_stt_ctcdecoder import Scorer
-from coqui_stt_training.evaluate import evaluate
-from coqui_stt_training.train import create_model, early_training_checks
 from coqui_stt_training.util.config import (
+    BaseSttConfig,
     Config,
-    initialize_globals_from_cli,
+    initialize_globals_from_instance,
     log_error,
 )
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
+from coqui_stt_training.evaluate_wav2vec2am import evaluate_wav2vec2am
 
 
 def character_based():
@@ -34,9 +36,16 @@ def objective(trial):
 
     samples = []
     for step, test_file in enumerate(Config.test_files):
-        tfv1.reset_default_graph()
-
-        current_samples = evaluate([test_file], create_model)
+        current_samples = evaluate_wav2vec2am(
+            Config.wav2vec2_model,
+            test_file,
+            Config.scorer_path,
+            Config.num_processes,
+            dump_to_file=None,
+            beam_width=Config.export_beam_width,
+            lm_alpha=Config.lm_alpha,
+            lm_beta=Config.lm_beta,
+        )
         samples += current_samples
 
         # Report intermediate objective value.
@@ -65,9 +74,37 @@ def compute_lm_optimization() -> dict:
     }
 
 
+@dataclass
+class LmOptimizeWav2vec2amConfig(BaseSttConfig):
+    wav2vec2_model: str = field(
+        default="",
+        metadata=dict(help="Path to exported ONNX model for wav2vec2 AM."),
+    )
+    num_processes: int = field(
+        default=os.cpu_count(),
+        metadata=dict(help="Number of worker processes for evaluation."),
+    )
+    clearml_project: str = field(
+        default="STT/wav2vec2 decoding",
+    )
+    clearml_task: str = field(
+        default="LM tuning",
+    )
+
+
+def initialize_config():
+    config = LmOptimizeWav2vec2amConfig.init_from_argparse(arg_prefix="")
+    try:
+        task = Task.init(
+            project_name=config.clearml_project, task_name=config.clearml_task
+        )
+    except:
+        pass
+    initialize_globals_from_instance(config)
+
+
 def main():
-    initialize_globals_from_cli()
-    early_training_checks()
+    initialize_config()
 
     if not Config.scorer_path:
         log_error(
@@ -83,7 +120,7 @@ def main():
         )
         sys.exit(1)
 
-    results = lm_opt.compute_lm_optimization()
+    results = compute_lm_optimization()
     print(
         "Best params: lm_alpha={} and lm_beta={} with WER={}".format(
             results.get("lm_alpha"),
