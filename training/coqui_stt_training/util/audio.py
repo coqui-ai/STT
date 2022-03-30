@@ -623,7 +623,8 @@ def write_wav(wav_file, pcm_data, audio_format=DEFAULT_FORMAT):
 
 
 def read_wav(wav_file):
-    wav_file.seek(0)
+    if not isinstance(wav_file, str):
+        wav_file.seek(0)
     with wave.open(wav_file, "rb") as wav_file_reader:
         audio_format = read_audio_format_from_wav_file(wav_file_reader)
         pcm_data = wav_file_reader.readframes(wav_file_reader.getnframes())
@@ -674,7 +675,8 @@ def write_audio(
 
 
 def read_wav_duration(wav_file):
-    wav_file.seek(0)
+    if not isinstance(wav_file, str):
+        wav_file.seek(0)
     with wave.open(wav_file, "rb") as wav_file_reader:
         return wav_file_reader.getnframes() / wav_file_reader.getframerate()
 
@@ -757,7 +759,8 @@ def read_duration(audio_type, audio_file):
 
 
 def read_wav_format(wav_file):
-    wav_file.seek(0)
+    if not isinstance(wav_file, str):
+        wav_file.seek(0)
     with wave.open(wav_file, "rb") as wav_file_reader:
         return read_audio_format_from_wav_file(wav_file_reader)
 
