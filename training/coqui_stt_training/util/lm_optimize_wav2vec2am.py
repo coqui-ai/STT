@@ -16,7 +16,7 @@ from coqui_stt_training.util.config import (
     log_error,
 )
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
-from coqui_stt_training.evaluate_wav2vec2am import evaluate_wav2vec2am
+from coqui_stt_training.evaluate_wav2vec2am import evaluate_wav2vec2am, EvaluationPool
 
 
 def character_based():
@@ -45,6 +45,7 @@ def objective(trial):
             beam_width=Config.export_beam_width,
             lm_alpha=Config.lm_alpha,
             lm_beta=Config.lm_beta,
+            existing_pool=Config.pool,
         )
         samples += current_samples
 
@@ -101,6 +102,10 @@ def initialize_config():
     except:
         pass
     initialize_globals_from_instance(config)
+    Config.pool = EvaluationPool.create_impl(
+        processes=config.num_processes,
+        initargs=(config.wav2vec2_model, Config.scorer_path),
+    )
 
 
 def main():

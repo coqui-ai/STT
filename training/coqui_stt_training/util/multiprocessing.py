@@ -14,7 +14,7 @@ def target_fn_single(arg):
     return target_impl.run(arg)
 
 
-def init_fn(target_impl_cls, global_lock, parent_env, id_queue):
+def init_fn(target_impl_cls, global_lock, parent_env, id_queue, initargs):
     process_id = id_queue.get()
 
     global target_impl
@@ -25,7 +25,7 @@ def init_fn(target_impl_cls, global_lock, parent_env, id_queue):
     if child_env is not None:
         os.environ = child_env
 
-    target_impl.init()
+    target_impl.init(*initargs)
 
 
 class PoolBase:
@@ -51,9 +51,9 @@ class PoolBase:
     Example usage:
 
         class MultiplyByTwoPool(PoolBase):
-            def init(self):
+            def init(self, pool_name):
                 with self.lock:
-                    print(f"synchronized step in proc {self.process_id}")
+                    print(f"[{pool_name}] synchronized step in proc {self.process_id}")
 
             def get_child_env(self, parent_env):
                 parent_env["TEST_VAR"] = str(self.process_id)
@@ -63,13 +63,12 @@ class PoolBase:
                 assert os.environ["TEST_VAR"] == str(self.process_id)
                 return x*2
 
-        pool = MultiplyByTwoPool.create(processes=4)
+        pool = MultiplyByTwoPool.create(processes=4, initargs=("my pool",))
         print(pool.map(range(10)))
     """
 
     @classmethod
-    @contextmanager
-    def create(cls, processes=None, context=None, *args, **kwargs):
+    def create_impl(cls, processes=None, context=None, initargs=(), *args, **kwargs):
         if processes is None:
             processes = os.cpu_count()
 
@@ -85,11 +84,18 @@ class PoolBase:
         pool = cls()
         pool._inner_pool = multiprocessing.pool.Pool(
             initializer=init_fn,
-            initargs=(cls, lock, parent_env, queue),
+            initargs=(cls, lock, parent_env, queue, initargs),
             context=context,
             *args,
             **kwargs,
         )
+
+        return pool
+
+    @classmethod
+    @contextmanager
+    def create(cls, processes=None, context=None, initargs=(), *args, **kwargs):
+        pool = cls.create_impl(processes, context, initargs, *args, **kwargs)
         try:
             yield pool
         finally:
@@ -99,7 +105,7 @@ class PoolBase:
         self.lock = lock
         self.process_id = process_id
 
-    def init(self):
+    def init(self, *args):
         pass
 
     def run(self, *args, **kwargs):
@@ -131,6 +137,15 @@ class PoolBase:
 
     def starmap_async(self, *args, **kwargs):
         return self._inner_pool.starmap_async(target_fn, *args, **kwargs)
+
+    def close(self):
+        return self._inner_pool.close()
+
+    def terminate(self):
+        return self._inner_pool.terminate()
+
+    def join(self):
+        return self._inner_pool.join()
 
 
 if __name__ == "__main__":

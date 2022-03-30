@@ -14,80 +14,75 @@ import onnxruntime
 import soundfile as sf
 from clearml import Task
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
+from coqui_stt_training.util.multiprocessing import PoolBase
 from coqui_stt_ctcdecoder import (
     Alphabet,
     Scorer,
     ctc_beam_search_decoder_for_wav2vec2am,
 )
+from tqdm import tqdm
 
 
-def evaluation_worker(
-    model, scorer_path, queue_in, queue_out, beam_width, lm_alpha, lm_beta
-):
-    sess_options = onnxruntime.SessionOptions()
-    sess_options.graph_optimization_level = (
-        onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
-    )
-    session = onnxruntime.InferenceSession(model, sess_options)
+class EvaluationPool(PoolBase):
+    def init(self, model_file, scorer_path):
+        sess_options = onnxruntime.SessionOptions()
+        sess_options.graph_optimization_level = (
+            onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+        )
+        self.session = onnxruntime.InferenceSession(model_file, sess_options)
 
-    am_alphabet = Alphabet()
-    am_alphabet.InitFromLabels("ABCD etaonihsrdlumwcfgypbvk'xjqz")
+        self.am_alphabet = Alphabet()
+        self.am_alphabet.InitFromLabels("ABCD etaonihsrdlumwcfgypbvk'xjqz")
 
-    scorer = None
-    if scorer_path:
-        scorer_alphabet = Alphabet()
-        scorer_alphabet.InitFromLabels(" abcdefghijklmnopqrstuvwxyz'")
+        self.scorer = None
+        if scorer_path:
+            self.scorer_alphabet = Alphabet()
+            self.scorer_alphabet.InitFromLabels(" abcdefghijklmnopqrstuvwxyz'")
 
-        scorer = Scorer()
-        scorer.init_from_filepath(scorer_path.encode("utf-8"), scorer_alphabet)
-        if lm_alpha and lm_beta:
-            scorer.reset_params(lm_alpha, lm_beta)
-
-    while True:
-        try:
-            msg = queue_in.get()
-            filename = msg["filename"]
-
-            speech_array, sr = sf.read(filename)
-            max_length = 250000
-            speech_array = speech_array.astype(np.float32)
-            features = speech_array[:max_length]
-
-            def norm(wav, db_level=-27):
-                r = 10 ** (db_level / 20)
-                a = np.sqrt((len(wav) * (r**2)) / np.sum(wav**2))
-                return wav * a
-
-            features = norm(features)
-
-            onnx_outputs = session.run(
-                None, {session.get_inputs()[0].name: [features]}
-            )[0].squeeze()
-            decoded = ctc_beam_search_decoder_for_wav2vec2am(
-                onnx_outputs,
-                am_alphabet,
-                beam_size=beam_width,
-                scorer=scorer,
-                blank_id=0,
-                ignored_symbols=[1, 2, 3],
-            )[0].transcript.strip()
-
-            queue_out.put(
-                {
-                    "wav": filename,
-                    "prediction": decoded,
-                    "ground_truth": msg["transcript"],
-                }
+            self.scorer = Scorer()
+            self.scorer.init_from_filepath(
+                scorer_path.encode("utf-8"), self.scorer_alphabet
             )
-        except FileNotFoundError as ex:
-            print("FileNotFoundError: ", ex)
 
-        print(queue_out.qsize(), end="\r")  # Update the current progress
-        queue_in.task_done()
+    def run(self, job):
+        wav_filename, ground_truth, beam_width, lm_alpha, lm_beta = job
+        prediction = self.transcribe_file(wav_filename, beam_width, lm_alpha, lm_beta)
+        return wav_filename, ground_truth, prediction
+
+    def transcribe_file(self, wav_filename, beam_width, lm_alpha, lm_beta):
+        if lm_alpha and lm_beta:
+            self.scorer.reset_params(lm_alpha, lm_beta)
+
+        speech_array, sr = sf.read(wav_filename)
+        max_length = 250000
+        speech_array = speech_array.astype(np.float32)
+        features = speech_array[:max_length]
+
+        def norm(wav, db_level=-27):
+            r = 10 ** (db_level / 20)
+            a = np.sqrt((len(wav) * (r**2)) / np.sum(wav**2))
+            return wav * a
+
+        features = norm(features)
+
+        onnx_outputs = self.session.run(
+            None, {self.session.get_inputs()[0].name: [features]}
+        )[0].squeeze()
+
+        decoded = ctc_beam_search_decoder_for_wav2vec2am(
+            onnx_outputs,
+            self.am_alphabet,
+            beam_size=beam_width,
+            scorer=self.scorer,
+            blank_id=0,
+            ignored_symbols=[1, 2, 3],
+        )[0].transcript.strip()
+
+        return decoded
 
 
 def evaluate_wav2vec2am(
-    model,
+    model_file,
     csv_file,
     scorer,
     num_processes,
@@ -95,27 +90,9 @@ def evaluate_wav2vec2am(
     beam_width,
     lm_alpha=None,
     lm_beta=None,
+    existing_pool=None,
 ):
-    manager = Manager()
-    work_todo = JoinableQueue()  # this is where we are going to store input data
-    work_done = manager.Queue()  # this where we are gonna push them out
-
-    processes = []
-    for i in range(num_processes):
-        worker_process = Process(
-            target=evaluation_worker,
-            args=(model, scorer, work_todo, work_done, beam_width, lm_alpha, lm_beta),
-            daemon=True,
-            name="evaluate_process_{}".format(i),
-        )
-        worker_process.start()  # Launch reader() as a separate python process
-        processes.append(worker_process)
-
-    wavlist = []
-    ground_truths = []
-    predictions = []
-    losses = []
-
+    jobs = []
     with open(csv_file, "r") as csvfile:
         csvreader = csv.DictReader(csvfile)
         count = 0
@@ -126,35 +103,50 @@ def evaluate_wav2vec2am(
                 row["wav_filename"] = os.path.join(
                     os.path.dirname(csv_file), row["wav_filename"]
                 )
-            work_todo.put(
-                {"filename": row["wav_filename"], "transcript": row["transcript"]}
+            jobs.append(
+                (row["wav_filename"], row["transcript"], beam_width, lm_alpha, lm_beta)
             )
 
-    print("%d wav entries found in csv" % count)
-    work_todo.join()
-    print("%d wav file transcribed" % work_done.qsize())
+    pool = existing_pool
+    if not pool:
+        pool = EvaluationPool.create_impl(
+            processes=num_processes, initargs=(model_file, scorer)
+        )
 
-    while not work_done.empty():
-        msg = work_done.get()
+    process_iterable = tqdm(
+        pool.imap_unordered(jobs),
+        desc="Transcribing files",
+        total=len(jobs),
+    )
+
+    wav_filenames = []
+    ground_truths = []
+    predictions = []
+    losses = []
+
+    for wav_filename, ground_truth, prediction in process_iterable:
+        wav_filenames.append(wav_filename)
+        ground_truths.append(ground_truth)
+        predictions.append(prediction)
         losses.append(0.0)
-        ground_truths.append(msg["ground_truth"])
-        predictions.append(msg["prediction"])
-        wavlist.append(msg["wav"])
 
     # Print test summary
     samples = calculate_and_print_report(
-        wavlist, ground_truths, predictions, losses, csv_file
+        wav_filenames, ground_truths, predictions, losses, csv_file
     )
 
     if dump_to_file:
         with open(dump_to_file + ".txt", "w") as ftxt, open(
             dump_to_file + ".out", "w"
         ) as fout:
-            for wav, txt, out in zip(wavlist, ground_truths, predictions):
+            for wav, txt, out in zip(wav_filenames, ground_truths, predictions):
                 ftxt.write("%s %s\n" % (wav, txt))
                 fout.write("%s %s\n" % (wav, out))
             print("Reference texts dumped to %s.txt" % dump_to_file)
             print("Transcription   dumped to %s.out" % dump_to_file)
+
+    if not existing_pool:
+        pool.close()
 
     return samples
 
