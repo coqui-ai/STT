@@ -15,12 +15,12 @@ class TestValidateReadAudio(unittest.TestCase):
         audio_path = from_here("../data/smoke_test/LDC93S1.flac")
         audio_type = audio.get_loadable_audio_type_from_extension(audio_path.suffix)
         result = audio.read_audio(audio_type, str(audio_path))
-        self.assertEqual(isinstance(result[0], audio.AudioFormat))
+        self.assertIsInstance(result[0], audio.AudioFormat)
     def test_wav(self):
         audio_path = from_here("../data/smoke_test/LDC93S1.wav")
         audio_type = audio.get_loadable_audio_type_from_extension(audio_path.suffix)
         result = audio.read_audio(audio_type, str(audio_path))
-        self.assertEqual(isinstance(result[0], audio.AudioFormat))
+        self.assertIsInstance(result[0], audio.AudioFormat)
 
 
 class TestValidateReadDuration(unittest.TestCase):
@@ -28,12 +28,12 @@ class TestValidateReadDuration(unittest.TestCase):
         audio_path = from_here("../data/smoke_test/LDC93S1.flac")
         audio_type = audio.get_loadable_audio_type_from_extension(audio_path.suffix)
         result = audio.read_duration(audio_type, str(audio_path))
-        self.assertEqual(isinstance(result, float))
+        self.assertIsInstance(result, float)
     def test_wav(self):
         audio_path = from_here("../data/smoke_test/LDC93S1.wav")
         audio_type = audio.get_loadable_audio_type_from_extension(audio_path.suffix)
         result = audio.read_duration(audio_type, str(audio_path))
-        self.assertEqual(isinstance(result, float))
+        self.assertIsInstance(result, float)
 
 
 if __name__ == "__main__":
