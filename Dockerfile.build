@@ -146,7 +146,7 @@ RUN bazel build \
 	//native_client:libstt.so
 
 # Copy built libs to /STT/native_client
-RUN cp bazel-bin/native_client/libstt.so /STT/native_client/
+RUN cp bazel-bin/native_client/libstt.so bazel-bin/native_client/libkenlm.so /STT/native_client/
 
 # Build client.cc and install Python client and decoder bindings
 ENV TFDIR /STT/tensorflow
