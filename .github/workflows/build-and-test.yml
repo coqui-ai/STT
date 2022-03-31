@@ -1153,6 +1153,30 @@ jobs:
         with:
           name: native_client.tflite.linux.aarch64.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.linux.aarch64.tar.xz
+      - uses: actions/download-artifact@v2
+        with:
+          name: swig_Windows_crosscompiled
+      - run: |
+          cd swig_Windows_crosscompiled
+          tar cvzf ../ds-swig.win.amd64.tar.gz .
+      - uses: actions/download-artifact@v2
+        with:
+          name: swig_macOS
+      - run: |
+          cd swig_macOS
+          tar cvzf ../ds-swig.darwin.amd64.tar.gz .
+      - uses: actions/download-artifact@v2
+        with:
+          name: swig_macOS_arm64
+      - run: |
+          cd swig_macOS_arm64
+          tar cvzf ../ds-swig.darwin.arm64.tar.gz .
+      - uses: actions/download-artifact@v2
+        with:
+          name: swig_Linux
+      - run: |
+          cd swig_Linux
+          tar cvzf ../ds-swig.linux.amd64.tar.gz .
       - run: ls -lh
       - uses: ./.github/actions/upload-release-asset
         with:
@@ -1163,6 +1187,11 @@ jobs:
         with:
           name: '' # use filename
           path: "*.zip"
+          release-tag: ${{ needs.create-release.outputs.release-tag }}
+      - uses: ./.github/actions/upload-release-asset
+        with:
+          name: '' # use filename
+          path: "*.tar.gz"
           release-tag: ${{ needs.create-release.outputs.release-tag }}
   docker-build:
     name: "Build Dockerfile.build image"
@@ -1389,6 +1418,58 @@ jobs:
       - run: |
           sh autogen.sh
           ./configure \
+            --prefix=${{ github.workspace }}/build-static/ \
+            --program-prefix=ds-
+        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+      - run: |
+          make -j
+        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+      - run: |
+          make install
+        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/build-static/
+  swig_macOS_arm64:
+    name: "Mac|Build SWIG for arm64"
+    runs-on: macos-10.15
+    env:
+      swig_hash: "90cdbee6a69d13b39d734083b9f91069533b0d7b"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: "swig/swig"
+          ref: ${{ env.swig_hash }}
+      - run: |
+          mkdir -p build-static/
+      - uses: actions/cache@v2
+        id: swig-build-cache
+        with:
+          path: build-static/
+          key: swig-${{ runner.os }}-arm64-${{ env.swig_hash }}
+      - run: |
+          brew install automake
+        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+      - run: |
+          curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/pcre-8.43.tar.gz > pcre-8.43.tar.gz
+        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+      - run: |
+          CFLAGS="-target arm64-apple-darwin" \
+          CXXFLAGS="-target arm64-apple-darwin" \
+          LDFLAGS="-target arm64-apple-darwin" \
+          ./Tools/pcre-build.sh \
+            --host x86_64-apple-darwin \
+            --target arm64-apple-darwin
+        if: steps.swig-build-cache.outputs.cache-hit != 'true'
+      - run: |
+          sh autogen.sh
+          CFLAGS="-target arm64-apple-darwin" \
+          CXXFLAGS="-target arm64-apple-darwin" \
+          LDFLAGS="-target arm64-apple-darwin" \
+          ./configure \
+            --host x86_64-apple-darwin \
+            --target arm64-apple-darwin \
             --prefix=${{ github.workspace }}/build-static/ \
             --program-prefix=ds-
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
