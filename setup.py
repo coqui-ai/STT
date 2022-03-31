@@ -18,7 +18,7 @@ def main():
         "coqpit",
         "numpy",
         "optuna",
-        "numba <= 0.53.1",
+        "numba == 0.54.1",
         "opuslib == 2.0.0",
         "pandas",
         "progressbar2",

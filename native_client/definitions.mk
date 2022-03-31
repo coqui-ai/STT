@@ -14,6 +14,7 @@ TOOL_LDD  := ldd
 TOOL_LIBEXE :=
 
 OS        := $(shell uname -s)
+ARCH      := $(shell uname -m)
 
 ifeq ($(findstring _NT,$(OS)),_NT)
 PLATFORM_EXE_SUFFIX := .exe
@@ -42,7 +43,7 @@ SOX_LDFLAGS             := $(shell pkg-config --libs sox) -framework CoreAudio -
 else
 SOX_LDFLAGS     := `pkg-config --libs sox`
 endif # OS others
-PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
+PYTHON_PACKAGES := oldest-supported-numpy
 ifeq ($(OS),Linux)
 PYTHON_PLATFORM_NAME ?= --plat-name manylinux_2_24_x86_64
 endif
@@ -59,7 +60,7 @@ LINK_PATH_STT :=
 CFLAGS_STT    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
 SOX_LDFLAGS     :=
-PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
+PYTHON_PACKAGES := oldest-supported-numpy
 endif
 
 ifeq ($(TARGET),rpi3)
@@ -210,11 +211,19 @@ endef
 SWIG_DIST_URL ?=
 ifeq ($(SWIG_DIST_URL),)
 ifeq ($(findstring Linux,$(OS)),Linux)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.linux.amd64.tar.gz"
+ifeq ($(ARCH),aarch64)
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.linux.arm64.tar.gz"
+else
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.linux.amd64.tar.gz"
+endif # aarch64
 else ifeq ($(findstring Darwin,$(OS)),Darwin)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.darwin.amd64.tar.gz"
+ifeq ($(ARCH),arm64)
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.darwin.arm64.tar.gz"
+else
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.darwin.amd64.tar.gz"
+endif # arm64
 else ifeq ($(findstring _NT,$(OS)),_NT)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.win.amd64.tar.gz"
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.win.amd64.tar.gz"
 else
 $(error There is no prebuilt SWIG available for your platform. Please produce one and set SWIG_DIST_URL.)
 endif # findstring()

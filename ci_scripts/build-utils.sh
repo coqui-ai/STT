@@ -8,9 +8,11 @@ do_bazel_build()
 
   cd ${DS_TFDIR}
 
+  WORKSPACE_STATUS=${WORKSPACE_STATUS:=--workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh"}
+
   bazel build ${BAZEL_CACHE} \
     -s --explain bazel_explain.log --verbose_explanations \
-    --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
+    ${WORKSPACE_STATUS} \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
 
   ls -lh bazel-bin/native_client

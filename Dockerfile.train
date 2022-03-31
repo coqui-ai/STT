@@ -2,10 +2,29 @@
 # You can train "acoustic models" with audio + Tensorflow, and
 # you can create "scorers" with text + KenLM.
 
-FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3 AS kenlm-build
-ENV DEBIAN_FRONTEND=noninteractive
+FROM ghcr.io/reuben/manylinux_2_24:2022-03-31-361e6b6 as py-venv
+ENV VIRTUAL_ENV=/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN /opt/python/cp38*/bin/python -m venv $VIRTUAL_ENV && \
+    $VIRTUAL_ENV/bin/pip install --upgrade pip wheel setuptools
 
+# Create Python 3.7 virtualenv for installing upstream TF package with TFLite
+RUN /opt/python/cp37*/bin/python -m venv /tflite-venv && \
+    /tflite-venv/bin/pip install --upgrade pip wheel setuptools
+
+FROM py-venv AS gen-scorer-package-build
+COPY native_client /code/native_client
+COPY tensorflow /code/tensorflow
+COPY ci_scripts /code/ci_scripts
+WORKDIR /code
+RUN ./ci_scripts/tf-setup.sh && \
+    ./ci_scripts/gen-scorer-package-build.sh && \
+    cp tensorflow/bazel-bin/native_client/generate_scorer_package . && \
+    cd tensorflow && /code/bin/bazel clean && rm -rf /code/bin /code/dls
+
+FROM ghcr.io/reuben/manylinux_2_24:2022-03-31-361e6b6 AS kenlm-build
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
         build-essential cmake libboost-system-dev \
         libboost-thread-dev libboost-program-options-dev \
@@ -14,11 +33,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Build KenLM to generate new scorers
-WORKDIR /code
 COPY kenlm /code/kenlm
-RUN cd /code/kenlm && \
-    mkdir -p build && \
-    cd build && \
+RUN mkdir -p /code/kenlm/build && \
+    cd /code/kenlm/build && \
     cmake .. && \
     make -j $(nproc) || \
     ( \
@@ -28,68 +45,39 @@ RUN cd /code/kenlm && \
         exit 1 \
     )
 
-FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        git \
-        wget \
-        libopus0 \
-        libvorbisfile3 \
-        libopusfile0 \
-        libsndfile1 \
-        sox \
-        libsox-fmt-mp3 \
-        python3-venv \
-        software-properties-common && \
-    rm -rf /var/lib/apt/lists/*
-
-# For exporting using TFLite
-RUN add-apt-repository ppa:deadsnakes/ppa -y
-
-RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends \
-    python3.7 \
-    python3.7-venv
-
-RUN python3 -m venv --system-site-packages /venv
-ENV VIRTUAL_ENV=/venv
-
-# Venv for upstream tensorflow with tflite api
-RUN python3.7 -m venv /tflite-venv
-
-ENV PATH="$VIRTUAL_ENV/bin:/tflite-venv/bin:$PATH"
-
-# Make sure pip and its dependencies are up-to-date
-RUN pip install --upgrade pip wheel setuptools
-
-WORKDIR /code
-
+FROM py-venv as decoder-build
 COPY native_client /code/native_client
-COPY .git /code/.git
 COPY training/coqui_stt_training/VERSION /code/training/coqui_stt_training/VERSION
+COPY VERSION /code/VERSION
 COPY training/coqui_stt_training/GRAPH_VERSION /code/training/coqui_stt_training/GRAPH_VERSION
+COPY GRAPH_VERSION /code/GRAPH_VERSION
+COPY native_client/ctcdecode/workspace_status.cc /code/native_client/ctcdecode/workspace_status.cc
 
 # Build CTC decoder first, to avoid clashes on incompatible versions upgrades
-RUN cd native_client/ctcdecode && make NUM_PROCESSES=$(nproc) bindings
-RUN pip install --upgrade native_client/ctcdecode/dist/*.whl
+WORKDIR /code
+RUN make -C native_client/ctcdecode bindings NUM_PROCESSES=$(nproc) && \
+    cp native_client/ctcdecode/dist/*.whl . && \
+    make -C native_client/ctcdecode clean
 
+FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3
+COPY --from=decoder-build /code/*.whl /code
+COPY --from=kenlm-build /code/kenlm-bin /code/kenlm/build/bin
+COPY --from=gen-scorer-package-build /code/generate_scorer_package /code
 COPY setup.py /code/setup.py
 COPY VERSION /code/VERSION
+COPY GRAPH_VERSION /code/GRAPH_VERSION
 COPY training /code/training
-# Copy files from previous build stages
-RUN mkdir -p /code/kenlm/build/
-COPY --from=kenlm-build /code/kenlm/build/bin /code/kenlm/build/bin
-
-# Pre-built native client tools
-RUN LATEST_STABLE_RELEASE=$(curl "https://api.github.com/repos/coqui-ai/STT/releases/latest" | python -c 'import sys; import json; print(json.load(sys.stdin)["tag_name"])') \
-    bash -c 'curl -L https://github.com/coqui-ai/STT/releases/download/${LATEST_STABLE_RELEASE}/native_client.tflite.Linux.tar.xz | tar -xJvf -'
 
 # Install STT
-# No need for the decoder since we did it earlier
+# Use decoder wheel from previous stage
 # TensorFlow GPU should already be installed on the base image,
 # and we don't want to break that
-RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip install --upgrade -e .
+WORKDIR /code
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libboost-program-options1.71.0 libboost-thread1.71.0 && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --upgrade coqui_stt_ctcdecoder-*.whl && \
+    DS_NODECODER=y DS_NOTENSORFLOW=y pip install --upgrade -e
 
 # Install coqui_stt_training (inside tf-venv) for exporting models using tflite
 RUN /tflite-venv/bin/pip install -e .
