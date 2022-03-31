@@ -50,7 +50,7 @@ class EvaluationPool(PoolBase):
         return wav_filename, ground_truth, prediction
 
     def transcribe_file(self, wav_filename, beam_width, lm_alpha, lm_beta):
-        if lm_alpha and lm_beta:
+        if lm_alpha is not None and lm_beta is not None:
             self.scorer.reset_params(lm_alpha, lm_beta)
 
         speech_array, sr = sf.read(wav_filename)
@@ -166,6 +166,18 @@ def parse_args():
         help="Path to the external scorer file",
     )
     parser.add_argument(
+        "--lm_alpha",
+        required=False,
+        default=None,
+        help="LM weight",
+    )
+    parser.add_argument(
+        "--lm_beta",
+        required=False,
+        default=None,
+        help="Word insertion bonus",
+    )
+    parser.add_argument(
         "--proc",
         required=False,
         default=cpu_count(),
@@ -204,8 +216,19 @@ def main():
         task = Task.init(project_name=args.clearml_project, task_name=args.clearml_task)
     except:
         pass
+    if args.lm_alpha is not None:
+        args.lm_alpha = float(args.lm_alpha)
+    if args.lm_beta is not None:
+        args.lm_beta = float(args.lm_beta)
     evaluate_wav2vec2am(
-        args.model, args.csv, args.scorer, args.proc, args.dump, args.beam_width
+        args.model,
+        args.csv,
+        args.scorer,
+        args.proc,
+        args.dump,
+        args.beam_width,
+        args.lm_alpha,
+        args.lm_beta,
     )
 
 
