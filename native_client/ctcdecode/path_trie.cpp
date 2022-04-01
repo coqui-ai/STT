@@ -158,7 +158,7 @@ PathTrie* PathTrie::get_prev_word(std::vector<unsigned int>& output,
 
 void PathTrie::iterate_to_vec(std::vector<PathTrie*>& output) {
   // previous_timesteps might point to ancestors' timesteps
-  // therefore, children must be uptaded first
+  // therefore, children must be updated first
   for (auto child : children_) {
     child.second->iterate_to_vec(output);
   }
@@ -218,7 +218,7 @@ void PathTrie::set_matcher(std::shared_ptr<fst::SortedMatcher<FstType>> matcher)
   matcher_ = matcher;
 }
 
-#ifdef DEBUG
+// #ifdef DEBUG
 void PathTrie::vec(std::vector<PathTrie*>& out) {
   if (parent != nullptr) {
     parent->vec(out);
@@ -244,4 +244,4 @@ void PathTrie::print(const Alphabet& a) {
   printf("\n");
   printf("transcript:\t %s\n", tr.c_str());
 }
-#endif // DEBUG
+// #endif // DEBUG

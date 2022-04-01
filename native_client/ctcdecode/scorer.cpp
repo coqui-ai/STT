@@ -83,6 +83,12 @@ Scorer::set_alphabet(const Alphabet& alphabet)
   setup_char_map();
 }
 
+const Alphabet&
+Scorer::get_alphabet() const
+{
+  return alphabet_;
+}
+
 void
 Scorer::setup_char_map()
 {

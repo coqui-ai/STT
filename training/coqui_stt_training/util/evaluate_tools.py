@@ -8,8 +8,6 @@ from multiprocessing.dummy import Pool
 import numpy as np
 from attrdict import AttrDict
 
-from .config import Config
-from .io import open_remote
 from .text import levenshtein
 
 
@@ -113,7 +111,7 @@ def print_report(samples, losses, wer, cer, dataset_name, report_count=5):
 
     def print_single_sample(sample):
         print("WER: %f, CER: %f, loss: %f" % (sample.wer, sample.cer, sample.loss))
-        print(" - wav: file://%s" % sample.wav_filename)
+        print(" - wav: %s" % sample.wav_filename)
         print(' - src: "%s"' % sample.src)
         print(' - res: "%s"' % sample.res)
         print("-" * 80)
@@ -137,5 +135,7 @@ def save_samples_json(samples, output_path):
     We set ensure_ascii=True to prevent json from escaping non-ASCII chars
     in the texts.
     """
+    from .io import open_remote
+
     with open_remote(output_path, "w") as fout:
         json.dump(samples, fout, default=float, ensure_ascii=False, indent=2)

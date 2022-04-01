@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List
 
 import progressbar
-import tensorflow.compat.v1 as tfv1
 from attrdict import AttrDict
 from coqpit import MISSING, Coqpit, check_argument
 from coqui_stt_ctcdecoder import Alphabet, UTF8Alphabet
@@ -39,6 +38,8 @@ Config = _ConfigSingleton()  # pylint: disable=invalid-name
 @dataclass
 class BaseSttConfig(Coqpit):
     def __post_init__(self):
+        import tensorflow.compat.v1 as tfv1
+
         # Augmentations
         self.augmentations = parse_augmentations(self.augment)
         if self.augmentations:

@@ -31,6 +31,7 @@ DecoderState::init(const Alphabet& alphabet,
   abs_time_step_ = 0;
   space_id_ = alphabet.GetSpaceLabel();
   blank_id_ = alphabet.GetSize();
+  alphabet_ = alphabet;
 
   beam_size_ = beam_size;
   cutoff_prob_ = cutoff_prob;
@@ -54,6 +55,57 @@ DecoderState::init(const Alphabet& alphabet,
     root->set_matcher(matcher);
   }
 
+  init_token_mapping();
+
+  return 0;
+}
+
+void
+DecoderState::init_token_mapping()
+{
+  for (size_t am_token = 0; am_token < alphabet_.GetSize(); ++am_token) {
+    am_token_to_scorer_[am_token] = am_token;
+    scorer_token_to_am_[am_token] = am_token;
+  }
+}
+
+void
+CTCDecoderForWav2vec2AM::init_token_mapping()
+{
+  if (!ext_scorer_) {
+    this->DecoderState::init_token_mapping();
+    return;
+  }
+  for (size_t am_token = 0; am_token < alphabet_.GetSize(); ++am_token) {
+    if (am_token == blank_id_) {
+      am_token_to_scorer_[am_token] = am_token;
+      scorer_token_to_am_[am_token] = am_token;
+    } else if (!ignored_symbols_.count(am_token)) {
+      std::string am_decoded = alphabet_.DecodeSingle(am_token);
+      size_t scorer_encoded = ext_scorer_->get_alphabet().EncodeSingle(am_decoded);
+      am_token_to_scorer_[am_token] = scorer_encoded;
+      scorer_token_to_am_[scorer_encoded] = am_token;
+    }
+  }
+}
+
+int
+CTCDecoderForWav2vec2AM::init(const Alphabet& alphabet,
+                              size_t beam_size,
+                              double cutoff_prob,
+                              size_t cutoff_top_n,
+                              int blank_id,
+                              const std::vector<unsigned int>& ignored_symbols,
+                              std::shared_ptr<Scorer> ext_scorer,
+                              std::unordered_map<std::string, float> hot_words)
+{
+  int err = this->DecoderState::init(alphabet, beam_size, cutoff_prob, cutoff_top_n, ext_scorer, hot_words);
+  if (err) {
+    return err;
+  }
+  blank_id_ = blank_id;
+  ignored_symbols_ = std::unordered_set<unsigned int>(ignored_symbols.begin(), ignored_symbols.end());
+  init_token_mapping();
   return 0;
 }
 
@@ -93,11 +145,11 @@ DecoderState::next(const double *probs,
       full_beam = (num_prefixes == beam_size_);
     }
 
-    std::vector<std::pair<size_t, float>> log_prob_idx =
-        get_pruned_log_probs(prob, class_dim, cutoff_prob_, cutoff_top_n_);
+    std::vector<std::pair<size_t, float>> log_prob_idx = get_pruned_emissions(prob, class_dim);
     // loop over class dim
     for (size_t index = 0; index < log_prob_idx.size(); index++) {
       auto c = log_prob_idx[index].first;
+      auto scorer_c = am_token_to_scorer_[c];
       auto log_prob_c = log_prob_idx[index].second;
 
       for (size_t i = 0; i < prefixes_.size() && i < beam_size_; ++i) {
@@ -127,7 +179,7 @@ DecoderState::next(const double *probs,
         }
 
         // repeated character
-        if (c == prefix->character) {
+        if (scorer_c == prefix->character) {
           // compute probability of current path
           float log_p = log_prob_c + prefix->log_prob_nb_prev;
 
@@ -141,16 +193,16 @@ DecoderState::next(const double *probs,
         }
 
         // get new prefix
-        auto prefix_new = prefix->get_path_trie(c, log_prob_c);
+        auto prefix_new = prefix->get_path_trie(scorer_c, log_prob_c);
 
         if (prefix_new != nullptr) {
           // compute probability of current path
           float log_p = -NUM_FLT_INF;
 
-          if (c == prefix->character &&
+          if (scorer_c == prefix->character &&
               prefix->log_prob_b_prev > -NUM_FLT_INF) {
             log_p = log_prob_c + prefix->log_prob_b_prev;
-          } else if (c != prefix->character) {
+          } else if (scorer_c != prefix->character) {
             log_p = log_prob_c + prefix->score;
           }
 
@@ -164,7 +216,7 @@ DecoderState::next(const double *probs,
             }
 
             // language model scoring
-            if (ext_scorer_->is_scoring_boundary(prefix_to_score, c)) {
+            if (ext_scorer_->is_scoring_boundary(prefix_to_score, scorer_c)) {
               float score = 0.0;
               std::vector<std::string> ngram;
               ngram = ext_scorer_->make_ngram(prefix_to_score);
@@ -176,7 +228,7 @@ DecoderState::next(const double *probs,
                 // that matches a word in the hot-words list
                 for (std::string word : ngram) {
                   iter = hot_words_.find(word);
-                  if ( iter != hot_words_.end() ) {
+                  if (iter != hot_words_.end()) {
                     // increase the log_cond_prob(prefix|LM)
                     hot_boost += iter->second;
                   }
@@ -220,7 +272,7 @@ DecoderState::next(const double *probs,
       // Remove the elements from std::vector
       prefixes_.resize(beam_size_);
     }
-  }  // end of loop over time
+  } // end of loop over time
 }
 
 std::vector<Output>
@@ -261,13 +313,83 @@ DecoderState::decode(size_t num_results) const
   for (size_t i = 0; i < num_returned; ++i) {
     Output output;
     prefixes_copy[i]->get_path_vec(output.tokens);
-    output.timesteps  = get_history(prefixes_copy[i]->timesteps, &timestep_tree_root_);
+    for (auto& token : output.tokens) {
+      token = scorer_token_to_am_.at(token);
+    }
+    output.timesteps = get_history(prefixes_copy[i]->timesteps, &timestep_tree_root_);
     assert(output.tokens.size() == output.timesteps.size());
     output.confidence = scores[prefixes_copy[i]];
     outputs.push_back(output);
   }
 
   return outputs;
+}
+
+std::vector<std::pair<size_t, float>>
+DecoderState::get_pruned_emissions(const double *prob_step, size_t class_dim)
+{
+  std::vector<std::pair<size_t, float>> prob_idx;
+  for (size_t i = 0; i < class_dim; ++i) {
+    prob_idx.push_back(std::make_pair(i, (float)prob_step[i]));
+  }
+  // pruning of vocabulary
+  size_t cutoff_len = class_dim;
+  if (cutoff_prob_ < 1.0 || cutoff_top_n_ < cutoff_len) {
+    std::sort(
+        prob_idx.begin(), prob_idx.end(), pair_comp_second_rev<int, float>);
+    if (cutoff_prob_ < 1.0) {
+      double cum_prob = 0.0;
+      cutoff_len = 0;
+      for (size_t i = 0; i < prob_idx.size(); ++i) {
+        cum_prob += prob_idx[i].second;
+        cutoff_len += 1;
+        if (cum_prob >= cutoff_prob_ || cutoff_len >= cutoff_top_n_) break;
+      }
+    }
+    prob_idx = std::vector<std::pair<size_t, float>>(
+        prob_idx.begin(), prob_idx.begin() + cutoff_len);
+  }
+  std::vector<std::pair<size_t, float>> log_prob_idx;
+  for (size_t i = 0; i < cutoff_len; ++i) {
+    log_prob_idx.push_back(std::pair<int, float>(
+        prob_idx[i].first, log(prob_idx[i].second + NUM_FLT_MIN)));
+  }
+  return log_prob_idx;
+}
+
+std::vector<std::pair<size_t, float>>
+CTCDecoderForWav2vec2AM::get_pruned_emissions(const double *prob_step, size_t class_dim)
+{
+  std::vector<std::pair<size_t, float>> prob_idx;
+  for (size_t i = 0; i < class_dim; ++i) {
+    if (i == blank_id_ || ignored_symbols_.count(i)) {
+      continue;
+    }
+    prob_idx.push_back(std::make_pair(i, (float)prob_step[i]));
+  }
+
+  // Blank must go last to satisfy assumption in decoding loop when merging timesteps.
+  prob_idx.push_back(std::make_pair(blank_id_, (float)prob_step[blank_id_]));
+
+  // pruning of vocabulary
+  size_t cutoff_len = class_dim;
+  if (cutoff_prob_ < 1.0 || cutoff_top_n_ < cutoff_len) {
+    std::sort(
+        prob_idx.begin(), prob_idx.end(), pair_comp_second_rev<int, float>);
+    if (cutoff_prob_ < 1.0) {
+      double cum_prob = 0.0;
+      cutoff_len = 0;
+      for (size_t i = 0; i < prob_idx.size(); ++i) {
+        cum_prob += prob_idx[i].second;
+        cutoff_len += 1;
+        if (cum_prob >= cutoff_prob_ || cutoff_len >= cutoff_top_n_) break;
+      }
+    }
+    prob_idx = std::vector<std::pair<size_t, float>>(
+        prob_idx.begin(), prob_idx.begin() + cutoff_len);
+  }
+
+  return prob_idx;
 }
 
 int
@@ -463,6 +585,26 @@ std::vector<Output> ctc_beam_search_decoder(
   return state.decode(num_results);
 }
 
+std::vector<Output> ctc_beam_search_decoder_for_wav2vec2am(
+    const double *probs,
+    int time_dim,
+    int class_dim,
+    const Alphabet &alphabet,
+    size_t beam_size,
+    double cutoff_prob,
+    size_t cutoff_top_n,
+    int blank_id,
+    const std::vector<unsigned int>& ignored_symbols,
+    std::shared_ptr<Scorer> ext_scorer,
+    std::unordered_map<std::string, float> hot_words,
+    size_t num_results)
+{
+  CTCDecoderForWav2vec2AM state;
+  state.init(alphabet, beam_size, cutoff_prob, cutoff_top_n, blank_id, ignored_symbols, ext_scorer, hot_words);
+  state.next(probs, time_dim, class_dim);
+  return state.decode(num_results);
+}
+
 std::vector<std::vector<Output>>
 ctc_beam_search_decoder_batch(
     const double *probs,
@@ -496,6 +638,56 @@ ctc_beam_search_decoder_batch(
                                   beam_size,
                                   cutoff_prob,
                                   cutoff_top_n,
+                                  ext_scorer,
+                                  hot_words,
+                                  num_results));
+  }
+
+  // get decoding results
+  std::vector<std::vector<Output>> batch_results;
+  for (size_t i = 0; i < batch_size; ++i) {
+    batch_results.emplace_back(res[i].get());
+  }
+  return batch_results;
+}
+
+std::vector<std::vector<Output>>
+ctc_beam_search_decoder_batch_for_wav2vec2am(
+    const double *probs,
+    int batch_size,
+    int time_dim,
+    int class_dim,
+    const int* seq_lengths,
+    int seq_lengths_size,
+    const Alphabet &alphabet,
+    size_t beam_size,
+    size_t num_processes,
+    double cutoff_prob,
+    size_t cutoff_top_n,
+    int blank_id,
+    const std::vector<unsigned int>& ignored_symbols,
+    std::shared_ptr<Scorer> ext_scorer,
+    std::unordered_map<std::string, float> hot_words,
+    size_t num_results)
+{
+  VALID_CHECK_GT(num_processes, 0, "num_processes must be nonnegative!");
+  VALID_CHECK_EQ(batch_size, seq_lengths_size, "must have one sequence length per batch element");
+  // thread pool
+  ThreadPool pool(num_processes);
+
+  // enqueue the tasks of decoding
+  std::vector<std::future<std::vector<Output>>> res;
+  for (size_t i = 0; i < batch_size; ++i) {
+    res.emplace_back(pool.enqueue(ctc_beam_search_decoder_for_wav2vec2am,
+                                  &probs[i*time_dim*class_dim],
+                                  seq_lengths[i],
+                                  class_dim,
+                                  alphabet,
+                                  beam_size,
+                                  cutoff_prob,
+                                  cutoff_top_n,
+                                  blank_id,
+                                  ignored_symbols,
                                   ext_scorer,
                                   hot_words,
                                   num_results));

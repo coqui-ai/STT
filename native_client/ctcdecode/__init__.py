@@ -178,6 +178,69 @@ def ctc_beam_search_decoder(
     return beam_results
 
 
+def ctc_beam_search_decoder_for_wav2vec2am(
+    probs_seq,
+    alphabet,
+    beam_size,
+    cutoff_prob=1.0,
+    cutoff_top_n=40,
+    blank_id=-1,
+    ignored_symbols=frozenset(),
+    scorer=None,
+    hot_words=dict(),
+    num_results=1,
+):
+    """Wrapper for the CTC Beam Search Decoder.
+
+    :param probs_seq: 2-D list of probability distributions over each time
+                      step, with each element being a list of normalized
+                      probabilities over alphabet and blank.
+    :type probs_seq: 2-D list
+    :param alphabet: Alphabet
+    :param beam_size: Width for beam search.
+    :type beam_size: int
+    :param cutoff_prob: Cutoff probability in pruning,
+                        default 1.0, no pruning.
+    :type cutoff_prob: float
+    :param cutoff_top_n: Cutoff number in pruning, only top cutoff_top_n
+                         characters with highest probs in alphabet will be
+                         used in beam search, default 40.
+    :type cutoff_top_n: int
+    :param scorer: External scorer for partially decoded sentence, e.g. word
+                   count or language model.
+    :type scorer: Scorer
+    :param hot_words: Map of words (keys) to their assigned boosts (values)
+    :type hot_words: dict[string, float]
+    :param num_results: Number of beams to return.
+    :type num_results: int
+    :return: List of tuples of confidence and sentence as decoding
+             results, in descending order of the confidence.
+    :rtype: list
+    """
+    beam_results = swigwrapper.ctc_beam_search_decoder_for_wav2vec2am(
+        probs_seq,
+        alphabet,
+        beam_size,
+        cutoff_prob,
+        cutoff_top_n,
+        blank_id,
+        ignored_symbols,
+        scorer,
+        hot_words,
+        num_results,
+    )
+    beam_results = [
+        DecodeResult(
+            res.confidence,
+            alphabet.Decode(res.tokens),
+            [int(t) for t in res.tokens],
+            [int(t) for t in res.timesteps],
+        )
+        for res in beam_results
+    ]
+    return beam_results
+
+
 def ctc_beam_search_decoder_batch(
     probs_seq,
     seq_lengths,

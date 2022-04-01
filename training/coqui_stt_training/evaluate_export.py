@@ -79,8 +79,6 @@ def main():
         worker_process.start()  # Launch reader() as a separate python process
         processes.append(worker_process)
 
-    print([x.name for x in processes])
-
     wavlist = []
     ground_truths = []
     predictions = []

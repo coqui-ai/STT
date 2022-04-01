@@ -90,8 +90,8 @@ Alphabet::SerializeText()
       << "# A line that starts with # is a comment. You can escape it with \\# if you wish\n"
       << "# to use '#' in the Alphabet.\n";
 
-  for (int idx = 0; idx < entrySize(); ++idx) {
-    out << getEntry(idx) << "\n";
+  for (const std::string& label : GetLabels()) {
+    out << label << "\n";
   }
 
   out << "# The last (non-comment) line needs to end with a newline.\n";
@@ -172,6 +172,16 @@ size_t
 Alphabet::GetSize() const
 {
   return entrySize();
+}
+
+std::vector<std::string>
+Alphabet::GetLabels() const
+{
+  std::vector<std::string> labels;
+  for (int idx = 0; idx < GetSize(); ++idx) {
+    labels.push_back(DecodeSingle(idx));
+  }
+  return labels;
 }
 
 bool
