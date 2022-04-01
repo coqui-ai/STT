@@ -425,13 +425,18 @@ def read_opus(opus_file):
 
 def read_ogg_opus(ogg_file):
     error = ctypes.c_int()
-    ogg_file_buffer = ogg_file.getbuffer()
-    ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
-    opusfile = pyogg.opus.op_open_memory(
-        ubyte_array.from_buffer(ogg_file_buffer),
-        len(ogg_file_buffer),
-        ctypes.pointer(error),
-    )
+    if isinstance(ogg_file, str):
+        opusfile = pyogg.opus.op_open_file(
+            bytes(ogg_file, encoding="utf-8"), ctypes.pointer(error)
+        )
+    else:
+        ogg_file_buffer = ogg_file.getbuffer()
+        ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
+        opusfile = pyogg.opus.op_open_memory(
+            ubyte_array.from_buffer(ogg_file_buffer),
+            len(ogg_file_buffer),
+            ctypes.pointer(error),
+        )
 
     if error.value != 0:
         raise ValueError(
@@ -688,13 +693,18 @@ def read_opus_duration(opus_file):
 
 def read_ogg_opus_duration(ogg_file):
     error = ctypes.c_int()
-    ogg_file_buffer = ogg_file.getbuffer()
-    ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
-    opusfile = pyogg.opus.op_open_memory(
-        ubyte_array.from_buffer(ogg_file_buffer),
-        len(ogg_file_buffer),
-        ctypes.pointer(error),
-    )
+    if isinstance(ogg_file, str):
+        opusfile = pyogg.opus.op_open_file(
+            bytes(ogg_file, encoding="utf-8"), ctypes.pointer(error)
+        )
+    else:
+        ogg_file_buffer = ogg_file.getbuffer()
+        ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
+        opusfile = pyogg.opus.op_open_memory(
+            ubyte_array.from_buffer(ogg_file_buffer),
+            len(ogg_file_buffer),
+            ctypes.pointer(error),
+        )
 
     if error.value != 0:
         raise ValueError(
@@ -772,13 +782,18 @@ def read_opus_format(opus_file):
 
 def read_ogg_opus_format(ogg_file):
     error = ctypes.c_int()
-    ogg_file_buffer = ogg_file.getbuffer()
-    ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
-    opusfile = pyogg.opus.op_open_memory(
-        ubyte_array.from_buffer(ogg_file_buffer),
-        len(ogg_file_buffer),
-        ctypes.pointer(error),
-    )
+    if isinstance(ogg_file, str):
+        opusfile = pyogg.opus.op_open_file(
+            bytes(ogg_file, encoding="utf-8"), ctypes.pointer(error)
+        )
+    else:
+        ogg_file_buffer = ogg_file.getbuffer()
+        ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
+        opusfile = pyogg.opus.op_open_memory(
+            ubyte_array.from_buffer(ogg_file_buffer),
+            len(ogg_file_buffer),
+            ctypes.pointer(error),
+        )
 
     if error.value != 0:
         raise ValueError(
