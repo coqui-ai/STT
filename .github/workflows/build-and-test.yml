@@ -1193,6 +1193,8 @@ jobs:
   docker-publish:
     name: "Build and publish Docker training image to GHCR"
     runs-on: ubuntu-20.04
+    needs: [upload-nc-release-assets]
+    if: always()
     steps:
       - uses: actions/checkout@v2
         with:
