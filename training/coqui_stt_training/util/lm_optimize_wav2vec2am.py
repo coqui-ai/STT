@@ -40,6 +40,7 @@ def objective(trial):
             Config.wav2vec2_model,
             test_file,
             Config.scorer_path,
+            Config.scorer_alphabet,
             Config.num_processes,
             dump_to_file=None,
             beam_width=Config.export_beam_width,
@@ -81,6 +82,12 @@ class LmOptimizeWav2vec2amConfig(BaseSttConfig):
         default="",
         metadata=dict(help="Path to exported ONNX model for wav2vec2 AM."),
     )
+    scorer_alphabet: str = field(
+        default="",
+        metadata=dict(
+            help="Path of alphabet file used for Scorer construction. Required if --scorer_path is specified"
+        ),
+    )
     num_processes: int = field(
         default=os.cpu_count(),
         metadata=dict(help="Number of worker processes for evaluation."),
@@ -104,7 +111,7 @@ def initialize_config():
     initialize_globals_from_instance(config)
     Config.pool = EvaluationPool.create_impl(
         processes=config.num_processes,
-        initargs=(config.wav2vec2_model, Config.scorer_path),
+        initargs=(config.wav2vec2_model, Config.scorer_path, Config.scorer_alphabet),
     )
 
 

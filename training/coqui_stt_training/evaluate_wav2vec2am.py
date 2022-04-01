@@ -3,11 +3,13 @@
 
 import argparse
 import csv
+import io
+import json
 import os
 import sys
-import io
 from functools import partial
 from multiprocessing import JoinableQueue, Manager, Process, cpu_count
+from pathlib import Path
 
 import numpy as np
 import onnxruntime
@@ -24,25 +26,42 @@ from tqdm import tqdm
 
 
 class EvaluationPool(PoolBase):
-    def init(self, model_file, scorer_path):
+    def init(self, model_file, scorer_path, scorer_alphabet_path):
         sess_options = onnxruntime.SessionOptions()
         sess_options.graph_optimization_level = (
             onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
         )
         self.session = onnxruntime.InferenceSession(model_file, sess_options)
 
+        parent_dir = Path(model_file).parent
+        with open(parent_dir / "config.json") as fin:
+            config = json.load(fin)
+
         self.am_alphabet = Alphabet()
-        self.am_alphabet.InitFromLabels("ABCD etaonihsrdlumwcfgypbvk'xjqz")
+        self.am_alphabet.InitFromLabels(config["alphabet_labels"])
 
         self.scorer = None
         if scorer_path:
-            self.scorer_alphabet = Alphabet()
-            self.scorer_alphabet.InitFromLabels(" abcdefghijklmnopqrstuvwxyz'")
+            self.scorer_alphabet = Alphabet(scorer_alphabet_path)
 
             self.scorer = Scorer()
             self.scorer.init_from_filepath(
-                scorer_path.encode("utf-8"), self.scorer_alphabet
+                scorer_path.encode("utf-8"),
+                self.scorer_alphabet,
             )
+
+        self.blank_id = config.get("blank_id", 0)
+        self.raw_vocab = config["raw_vocab"]
+        self.ignored_symbols = set(config["ignored_symbols"])
+
+        if scorer_path:
+            scorer_alphabet_labels = [
+                s.decode("utf-8") for s in self.scorer_alphabet.GetLabels()
+            ]
+
+            for idx, label in enumerate(config["alphabet_labels"]):
+                if label not in scorer_alphabet_labels:
+                    self.ignored_symbols |= frozenset([idx])
 
     def run(self, job):
         wav_filename, ground_truth, beam_width, lm_alpha, lm_beta = job
@@ -74,8 +93,8 @@ class EvaluationPool(PoolBase):
             self.am_alphabet,
             beam_size=beam_width,
             scorer=self.scorer,
-            blank_id=0,
-            ignored_symbols=[1, 2, 3],
+            blank_id=self.blank_id,
+            ignored_symbols=list(self.ignored_symbols),
         )[0].transcript.strip()
 
         return decoded
@@ -85,6 +104,7 @@ def evaluate_wav2vec2am(
     model_file,
     csv_file,
     scorer,
+    scorer_alphabet_path,
     num_processes,
     dump_to_file,
     beam_width,
@@ -110,7 +130,7 @@ def evaluate_wav2vec2am(
     pool = existing_pool
     if not pool:
         pool = EvaluationPool.create_impl(
-            processes=num_processes, initargs=(model_file, scorer)
+            processes=num_processes, initargs=(model_file, scorer, scorer_alphabet_path)
         )
 
     process_iterable = tqdm(
@@ -164,6 +184,13 @@ def parse_args():
         required=False,
         default=None,
         help="Path to the external scorer file",
+    )
+    parser.add_argument(
+        "--scorer_alphabet",
+        type=str,
+        required=False,
+        default="",
+        help="Path of alphabet file used for Scorer construction. Required if --scorer is specified",
     )
     parser.add_argument(
         "--lm_alpha",
@@ -224,6 +251,7 @@ def main():
         args.model,
         args.csv,
         args.scorer,
+        args.scorer_alphabet,
         args.proc,
         args.dump,
         args.beam_width,

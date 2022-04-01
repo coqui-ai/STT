@@ -44,6 +44,8 @@ public:
     return space_index_;
   }
 
+  virtual std::vector<std::string> GetLabels() const;
+
   // Returns true if the single character/output class has a corresponding index
   // in the alphabet.
   virtual bool CanEncodeSingle(const std::string& label) const;
