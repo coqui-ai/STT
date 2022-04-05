@@ -102,12 +102,7 @@ class LmOptimizeWav2vec2amConfig(BaseSttConfig):
 
 def initialize_config():
     config = LmOptimizeWav2vec2amConfig.init_from_argparse(arg_prefix="")
-    try:
-        task = Task.init(
-            project_name=config.clearml_project, task_name=config.clearml_task
-        )
-    except:
-        pass
+    task = Task.init(project_name=config.clearml_project, task_name=config.clearml_task)
     initialize_globals_from_instance(config)
     Config.pool = EvaluationPool.create_impl(
         processes=config.num_processes,

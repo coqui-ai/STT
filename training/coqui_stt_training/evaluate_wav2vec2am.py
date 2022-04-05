@@ -239,10 +239,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    try:
-        task = Task.init(project_name=args.clearml_project, task_name=args.clearml_task)
-    except:
-        pass
+    task = Task.init(project_name=args.clearml_project, task_name=args.clearml_task)
     if args.lm_alpha is not None:
         args.lm_alpha = float(args.lm_alpha)
     if args.lm_beta is not None:
