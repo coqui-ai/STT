@@ -83,6 +83,7 @@ class PoolBase:
         parent_env = os.environ.copy()
         pool = cls()
         pool._inner_pool = multiprocessing.pool.Pool(
+            processes=processes,
             initializer=init_fn,
             initargs=(cls, lock, parent_env, queue, initargs),
             context=context,
