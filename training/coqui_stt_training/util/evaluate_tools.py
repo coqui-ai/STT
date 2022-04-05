@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+
+import os
 import json
 from multiprocessing.dummy import Pool
 
@@ -9,6 +11,20 @@ import numpy as np
 from attrdict import AttrDict
 
 from .text import levenshtein
+from tempfile import gettempdir
+import tensorflow.compat.v1 as tfv1
+
+tfv1.logging.set_verbosity(tfv1.logging.ERROR)
+
+
+def tfv1_plot_scalars(scalar_dict):
+    with tfv1.summary.FileWriter(os.path.join(gettempdir(), "logs")) as writer:
+        with tfv1.Graph().as_default(), tfv1.Session(
+            config=tfv1.ConfigProto(log_device_placement=False)
+        ) as sess:
+            for key in scalar_dict.keys():
+                summary = tfv1.summary.scalar(name=key, tensor=scalar_dict[key])
+                writer.add_summary(sess.run(summary))
 
 
 def pmap(fun, iterable):
@@ -94,6 +110,9 @@ def calculate_and_print_report(
 
 def print_report(samples, losses, wer, cer, dataset_name, report_count=5):
     """Print a report summary and samples of best, median and worst results"""
+
+    # Plot
+    tfv1_plot_scalars({"WER": wer, "CER": cer})
 
     # Print summary
     mean_loss = np.mean(losses)
