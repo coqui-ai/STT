@@ -16,7 +16,10 @@ from coqui_stt_training.util.config import (
     log_error,
 )
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
-from coqui_stt_training.evaluate_wav2vec2am import evaluate_wav2vec2am, EvaluationPool
+from coqui_stt_training.evaluate_wav2vec2am import (
+    compute_emissions,
+    evaluate_from_emissions,
+)
 
 
 def character_based():
@@ -36,9 +39,10 @@ def objective(trial):
 
     samples = []
     for step, test_file in enumerate(Config.test_files):
-        current_samples = evaluate_wav2vec2am(
+        current_samples = evaluate_from_emissions(
             Config.wav2vec2_model,
             test_file,
+            trial.study.user_attrs["emissions"][step],
             Config.scorer_path,
             Config.scorer_alphabet,
             Config.num_processes,
@@ -46,7 +50,6 @@ def objective(trial):
             beam_width=Config.export_beam_width,
             lm_alpha=Config.lm_alpha,
             lm_beta=Config.lm_beta,
-            existing_pool=Config.pool,
         )
         samples += current_samples
 
@@ -66,7 +69,18 @@ def compute_lm_optimization() -> dict:
     is_character_based = character_based()
 
     study = optuna.create_study()
+
+    emissions = []
+    for step, test_file in enumerate(Config.test_files):
+        emission = compute_emissions(
+            Config.wav2vec2_model,
+            test_file,
+            Config.num_processes,
+        )
+        emissions.append(emission)
+
     study.set_user_attr("is_character_based", is_character_based)
+    study.set_user_attr("emissions", emissions)
     study.optimize(objective, n_jobs=1, n_trials=Config.n_trials)
 
     return {
@@ -104,10 +118,6 @@ def initialize_config():
     config = LmOptimizeWav2vec2amConfig.init_from_argparse(arg_prefix="")
     task = Task.init(project_name=config.clearml_project, task_name=config.clearml_task)
     initialize_globals_from_instance(config)
-    Config.pool = EvaluationPool.create_impl(
-        processes=config.num_processes,
-        initargs=(config.wav2vec2_model, Config.scorer_path, Config.scorer_alphabet),
-    )
 
 
 def main():

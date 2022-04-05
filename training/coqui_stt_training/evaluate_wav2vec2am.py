@@ -25,14 +25,43 @@ from coqui_stt_ctcdecoder import (
 from tqdm import tqdm
 
 
-class EvaluationPool(PoolBase):
-    def init(self, model_file, scorer_path, scorer_alphabet_path):
+class CollectEmissionsPool(PoolBase):
+    def init(self, model_file):
         sess_options = onnxruntime.SessionOptions()
         sess_options.graph_optimization_level = (
             onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
         )
         self.session = onnxruntime.InferenceSession(model_file, sess_options)
 
+        parent_dir = Path(model_file).parent
+        with open(parent_dir / "config.json") as fin:
+            config = json.load(fin)
+
+        self.am_alphabet = Alphabet()
+        self.am_alphabet.InitFromLabels(config["alphabet_labels"])
+
+    def run(self, wav_filename):
+        speech_array, sr = sf.read(wav_filename)
+        max_length = 250000
+        speech_array = speech_array.astype(np.float32)
+        features = speech_array[:max_length]
+
+        def norm(wav, db_level=-27):
+            r = 10 ** (db_level / 20)
+            a = np.sqrt((len(wav) * (r**2)) / np.sum(wav**2))
+            return wav * a
+
+        features = norm(features)
+
+        onnx_outputs = self.session.run(
+            None, {self.session.get_inputs()[0].name: [features]}
+        )[0].squeeze()
+
+        return onnx_outputs
+
+
+class EvaluationPool(PoolBase):
+    def init(self, model_file, scorer_path, scorer_alphabet_path):
         parent_dir = Path(model_file).parent
         with open(parent_dir / "config.json") as fin:
             config = json.load(fin)
@@ -64,32 +93,16 @@ class EvaluationPool(PoolBase):
                     self.ignored_symbols |= frozenset([idx])
 
     def run(self, job):
-        wav_filename, ground_truth, beam_width, lm_alpha, lm_beta = job
-        prediction = self.transcribe_file(wav_filename, beam_width, lm_alpha, lm_beta)
+        wav_filename, emission, ground_truth, beam_width, lm_alpha, lm_beta = job
+        prediction = self.transcribe_file(emission, beam_width, lm_alpha, lm_beta)
         return wav_filename, ground_truth, prediction
 
-    def transcribe_file(self, wav_filename, beam_width, lm_alpha, lm_beta):
+    def transcribe_file(self, emission, beam_width, lm_alpha, lm_beta):
         if lm_alpha is not None and lm_beta is not None:
             self.scorer.reset_params(lm_alpha, lm_beta)
 
-        speech_array, sr = sf.read(wav_filename)
-        max_length = 250000
-        speech_array = speech_array.astype(np.float32)
-        features = speech_array[:max_length]
-
-        def norm(wav, db_level=-27):
-            r = 10 ** (db_level / 20)
-            a = np.sqrt((len(wav) * (r**2)) / np.sum(wav**2))
-            return wav * a
-
-        features = norm(features)
-
-        onnx_outputs = self.session.run(
-            None, {self.session.get_inputs()[0].name: [features]}
-        )[0].squeeze()
-
         decoded = ctc_beam_search_decoder_for_wav2vec2am(
-            onnx_outputs,
+            emission,
             self.am_alphabet,
             beam_size=beam_width,
             scorer=self.scorer,
@@ -100,9 +113,38 @@ class EvaluationPool(PoolBase):
         return decoded
 
 
-def evaluate_wav2vec2am(
+def compute_emissions(model_file, csv_file, num_processes):
+    jobs = []
+    with open(csv_file, "r") as csvfile:
+        csvreader = csv.DictReader(csvfile)
+        for row in csvreader:
+            # Relative paths are relative to the folder the CSV file is in
+            if not os.path.isabs(row["wav_filename"]):
+                row["wav_filename"] = os.path.join(
+                    os.path.dirname(csv_file), row["wav_filename"]
+                )
+            jobs.append(row["wav_filename"])
+
+    with CollectEmissionsPool.create(
+        processes=num_processes, initargs=(model_file,)
+    ) as pool:
+        process_iterable = tqdm(
+            pool.imap(jobs),
+            desc="Collecting acoustic model emissions",
+            total=len(jobs),
+        )
+
+        emissions = []
+        for emission in process_iterable:
+            emissions.append(emission)
+
+    return emissions
+
+
+def evaluate_from_emissions(
     model_file,
     csv_file,
+    emissions,
     scorer,
     scorer_alphabet_path,
     num_processes,
@@ -110,45 +152,46 @@ def evaluate_wav2vec2am(
     beam_width,
     lm_alpha=None,
     lm_beta=None,
-    existing_pool=None,
 ):
     jobs = []
     with open(csv_file, "r") as csvfile:
         csvreader = csv.DictReader(csvfile)
-        count = 0
-        for row in csvreader:
-            count += 1
+        for emission, row in zip(emissions, csvreader):
             # Relative paths are relative to the folder the CSV file is in
             if not os.path.isabs(row["wav_filename"]):
                 row["wav_filename"] = os.path.join(
                     os.path.dirname(csv_file), row["wav_filename"]
                 )
             jobs.append(
-                (row["wav_filename"], row["transcript"], beam_width, lm_alpha, lm_beta)
+                (
+                    row["wav_filename"],
+                    emission,
+                    row["transcript"],
+                    beam_width,
+                    lm_alpha,
+                    lm_beta,
+                )
             )
 
-    pool = existing_pool
-    if not pool:
-        pool = EvaluationPool.create_impl(
-            processes=num_processes, initargs=(model_file, scorer, scorer_alphabet_path)
+    with EvaluationPool.create(
+        processes=num_processes, initargs=(model_file, scorer, scorer_alphabet_path)
+    ) as pool:
+        process_iterable = tqdm(
+            pool.imap_unordered(jobs),
+            desc="Transcribing files",
+            total=len(jobs),
         )
 
-    process_iterable = tqdm(
-        pool.imap_unordered(jobs),
-        desc="Transcribing files",
-        total=len(jobs),
-    )
+        wav_filenames = []
+        ground_truths = []
+        predictions = []
+        losses = []
 
-    wav_filenames = []
-    ground_truths = []
-    predictions = []
-    losses = []
-
-    for wav_filename, ground_truth, prediction in process_iterable:
-        wav_filenames.append(wav_filename)
-        ground_truths.append(ground_truth)
-        predictions.append(prediction)
-        losses.append(0.0)
+        for wav_filename, ground_truth, prediction in process_iterable:
+            wav_filenames.append(wav_filename)
+            ground_truths.append(ground_truth)
+            predictions.append(prediction)
+            losses.append(0.0)
 
     # Print test summary
     samples = calculate_and_print_report(
@@ -165,10 +208,34 @@ def evaluate_wav2vec2am(
             print("Reference texts dumped to %s.txt" % dump_to_file)
             print("Transcription   dumped to %s.out" % dump_to_file)
 
-    if not existing_pool:
-        pool.close()
-
     return samples
+
+
+def evaluate_wav2vec2am(
+    model_file,
+    csv_file,
+    scorer,
+    scorer_alphabet_path,
+    num_processes,
+    dump_to_file,
+    beam_width,
+    lm_alpha=None,
+    lm_beta=None,
+    existing_pool=None,
+):
+    emissions = compute_emissions(model_file, csv_file, num_processes)
+    return evaluate_from_emissions(
+        model_file,
+        csv_file,
+        emissions,
+        scorer,
+        scorer_alphabet_path,
+        num_processes,
+        dump_to_file,
+        beam_width,
+        lm_alpha,
+        lm_beta,
+    )
 
 
 def parse_args():
