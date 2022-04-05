@@ -13,12 +13,15 @@ from attrdict import AttrDict
 from .text import levenshtein
 from tempfile import gettempdir
 import tensorflow.compat.v1 as tfv1
+
 tfv1.logging.set_verbosity(tfv1.logging.ERROR)
 
 
 def tfv1_plot_scalars(scalar_dict):
     with tfv1.summary.FileWriter(os.path.join(gettempdir(), "logs")) as writer:
-        with tfv1.Graph().as_default(), tfv1.Session(config=tfv1.ConfigProto(log_device_placement=False)) as sess:
+        with tfv1.Graph().as_default(), tfv1.Session(
+            config=tfv1.ConfigProto(log_device_placement=False)
+        ) as sess:
             for key in scalar_dict.keys():
                 summary = tfv1.summary.scalar(name=key, tensor=scalar_dict[key])
                 writer.add_summary(sess.run(summary))
