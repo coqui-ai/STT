@@ -38,11 +38,7 @@ CFLAGS                  := -mmacosx-version-min=10.10 -target x86_64-apple-macos
 LDFLAGS                 := -mmacosx-version-min=10.10 -target x86_64-apple-macos10.10
 
 SOX_CFLAGS              := $(shell pkg-config --cflags sox)
-LIBSOX_PATH             := $(shell echo `pkg-config --libs-only-L sox | sed -e 's/^-L//'`/lib`pkg-config --libs-only-l sox | sed -e 's/^-l//'`.dylib)
-LIBOPUSFILE_PATH        := $(shell echo `pkg-config --libs-only-L opusfile | sed -e 's/^-L//'`/lib`pkg-config --libs-only-l opusfile | sed -e 's/^-l//'`.dylib)
-LIBSOX_STATIC_DEPS      := $(shell echo `otool -L $(LIBSOX_PATH) | tail -n +2 | cut -d' ' -f1 | grep /opt/ | sed -E "s/\.[[:digit:]]+\.dylib/\.a/" | tr '\n' ' '`)
-LIBOPUSFILE_STATIC_DEPS := $(shell echo `otool -L $(LIBOPUSFILE_PATH) | tail -n +2 | cut -d' ' -f1 | grep /opt/ | sed -E "s/\.[[:digit:]]+\.dylib/\.a/" | tr '\n' ' '`)
-SOX_LDFLAGS             := $(LIBSOX_STATIC_DEPS) $(LIBOPUSFILE_STATIC_DEPS) -framework CoreAudio -lz
+SOX_LDFLAGS             := $(shell pkg-config --libs sox) -framework CoreAudio -lz
 else
 SOX_LDFLAGS     := `pkg-config --libs sox`
 endif # OS others
@@ -128,11 +124,7 @@ CFLAGS                  := -mmacosx-version-min=11.0 -target arm64-apple-macos11
 LDFLAGS                 := -mmacosx-version-min=11.0 -target arm64-apple-macos11
 
 SOX_CFLAGS              := $(shell arm-pkg-config --cflags sox)
-LIBSOX_PATH             := $(shell echo `arm-pkg-config --libs-only-L sox | sed -e 's/^-L//'`/lib`arm-pkg-config --libs-only-l sox | sed -e 's/^-l//'`.dylib)
-LIBOPUSFILE_PATH        := $(shell echo `arm-pkg-config --libs-only-L opusfile | sed -e 's/^-L//'`/lib`arm-pkg-config --libs-only-l opusfile | sed -e 's/^-l//'`.dylib)
-LIBSOX_STATIC_DEPS      := $(shell echo `otool -L $(LIBSOX_PATH) | tail -n +2 | cut -d' ' -f1 | grep /opt/ | sed -E "s/\.[[:digit:]]+\.dylib/\.a/" | tr '\n' ' '`)
-LIBOPUSFILE_STATIC_DEPS := $(shell echo `otool -L $(LIBOPUSFILE_PATH) | tail -n +2 | cut -d' ' -f1 | grep /opt/ | sed -E "s/\.[[:digit:]]+\.dylib/\.a/" | tr '\n' ' '`)
-SOX_LDFLAGS             := $(LIBSOX_STATIC_DEPS) $(LIBOPUSFILE_STATIC_DEPS) -framework CoreAudio -lz
+SOX_LDFLAGS             := $(shell arm-pkg-config --libs sox) -framework CoreAudio -lz
 endif
 
 # -Wl,--no-as-needed is required to force linker not to evict libs it thinks we

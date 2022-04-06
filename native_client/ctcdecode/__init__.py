@@ -311,6 +311,78 @@ def ctc_beam_search_decoder_batch(
     return batch_beam_results
 
 
+def ctc_beam_search_decoder_for_wav2vec2am_batch(
+    probs_seq,
+    seq_lengths,
+    alphabet,
+    beam_size,
+    num_threads,
+    cutoff_prob=1.0,
+    cutoff_top_n=40,
+    blank_id=-1,
+    ignored_symbols=frozenset(),
+    scorer=None,
+    hot_words=dict(),
+    num_results=1,
+):
+    """Wrapper for the batched CTC beam search decoder for wav2vec2 AM.
+
+    :param probs_seq: 3-D list with each element as an instance of 2-D list
+                      of probabilities used by ctc_beam_search_decoder().
+    :type probs_seq: 3-D list
+    :param alphabet: alphabet list.
+    :alphabet: Alphabet
+    :param beam_size: Width for beam search.
+    :type beam_size: int
+    :param num_threads: Number of threads to use for processing batch.
+    :type num_threads: int
+    :param cutoff_prob: Cutoff probability in alphabet pruning,
+                        default 1.0, no pruning.
+    :type cutoff_prob: float
+    :param cutoff_top_n: Cutoff number in pruning, only top cutoff_top_n
+                         characters with highest probs in alphabet will be
+                         used in beam search, default 40.
+    :type cutoff_top_n: int
+    :param scorer: External scorer for partially decoded sentence, e.g. word
+                   count or language model.
+    :type scorer: Scorer
+    :param hot_words: Map of words (keys) to their assigned boosts (values)
+    :type hot_words: dict[string, float]
+    :param num_results: Number of beams to return.
+    :type num_results: int
+    :return: List of tuples of confidence and sentence as decoding
+             results, in descending order of the confidence.
+    :rtype: list
+    """
+    batch_beam_results = swigwrapper.ctc_beam_search_decoder_for_wav2vec2am_batch(
+        probs_seq,
+        seq_lengths,
+        alphabet,
+        beam_size,
+        num_threads,
+        cutoff_prob,
+        cutoff_top_n,
+        blank_id,
+        ignored_symbols,
+        scorer,
+        hot_words,
+        num_results,
+    )
+    batch_beam_results = [
+        [
+            DecodeResult(
+                res.confidence,
+                alphabet.Decode(res.tokens),
+                [int(t) for t in res.tokens],
+                [int(t) for t in res.timesteps],
+            )
+            for res in beam_results
+        ]
+        for beam_results in batch_beam_results
+    ]
+    return batch_beam_results
+
+
 class FlashlightDecoderState(swigwrapper.FlashlightDecoderState):
     """
     This class contains constants used to specify the desired behavior for the

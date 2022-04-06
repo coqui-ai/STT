@@ -333,7 +333,7 @@ ctc_beam_search_decoder_batch(
  *     result for one audio sample.
 */
 std::vector<std::vector<Output>>
-ctc_beam_search_decoder_batch_for_wav2vec2am(
+ctc_beam_search_decoder_for_wav2vec2am_batch(
     const double* probs,
     int batch_size,
     int time_dim,

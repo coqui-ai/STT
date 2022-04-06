@@ -1567,6 +1567,9 @@ jobs:
         run: |
           sudo rm -r /Library/Developer/CommandLineTools
       - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
         with:
