@@ -652,7 +652,7 @@ ctc_beam_search_decoder_batch(
 }
 
 std::vector<std::vector<Output>>
-ctc_beam_search_decoder_batch_for_wav2vec2am(
+ctc_beam_search_decoder_for_wav2vec2am_batch(
     const double *probs,
     int batch_size,
     int time_dim,
@@ -661,7 +661,7 @@ ctc_beam_search_decoder_batch_for_wav2vec2am(
     int seq_lengths_size,
     const Alphabet &alphabet,
     size_t beam_size,
-    size_t num_processes,
+    size_t num_threads,
     double cutoff_prob,
     size_t cutoff_top_n,
     int blank_id,
@@ -670,10 +670,10 @@ ctc_beam_search_decoder_batch_for_wav2vec2am(
     std::unordered_map<std::string, float> hot_words,
     size_t num_results)
 {
-  VALID_CHECK_GT(num_processes, 0, "num_processes must be nonnegative!");
+  VALID_CHECK_GT(num_threads, 0, "num_threads must be nonnegative!");
   VALID_CHECK_EQ(batch_size, seq_lengths_size, "must have one sequence length per batch element");
   // thread pool
-  ThreadPool pool(num_processes);
+  ThreadPool pool(num_threads);
 
   // enqueue the tasks of decoding
   std::vector<std::future<std::vector<Output>>> res;
