@@ -6,6 +6,7 @@ import subprocess
 from collections import Counter
 
 import progressbar
+from clearml import Task
 
 
 def convert_and_filter_topk(args):
@@ -194,11 +195,31 @@ def main():
         help="To try when such message is returned by kenlm: 'Could not calculate Kneser-Ney discounts [...] rerun with --discount_fallback'",
         action="store_true",
     )
-
+    parser.add_argument(
+        "--clearml_project",
+        required=False,
+        default="STT/wav2vec2 decoding",
+    )
+    parser.add_argument(
+        "--clearml_task",
+        required=False,
+        default="LM generation",
+    )
     args = parser.parse_args()
+    try:
+        task = Task.init(project_name=args.clearml_project, task_name=args.clearml_task)
+    except:
+        pass
 
     data_lower, vocab_str = convert_and_filter_topk(args)
     build_lm(args, data_lower, vocab_str)
+
+    try:
+        task.upload_artifact(
+            name="lm.binary", artifact_object=os.path.join(args.output_dir, "lm.binary")
+        )
+    except:
+        pass
 
     # Delete intermediate files
     os.remove(os.path.join(args.output_dir, "lower.txt.gz"))
