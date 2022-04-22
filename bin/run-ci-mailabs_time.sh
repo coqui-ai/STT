@@ -36,6 +36,7 @@ python -u train.py --alphabet_config_path ${alphabet_path} \
   --export_tflite false
   --automatic_mixed_precision 1
   --train_cudnn 1
+  --log_level 0
 
 exit_code=$?
 
