@@ -42,5 +42,5 @@ exit_code=$?
 ent=$(date +%s)
 echo "Index -1 ends at ${ent}"
 
-ext=$(expr $end_time - $start_time)
+ext=$(expr $ent - $st)
 echo "Execution took ${ext} seconds to return exit code ${exit_code}."
