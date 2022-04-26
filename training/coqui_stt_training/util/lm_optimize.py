@@ -83,7 +83,7 @@ def main():
         )
         sys.exit(1)
 
-    results = lm_opt.compute_lm_optimization()
+    results = compute_lm_optimization()
     print(
         "Best params: lm_alpha={} and lm_beta={} with WER={}".format(
             results.get("lm_alpha"),
