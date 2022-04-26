@@ -21,7 +21,7 @@ fi
 st=$(date +%s)
 echo "Index 0 starts at ${st}."
 
-python -u train.py --alphabet_config_path ${alphabet_path} \
+python -m coqui_stt_training.train --alphabet_config_path ${alphabet_path} \
   --show_progressbar false --early_stop false \
   --train_files ${mailabs_train_csv} --train_batch_size 32 \
   --feature_cache '/tmp/mailabs_cache' \
@@ -33,7 +33,8 @@ python -u train.py --alphabet_config_path ${alphabet_path} \
   --scorer_path ${scorer_path} \
   --audio_sample_rate ${audio_sample_rate} \
   --export_tflite false \
-  --log_level 0
+  --log_level 0 \
+  --skip_batch_test true
 
 exit_code=$?
 
