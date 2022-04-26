@@ -822,6 +822,9 @@ jobs:
 
           # Test FLAC input
           time ./bin/run-ci-ldc93s1-flac.sh --epochs 1
+
+          # Test LM opt
+          time ./bin/run-ci-lm-opt.sh
   training-sdb-tests:
     name: "Lin|SDB training tests"
     runs-on: ubuntu-20.04
