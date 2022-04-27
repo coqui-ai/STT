@@ -503,6 +503,14 @@ class BaseSttConfig(Coqpit):
         metadata=dict(help="number of elements per batch on the exported graph"),
     )
 
+    # Memory test
+    skip_batch_test: bool = field(
+        default=False,
+        metadata=dict(
+            help="skip batch size memory test before training"
+        ),
+    )
+
     # Performance
     inter_op_parallelism_threads: int = field(
         default=0,
