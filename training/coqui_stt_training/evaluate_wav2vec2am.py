@@ -8,8 +8,9 @@ import json
 import os
 import sys
 from functools import partial
-from multiprocessing import JoinableQueue, Manager, Process, cpu_count
+from multiprocessing import JoinableQueue, Manager, Process
 from pathlib import Path
+import psutil
 
 import numpy as np
 import onnxruntime
@@ -274,7 +275,7 @@ def parse_args():
     parser.add_argument(
         "--proc",
         required=False,
-        default=cpu_count(),
+        default=len(psutil.Process().cpu_affinity()),
         type=int,
         help="Number of processes to spawn, defaulting to number of CPUs",
     )

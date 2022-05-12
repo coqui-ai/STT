@@ -1,8 +1,8 @@
 import math
-import os
 import random
 import re
 from multiprocessing import Process, Queue
+import psutil
 
 import numpy as np
 import resampy
@@ -312,7 +312,14 @@ class Overlay(SampleAugmentation):
 
     def start(self, buffering=BUFFER_SIZE):
         self.queue = Queue(
-            max(1, math.floor(self.probability * self.layers[1] * os.cpu_count()))
+            max(
+                1,
+                math.floor(
+                    self.probability
+                    * self.layers[1]
+                    * len(psutil.Process().cpu_affinity())
+                ),
+            )
         )
         self.enqueue_process = Process(
             target=_enqueue_overlay_samples,

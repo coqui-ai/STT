@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import sys
-from multiprocessing import cpu_count
+import psutil
 
 import progressbar
 import tensorflow.compat.v1 as tfv1
@@ -91,7 +91,7 @@ def evaluate(test_csvs, create_model):
 
     # Get number of accessible CPU cores for this process
     try:
-        num_processes = cpu_count()
+        num_processes = len(psutil.Process().cpu_affinity())
     except NotImplementedError:
         num_processes = 1
 

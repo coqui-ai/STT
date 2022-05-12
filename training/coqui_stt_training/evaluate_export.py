@@ -8,7 +8,8 @@ import sys
 import wave
 import io
 from functools import partial
-from multiprocessing import JoinableQueue, Manager, Process, cpu_count
+from multiprocessing import JoinableQueue, Manager, Process
+import psutil
 
 import numpy as np
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
@@ -142,7 +143,7 @@ def parse_args():
     parser.add_argument(
         "--proc",
         required=False,
-        default=cpu_count(),
+        default=len(psutil.Process().cpu_affinity()),
         type=int,
         help="Number of processes to spawn, defaulting to number of CPUs",
     )

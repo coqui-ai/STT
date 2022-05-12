@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function
 
-import os
 import sys
 from dataclasses import dataclass, field
+import psutil
 
 import optuna
 from clearml import Task
@@ -103,7 +103,7 @@ class LmOptimizeWav2vec2amConfig(BaseSttConfig):
         ),
     )
     num_processes: int = field(
-        default=os.cpu_count(),
+        default=len(psutil.Process().cpu_affinity()),
         metadata=dict(help="Number of worker processes for evaluation."),
     )
     clearml_project: str = field(

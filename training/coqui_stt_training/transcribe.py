@@ -9,6 +9,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, List, Tuple
+import psutil
 
 LOG_LEVEL_INDEX = sys.argv.index("--log_level") + 1 if "--log_level" in sys.argv else 0
 DESIRED_LOG_LEVEL = (
@@ -34,7 +35,7 @@ from tqdm import tqdm
 
 
 def cpu_count():
-    return os.cpu_count() or 1
+    return len(psutil.Process().cpu_affinity()) or 1
 
 
 class TranscriptionPool(PoolBase):

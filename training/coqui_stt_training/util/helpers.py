@@ -1,5 +1,6 @@
 import heapq
 import os
+import psutil
 import random
 import sys
 import time
@@ -134,7 +135,14 @@ class LimitingPool:
         process_ahead=None,
         sleeping_for=0.1,
     ):
-        self.process_ahead = os.cpu_count() if process_ahead is None else process_ahead
+        if processes is None:
+            processes = len(psutil.Process().cpu_affinity())
+
+        self.process_ahead = (
+            len(psutil.Process().cpu_affinity())
+            if process_ahead is None
+            else process_ahead
+        )
         self.sleeping_for = sleeping_for
         self.processed = 0
         self.pool = Pool(
