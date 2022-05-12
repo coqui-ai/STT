@@ -837,4 +837,4 @@ if __name__ == "__main__":
     write_general_csv(sources_root_dir, _counter=all_counter, _rows=all_rows)
 
     if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-        save_sentences_to_txt(excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+        save_sentences_to_txt(_excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
