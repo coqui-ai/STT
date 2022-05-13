@@ -782,7 +782,7 @@ if __name__ == "__main__":
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
-    parser.add_argument(
+    PARSER.add_argument(
         "--save_excluded_max_sec_to_disk",
         type=str,
         help="Text file path to save excluded (max length) sentences to add them to the language model",
