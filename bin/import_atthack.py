@@ -63,16 +63,20 @@ def _download_and_preprocess_data(target_dir):
 
 def _maybe_extract(target_dir, extracted_data, archive_path):
     # If target_dir/extracted_data does not exist, extract archive in target_dir
-    extracted_path = os.path.join(target_dir, extracted_data)
-    if not os.path.exists(extracted_path):
+    try:
+        extracted_path = os.path.join(target_dir, extracted_data)
+        if os.path.exists(extracted_path):
+            print(
+                'Found directory "%s" - not extracting it from archive.'
+                % extracted_path
+            )
+        else:
+            raise FileNotFoundError
+    except FileNotFoundError:
         print('No directory "%s" - extracting archive...' % extracted_path)
-        if not os.path.isdir(extracted_path):
-            os.mkdir(extracted_path)
         tar = tarfile.open(archive_path)
         tar.extractall(target_dir)
         tar.close()
-    else:
-        print('Found directory "%s" - not extracting it from archive.' % archive_path)
 
 
 def save_sentences_to_txt(sentences, text_file):
