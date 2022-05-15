@@ -15,7 +15,6 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
-import zipfile38 as zipfile
 from glob import glob
 from multiprocessing import Pool
 
@@ -43,6 +42,20 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
+
+try:
+    ffmpeg_path = subprocess.check_output(["which",  "ffmpeg"], stderr=subprocess.STDOUT).decode().replace("\n", "")
+    if not ffmpeg_path:
+        raise subprocess.CalledProcessError
+    else:
+        print(f"Using FFMPEG from {str(ffmpeg_path)}.")
+except subprocess.CalledProcessError:
+    print("ERROR: This importer needs FFMPEG.")
+    print()
+    print("Type:")
+    print("$   apt install ffmpeg")
+    exit(1)
+
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000

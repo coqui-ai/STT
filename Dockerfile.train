@@ -39,7 +39,6 @@ RUN apt-get update && \
         libsndfile1 \
         sox \
         libsox-fmt-mp3 \
-        ffmpeg \
         python3-venv && \
     rm -rf /var/lib/apt/lists/*
 
