@@ -53,7 +53,7 @@ except subprocess.CalledProcessError:
     print("ERROR: This importer needs FFMPEG.")
     print()
     print("Type:")
-    print("$   apt install ffmpeg")
+    print("$   apt-get update && apt-get install -y --no-install-recommends ffmpeg")
     exit(1)
 
 
