@@ -26,5 +26,5 @@ python -m coqui_stt_training.train \
   --n_hidden 100 \
   --epochs 200 \
   --checkpoint_dir "$checkpoint_dir" \
-  --skip_batch_test true
+  --skip_batch_test true \
   "$@"
