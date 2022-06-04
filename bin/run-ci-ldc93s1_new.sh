@@ -29,3 +29,4 @@ python -u train.py --alphabet_config_path "data/alphabet.txt" \
   --scorer_path 'data/smoke_test/pruned_lm.scorer' \
   --audio_sample_rate ${audio_sample_rate} \
   --export_tflite false
+  --skip_batch_test true
