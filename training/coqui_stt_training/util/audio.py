@@ -533,88 +533,94 @@ def get_pyogg_vorbis_callbacks_from_bytesio(bytesio):
 
 
 def read_ogg_vorbis(ogg_file):
-    ogg_file.seek(0)
-    vf = pyogg.vorbis.OggVorbis_File()
-    callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
-
-    buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
-    error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
-    if error != 0:
-        raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
-
-    info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
-    channel_count = info.contents.channels
-    sample_rate = info.contents.rate
     sample_width = 2  # always 16-bit
-    audio_format = AudioFormat(sample_rate, channel_count, sample_width)
+    if isinstance(ogg_file, str):
+        v_file = pyogg.VorbisFile(ogg_file)
+        sample_rate = v_file.frequency
+        channel_count = v_file.channels
+        buffer = v_file.buffer
+    else:
+        ogg_file.seek(0)
+        vf = pyogg.vorbis.OggVorbis_File()
+        callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
 
-    # Extract the total number of PCM samples for the first logical bitstream
-    pcm_length_samples = pyogg.vorbis.ov_pcm_total(
-        ctypes.byref(vf), 0  # to extract the length of the first logical bitstream
-    )
+        buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
+        error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
+        if error != 0:
+            raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
 
-    # Create a memory block to store the entire PCM
-    Buffer = ctypes.c_char * (pcm_length_samples * sample_width * channel_count)
-    buffer = Buffer()
+        info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
+        channel_count = info.contents.channels
+        sample_rate = info.contents.rate
 
-    # Create a pointer to the newly allocated memory.  It
-    # seems we can only do pointer arithmetic on void
-    # pointers.  See
-    # https://mattgwwalker.wordpress.com/2020/05/30/pointer-manipulation-in-python/
-    buf_ptr = ctypes.cast(ctypes.pointer(buffer), ctypes.c_void_p)
-
-    # Storage for the index of the logical bitstream
-    bitstream_previous = None
-    bitstream = ctypes.c_int()
-
-    # Set bytes remaining to read into PCM
-    read_size = len(buffer)
-
-    while True:
-        # Convert buffer pointer to the desired type
-        ptr = ctypes.cast(buf_ptr, ctypes.POINTER(ctypes.c_char))
-
-        # Attempt to decode PCM from the Vorbis file
-        result = pyogg.vorbis.ov_read(
-            ctypes.byref(vf),
-            ptr,
-            read_size,
-            0,  # Little endian
-            sample_width,
-            1,  # Signed samples
-            ctypes.byref(bitstream),
+        # Extract the total number of PCM samples for the first logical bitstream
+        pcm_length_samples = pyogg.vorbis.ov_pcm_total(
+            ctypes.byref(vf), 0  # to extract the length of the first logical bitstream
         )
 
-        # Check for errors
-        if result < 0:
-            raise ValueError(
-                "An error occurred decoding the Vorbis file: " + f"Error code: {result}"
+        # Create a memory block to store the entire PCM
+        Buffer = ctypes.c_char * (pcm_length_samples * sample_width * channel_count)
+        buffer = Buffer()
+
+        # Create a pointer to the newly allocated memory.  It
+        # seems we can only do pointer arithmetic on void
+        # pointers.  See
+        # https://mattgwwalker.wordpress.com/2020/05/30/pointer-manipulation-in-python/
+        buf_ptr = ctypes.cast(ctypes.pointer(buffer), ctypes.c_void_p)
+
+        # Storage for the index of the logical bitstream
+        bitstream_previous = None
+        bitstream = ctypes.c_int()
+
+        # Set bytes remaining to read into PCM
+        read_size = len(buffer)
+
+        while True:
+            # Convert buffer pointer to the desired type
+            ptr = ctypes.cast(buf_ptr, ctypes.POINTER(ctypes.c_char))
+
+            # Attempt to decode PCM from the Vorbis file
+            result = pyogg.vorbis.ov_read(
+                ctypes.byref(vf),
+                ptr,
+                read_size,
+                0,  # Little endian
+                sample_width,
+                1,  # Signed samples
+                ctypes.byref(bitstream),
             )
 
-        # Check that the bitstream hasn't changed as we only
-        # support Vorbis files with a single logical bitstream.
-        if bitstream_previous is None:
-            bitstream_previous = bitstream
-        else:
-            if bitstream_previous != bitstream:
+            # Check for errors
+            if result < 0:
                 raise ValueError(
-                    "PyOgg currently supports Vorbis files "
-                    + "with only one logical stream"
+                    "An error occurred decoding the Vorbis file: " + f"Error code: {result}"
                 )
 
-        # Check for end of file
-        if result == 0:
-            break
+            # Check that the bitstream hasn't changed as we only
+            # support Vorbis files with a single logical bitstream.
+            if bitstream_previous is None:
+                bitstream_previous = bitstream
+            else:
+                if bitstream_previous != bitstream:
+                    raise ValueError(
+                        "PyOgg currently supports Vorbis files "
+                        + "with only one logical stream"
+                    )
 
-        # Calculate the number of bytes remaining to read into PCM
-        read_size -= result
+            # Check for end of file
+            if result == 0:
+                break
 
-        # Update the pointer into the buffer
-        buf_ptr.value += result
+            # Calculate the number of bytes remaining to read into PCM
+            read_size -= result
 
-    # Close the file and clean up memory
-    pyogg.vorbis.ov_clear(ctypes.byref(vf))
+            # Update the pointer into the buffer
+            buf_ptr.value += result
 
+        # Close the file and clean up memory
+        pyogg.vorbis.ov_clear(ctypes.byref(vf))
+
+    audio_format = AudioFormat(sample_rate, channel_count, sample_width)
     return audio_format, buffer
 
 
