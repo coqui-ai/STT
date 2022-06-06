@@ -8,7 +8,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential cmake libboost-system-dev \
-    libopusfile0 \
     libboost-thread-dev libboost-program-options-dev \
     libboost-test-dev libeigen3-dev zlib1g-dev \
     libbz2-dev liblzma-dev && \
