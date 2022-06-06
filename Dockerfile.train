@@ -1,4 +1,4 @@
-# ok This is a Dockerfile useful for training models with Coqui STT.
+# This is a Dockerfile useful for training models with Coqui STT.
 # You can train "acoustic models" with audio + Tensorflow, and
 # you can create "scorers" with text + KenLM.
 
