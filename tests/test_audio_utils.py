@@ -29,10 +29,6 @@ class TestValidateReadAudio(unittest.TestCase):
         result = audio.read_audio(audio_type, str(audio_path))
         self.assertIsInstance(result[0], audio.AudioFormat)
 
-    def test_ogg_vorbis(self):
-        audio_path = "Example.ogg"
-        audio.read_ogg_vorbis(audio_path)
-
 
 class TestValidateReadDuration(unittest.TestCase):
     def test_flac(self):
