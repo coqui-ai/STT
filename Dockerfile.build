@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libbz2-dev \
         libboost-all-dev \
         libgsm1-dev \
+        libopusfile0 \
         libltdl-dev \
         liblzma-dev \
         libmagic-dev \

@@ -547,7 +547,9 @@ def read_ogg_vorbis(ogg_file):
         buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
         error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
         if error != 0:
-            raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
+            raise ValueError(
+                f"Ogg/Vorbis buffer could not be read. Error code: {error}"
+            )
 
         info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
         channel_count = info.contents.channels
@@ -593,7 +595,8 @@ def read_ogg_vorbis(ogg_file):
             # Check for errors
             if result < 0:
                 raise ValueError(
-                    "An error occurred decoding the Vorbis file: " + f"Error code: {result}"
+                    "An error occurred decoding the Vorbis file: "
+                    + f"Error code: {result}"
                 )
 
             # Check that the bitstream hasn't changed as we only
