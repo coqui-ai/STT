@@ -425,13 +425,18 @@ def read_opus(opus_file):
 
 def read_ogg_opus(ogg_file):
     error = ctypes.c_int()
-    ogg_file_buffer = ogg_file.getbuffer()
-    ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
-    opusfile = pyogg.opus.op_open_memory(
-        ubyte_array.from_buffer(ogg_file_buffer),
-        len(ogg_file_buffer),
-        ctypes.pointer(error),
-    )
+    if isinstance(ogg_file, str):
+        opusfile = pyogg.opus.op_open_file(
+            bytes(ogg_file, encoding="utf-8"), ctypes.pointer(error)
+        )
+    else:
+        ogg_file_buffer = ogg_file.getbuffer()
+        ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
+        opusfile = pyogg.opus.op_open_memory(
+            ubyte_array.from_buffer(ogg_file_buffer),
+            len(ogg_file_buffer),
+            ctypes.pointer(error),
+        )
 
     if error.value != 0:
         raise ValueError(
@@ -528,88 +533,97 @@ def get_pyogg_vorbis_callbacks_from_bytesio(bytesio):
 
 
 def read_ogg_vorbis(ogg_file):
-    ogg_file.seek(0)
-    vf = pyogg.vorbis.OggVorbis_File()
-    callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
-
-    buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
-    error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
-    if error != 0:
-        raise ValueError(f"Ogg/Vorbis buffer could not be read. Error code: {error}")
-
-    info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
-    channel_count = info.contents.channels
-    sample_rate = info.contents.rate
     sample_width = 2  # always 16-bit
-    audio_format = AudioFormat(sample_rate, channel_count, sample_width)
+    if isinstance(ogg_file, str):
+        v_file = pyogg.VorbisFile(ogg_file)
+        sample_rate = v_file.frequency
+        channel_count = v_file.channels
+        buffer = v_file.buffer
+    else:
+        ogg_file.seek(0)
+        vf = pyogg.vorbis.OggVorbis_File()
+        callbacks = get_pyogg_vorbis_callbacks_from_bytesio(ogg_file)
 
-    # Extract the total number of PCM samples for the first logical bitstream
-    pcm_length_samples = pyogg.vorbis.ov_pcm_total(
-        ctypes.byref(vf), 0  # to extract the length of the first logical bitstream
-    )
-
-    # Create a memory block to store the entire PCM
-    Buffer = ctypes.c_char * (pcm_length_samples * sample_width * channel_count)
-    buffer = Buffer()
-
-    # Create a pointer to the newly allocated memory.  It
-    # seems we can only do pointer arithmetic on void
-    # pointers.  See
-    # https://mattgwwalker.wordpress.com/2020/05/30/pointer-manipulation-in-python/
-    buf_ptr = ctypes.cast(ctypes.pointer(buffer), ctypes.c_void_p)
-
-    # Storage for the index of the logical bitstream
-    bitstream_previous = None
-    bitstream = ctypes.c_int()
-
-    # Set bytes remaining to read into PCM
-    read_size = len(buffer)
-
-    while True:
-        # Convert buffer pointer to the desired type
-        ptr = ctypes.cast(buf_ptr, ctypes.POINTER(ctypes.c_char))
-
-        # Attempt to decode PCM from the Vorbis file
-        result = pyogg.vorbis.ov_read(
-            ctypes.byref(vf),
-            ptr,
-            read_size,
-            0,  # Little endian
-            sample_width,
-            1,  # Signed samples
-            ctypes.byref(bitstream),
-        )
-
-        # Check for errors
-        if result < 0:
+        buff = ctypes.create_string_buffer(pyogg.PYOGG_STREAM_BUFFER_SIZE)
+        error = pyogg.vorbis.ov_open_callbacks(buff, vf, None, 0, callbacks)
+        if error != 0:
             raise ValueError(
-                "An error occurred decoding the Vorbis file: " + f"Error code: {result}"
+                f"Ogg/Vorbis buffer could not be read. Error code: {error}"
             )
 
-        # Check that the bitstream hasn't changed as we only
-        # support Vorbis files with a single logical bitstream.
-        if bitstream_previous is None:
-            bitstream_previous = bitstream
-        else:
-            if bitstream_previous != bitstream:
+        info = pyogg.vorbis.ov_info(ctypes.byref(vf), -1)
+        channel_count = info.contents.channels
+        sample_rate = info.contents.rate
+
+        # Extract the total number of PCM samples for the first logical bitstream
+        pcm_length_samples = pyogg.vorbis.ov_pcm_total(
+            ctypes.byref(vf), 0  # to extract the length of the first logical bitstream
+        )
+
+        # Create a memory block to store the entire PCM
+        Buffer = ctypes.c_char * (pcm_length_samples * sample_width * channel_count)
+        buffer = Buffer()
+
+        # Create a pointer to the newly allocated memory.  It
+        # seems we can only do pointer arithmetic on void
+        # pointers.  See
+        # https://mattgwwalker.wordpress.com/2020/05/30/pointer-manipulation-in-python/
+        buf_ptr = ctypes.cast(ctypes.pointer(buffer), ctypes.c_void_p)
+
+        # Storage for the index of the logical bitstream
+        bitstream_previous = None
+        bitstream = ctypes.c_int()
+
+        # Set bytes remaining to read into PCM
+        read_size = len(buffer)
+
+        while True:
+            # Convert buffer pointer to the desired type
+            ptr = ctypes.cast(buf_ptr, ctypes.POINTER(ctypes.c_char))
+
+            # Attempt to decode PCM from the Vorbis file
+            result = pyogg.vorbis.ov_read(
+                ctypes.byref(vf),
+                ptr,
+                read_size,
+                0,  # Little endian
+                sample_width,
+                1,  # Signed samples
+                ctypes.byref(bitstream),
+            )
+
+            # Check for errors
+            if result < 0:
                 raise ValueError(
-                    "PyOgg currently supports Vorbis files "
-                    + "with only one logical stream"
+                    "An error occurred decoding the Vorbis file: "
+                    + f"Error code: {result}"
                 )
 
-        # Check for end of file
-        if result == 0:
-            break
+            # Check that the bitstream hasn't changed as we only
+            # support Vorbis files with a single logical bitstream.
+            if bitstream_previous is None:
+                bitstream_previous = bitstream
+            else:
+                if bitstream_previous != bitstream:
+                    raise ValueError(
+                        "PyOgg currently supports Vorbis files "
+                        + "with only one logical stream"
+                    )
 
-        # Calculate the number of bytes remaining to read into PCM
-        read_size -= result
+            # Check for end of file
+            if result == 0:
+                break
 
-        # Update the pointer into the buffer
-        buf_ptr.value += result
+            # Calculate the number of bytes remaining to read into PCM
+            read_size -= result
 
-    # Close the file and clean up memory
-    pyogg.vorbis.ov_clear(ctypes.byref(vf))
+            # Update the pointer into the buffer
+            buf_ptr.value += result
 
+        # Close the file and clean up memory
+        pyogg.vorbis.ov_clear(ctypes.byref(vf))
+
+    audio_format = AudioFormat(sample_rate, channel_count, sample_width)
     return audio_format, buffer
 
 
@@ -623,7 +637,8 @@ def write_wav(wav_file, pcm_data, audio_format=DEFAULT_FORMAT):
 
 
 def read_wav(wav_file):
-    wav_file.seek(0)
+    if not isinstance(wav_file, str):
+        wav_file.seek(0)
     with wave.open(wav_file, "rb") as wav_file_reader:
         audio_format = read_audio_format_from_wav_file(wav_file_reader)
         pcm_data = wav_file_reader.readframes(wav_file_reader.getnframes())
@@ -631,11 +646,16 @@ def read_wav(wav_file):
 
 
 def read_flac(flac_file):
-    audio_format = read_flac_format(flac_file)
-    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
-    decoded = miniaudio.decode(
-        flac_buffer, nchannels=audio_format.channels, sample_rate=audio_format.rate
-    )
+    if isinstance(flac_file, str):
+        # if flac_file is a string path
+        audio_format = read_flac_format(flac_file)
+        decoded = miniaudio.decode_file(flac_file)
+    else:
+        audio_format = read_flac_format(flac_file)
+        flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+        decoded = miniaudio.decode(
+            flac_buffer, nchannels=audio_format.channels, sample_rate=audio_format.rate
+        )
     asnp = np.frombuffer(decoded.samples, np.int16)
     return audio_format, asnp.reshape(
         asnp.shape[0] // audio_format.channels, audio_format.channels
@@ -669,7 +689,8 @@ def write_audio(
 
 
 def read_wav_duration(wav_file):
-    wav_file.seek(0)
+    if not isinstance(wav_file, str):
+        wav_file.seek(0)
     with wave.open(wav_file, "rb") as wav_file_reader:
         return wav_file_reader.getnframes() / wav_file_reader.getframerate()
 
@@ -681,13 +702,18 @@ def read_opus_duration(opus_file):
 
 def read_ogg_opus_duration(ogg_file):
     error = ctypes.c_int()
-    ogg_file_buffer = ogg_file.getbuffer()
-    ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
-    opusfile = pyogg.opus.op_open_memory(
-        ubyte_array.from_buffer(ogg_file_buffer),
-        len(ogg_file_buffer),
-        ctypes.pointer(error),
-    )
+    if isinstance(ogg_file, str):
+        opusfile = pyogg.opus.op_open_file(
+            bytes(ogg_file, encoding="utf-8"), ctypes.pointer(error)
+        )
+    else:
+        ogg_file_buffer = ogg_file.getbuffer()
+        ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
+        opusfile = pyogg.opus.op_open_memory(
+            ubyte_array.from_buffer(ogg_file_buffer),
+            len(ogg_file_buffer),
+            ctypes.pointer(error),
+        )
 
     if error.value != 0:
         raise ValueError(
@@ -728,8 +754,12 @@ def read_ogg_vorbis_duration(ogg_file):
 
 
 def read_flac_duration(flac_file):
-    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
-    info = miniaudio.flac_get_info(flac_buffer)
+    if isinstance(flac_file, str):
+        # if flac_file is a string path to the file
+        info = miniaudio.flac_get_file_info(flac_file)
+    else:
+        flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+        info = miniaudio.flac_get_info(flac_buffer)
     return info.duration
 
 
@@ -748,7 +778,8 @@ def read_duration(audio_type, audio_file):
 
 
 def read_wav_format(wav_file):
-    wav_file.seek(0)
+    if not isinstance(wav_file, str):
+        wav_file.seek(0)
     with wave.open(wav_file, "rb") as wav_file_reader:
         return read_audio_format_from_wav_file(wav_file_reader)
 
@@ -760,13 +791,18 @@ def read_opus_format(opus_file):
 
 def read_ogg_opus_format(ogg_file):
     error = ctypes.c_int()
-    ogg_file_buffer = ogg_file.getbuffer()
-    ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
-    opusfile = pyogg.opus.op_open_memory(
-        ubyte_array.from_buffer(ogg_file_buffer),
-        len(ogg_file_buffer),
-        ctypes.pointer(error),
-    )
+    if isinstance(ogg_file, str):
+        opusfile = pyogg.opus.op_open_file(
+            bytes(ogg_file, encoding="utf-8"), ctypes.pointer(error)
+        )
+    else:
+        ogg_file_buffer = ogg_file.getbuffer()
+        ubyte_array = ctypes.c_ubyte * len(ogg_file_buffer)
+        opusfile = pyogg.opus.op_open_memory(
+            ubyte_array.from_buffer(ogg_file_buffer),
+            len(ogg_file_buffer),
+            ctypes.pointer(error),
+        )
 
     if error.value != 0:
         raise ValueError(
@@ -799,8 +835,12 @@ def read_ogg_vorbis_format(ogg_file):
 
 
 def read_flac_format(flac_file):
-    flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
-    info = miniaudio.flac_get_info(flac_buffer)
+    if isinstance(flac_file, str):
+        # if flac_file is a string path to the file
+        info = miniaudio.flac_get_file_info(flac_file)
+    else:
+        flac_buffer = miniaudio.ffi.from_buffer(flac_file.getbuffer())
+        info = miniaudio.flac_get_info(flac_buffer)
 
     if info.sample_format == miniaudio.SampleFormat.UNKNOWN:
         raise ValueError("Unsupported FLAC file with unknown sample format")
