@@ -27,52 +27,82 @@ set(KENLM_UTIL_SOURCE
 		usage.cc
 	)
 
+if (WIN32)
+  set(KENLM_UTIL_SOURCE ${KENLM_UTIL_SOURCE} getopt.c)
+endif()
+
+# This directory has children that need to be processed
+add_subdirectory(double-conversion)
+add_subdirectory(stream)
+
+add_library(kenlm_util ${KENLM_UTIL_DOUBLECONVERSION_SOURCE} ${KENLM_UTIL_STREAM_SOURCE} ${KENLM_UTIL_SOURCE})
+# Since headers are relative to `include/kenlm` at install time, not just `include`
+target_include_directories(kenlm_util PUBLIC $<INSTALL_INTERFACE:include/kenlm>)
+
 set(READ_COMPRESSED_FLAGS)
-set(READ_COMPRESSED_LIBS)
 find_package(ZLIB)
 if (ZLIB_FOUND)
   set(READ_COMPRESSED_FLAGS "${READ_COMPRESSED_FLAGS} -DHAVE_ZLIB")
-  set(READ_COMPRESSED_LIBS ${READ_COMPRESSED_LIBS} ${ZLIB_LIBRARIES})
+  target_link_libraries(kenlm_util PRIVATE ${ZLIB_LIBRARIES})
   include_directories(${ZLIB_INCLUDE_DIR})
 endif()
 
 find_package(BZip2)
 if (BZIP2_FOUND)
   set(READ_COMPRESSED_FLAGS "${READ_COMPRESSED_FLAGS} -DHAVE_BZLIB")
-  set(READ_COMPRESSED_LIBS ${READ_COMPRESSED_LIBS} ${BZIP2_LIBRARIES})
+    target_link_libraries(kenlm_util PRIVATE ${BZIP2_LIBRARIES})
   include_directories(${BZIP2_INCLUDE_DIR})
 endif()
 
 find_package(LibLZMA)
 if (LIBLZMA_FOUND)
   set(READ_COMPRESSED_FLAGS "${READ_COMPRESSED_FLAGS} -DHAVE_XZLIB")
-  set(READ_COMPRESSED_LIBS ${READ_COMPRESSED_LIBS} ${LIBLZMA_LIBRARIES})
+      target_link_libraries(kenlm_util PRIVATE ${LIBLZMA_LIBRARIES})
   include_directories(${LIBLZMA_INCLUDE_DIRS})
 endif()
-set_source_files_properties(read_compressed.cc PROPERTIES COMPILE_FLAGS ${READ_COMPRESSED_FLAGS})
-set_source_files_properties(read_compressed_test.cc PROPERTIES COMPILE_FLAGS ${READ_COMPRESSED_FLAGS})
-set_source_files_properties(file_piece_test.cc PROPERTIES COMPILE_FLAGS ${READ_COMPRESSED_FLAGS})
-
-# This directory has children that need to be processed
-add_subdirectory(double-conversion)
-add_subdirectory(stream)
-
-if (UNIX AND NOT APPLE)
-  set(TIMER_LINK rt)
-else()
-  set(TIMER_LINK)
+if (NOT "${READ_COMPRESSED_FLAGS}" STREQUAL "")
+  set_source_files_properties(read_compressed.cc PROPERTIES COMPILE_FLAGS ${READ_COMPRESSED_FLAGS})
+  set_source_files_properties(read_compressed_test.cc PROPERTIES COMPILE_FLAGS ${READ_COMPRESSED_FLAGS})
+  set_source_files_properties(file_piece_test.cc PROPERTIES COMPILE_FLAGS ${READ_COMPRESSED_FLAGS})
 endif()
 
-if (NOT MSVC)
-	set(THREADS pthread)
+if(UNIX)
+  include(CheckLibraryExists)
+  check_library_exists(rt clock_gettime "clock_gettime from librt" HAVE_CLOCKGETTIME_RT)
+  if (HAVE_CLOCKGETTIME_RT)
+    set(RT rt)
+  else()
+    check_library_exists(c clock_gettime "clock_gettime from the libc" HAVE_CLOCKGETTIME)
+  endif()
+
+  if (HAVE_CLOCKGETTIME_RT OR HAVE_CLOCKGETTIME)
+    add_definitions(-DHAVE_CLOCKGETTIME)
+  endif()
 endif()
 
 # Group these objects together for later use.
-add_library(kenlm_util ${KENLM_UTIL_DOUBLECONVERSION_SOURCE} ${KENLM_UTIL_STREAM_SOURCE} ${KENLM_UTIL_SOURCE})
-target_link_libraries(kenlm_util ${Boost_LIBRARIES} ${READ_COMPRESSED_LIBS} ${THREADS} ${TIMER_LINK})
+set_target_properties(kenlm_util PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(kenlm_util
+  PUBLIC
+  # Boost is required for building binaries and tests
+  "$<BUILD_INTERFACE:${Boost_LIBRARIES}>"
+  PRIVATE
+  Threads::Threads
+  ${RT})
 
+install(
+  TARGETS kenlm_util
+  EXPORT kenlmTargets
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  INCLUDES DESTINATION include
+)
+
+if (NOT WIN32)
 AddExes(EXES probing_hash_table_benchmark
-        LIBRARIES kenlm_util ${Boost_LIBRARIES} ${THREADS})
+        LIBRARIES kenlm_util Threads::Threads)
+endif()
 
 # Only compile and run unit tests if tests should be run
 if(BUILD_TESTING)
@@ -91,10 +121,10 @@ if(BUILD_TESTING)
   )
 
   AddTests(TESTS ${KENLM_BOOST_TESTS_LIST}
-           LIBRARIES kenlm_util ${Boost_LIBRARIES} ${THREADS})
+           LIBRARIES kenlm_util Threads::Threads)
 
   # file_piece_test requires an extra command line parameter
   KenLMAddTest(TEST file_piece_test
-               LIBRARIES kenlm_util ${Boost_LIBRARIES} ${THREADS}
+               LIBRARIES kenlm_util Threads::Threads
                TEST_ARGS ${CMAKE_CURRENT_SOURCE_DIR}/file_piece.cc)
 endif()

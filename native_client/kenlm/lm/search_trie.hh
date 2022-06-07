@@ -1,14 +1,14 @@
 #ifndef LM_SEARCH_TRIE_H
 #define LM_SEARCH_TRIE_H
 
-#include "lm/config.hh"
-#include "lm/model_type.hh"
-#include "lm/return.hh"
-#include "lm/trie.hh"
-#include "lm/weights.hh"
+#include "config.hh"
+#include "model_type.hh"
+#include "return.hh"
+#include "trie.hh"
+#include "weights.hh"
 
-#include "util/file.hh"
-#include "util/file_piece.hh"
+#include "../util/file.hh"
+#include "../util/file_piece.hh"
 
 #include <vector>
 #include <cstdlib>
@@ -38,12 +38,11 @@ template <class Quant, class Bhiksha> class TrieSearch {
 
     static const unsigned int kVersion = 1;
 
-    static void UpdateConfigFromBinary(const BinaryFormat &file, const std::vector<uint64_t> &counts, uint64_t offset, Config &config, bool load_from_memory) {
-      Quant::UpdateConfigFromBinary(file, offset, config, load_from_memory);
-
+    static void UpdateConfigFromBinary(const BinaryFormat &file, const std::vector<uint64_t> &counts, uint64_t offset, Config &config) {
+      Quant::UpdateConfigFromBinary(file, offset, config);
       // Currently the unigram pointers are not compresssed, so there will only be a header for order > 2.
       if (counts.size() > 2)
-        Bhiksha::UpdateConfigFromBinary(file, offset + Quant::Size(counts.size(), config) + Unigram::Size(counts[0]), config, load_from_memory);
+        Bhiksha::UpdateConfigFromBinary(file, offset + Quant::Size(counts.size(), config) + Unigram::Size(counts[0]), config);
     }
 
     static uint64_t Size(const std::vector<uint64_t> &counts, const Config &config) {

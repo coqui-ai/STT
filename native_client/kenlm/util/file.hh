@@ -1,25 +1,18 @@
 #ifndef UTIL_FILE_H
 #define UTIL_FILE_H
 
-#include "util/exception.hh"
-#include "util/scoped.hh"
-#include "util/string_piece.hh"
+#include "exception.hh"
+#include "scoped.hh"
+#include "string_piece.hh"
 
 #include <cstddef>
 #include <cstdio>
 #include <string>
 #include <stdint.h>
 
-#if defined _MSC_VER
-    #define KENLM_EXPORT __declspec(dllexport)
-#else
-    #define KENLM_EXPORT __attribute__ ((visibility("default")))
-#endif /* _MSC_VER */
-
-
 namespace util {
 
-class KENLM_EXPORT scoped_fd {
+class scoped_fd {
   public:
     scoped_fd() : fd_(-1) {}
 
@@ -89,7 +82,7 @@ class EndOfFileException : public Exception {
 class UnsupportedOSException : public Exception {};
 
 // Open for read only.
-KENLM_EXPORT int OpenReadOrThrow(const char *name);
+int OpenReadOrThrow(const char *name);
 // Create file if it doesn't exist, truncate if it does.  Opened for write.
 int CreateOrThrow(const char *name);
 
@@ -117,7 +110,7 @@ bool OutputPathIsStdout(StringPiece path);
 
 // Return value for SizeFile when it can't size properly.
 const uint64_t kBadSize = (uint64_t)-1;
-KENLM_EXPORT uint64_t SizeFile(int fd);
+uint64_t SizeFile(int fd);
 uint64_t SizeOrThrow(int fd);
 
 void ResizeOrThrow(int fd, uint64_t to);
@@ -141,7 +134,6 @@ void WriteOrThrow(FILE *to, const void *data, std::size_t size);
  * above.
  */
 void ErsatzPRead(int fd, void *to, std::size_t size, uint64_t off);
-void ErsatzPRead(const char *file_data, void *to_void, std::size_t size, uint64_t off);
 void ErsatzPWrite(int fd, const void *data_void, std::size_t size, uint64_t off);
 
 void FSyncOrThrow(int fd);

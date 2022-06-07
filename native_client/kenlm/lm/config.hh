@@ -1,8 +1,8 @@
 #ifndef LM_CONFIG_H
 #define LM_CONFIG_H
 
-#include "lm/lm_exception.hh"
-#include "util/mmap.hh"
+#include "lm_exception.hh"
+#include "../util/mmap.hh"
 
 #include <iosfwd>
 #include <string>
@@ -10,19 +10,13 @@
 
 /* Configuration for ngram model.  Separate header to reduce pollution. */
 
-#if defined _MSC_VER
-    #define KENLM_EXPORT __declspec(dllexport)
-#else
-    #define KENLM_EXPORT __attribute__ ((visibility("default")))
-#endif /* _MSC_VER */
-
 namespace lm {
 
 class EnumerateVocab;
 
 namespace ngram {
 
-struct KENLM_EXPORT Config {
+struct Config {
   // EFFECTIVE FOR BOTH ARPA AND BINARY READS
 
   // (default true) print progress bar to messages

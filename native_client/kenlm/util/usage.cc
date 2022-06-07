@@ -1,6 +1,6 @@
-#include "util/usage.hh"
+#include "usage.hh"
 
-#include "util/exception.hh"
+#include "exception.hh"
 
 #include <fstream>
 #include <ostream>
@@ -38,11 +38,12 @@ typedef WINBOOL (WINAPI *PFN_MS_EX) (lMEMORYSTATUSEX*);
 #include <unistd.h>
 #endif
 
-#if defined(__MACH__) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__MACH__) || defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <mach/task.h>
 #include <mach/mach.h>
+#include <libproc.h>
 #endif
 
 namespace util {
@@ -170,16 +171,16 @@ double ThreadTime() {
   // GetThreadTimes() reports in units of 100 nanoseconds, i.e. ten-millionths
   // of a second.
   return ticks / (10 * 1000 * 1000);
-#elif defined(__MACH__) || defined(__FreeBSD__) || defined(__APPLE__)
+#elif defined(HAVE_CLOCKGETTIME)
+  struct timespec usage;
+  UTIL_THROW_IF(clock_gettime(CLOCK_THREAD_CPUTIME_ID, &usage), ErrnoException, "clock_gettime failed?!");
+  return DoubleSec(usage);
+#elif defined(__MACH__) || defined(__APPLE__)
   struct task_basic_info t_info;
   mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;  
   task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
   
   return 0.0;
-#else
-  struct timespec usage;
-  UTIL_THROW_IF(clock_gettime(CLOCK_THREAD_CPUTIME_ID, &usage), ErrnoException, "clock_gettime failed?!"); 
-  return DoubleSec(usage);
 #endif
 }
 
@@ -196,11 +197,23 @@ uint64_t RSSMax() {
 
 void PrintUsage(std::ostream &out) {
 #if !defined(_WIN32) && !defined(_WIN64)
+  #if defined(__MACH__) || defined(__APPLE__)
+  struct mach_task_basic_info t_info;
+  char name[2 * MAXCOMLEN] = {0};
+
+  proc_name(getpid(), name, sizeof(name));
+  mach_msg_type_number_t t_info_count = MACH_TASK_BASIC_INFO_COUNT;
+  task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
+
+  out << name << '\t';
+  out << t_info.resident_size_max << '\t';
+  out << t_info.resident_size << '\t';
+  #else
   // Linux doesn't set memory usage in getrusage :-(
   std::set<std::string> headers;
+  headers.insert("Name:");
   headers.insert("VmPeak:");
   headers.insert("VmRSS:");
-  headers.insert("Name:");
 
   std::ifstream status("/proc/self/status", std::ios::in);
   std::string header, value;
@@ -209,6 +222,7 @@ void PrintUsage(std::ostream &out) {
       out << header << SkipSpaces(value.c_str()) << '\t';
     }
   }
+  #endif
 
   struct rusage usage;
   if (getrusage(RUSAGE_SELF, &usage)) {

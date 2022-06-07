@@ -1,9 +1,9 @@
 #ifndef LM_VIRTUAL_INTERFACE_H
 #define LM_VIRTUAL_INTERFACE_H
 
-#include "lm/return.hh"
-#include "lm/word_index.hh"
-#include "util/string_piece.hh"
+#include "return.hh"
+#include "word_index.hh"
+#include "../util/string_piece.hh"
 
 #include <string>
 #include <cstring>
@@ -136,8 +136,6 @@ class Model {
     unsigned char Order() const { return order_; }
 
     const Vocabulary &BaseVocabulary() const { return *base_vocab_; }
-
-    virtual uint64_t GetEndOfSearchOffset() const = 0;
 
   private:
     template <class T, class U, class V> friend class ModelFacade;

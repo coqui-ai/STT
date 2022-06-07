@@ -1,13 +1,13 @@
 #ifndef LM_BINARY_FORMAT_H
 #define LM_BINARY_FORMAT_H
 
-#include "lm/config.hh"
-#include "lm/model_type.hh"
-#include "lm/read_arpa.hh"
+#include "config.hh"
+#include "model_type.hh"
+#include "read_arpa.hh"
 
-#include "util/file_piece.hh"
-#include "util/mmap.hh"
-#include "util/scoped.hh"
+#include "../util/file_piece.hh"
+#include "../util/mmap.hh"
+#include "../util/scoped.hh"
 
 #include <cstddef>
 #include <vector>
@@ -23,8 +23,7 @@ extern const char *kModelNames[6];
  * If so, return true and set recognized to the type.  This is the only API in
  * this header designed for use by decoder authors.
  */
-KENLM_EXPORT bool RecognizeBinary(const char *file, ModelType &recognized);
-KENLM_EXPORT bool RecognizeBinary(const char *file_data, const uint64_t file_data_size, ModelType &recognized);
+bool RecognizeBinary(const char *file, ModelType &recognized);
 
 struct FixedWidthParameters {
   unsigned char order;
@@ -49,20 +48,13 @@ class BinaryFormat {
   public:
     explicit BinaryFormat(const Config &config);
 
-    ~BinaryFormat(){
-      file_data_ = NULL;
-    }
-
     // Reading a binary file:
     // Takes ownership of fd
     void InitializeBinary(int fd, ModelType model_type, unsigned int search_version, Parameters &params);
-    void InitializeBinary(const char *file_data, ModelType model_type, unsigned int search_version, Parameters &params);
     // Used to read parts of the file to update the config object before figuring out full size.
     void ReadForConfig(void *to, std::size_t amount, uint64_t offset_excluding_header) const;
-    void ReadForConfig(void *to, std::size_t amount, uint64_t offset_excluding_header, bool useMemory) const;
     // Actually load the binary file and return a pointer to the beginning of the search area.
     void *LoadBinary(std::size_t size);
-    void *LoadBinary(std::size_t size, const uint64_t  file_size);
 
     uint64_t VocabStringReadingOffset() const {
       assert(vocab_string_offset_ != kInvalidOffset);
@@ -89,10 +81,9 @@ class BinaryFormat {
 
     // File behind memory, if any.
     util::scoped_fd file_;
-    const char *file_data_;
 
     // If there is a file involved, a single mapping.
-    util::scoped_memory mapping_= new util::scoped_memory(true);
+    util::scoped_memory mapping_;
 
     // If the data is only in memory, separately allocate each because the trie
     // knows vocab's size before it knows search's size (because SRILM might
@@ -109,7 +100,6 @@ class BinaryFormat {
 };
 
 bool IsBinaryFormat(int fd);
-bool IsBinaryFormat(const char *file_data, uint64_t size);
 
 } // namespace ngram
 } // namespace lm

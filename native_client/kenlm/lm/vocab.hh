@@ -1,20 +1,19 @@
 #ifndef LM_VOCAB_H
 #define LM_VOCAB_H
 
-#include "lm/enumerate_vocab.hh"
-#include "lm/lm_exception.hh"
-#include "lm/virtual_interface.hh"
-#include "util/file_stream.hh"
-#include "util/murmur_hash.hh"
-#include "util/pool.hh"
-#include "util/probing_hash_table.hh"
-#include "util/sorted_uniform.hh"
-#include "util/string_piece.hh"
+#include "enumerate_vocab.hh"
+#include "lm_exception.hh"
+#include "virtual_interface.hh"
+#include "../util/file_stream.hh"
+#include "../util/murmur_hash.hh"
+#include "../util/pool.hh"
+#include "../util/probing_hash_table.hh"
+#include "../util/sorted_uniform.hh"
+#include "../util/string_piece.hh"
 
 #include <limits>
 #include <string>
 #include <vector>
-#include <iostream> 
 
 namespace lm {
 struct ProbBackoff;
@@ -112,7 +111,6 @@ class SortedVocabulary : public base::Vocabulary {
     bool SawUnk() const { return saw_unk_; }
 
     void LoadedBinary(bool have_words, int fd, EnumerateVocab *to, uint64_t offset);
-    void LoadedBinary(bool have_words, const char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory);
 
     uint64_t *&EndHack() { return end_; }
 
@@ -192,7 +190,6 @@ class ProbingVocabulary : public base::Vocabulary {
     bool SawUnk() const { return saw_unk_; }
 
     void LoadedBinary(bool have_words, int fd, EnumerateVocab *to, uint64_t offset);
-    void LoadedBinary(bool have_words, const char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory);
 
   private:
     void InternalFinishedLoading();

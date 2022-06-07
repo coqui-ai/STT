@@ -1,13 +1,13 @@
 #ifndef UTIL_FILE_PIECE_H
 #define UTIL_FILE_PIECE_H
 
-#include "util/ersatz_progress.hh"
-#include "util/exception.hh"
-#include "util/file.hh"
-#include "util/mmap.hh"
-#include "util/read_compressed.hh"
-#include "util/spaces.hh"
-#include "util/string_piece.hh"
+#include "ersatz_progress.hh"
+#include "exception.hh"
+#include "file.hh"
+#include "mmap.hh"
+#include "read_compressed.hh"
+#include "spaces.hh"
+#include "string_piece.hh"
 
 #include <cstddef>
 #include <iosfwd>
@@ -81,12 +81,18 @@ class FilePiece {
       return LineIterator();
     }
 
-    char get() {
+    char peek() {
       if (position_ == position_end_) {
         Shift();
         if (at_end_) throw EndOfFileException();
       }
-      return *(position_++);
+      return *position_;
+    }
+
+    char get() {
+      char ret = peek();
+      ++position_;
+      return ret;
     }
 
     // Leaves the delimiter, if any, to be returned by get().  Delimiters defined by isspace().

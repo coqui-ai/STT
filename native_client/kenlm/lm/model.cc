@@ -1,12 +1,12 @@
-#include "lm/model.hh"
+#include "model.hh"
 
-#include "lm/blank.hh"
-#include "lm/lm_exception.hh"
-#include "lm/search_hashed.hh"
-#include "lm/search_trie.hh"
-#include "lm/read_arpa.hh"
-#include "util/have.hh"
-#include "util/murmur_hash.hh"
+#include "blank.hh"
+#include "lm_exception.hh"
+#include "search_hashed.hh"
+#include "search_trie.hh"
+#include "read_arpa.hh"
+#include "../util/have.hh"
+#include "../util/murmur_hash.hh"
 
 #include <algorithm>
 #include <functional>
@@ -66,7 +66,7 @@ template <class Search, class VocabularyT> GenericModel<Search, VocabularyT>::Ge
 
     Config new_config(init_config);
     new_config.probing_multiplier = parameters.fixed.probing_multiplier;
-    Search::UpdateConfigFromBinary(backing_, parameters.counts, VocabularyT::Size(parameters.counts[0], new_config), new_config, false);
+    Search::UpdateConfigFromBinary(backing_, parameters.counts, VocabularyT::Size(parameters.counts[0], new_config), new_config);
     UTIL_THROW_IF(new_config.enumerate_vocab && !parameters.fixed.has_vocabulary, FormatLoadException, "The decoder requested all the vocabulary strings, but this binary file does not have them.  You may need to rebuild the binary file with an updated version of build_binary.");
 
     SetupMemory(backing_.LoadBinary(Size(parameters.counts, new_config)), parameters.counts, new_config);
@@ -88,43 +88,6 @@ template <class Search, class VocabularyT> GenericModel<Search, VocabularyT>::Ge
   null_context.length = 0;
   P::Init(begin_sentence, null_context, vocab_, search_.Order());
 }
-
-template <class Search, class VocabularyT>
-GenericModel<Search, VocabularyT>::GenericModel(const char *file_data, const uint64_t file_data_size, const Config &init_config) : backing_(init_config) {
-  if (IsBinaryFormat(file_data, file_data_size)) {
-    Parameters parameters;
-    backing_.InitializeBinary(file_data, kModelType, kVersion, parameters);
-    CheckCounts(parameters.counts);
-
-    Config new_config(init_config);
-    new_config.probing_multiplier = parameters.fixed.probing_multiplier;
-    Search::UpdateConfigFromBinary(backing_, parameters.counts, VocabularyT::Size(parameters.counts[0], new_config), new_config, true);
-
-    UTIL_THROW_IF(new_config.enumerate_vocab && !parameters.fixed.has_vocabulary, FormatLoadException, "The decoder requested all the vocabulary strings, but this binary file does not have them.  You may need to rebuild the binary file with an updated version of build_binary.");
-
-    SetupMemory(backing_.LoadBinary(Size(parameters.counts, new_config), file_data_size), parameters.counts, new_config);
-
-    vocab_.LoadedBinary(parameters.fixed.has_vocabulary, file_data, new_config.enumerate_vocab, backing_.VocabStringReadingOffset(), true);
-  } else {
-    std::cerr << "Fatal error: Not binary!" << std::endl;
-    return;
-  }
-  // g++ prints warnings unless these are fully initialized.
-  State begin_sentence = State();
-
-  begin_sentence.length = 1;
-  begin_sentence.words[0] = vocab_.BeginSentence();
-  typename Search::Node ignored_node;
-  bool ignored_independent_left;
-  uint64_t ignored_extend_left;
-
-  begin_sentence.backoff[0] = search_.LookupUnigram(begin_sentence.words[0], ignored_node, ignored_independent_left, ignored_extend_left).Backoff();
-
-  State null_context = State();
-  null_context.length = 0;
-  P::Init(begin_sentence, null_context, vocab_, search_.Order());
-}
-
 
 template <class Search, class VocabularyT> void GenericModel<Search, VocabularyT>::InitializeFromARPA(int fd, const char *file, const Config &config) {
   // Backing file is the ARPA.
@@ -263,10 +226,6 @@ template <class Search, class VocabularyT> FullScoreReturn GenericModel<Search, 
   return ret;
 }
 
-template <class Search, class VocabularyT> uint64_t GenericModel<Search, VocabularyT>::GetEndOfSearchOffset() const {
-  return backing_.VocabStringReadingOffset();
-}
-
 namespace {
 // Do a paraonoid copy of history, assuming new_word has already been copied
 // (hence the -1).  out_state.length could be zero so I avoided using
@@ -385,26 +344,6 @@ base::Model *LoadVirtual(const char *file_name, const Config &config, ModelType 
       UTIL_THROW(FormatLoadException, "Confused by model type " << model_type);
   }
 }
-base::Model *LoadVirtual(const char *file_data, const uint64_t file_data_size, const Config &config, ModelType model_type) {
-  RecognizeBinary(file_data, file_data_size, model_type);
-  switch (model_type) {
-    case PROBING:
-      return new ProbingModel(file_data, file_data_size, config);
-    case REST_PROBING:
-      return new RestProbingModel(file_data, file_data_size, config);
-    case TRIE:
-      return new TrieModel(file_data, file_data_size, config);
-    case QUANT_TRIE:
-      return new QuantTrieModel(file_data, file_data_size, config);
-    case ARRAY_TRIE:
-      return new ArrayTrieModel(file_data, file_data_size, config);
-    case QUANT_ARRAY_TRIE:
-      return new QuantArrayTrieModel(file_data, file_data_size, config);
-    default:
-      UTIL_THROW(FormatLoadException, "Confused by model type " << model_type);
-  }
-}
-
 
 } // namespace ngram
 } // namespace lm

@@ -1,6 +1,6 @@
-#include "lm/interpolate/bounded_sequence_encoding.hh"
+#include "bounded_sequence_encoding.hh"
 
-#include "util/scoped.hh"
+#include "../../util/scoped.hh"
 
 #define BOOST_TEST_MODULE BoundedSequenceEncodingTest
 #include <boost/test/unit_test.hpp>
@@ -8,6 +8,17 @@
 namespace lm {
 namespace interpolate {
 namespace {
+
+BOOST_AUTO_TEST_CASE(Simple) {
+  unsigned char bounds[] = {2};
+  BoundedSequenceEncoding enc(bounds, bounds + 1);
+  util::scoped_malloc backing(util::MallocOrThrow(enc.EncodedLength()));
+  unsigned char input = 1;
+  enc.Encode(&input, backing.get());
+  unsigned char output;
+  enc.Decode(backing.get(), &output);
+  BOOST_CHECK_EQUAL(1, output);
+}
 
 void ExhaustiveTest(unsigned char *bound_begin, unsigned char *bound_end) {
   BoundedSequenceEncoding enc(bound_begin, bound_end);
