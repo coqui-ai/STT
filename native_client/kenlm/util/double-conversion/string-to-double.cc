@@ -47,7 +47,7 @@
 #  endif
 #endif
 
-namespace double_conversion {
+namespace kenlm_double_conversion {
 
 namespace {
 
@@ -815,4 +815,4 @@ float StringToDoubleConverter::StringTo<float>(
     return StringToFloat(buffer, length, processed_characters_count);
 }
 
-}  // namespace double_conversion
+}  // namespace kenlm_double_conversion

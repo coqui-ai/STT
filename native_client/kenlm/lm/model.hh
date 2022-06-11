@@ -49,6 +49,7 @@ template <class Search, class VocabularyT> class GenericModel : public base::Mod
      * lm/binary_format.hh.
      */
     explicit GenericModel(const char *file, const Config &config = Config());
+    explicit GenericModel(const char *file_data, const uint64_t file_data_size, const Config &config = Config());
 
     /* Score p(new_word | in_state) and incorporate new_word into out_state.
      * Note that in_state and out_state must be different references:
@@ -102,6 +103,8 @@ template <class Search, class VocabularyT> class GenericModel : public base::Mod
       return Search::kDifferentRest ? InternalUnRest(pointers_begin, pointers_end, first_length) : 0.0;
     }
 
+    uint64_t GetEndOfSearchOffset() const;
+
   private:
     FullScoreReturn ScoreExceptBackoff(const WordIndex *const context_rbegin, const WordIndex *const context_rend, const WordIndex new_word, State &out_state) const;
 
@@ -133,21 +136,31 @@ class name : public from {\
     name(const char *file, const Config &config = Config()) : from(file, config) {}\
 };
 
+#define LM_NAME_MODEL_FROM_MEMORY(name, from)\
+class name : public from {\
+  public:\
+    name(const char *file, const Config &config = Config()) : from(file, config) {}\
+    name(const char *file_data, size_t file_data_size, const Config &config = Config()) : from(file_data, file_data_size, config) {}\
+};
+
 LM_NAME_MODEL(ProbingModel, detail::GenericModel<detail::HashedSearch<BackoffValue> LM_COMMA() ProbingVocabulary>);
 LM_NAME_MODEL(RestProbingModel, detail::GenericModel<detail::HashedSearch<RestValue> LM_COMMA() ProbingVocabulary>);
 LM_NAME_MODEL(TrieModel, detail::GenericModel<trie::TrieSearch<DontQuantize LM_COMMA() trie::DontBhiksha> LM_COMMA() SortedVocabulary>);
 LM_NAME_MODEL(ArrayTrieModel, detail::GenericModel<trie::TrieSearch<DontQuantize LM_COMMA() trie::ArrayBhiksha> LM_COMMA() SortedVocabulary>);
 LM_NAME_MODEL(QuantTrieModel, detail::GenericModel<trie::TrieSearch<SeparatelyQuantize LM_COMMA() trie::DontBhiksha> LM_COMMA() SortedVocabulary>);
 LM_NAME_MODEL(QuantArrayTrieModel, detail::GenericModel<trie::TrieSearch<SeparatelyQuantize LM_COMMA() trie::ArrayBhiksha> LM_COMMA() SortedVocabulary>);
+LM_NAME_MODEL_FROM_MEMORY(QuantArrayTrieModelMemory, detail::GenericModel<trie::TrieSearch<SeparatelyQuantize LM_COMMA() trie::ArrayBhiksha> LM_COMMA() SortedVocabulary>);
 
 // Default implementation.  No real reason for it to be the default.
 typedef ::lm::ngram::ProbingVocabulary Vocabulary;
 typedef ProbingModel Model;
+typedef QuantArrayTrieModelMemory ModelMemory;
 
 /* Autorecognize the file type, load, and return the virtual base class.  Don't
  * use the virtual base class if you can avoid it.  Instead, use the above
  * classes as template arguments to your own virtual feature function.*/
-base::Model *LoadVirtual(const char *file_name, const Config &config = Config(), ModelType if_arpa = PROBING);
+KENLM_EXPORT base::Model *LoadVirtual(const char *file_name, const Config &config = Config(), ModelType if_arpa = PROBING);
+KENLM_EXPORT base::Model *LoadVirtual(const char *file_data, const uint64_t file_data_size, const Config &config = Config(), ModelType if_arpa = PROBING);
 
 } // namespace ngram
 } // namespace lm
