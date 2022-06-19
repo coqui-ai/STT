@@ -141,15 +141,12 @@ void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, cha
   }
 #endif
 #if defined(_WIN32) || defined(_WIN64)
-
-  TCHAR szName[]=TEXT("Global\\LanguageModelMapping");
-
   int protectC = for_write ? PAGE_READWRITE : PAGE_READONLY;
   int protectM = for_write ? FILE_MAP_WRITE : FILE_MAP_READ;
   uint64_t total_size = size + offset;
   // HANDLE hMapping = CreateFileMapping((HANDLE)_get_osfhandle(fd), NULL, protectC, total_size >> 32, static_cast<DWORD>(total_size), NULL);
 
-  HANDLE hMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, total_size >> 32, static_cast<DWORD>(total_size), szName);
+  HANDLE hMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, total_size >> 32, static_cast<DWORD>(total_size), NULL);
   UTIL_THROW_IF(!hMapping, ErrnoException, "CreateFileMapping failed");
   // LPVOID ret = MapViewOfFile(hMapping, protectM, offset >> 32, offset, size);
 
