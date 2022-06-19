@@ -126,7 +126,7 @@ extern const int kFileFlags;
 
 // Cross-platform, error-checking wrapper for mmap().
 void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, int fd, uint64_t offset = 0);
-void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, char *file_data, uint64_t offset = 0);
+void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, const char *file_data, uint64_t offset = 0);
 
 // msync wrapper
 void SyncOrThrow(void *start, size_t length);
@@ -161,7 +161,7 @@ enum LoadMethod {
 };
 
 void MapRead(LoadMethod method, int fd, uint64_t offset, std::size_t size, scoped_memory &out);
-void MapRead(LoadMethod method, char *file_data, uint64_t offset, std::size_t size, scoped_memory &out);
+void MapRead(LoadMethod method, const char *file_data, uint64_t offset, std::size_t size, scoped_memory &out);
 
 // Open file name with mmap of size bytes, all of which are initially zero.
 void *MapZeroedWrite(int fd, std::size_t size);

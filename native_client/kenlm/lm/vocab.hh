@@ -112,7 +112,7 @@ class SortedVocabulary : public base::Vocabulary {
     bool SawUnk() const { return saw_unk_; }
 
     void LoadedBinary(bool have_words, int fd, EnumerateVocab *to, uint64_t offset);
-    void LoadedBinary(bool have_words, char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory);
+    void LoadedBinary(bool have_words, const char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory);
 
     uint64_t *&EndHack() { return end_; }
 
@@ -192,7 +192,7 @@ class ProbingVocabulary : public base::Vocabulary {
     bool SawUnk() const { return saw_unk_; }
 
     void LoadedBinary(bool have_words, int fd, EnumerateVocab *to, uint64_t offset);
-    void LoadedBinary(bool have_words, char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory);
+    void LoadedBinary(bool have_words, const char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory);
 
   private:
     void InternalFinishedLoading();

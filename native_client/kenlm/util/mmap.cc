@@ -134,7 +134,7 @@ void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, int
   return ret;
 }
 
-void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, char *file_data, uint64_t offset) {
+void *MapOrThrow(std::size_t size, bool for_write, int flags, bool prefault, const char *file_data, uint64_t offset) {
 #ifdef MAP_POPULATE // Linux specific
   if (prefault) {
     flags |= MAP_POPULATE;
@@ -363,7 +363,7 @@ void MapRead(LoadMethod method, int fd, uint64_t offset, std::size_t size, scope
   }
 }
 
-void MapRead(LoadMethod method, char *file_data, uint64_t offset, std::size_t size, scoped_memory &out) {  
+void MapRead(LoadMethod method, const char *file_data, uint64_t offset, std::size_t size, scoped_memory &out) {  
   switch (method) {
     case LAZY:
       out.reset(MapOrThrow(size, false, kFileFlags, false, file_data, offset), size, scoped_memory::MMAP_ALLOCATED);

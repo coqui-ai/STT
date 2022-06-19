@@ -89,13 +89,11 @@ template <class Search, class VocabularyT> GenericModel<Search, VocabularyT>::Ge
   P::Init(begin_sentence, null_context, vocab_, search_.Order());
 }
 
-template <class Search, class VocabularyT> GenericModel<Search, VocabularyT>::GenericModel(const char *file_data, const uint64_t file_data_size, const Config &init_config) : backing_(init_config) { 
-  char *file_data_temp = new char[file_data_size];
-  memcpy(file_data_temp, file_data, file_data_size);
-
-  if (IsBinaryFormat(file_data_temp, file_data_size)) {
+template <class Search, class VocabularyT>
+GenericModel<Search, VocabularyT>::GenericModel(const char *file_data, const uint64_t file_data_size, const Config &init_config) : backing_(init_config) {
+  if (IsBinaryFormat(file_data, file_data_size)) {
     Parameters parameters;
-    backing_.InitializeBinary(file_data_temp, kModelType, kVersion, parameters);
+    backing_.InitializeBinary(file_data, kModelType, kVersion, parameters);
     CheckCounts(parameters.counts);
 
     Config new_config(init_config);
@@ -106,12 +104,9 @@ template <class Search, class VocabularyT> GenericModel<Search, VocabularyT>::Ge
 
     SetupMemory(backing_.LoadBinary(Size(parameters.counts, new_config), file_data_size), parameters.counts, new_config);
 
-    vocab_.LoadedBinary(parameters.fixed.has_vocabulary, file_data_temp, new_config.enumerate_vocab, backing_.VocabStringReadingOffset(), true);
-
-    delete[] file_data_temp;    
+    vocab_.LoadedBinary(parameters.fixed.has_vocabulary, file_data, new_config.enumerate_vocab, backing_.VocabStringReadingOffset(), true);
   } else {
     std::cerr << "Fatal error: Not binary!" << std::endl;
-    delete[] file_data_temp;
     return;
   }
   // g++ prints warnings unless these are fully initialized.
@@ -394,17 +389,17 @@ base::Model *LoadVirtual(const char *file_data, const uint64_t file_data_size, c
   RecognizeBinary(file_data, file_data_size, model_type);
   switch (model_type) {
     case PROBING:
-      UTIL_THROW(FormatLoadException, "Probing without memory option " << model_type);
+      return new ProbingModel(file_data, file_data_size, config);
     case REST_PROBING:
-      UTIL_THROW(FormatLoadException, "Rest Probing without memory option " << model_type);
+      return new RestProbingModel(file_data, file_data_size, config);
     case TRIE:
-      UTIL_THROW(FormatLoadException, "Trie without memory option " << model_type);
+      return new TrieModel(file_data, file_data_size, config);
     case QUANT_TRIE:
-      UTIL_THROW(FormatLoadException, "Quant Trie without memory option " << model_type);
+      return new QuantTrieModel(file_data, file_data_size, config);
     case ARRAY_TRIE:
-      UTIL_THROW(FormatLoadException, "Array Trie without memory option " << model_type);
+      return new ArrayTrieModel(file_data, file_data_size, config);
     case QUANT_ARRAY_TRIE:
-      return new QuantArrayTrieModelMemory(file_data, file_data_size, config);
+      return new QuantArrayTrieModel(file_data, file_data_size, config);
     default:
       UTIL_THROW(FormatLoadException, "Confused by model type " << model_type);
   }

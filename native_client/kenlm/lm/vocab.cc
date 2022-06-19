@@ -53,14 +53,13 @@ void ReadWords(int fd, EnumerateVocab *enumerate, WordIndex expected_count, uint
   UTIL_THROW_IF(expected_count != index, FormatLoadException, "The binary file has the wrong number of words at the end.  This could be caused by a truncated binary file.");
 }
 
-void ReadWords(char* file_data, EnumerateVocab *enumerate, WordIndex expected_count, uint64_t offset) {  
-  const char *file_data_tmp = file_data;
-  file_data_tmp += offset;
+void ReadWords(const char* file_data, EnumerateVocab *enumerate, WordIndex expected_count, uint64_t offset) {
+  file_data += offset;
 
   // Check that we're at the right place by reading <unk> which is always first.
   char check_unk[6];
-  std::memcpy(check_unk, file_data_tmp, 6);
-  file_data_tmp += 6;
+  std::memcpy(check_unk, file_data, 6);
+  file_data += 6;
 
   UTIL_THROW_IF(
       memcmp(check_unk, "<unk>", 6),
@@ -72,7 +71,7 @@ void ReadWords(char* file_data, EnumerateVocab *enumerate, WordIndex expected_co
   enumerate->Add(0, "<unk>");
 
   WordIndex index = 1; // Read <unk> already.
-  std::istringstream in(file_data_tmp);
+  std::istringstream in(file_data);
 
   for (std::string line; std::getline(in, line); )
   {
@@ -223,7 +222,7 @@ void SortedVocabulary::LoadedBinary(bool have_words, int fd, EnumerateVocab *to,
   if (have_words) ReadWords(fd, to, bound_, offset);
 }
 
-void SortedVocabulary::LoadedBinary(bool have_words, char* file_data, EnumerateVocab *to, uint64_t offset,  bool load_from_memory) {
+void SortedVocabulary::LoadedBinary(bool have_words, const char* file_data, EnumerateVocab *to, uint64_t offset,  bool load_from_memory) {
   end_ = begin_ + *(reinterpret_cast<const uint64_t*>(begin_) - 1);
   SetSpecial(Index("<s>"), Index("</s>"), 0);
   bound_ = end_ - begin_ + 1;
@@ -322,7 +321,7 @@ void ProbingVocabulary::LoadedBinary(bool have_words, int fd, EnumerateVocab *to
   if (have_words) ReadWords(fd, to, bound_, offset);
 }
 
-void ProbingVocabulary::LoadedBinary(bool have_words, char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory) {
+void ProbingVocabulary::LoadedBinary(bool have_words, const char* file_data, EnumerateVocab *to, uint64_t offset, bool load_from_memory) {
   UTIL_THROW_IF(header_->version != kProbingVocabularyVersion, FormatLoadException, "The binary file has probing version " << header_->version << " but the code expects version " << kProbingVocabularyVersion << ".  Please rerun build_binary using the same version of the code.");
   bound_ = header_->bound;
 
