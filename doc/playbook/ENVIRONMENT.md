@@ -147,7 +147,7 @@ sudo apt-get update
 Next, install `nvidia-container-toolkit`:
 
 ```
-$ sudo apt-get install -y nvidia-container-toolkit
+$ sudo apt-get install -y nvidia-docker2
 ```
 
 ## Pulling down a pre-built Coqui STT Docker image
