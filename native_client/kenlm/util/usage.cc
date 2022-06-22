@@ -43,7 +43,10 @@ typedef WINBOOL (WINAPI *PFN_MS_EX) (lMEMORYSTATUSEX*);
 #include <sys/sysctl.h>
 #include <mach/task.h>
 #include <mach/mach.h>
+#include <TargetConditionals.h>
+#ifndef TARGET_OS_IPHONE
 #include <libproc.h>
+#endif
 #endif
 
 namespace util {
@@ -197,7 +200,7 @@ uint64_t RSSMax() {
 
 void PrintUsage(std::ostream &out) {
 #if !defined(_WIN32) && !defined(_WIN64)
-  #if defined(__MACH__) || defined(__APPLE__)
+  #if (defined(__MACH__) || defined(__APPLE__)) && !defined(TARGET_OS_IPHONE)
   struct mach_task_basic_info t_info;
   char name[2 * MAXCOMLEN] = {0};
 
