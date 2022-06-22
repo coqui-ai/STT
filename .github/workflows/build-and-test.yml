@@ -3494,6 +3494,12 @@ jobs:
           cache: "gradle"
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
+      - name: Install Android NDK r19c
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r19c
+          add-to-path: false
       # This particular version of CMake confuses Gradle by not being semver.
       # We're fine with 3.10.2 which is also installed. Keep an eye on the
       # virtual environments though:
@@ -3503,8 +3509,12 @@ jobs:
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall 'cmake;3.18.1'
       - run: |
           make GRADLE="./gradlew " -C native_client/java
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
       - run: |
           make GRADLE="./gradlew " -C native_client/java maven-bundle
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
       - uses: actions/upload-artifact@v2
         with:
           name: "app.apk"
