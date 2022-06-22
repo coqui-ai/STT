@@ -506,9 +506,7 @@ class BaseSttConfig(Coqpit):
     # Memory test
     skip_batch_test: bool = field(
         default=False,
-        metadata=dict(
-            help="skip batch size memory test before training"
-        ),
+        metadata=dict(help="skip batch size memory test before training"),
     )
 
     # Performance

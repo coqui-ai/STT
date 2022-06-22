@@ -1,8 +1,8 @@
-#include "lm/binary_format.hh"
+#include "binary_format.hh"
 
-#include "lm/lm_exception.hh"
-#include "util/file.hh"
-#include "util/file_piece.hh"
+#include "lm_exception.hh"
+#include "../util/file.hh"
+#include "../util/file_piece.hh"
 
 #include <cstddef>
 #include <cstring>
@@ -151,8 +151,6 @@ bool IsBinaryFormat(const char *file_data, uint64_t size) {
   return false;
 }
 
-
-
 void ReadHeader(int fd, Parameters &out) {
   util::SeekOrThrow(fd, sizeof(Sanity));
   util::ReadOrThrow(fd, &out.fixed, sizeof(out.fixed));
@@ -178,7 +176,6 @@ void ReadHeader(const char *file_data, Parameters &out) {
   }
 }
 
-
 void MatchCheck(ModelType model_type, unsigned int search_version, const Parameters &params) {
   if (params.fixed.model_type != model_type) {
     if (static_cast<unsigned int>(params.fixed.model_type) >= (sizeof(kModelNames) / sizeof(const char *)))
@@ -186,6 +183,14 @@ void MatchCheck(ModelType model_type, unsigned int search_version, const Paramet
     UTIL_THROW(FormatLoadException, "The binary file was built for " << kModelNames[params.fixed.model_type] << " but the inference code is trying to load " << kModelNames[model_type]);
   }
   UTIL_THROW_IF(search_version != params.fixed.search_version, FormatLoadException, "The binary file has " << kModelNames[params.fixed.model_type] << " version " << params.fixed.search_version << " but this code expects " << kModelNames[params.fixed.model_type] << " version " << search_version);
+}
+
+void BinaryFormat::InitializeBinary(const char *file_data, ModelType model_type, unsigned int search_version, Parameters &params) {
+  file_data_ = file_data;
+  write_mmap_ = NULL; // Ignore write requests; this is already in binary format.
+  ReadHeader(file_data, params);
+  MatchCheck(model_type, search_version, params);
+  header_size_ = TotalHeaderSize(params.counts.size());
 }
 
 const std::size_t kInvalidSize = static_cast<std::size_t>(-1);
@@ -202,15 +207,6 @@ void BinaryFormat::InitializeBinary(int fd, ModelType model_type, unsigned int s
   header_size_ = TotalHeaderSize(params.counts.size());
 }
 
-void BinaryFormat::InitializeBinary(const char *file_data, ModelType model_type, unsigned int search_version, Parameters &params) {
-  file_data_ = file_data;
-  write_mmap_ = NULL; // Ignore write requests; this is already in binary format.
-  ReadHeader(file_data, params);
-  MatchCheck(model_type, search_version, params);
-  header_size_ = TotalHeaderSize(params.counts.size());
-}
-
-
 void BinaryFormat::ReadForConfig(void *to, std::size_t amount, uint64_t offset_excluding_header) const {
   assert(header_size_ != kInvalidSize);
   util::ErsatzPRead(file_.get(), to, amount, offset_excluding_header + header_size_);
@@ -220,7 +216,6 @@ void BinaryFormat::ReadForConfig(void *to, std::size_t amount, uint64_t offset_e
   assert(header_size_ != kInvalidSize);
   util::ErsatzPRead(file_data_, to, amount, offset_excluding_header + header_size_);
 }
-
 
 void *BinaryFormat::LoadBinary(std::size_t size) {
   assert(header_size_ != kInvalidSize);
@@ -244,7 +239,6 @@ void *BinaryFormat::LoadBinary(std::size_t size, const uint64_t file_size) { /* 
   vocab_string_offset_ = total_map;
   return reinterpret_cast<uint8_t*>(mapping_.get()) + header_size_;
 }
-
 
 void *BinaryFormat::SetupJustVocab(std::size_t memory_size, uint8_t order) {
   vocab_size_ = memory_size;
@@ -363,7 +357,7 @@ void BinaryFormat::FinishFile(const Config &config, ModelType model_type, unsign
 }
 
 void BinaryFormat::MapFile(void *&vocab_base, void *&search_base) {
-  mapping_.reset(util::MapOrThrow(vocab_string_offset_, true, util::kFileFlags, false, (int) file_.get()), vocab_string_offset_, util::scoped_memory::MMAP_ALLOCATED);
+  mapping_.reset(util::MapOrThrow(vocab_string_offset_, true, util::kFileFlags, false, (int)file_.get()), vocab_string_offset_, util::scoped_memory::MMAP_ALLOCATED);
   vocab_base = reinterpret_cast<uint8_t*>(mapping_.get()) + header_size_;
   search_base = reinterpret_cast<uint8_t*>(mapping_.get()) + header_size_ + vocab_size_ + vocab_pad_;
 }
@@ -389,7 +383,6 @@ bool RecognizeBinary(const char *file_data, const uint64_t file_data_size, Model
   recognized = params.fixed.model_type;
   return true;
 }
-
 
 } // namespace ngram
 } // namespace lm

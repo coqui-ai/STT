@@ -1,12 +1,12 @@
-#include "lm/model.hh"
+#include "model.hh"
 
-#include "lm/blank.hh"
-#include "lm/lm_exception.hh"
-#include "lm/search_hashed.hh"
-#include "lm/search_trie.hh"
-#include "lm/read_arpa.hh"
-#include "util/have.hh"
-#include "util/murmur_hash.hh"
+#include "blank.hh"
+#include "lm_exception.hh"
+#include "search_hashed.hh"
+#include "search_trie.hh"
+#include "read_arpa.hh"
+#include "../util/have.hh"
+#include "../util/murmur_hash.hh"
 
 #include <algorithm>
 #include <functional>
@@ -124,7 +124,6 @@ GenericModel<Search, VocabularyT>::GenericModel(const char *file_data, const uin
   null_context.length = 0;
   P::Init(begin_sentence, null_context, vocab_, search_.Order());
 }
-
 
 template <class Search, class VocabularyT> void GenericModel<Search, VocabularyT>::InitializeFromARPA(int fd, const char *file, const Config &config) {
   // Backing file is the ARPA.
@@ -385,6 +384,7 @@ base::Model *LoadVirtual(const char *file_name, const Config &config, ModelType 
       UTIL_THROW(FormatLoadException, "Confused by model type " << model_type);
   }
 }
+
 base::Model *LoadVirtual(const char *file_data, const uint64_t file_data_size, const Config &config, ModelType model_type) {
   RecognizeBinary(file_data, file_data_size, model_type);
   switch (model_type) {
@@ -404,7 +404,6 @@ base::Model *LoadVirtual(const char *file_data, const uint64_t file_data_size, c
       UTIL_THROW(FormatLoadException, "Confused by model type " << model_type);
   }
 }
-
 
 } // namespace ngram
 } // namespace lm
