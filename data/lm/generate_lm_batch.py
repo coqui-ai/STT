@@ -4,6 +4,7 @@ import io
 import os
 import subprocess
 from collections import Counter
+import datetime
 
 import progressbar
 from clearml import Task
@@ -43,7 +44,7 @@ def convert_and_filter_topk(args):
             file_in.close()
 
     # Save top-k words
-    print("\nCounting word occurrences ...")
+    print("\nCounting word occurrences...")
     vocab_path = "vocab-{}.txt".format(args.top_k)
     vocab_path = os.path.join(args.output_dir, vocab_path)
     top_counter = counter.most_common(args.top_k)
@@ -123,7 +124,6 @@ def build_lm(args, data_lower, vocab_str):
     )
 
     # Quantize and produce trie binary.
-    print("\nBuilding lm.binary ...")
     binary_path = os.path.join(
         args.output_dir,
         "lm_{}_{}_{}.binary".format(
@@ -132,6 +132,7 @@ def build_lm(args, data_lower, vocab_str):
             str(args.arpa_prune.replace("|",""))
             )
     )
+    print("\nBuilding {}...".format(binary_path))
     subprocess.check_call(
         [
             os.path.join(args.kenlm_bins, "build_binary"),
@@ -256,9 +257,19 @@ def main():
     # except:
     #     pass
 
-    top_k_list = [int(x) for x in args_batch.top_k_list.split("-")]
-    arpa_order_list = [int(x) for x in args_batch.arpa_order_list.split("-")]
+    arpa_order_list = []
+    top_k_list = []
+    for x in args_batch.arpa_order_list.split("-"):
+        if x.isnumeric():
+            arpa_order_list.append(int(float(x)))
+    for x in args_batch.top_k_list.split("-"):
+        if x.isnumeric():
+            top_k_list.append(int(float(x)))
     arpa_prune_list = args_batch.arpa_prune_list.split("-")
+
+    total_runs = len(arpa_order_list) * len(top_k_list) * len(arpa_prune_list)
+    current_run_count = 0
+    boottime = datetime.datetime.now()
 
     for arpa_order in arpa_order_list:
         for top_k in top_k_list:
@@ -268,17 +279,29 @@ def main():
                     parents=[parser_batch],
                     add_help=False,
                 )
-                parser_single.add_argument("--arpa_order", type=int, default=arpa_order, )
-                parser_single.add_argument("--top_k", type=int, default=top_k, )
-                parser_single.add_argument("--arpa_prune", type=str, default=arpa_prune,)
+                parser_single.add_argument("--arpa_order", type=int, default=arpa_order)
+                parser_single.add_argument("--top_k", type=int, default=top_k)
+                parser_single.add_argument("--arpa_prune", type=str, default=arpa_prune)
                 args_single = parser_single.parse_args()
+                current_run_count += 1
+                start_time = datetime.datetime.now()
                 print('---------------------------------------------------------------------------------------------')
-                print("RUNNING FOR arpa_order={} top_k={} arpa_prune={}".format(str(arpa_order), str(top_k), arpa_prune))
+                print("{} RUNNING {}/{} FOR arpa_order={} top_k={} arpa_prune={}".format(
+                    str(datetime.datetime.now() - boottime),
+                    str(current_run_count),
+                    str(total_runs),
+                    str(arpa_order),
+                    str(top_k),
+                    arpa_prune)
+                    )
                 print('---------------------------------------------------------------------------------------------')
                 # call with these arguments
                 data_lower, vocab_str = convert_and_filter_topk(args_single)
                 build_lm(args_single, data_lower, vocab_str)
                 parser_single = None
+                os.remove(os.path.join(args_batch.output_dir, "lm.arpa"))
+                os.remove(os.path.join(args_batch.output_dir, "lm_filtered.arpa"))
+                print("This LM generation took:", str(datetime.datetime.now() - start_time))
 
     # try:
     #     task.upload_artifact(
@@ -289,8 +312,6 @@ def main():
 
     # Delete intermediate files
     os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
-    os.remove(os.path.join(args_batch.output_dir, "lm.arpa"))
-    os.remove(os.path.join(args_batch.output_dir, "lm_filtered.arpa"))
 
 if __name__ == "__main__":
     main()
