@@ -230,19 +230,19 @@ def main():
 
     parser_batch.add_argument(
         "--arpa_order_list",
-        help="List of arpa_order values. Separate values with '|'.",
+        help="List of arpa_order values. Separate values with '-' (e.g. '3-4-5').",
         type=str,
         required=True,
     )
     parser_batch.add_argument(
         "--top_k_list",
-        help="A list of top_k values. Separate values with '|'.",
+        help="A list of top_k values. Separate values with '-' (e.g. '20000-50000').",
         type=str,
         required=True,
     )
     parser_batch.add_argument(
         "--arpa_prune_list",
-        help="ARPA pruning parameters. Separate values with '|', groups with '-'",
+        help="ARPA pruning parameters. Separate values with '|', groups with '-' (e.g. '0|0|1-0|0|2')",
         type=str,
         required=True,
     )
@@ -256,8 +256,8 @@ def main():
     # except:
     #     pass
 
-    top_k_list = args_batch.top_k_list.split("-")
-    arpa_order_list = args_batch.arpa_order_list.split("-")
+    top_k_list = [int(x) for x in args_batch.top_k_list.split("-")]
+    arpa_order_list = [int(x) for x in args_batch.arpa_order_list.split("-")]
     arpa_prune_list = args_batch.arpa_prune_list.split("-")
 
     for arpa_order in arpa_order_list:
@@ -268,12 +268,12 @@ def main():
                     parents=[parser_batch],
                     add_help=False,
                 )
-                parser_single.add_argument("--arpa_order", type=int, default=int(arpa_order), )
-                parser_single.add_argument("--top_k", type=int, default=int(top_k), )
+                parser_single.add_argument("--arpa_order", type=int, default=arpa_order, )
+                parser_single.add_argument("--top_k", type=int, default=top_k, )
                 parser_single.add_argument("--arpa_prune", type=str, default=arpa_prune,)
                 args_single = parser_single.parse_args()
                 print('---------------------------------------------------------------------------------------------')
-                print("RUNNING FOR arpa_order={} top_k={} arpa_prune={}".format(arpa_order, top_k, arpa_prune))
+                print("RUNNING FOR arpa_order={} top_k={} arpa_prune={}".format(str(arpa_order), str(top_k), arpa_prune))
                 print('---------------------------------------------------------------------------------------------')
                 # call with these arguments
                 data_lower, vocab_str = convert_and_filter_topk(args_single)
