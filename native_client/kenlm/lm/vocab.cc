@@ -1,16 +1,16 @@
-#include "lm/vocab.hh"
+#include "vocab.hh"
 
-#include "lm/binary_format.hh"
-#include "lm/enumerate_vocab.hh"
-#include "lm/lm_exception.hh"
-#include "lm/config.hh"
-#include "lm/weights.hh"
-#include "util/exception.hh"
-#include "util/file_stream.hh"
-#include "util/file.hh"
-#include "util/joint_sort.hh"
-#include "util/murmur_hash.hh"
-#include "util/probing_hash_table.hh"
+#include "binary_format.hh"
+#include "enumerate_vocab.hh"
+#include "lm_exception.hh"
+#include "config.hh"
+#include "weights.hh"
+#include "../util/exception.hh"
+#include "../util/file_stream.hh"
+#include "../util/file.hh"
+#include "../util/joint_sort.hh"
+#include "../util/murmur_hash.hh"
+#include "../util/probing_hash_table.hh"
 
 #include <cstring>
 #include <string>
@@ -75,12 +75,12 @@ void ReadWords(const char* file_data, EnumerateVocab *enumerate, WordIndex expec
 
   for (std::string line; std::getline(in, line); )
   {
+    // std::cerr << "LINHA -> " << line << std::endl;
     enumerate->Add(index, line);
   }
 
   UTIL_THROW_IF(expected_count != index, FormatLoadException, "The binary file has the wrong number of words at the end.  This could be caused by a truncated binary file.");
 }
-
 
 // Constructor ordering madness.
 int SeekAndReturn(int fd, uint64_t start) {
@@ -231,7 +231,6 @@ void SortedVocabulary::LoadedBinary(bool have_words, const char* file_data, Enum
   }
 }
 
-
 template <class T> void SortedVocabulary::GenericFinished(T *reorder) {
   if (enumerate_) {
     if (!strings_to_enumerate_.empty()) {
@@ -331,7 +330,6 @@ void ProbingVocabulary::LoadedBinary(bool have_words, const char* file_data, Enu
     ReadWords(file_data, to, bound_, offset);
   }
 }
-
 
 void MissingUnknown(const Config &config) {
   switch(config.unknown_missing) {

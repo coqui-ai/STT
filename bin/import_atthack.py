@@ -22,7 +22,11 @@ from coqui_stt_training.util.importers import (
 )
 
 try:
-    ffmpeg_path = subprocess.check_output(["which",  "ffmpeg"], stderr=subprocess.STDOUT).decode().replace("\n", "")
+    ffmpeg_path = (
+        subprocess.check_output(["which", "ffmpeg"], stderr=subprocess.STDOUT)
+        .decode()
+        .replace("\n", "")
+    )
     if not ffmpeg_path:
         raise subprocess.CalledProcessError
     else:

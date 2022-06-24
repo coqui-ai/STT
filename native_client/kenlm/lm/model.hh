@@ -1,19 +1,19 @@
 #ifndef LM_MODEL_H
 #define LM_MODEL_H
 
-#include "lm/bhiksha.hh"
-#include "lm/binary_format.hh"
-#include "lm/config.hh"
-#include "lm/facade.hh"
-#include "lm/quantize.hh"
-#include "lm/search_hashed.hh"
-#include "lm/search_trie.hh"
-#include "lm/state.hh"
-#include "lm/value.hh"
-#include "lm/vocab.hh"
-#include "lm/weights.hh"
+#include "bhiksha.hh"
+#include "binary_format.hh"
+#include "config.hh"
+#include "facade.hh"
+#include "quantize.hh"
+#include "search_hashed.hh"
+#include "search_trie.hh"
+#include "state.hh"
+#include "value.hh"
+#include "vocab.hh"
+#include "weights.hh"
 
-#include "util/murmur_hash.hh"
+#include "../util/murmur_hash.hh"
 
 #include <algorithm>
 #include <vector>
@@ -50,6 +50,7 @@ template <class Search, class VocabularyT> class GenericModel : public base::Mod
      */
     explicit GenericModel(const char *file, const Config &config = Config());
     explicit GenericModel(const char *file_data, const uint64_t file_data_size, const Config &config = Config());
+
     /* Score p(new_word | in_state) and incorporate new_word into out_state.
      * Note that in_state and out_state must be different references:
      * &in_state != &out_state.
@@ -136,7 +137,6 @@ class name : public from {\
     name(const char *file_data, size_t file_data_size, const Config &config = Config()) : from(file_data, file_data_size, config) {}\
   };
 
-
 LM_NAME_MODEL(ProbingModel, detail::GenericModel<detail::HashedSearch<BackoffValue> LM_COMMA() ProbingVocabulary>);
 LM_NAME_MODEL(RestProbingModel, detail::GenericModel<detail::HashedSearch<RestValue> LM_COMMA() ProbingVocabulary>);
 LM_NAME_MODEL(TrieModel, detail::GenericModel<trie::TrieSearch<DontQuantize LM_COMMA() trie::DontBhiksha> LM_COMMA() SortedVocabulary>);
@@ -147,6 +147,7 @@ LM_NAME_MODEL(QuantArrayTrieModel, detail::GenericModel<trie::TrieSearch<Separat
 // Default implementation.  No real reason for it to be the default.
 typedef ::lm::ngram::ProbingVocabulary Vocabulary;
 typedef ProbingModel Model;
+
 /* Autorecognize the file type, load, and return the virtual base class.  Don't
  * use the virtual base class if you can avoid it.  Instead, use the above
  * classes as template arguments to your own virtual feature function.*/

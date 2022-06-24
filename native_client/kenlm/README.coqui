@@ -1,15 +1,15 @@
 KenLM source downloaded from https://github.com/kpu/kenlm on 2020/01/15
-commit b9f35777d112ce2fc10bd3986302517a16dc3883
+commit fee7b058bf3f96d570c852340729c0d4d4df2c25
 
-This corresponds to https://github.com/kpu/kenlm/commit/b9f35777d112ce2fc10bd3986302517a16dc3883
+This corresponds to https://github.com/kpu/kenlm/commit/fee7b058bf3f96d570c852340729c0d4d4df2c25
 
 The following procedure was run to remove unneeded files:
 
 cd kenlm
 rm -rf windows include lm/filter lm/builder util/stream util/getopt.* python
 
-This was done in order to ensure uniqueness of double_conversion:
-git grep 'double_conversion' | cut -d':' -f1 | sort | uniq | xargs sed -ri 's/double_conversion/kenlm_double_conversion/g'
+This was done in order to ensure uniqueness of kenlm_double_conversion:
+git grep 'kenlm_double_conversion' | cut -d':' -f1 | sort | uniq | xargs sed -ri 's/kenlm_double_conversion/kenlm_kenlm_double_conversion/g'
 
 Cherry-pick fix for MSVC:
 curl -vsSL https://github.com/kpu/kenlm/commit/d70e28403f07e88b276c6bd9f162d2a428530f2e.patch | git am -p1 --directory=native_client/kenlm
