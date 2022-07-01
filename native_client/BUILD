@@ -210,7 +210,7 @@ cc_library(
     includes = DECODER_INCLUDES,
     deps = [
         ":decoder",
-        "//tensorflow/lite:framework_stable",
+        "//tensorflow/lite:framework_experimental",
         "//tensorflow/lite/kernels:builtin_ops",
         "//tensorflow/lite/tools/evaluation:utils",
     ],
