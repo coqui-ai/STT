@@ -212,6 +212,7 @@ cc_library(
         ":decoder",
         "//tensorflow/lite:framework_experimental",
         "//tensorflow/lite/kernels:builtin_ops",
+        "//tensorflow/lite/tools/delegates:delegate_provider_lib",
         "//tensorflow/lite/tools/evaluation:utils",
     ],
 )
