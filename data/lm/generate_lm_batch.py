@@ -4,6 +4,7 @@ import io
 import os
 import re
 import subprocess
+import logging
 from collections import Counter
 import datetime, time
 
@@ -13,6 +14,8 @@ import progressbar
 from clearml import Task
 
 from generate_lm import build_lm, convert_and_filter_topk
+
+logging.basicConfig(filename="batch_gen_lm.log", level=logging.INFO)
 
 
 def available_cpu_count():
@@ -131,7 +134,10 @@ def available_cpu_count():
     raise Exception("Can not determine number of CPUs on this system")
 
 
-def generate_batch_lm(parser_batch, i, arpa_order, top_k, arpa_prune):
+def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs):
+    logging.info(
+        f"generate_batch_lm({parser_batch}, {arpa_order}, {top_k}, {arpa_prune})"
+    )
     # Create a child parser and add single elements
     parser_single = argparse.ArgumentParser(
         parents=[parser_batch],
@@ -144,18 +150,18 @@ def generate_batch_lm(parser_batch, i, arpa_order, top_k, arpa_prune):
     _start_time = (
         time.perf_counter()
     )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
-    print("-" * 3 * 10)
-    print(
-        f"{time.perf_counter() - start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
+    logging.log(msg="-" * 3 * 10, level=logging.DEBUG)
+    logging.info(
+        f"{time.perf_counter() - _start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
-    print("-" * 3 * 10)
+    logging.log(msg="-" * 3 * 10, level=logging.DEBUG)
     # call with these arguments
     data_lower, vocab_str = convert_and_filter_topk(args_single)
     build_lm(args_single, data_lower, vocab_str)
     parser_single = None
     os.remove(os.path.join(args_batch.output_dir, "lm.arpa"))
     os.remove(os.path.join(args_batch.output_dir, "lm_filtered.arpa"))
-    print(f"LM generation {i} took: {time.perf_counter() - _start_time}")
+    logging.info(f"LM generation {i} took: {time.perf_counter() - _start_time}")
 
 
 def parse_args():
@@ -266,56 +272,70 @@ def parse_args():
         default=n,
     )
 
-    return parser_batch.parse_args()
+    return parser_batch
 
 
 def main():
 
     args_batch = parse_args()
+    args_parsed_batch = args_batch.parse_args()
 
     try:
         task = Task.init(
-            project_name=args_batch.clearml_project, task_name=args_batch.clearml_task
+            project_name=args_parsed_batch.clearml_project,
+            task_name=args_parsed_batch.clearml_task,
         )
     except Exception:
         pass
 
     arpa_order_list = []
     top_k_list = []
-    for x in args_batch.arpa_order_list.split("-"):
+    for x in args_parsed_batch.arpa_order_list.split("-"):
         if x.isnumeric():
             arpa_order_list.append(int(float(x)))
-    for x in args_batch.top_k_list.split("-"):
+    for x in args_parsed_batch.top_k_list.split("-"):
         if x.isnumeric():
             top_k_list.append(int(float(x)))
-    arpa_prune_list = args_batch.arpa_prune_list.split("-")
+    arpa_prune_list = args_parsed_batch.arpa_prune_list.split("-")
 
+    i = 1
     total_runs = len(arpa_order_list) * len(top_k_list) * len(arpa_prune_list)
     start_time = time.perf_counter()
 
-    assert int(args_batch.n_proc) <= int(
-        total_runs
-    ), f"Maximum number of proc exceded given {total_runs} task(s).\n[{args_batch.n_proc=} <= {total_runs=}]\nSet the -j|--n_proc argument to a value equal or lower than {total_runs}."
+    assert int(args_parsed_batch.n_proc) <= int(total_runs), logging.error(
+        f"Maximum number of proc exceded given {total_runs} task(s).\n[{args_parsed_batch.n_proc=} <= {total_runs=}]\nSet the -j|--n_proc argument to a value equal or lower than {total_runs}."
+    )
 
-    n = int(args_batch.n_proc)
+    n = int(args_parsed_batch.n_proc)
 
-    with concurrent.futures.ProcessPoolExecutor(n) as executor:
-        executor.map(
-            generate_batch_lm,
-            ((z) for z in zip(arpa_order_list, top_k_list, arpa_prune_list)),
-        )
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+        for i, arpa_order in enumerate(arpa_order_list, start=1):
+            for top_k in top_k_list:
+                for arpa_prune in arpa_prune_list:
+                    future = executor.submit(
+                        generate_batch_lm,
+                        args_batch,
+                        arpa_order,
+                        top_k,
+                        arpa_prune,
+                        i,
+                        total_runs,
+                    )
+                    logging.debug(f"{future.result()}")
+                    i += 1
 
     try:
         task.upload_artifact(
-            name="lm.binary", artifact_object=os.path.join(args.output_dir, "lm.binary")
+            name="lm.binary",
+            artifact_object=os.path.join(args_parsed_batch.output_dir, "lm.binary"),
         )
     except Exception:
         pass
 
     # Delete intermediate files
-    os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
+    # os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
 
-    print(
+    logging.info(
         f"Took {time.perf_counter() - start_time} to generate {total_runs} language {'models' if total_runs > 1 else 'model'}."
     )
 
