@@ -15,7 +15,7 @@ from clearml import Task
 
 from generate_lm import build_lm, convert_and_filter_topk
 
-logging.basicConfig(filename="batch_gen_lm.log", level=logging.INFO)
+# logging.basicConfig(filename="batch_gen_lm.log", level=logging.INFO)
 
 
 def available_cpu_count():
@@ -135,9 +135,7 @@ def available_cpu_count():
 
 
 def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs):
-    logging.info(
-        f"generate_batch_lm({parser_batch}, {arpa_order}, {top_k}, {arpa_prune})"
-    )
+    print(f"generate_batch_lm({parser_batch}, {arpa_order}, {top_k}, {arpa_prune})")
     # Create a child parser and add single elements
     parser_single = argparse.ArgumentParser(
         parents=[parser_batch],
@@ -150,18 +148,18 @@ def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs
     _start_time = (
         time.perf_counter()
     )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
-    logging.log(msg="-" * 3 * 10, level=logging.DEBUG)
-    logging.info(
+    print("-" * 3 * 10)
+    print(
         f"{time.perf_counter() - _start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
-    logging.log(msg="-" * 3 * 10, level=logging.DEBUG)
+    print("-" * 3 * 10)
     # call with these arguments
     data_lower, vocab_str = convert_and_filter_topk(args_single)
     build_lm(args_single, data_lower, vocab_str)
     parser_single = None
-    os.remove(os.path.join(args_batch.output_dir, "lm.arpa"))
-    os.remove(os.path.join(args_batch.output_dir, "lm_filtered.arpa"))
-    logging.info(f"LM generation {i} took: {time.perf_counter() - _start_time}")
+    os.remove(os.path.join(args_single.output_dir, "lm.arpa"))
+    os.remove(os.path.join(args_single.output_dir, "lm_filtered.arpa"))
+    print(f"LM generation {i} took: {time.perf_counter() - _start_time}")
 
 
 def parse_args():
@@ -302,9 +300,9 @@ def main():
     total_runs = len(arpa_order_list) * len(top_k_list) * len(arpa_prune_list)
     start_time = time.perf_counter()
 
-    assert int(args_parsed_batch.n_proc) <= int(total_runs), logging.error(
-        f"Maximum number of proc exceded given {total_runs} task(s).\n[{args_parsed_batch.n_proc=} <= {total_runs=}]\nSet the -j|--n_proc argument to a value equal or lower than {total_runs}."
-    )
+    assert int(args_parsed_batch.n_proc) <= int(
+        total_runs
+    ), f"Maximum number of proc exceded given {total_runs} task(s).\n[{args_parsed_batch.n_proc=} <= {total_runs=}]\nSet the -j|--n_proc argument to a value equal or lower than {total_runs}."
 
     n = int(args_parsed_batch.n_proc)
 
@@ -321,7 +319,7 @@ def main():
                         i,
                         total_runs,
                     )
-                    logging.debug(f"{future.result()}")
+                    print(f"{future.result()}")
                     i += 1
 
     try:
@@ -333,9 +331,9 @@ def main():
         pass
 
     # Delete intermediate files
-    # os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
+    os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
 
-    logging.info(
+    print(
         f"Took {time.perf_counter() - start_time} to generate {total_runs} language {'models' if total_runs > 1 else 'model'}."
     )
 

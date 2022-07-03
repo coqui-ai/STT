@@ -39,6 +39,8 @@ RUN apt-get update && \
         libvorbisfile3 \
         libopusfile0 \
         libsndfile1 \
+        libboost-program-options-dev \
+        libboost-thread-dev \
         sox \
         libsox-fmt-mp3 \
         python3-venv \
