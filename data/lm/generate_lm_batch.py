@@ -2,153 +2,164 @@ import argparse
 import gzip
 import io
 import os
+import re
 import subprocess
 from collections import Counter
-import datetime
+import datetime, time
+
+import concurrent.futures
 
 import progressbar
 from clearml import Task
 
-counter = Counter()
-
-def convert_and_filter_topk(args):
-    global counter
-    """Convert to lowercase, count word occurrences and save top-k words to a file"""
-
-    # counter = Counter()
-    data_lower = os.path.join(args.output_dir, "lower.txt.gz")
-
-    # Skip this phase if lower.txt.gz already exists
-    print("\nConverting to lowercase...")
-    if os.path.isfile(data_lower):
-        print("Already converted, skipping conversion...")
-    else:
-        with io.TextIOWrapper(
-            io.BufferedWriter(gzip.open(data_lower, "w+")), encoding="utf-8"
-        ) as file_out:
-
-            # Open the input file either from input.txt or input.txt.gz
-            _, file_extension = os.path.splitext(args.input_txt)
-            if file_extension == ".gz":
-                file_in = io.TextIOWrapper(
-                    io.BufferedReader(gzip.open(args.input_txt)), encoding="utf-8"
-                )
-            else:
-                file_in = open(args.input_txt, encoding="utf-8")
-
-            for line in progressbar.progressbar(file_in):
-                line_lower = line.lower()
-                counter.update(line_lower.split())
-                file_out.write(line_lower)
-
-            file_in.close()
-
-    # Save top-k words
-    print("\nCounting word occurrences...")
-    vocab_path = "vocab-{}.txt".format(args.top_k)
-    vocab_path = os.path.join(args.output_dir, vocab_path)
-    top_counter = counter.most_common(args.top_k)
-    vocab_str = "\n".join(word for word, count in top_counter)
-    # Skip this phase if vocab_path already exists
-    if os.path.isfile(vocab_path):
-        print("Already calculated for top_k={}, skipping...".format(args.top_k))
-    else:
-        print("\nSaving top {} words ...".format(args.top_k))
-        with open(vocab_path, "w+") as file:
-            file.write(vocab_str)
-
-        print("\nCalculating word statistics ...")
-        total_words = sum(counter.values())
-        print("  Your text file has {} words in total".format(total_words))
-        print("  It has {} unique words".format(len(counter)))
-        top_words_sum = sum(count for word, count in top_counter)
-        word_fraction = (top_words_sum / total_words) * 100
-        print(
-            "  Your top-{} words are {:.4f} percent of all words".format(
-                args.top_k, word_fraction
-            )
-        )
-        print('  Your most common word "{}" occurred {} times'.format(*top_counter[0]))
-        last_word, last_count = top_counter[-1]
-        print(
-            '  The least common word in your top-k is "{}" with {} times'.format(
-                last_word, last_count
-            )
-        )
-        for i, (w, c) in enumerate(reversed(top_counter)):
-            if c > last_count:
-                print(
-                    '  The first word with {} occurrences is "{}" at place {}'.format(
-                        c, w, len(top_counter) - 1 - i
-                    )
-                )
-                break
-
-    return data_lower, vocab_str
+from generate_lm import build_lm, convert_and_filter_topk
 
 
-def build_lm(args, data_lower, vocab_str):
-    print("\nCreating ARPA file ...")
-    lm_path = os.path.join(args.output_dir, "lm.arpa")
-    subargs = [
-        os.path.join(args.kenlm_bins, "lmplz"),
-        "--order",
-        str(args.arpa_order),
-        "--temp_prefix",
-        args.output_dir,
-        "--memory",
-        args.max_arpa_memory,
-        "--text",
-        data_lower,
-        "--arpa",
-        lm_path,
-        "--prune",
-        *args.arpa_prune.split("|"),
-    ]
-    if args.discount_fallback:
-        subargs += ["--discount_fallback"]
-    subprocess.check_call(subargs)
+def available_cpu_count():
+    """Number of available virtual or physical CPUs on this system, i.e.
+    user/real as output by time(1) when called with an optimally scaling
+    userspace-only program
 
-    # Filter LM using vocabulary of top-k words
-    print("\nFiltering ARPA file using vocabulary of top-k words ...")
-    filtered_path = os.path.join(args.output_dir, "lm_filtered.arpa")
-    subprocess.run(
-        [
-            os.path.join(args.kenlm_bins, "filter"),
-            "single",
-            "model:{}".format(lm_path),
-            filtered_path,
-        ],
-        input=vocab_str.encode("utf-8"),
-        check=True,
+    See this https://stackoverflow.com/a/1006301/13561390"""
+
+    # cpuset
+    # cpuset may restrict the number of *available* processors
+    try:
+        m = re.search(r"(?m)^Cpus_allowed:\s*(.*)$", open("/proc/self/status").read())
+        if m:
+            res = bin(int(m.group(1).replace(",", ""), 16)).count("1")
+            if res > 0:
+                return res
+    except IOError:
+        pass
+
+    # Python 2.6+
+    try:
+        import multiprocessing
+
+        return multiprocessing.cpu_count()
+    except (ImportError, NotImplementedError):
+        pass
+
+    # https://github.com/giampaolo/psutil
+    try:
+        import psutil
+
+        return psutil.cpu_count()  # psutil.NUM_CPUS on old versions
+    except (ImportError, AttributeError):
+        pass
+
+    # POSIX
+    try:
+        res = int(os.sysconf("SC_NPROCESSORS_ONLN"))
+
+        if res > 0:
+            return res
+    except (AttributeError, ValueError):
+        pass
+
+    # Windows
+    try:
+        res = int(os.environ["NUMBER_OF_PROCESSORS"])
+
+        if res > 0:
+            return res
+    except (KeyError, ValueError):
+        pass
+
+    # jython
+    try:
+        from java.lang import Runtime
+
+        runtime = Runtime.getRuntime()
+        res = runtime.availableProcessors()
+        if res > 0:
+            return res
+    except ImportError:
+        pass
+
+    # BSD
+    try:
+        sysctl = subprocess.Popen(["sysctl", "-n", "hw.ncpu"], stdout=subprocess.PIPE)
+        scStdout = sysctl.communicate()[0]
+        res = int(scStdout)
+
+        if res > 0:
+            return res
+    except (OSError, ValueError):
+        pass
+
+    # Linux
+    try:
+        res = open("/proc/cpuinfo").read().count("processor\t:")
+
+        if res > 0:
+            return res
+    except IOError:
+        pass
+
+    # Solaris
+    try:
+        pseudoDevices = os.listdir("/devices/pseudo/")
+        res = 0
+        for pd in pseudoDevices:
+            if re.match(r"^cpuid@[0-9]+$", pd):
+                res += 1
+
+        if res > 0:
+            return res
+    except OSError:
+        pass
+
+    # Other UNIXes (heuristic)
+    try:
+        try:
+            dmesg = open("/var/run/dmesg.boot").read()
+        except IOError:
+            dmesgProcess = subprocess.Popen(["dmesg"], stdout=subprocess.PIPE)
+            dmesg = dmesgProcess.communicate()[0]
+
+        res = 0
+        while "\ncpu" + str(res) + ":" in dmesg:
+            res += 1
+
+        if res > 0:
+            return res
+    except OSError:
+        pass
+
+    raise Exception("Can not determine number of CPUs on this system")
+
+
+def generate_batch_lm(parser_batch, i, arpa_order, top_k, arpa_prune):
+    # Create a child parser and add single elements
+    parser_single = argparse.ArgumentParser(
+        parents=[parser_batch],
+        add_help=False,
     )
-
-    # Quantize and produce trie binary.
-    binary_path = os.path.join(
-        args.output_dir,
-        "lm_{}_{}_{}.binary".format(
-            str(args.arpa_order),
-            str(args.top_k),
-            str(args.arpa_prune.replace("|",""))
-            )
+    parser_single.add_argument("--arpa_order", type=int, default=arpa_order)
+    parser_single.add_argument("--top_k", type=int, default=top_k)
+    parser_single.add_argument("--arpa_prune", type=str, default=arpa_prune)
+    args_single = parser_single.parse_args()
+    _start_time = (
+        time.perf_counter()
+    )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
+    print("-" * 3 * 10)
+    print(
+        f"{time.perf_counter() - start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
-    print("\nBuilding {}...".format(binary_path))
-    subprocess.check_call(
-        [
-            os.path.join(args.kenlm_bins, "build_binary"),
-            "-a",
-            str(args.binary_a_bits),
-            "-q",
-            str(args.binary_q_bits),
-            "-v",
-            args.binary_type,
-            filtered_path,
-            binary_path,
-        ]
-    )
+    print("-" * 3 * 10)
+    # call with these arguments
+    data_lower, vocab_str = convert_and_filter_topk(args_single)
+    build_lm(args_single, data_lower, vocab_str)
+    parser_single = None
+    os.remove(os.path.join(args_batch.output_dir, "lm.arpa"))
+    os.remove(os.path.join(args_batch.output_dir, "lm_filtered.arpa"))
+    print(f"LM generation {i} took: {time.perf_counter() - _start_time}")
 
 
-def main():
+def parse_args():
+    n = int(available_cpu_count())
     parser_batch = argparse.ArgumentParser(
         description="Generate lm.binary and top-k vocab for Coqui STT in batch for multiple arpa_order, top_k and arpa_prune values."
     )
@@ -247,15 +258,27 @@ def main():
         type=str,
         required=True,
     )
+    parser_batch.add_argument(
+        "-j",
+        "--n_proc",
+        help=f"Maximum allowed processes. (default: {n})",
+        type=int,
+        default=n,
+    )
+
+    return parser_batch.parse_args()
 
 
-    args_batch = parser_batch.parse_args()
-    # print("ARGS_BATCH = ",args_batch)
+def main():
 
-    # try:
-    #     task = Task.init(project_name=args_batch.clearml_project, task_name=args_batch.clearml_task)
-    # except:
-    #     pass
+    args_batch = parse_args()
+
+    try:
+        task = Task.init(
+            project_name=args_batch.clearml_project, task_name=args_batch.clearml_task
+        )
+    except Exception:
+        pass
 
     arpa_order_list = []
     top_k_list = []
@@ -268,50 +291,34 @@ def main():
     arpa_prune_list = args_batch.arpa_prune_list.split("-")
 
     total_runs = len(arpa_order_list) * len(top_k_list) * len(arpa_prune_list)
-    current_run_count = 0
-    boottime = datetime.datetime.now()
+    start_time = time.perf_counter()
 
-    for arpa_order in arpa_order_list:
-        for top_k in top_k_list:
-            for arpa_prune in arpa_prune_list:
-                # Create a child parser and add single elements
-                parser_single = argparse.ArgumentParser(
-                    parents=[parser_batch],
-                    add_help=False,
-                )
-                parser_single.add_argument("--arpa_order", type=int, default=arpa_order)
-                parser_single.add_argument("--top_k", type=int, default=top_k)
-                parser_single.add_argument("--arpa_prune", type=str, default=arpa_prune)
-                args_single = parser_single.parse_args()
-                current_run_count += 1
-                start_time = datetime.datetime.now()
-                print('---------------------------------------------------------------------------------------------')
-                print("{} RUNNING {}/{} FOR arpa_order={} top_k={} arpa_prune={}".format(
-                    str(datetime.datetime.now() - boottime),
-                    str(current_run_count),
-                    str(total_runs),
-                    str(arpa_order),
-                    str(top_k),
-                    arpa_prune)
-                    )
-                print('---------------------------------------------------------------------------------------------')
-                # call with these arguments
-                data_lower, vocab_str = convert_and_filter_topk(args_single)
-                build_lm(args_single, data_lower, vocab_str)
-                parser_single = None
-                os.remove(os.path.join(args_batch.output_dir, "lm.arpa"))
-                os.remove(os.path.join(args_batch.output_dir, "lm_filtered.arpa"))
-                print("This LM generation took:", str(datetime.datetime.now() - start_time))
+    assert int(args_batch.n_proc) <= int(
+        total_runs
+    ), f"Maximum number of proc exceded given {total_runs} task(s).\n[{args_batch.n_proc=} <= {total_runs=}]\nSet the -j|--n_proc argument to a value equal or lower than {total_runs}."
 
-    # try:
-    #     task.upload_artifact(
-    #         name="lm.binary", artifact_object=os.path.join(args.output_dir, "lm.binary")
-    #     )
-    # except:
-    #     pass
+    n = int(args_batch.n_proc)
+
+    with concurrent.futures.ProcessPoolExecutor(n) as executor:
+        executor.map(
+            generate_batch_lm,
+            ((z) for z in zip(arpa_order_list, top_k_list, arpa_prune_list)),
+        )
+
+    try:
+        task.upload_artifact(
+            name="lm.binary", artifact_object=os.path.join(args.output_dir, "lm.binary")
+        )
+    except Exception:
+        pass
 
     # Delete intermediate files
     os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
+
+    print(
+        f"Took {time.perf_counter() - start_time} to generate {total_runs} language {'models' if total_runs > 1 else 'model'}."
+    )
+
 
 if __name__ == "__main__":
     main()
