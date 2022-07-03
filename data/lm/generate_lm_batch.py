@@ -135,7 +135,6 @@ def available_cpu_count():
 
 
 def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs):
-    print(f"generate_batch_lm({parser_batch}, {arpa_order}, {top_k}, {arpa_prune})")
     # Create a child parser and add single elements
     parser_single = argparse.ArgumentParser(
         parents=[parser_batch],
@@ -150,7 +149,7 @@ def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs
     )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
     print("-" * 3 * 10)
     print(
-        f"{time.perf_counter() - _start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
+        f"{float(time.perf_counter() - _start_time)} seconds RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
     print("-" * 3 * 10)
     # call with these arguments
@@ -319,7 +318,7 @@ def main():
                         i,
                         total_runs,
                     )
-                    print(f"{future.result()}")
+                    # print(f"{future.result()}")
                     i += 1
 
     try:
