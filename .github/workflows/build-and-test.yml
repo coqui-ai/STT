@@ -823,6 +823,9 @@ jobs:
           # Test FLAC input
           time ./bin/run-ci-ldc93s1-flac.sh --epochs 1
 
+          # Test LM gen
+          time ./bin/run-ci-lm-gen-batch.sh
+
           # Test LM opt
           time ./bin/run-ci-lm-opt.sh
   training-sdb-tests:
