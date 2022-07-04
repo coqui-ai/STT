@@ -4,13 +4,6 @@
 
 set -xe
 
-if [ ! -f lm_optimizer.py ]; then
-    echo "Please make sure you run this from STT's top level directory."
-    exit 1
-fi;
-
-
-
 lm_path="./data/lm"
 sources_lm_filepath="./data/smoke_test/vocab.txt"
 
