@@ -454,6 +454,33 @@ jobs:
         with:
           name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
+  build-wasm:
+    name: "Wasm|Build libstt"
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends xz-utils zip liblzma-dev libbz2-dev
+      - name: Setup venv
+        run: |
+          /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
+          echo "/tmp/venv/bin" >> $GITHUB_PATH
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/wasm-build.sh
+      - run: ./ci_scripts/package.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.wasm.zip"
+          path: ${{ github.workspace }}/artifacts/libstt.zip
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04

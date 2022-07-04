@@ -112,3 +112,25 @@ package_libstt_as_zip()
     ${tensorflow_dir}/bazel-bin/native_client/libkenlm.so \
     ${libsox_lib}
 }
+
+package_libstt_wasm()
+{
+  tensorflow_dir=${DS_TFDIR}
+  stt_dir=${DS_DSDIR}
+  artifacts_dir=${CI_ARTIFACTS_DIR}
+  artifact_name=$1
+
+  if [ ! -d ${tensorflow_dir} -o ! -d ${artifacts_dir} ]; then
+    echo "Missing directory. Please check:"
+    echo "tensorflow_dir=${tensorflow_dir}"
+    echo "artifacts_dir=${artifacts_dir}"
+    exit 1
+  fi;
+
+  if [ -z "${artifact_name}" ]; then
+    echo "Please specify artifact name."
+  fi;
+
+  ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" \
+    ${tensorflow_dir}/bazel-bin/native_client/stt_wasm_bindings/*
+}
