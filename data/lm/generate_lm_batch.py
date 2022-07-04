@@ -9,13 +9,14 @@ from collections import Counter
 import datetime, time
 
 import concurrent.futures
+from concurrent.futures import wait
 
 import progressbar
 from clearml import Task
 
 from generate_lm import build_lm, convert_and_filter_topk
 
-# logging.basicConfig(filename="batch_gen_lm.log", level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 
 def available_cpu_count():
@@ -147,11 +148,11 @@ def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs
     _start_time = (
         time.perf_counter()
     )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
-    print("-" * 3 * 10)
-    print(
+    logging.info("-" * 3 * 10)
+    logging.info(
         f"{float(time.perf_counter() - _start_time)} seconds RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
-    print("-" * 3 * 10)
+    logging.info("-" * 3 * 10)
     # call with these arguments
     data_lower, vocab_str = convert_and_filter_topk(args_single)
     build_lm(args_single, data_lower, vocab_str)
@@ -306,6 +307,7 @@ def main():
     n = int(args_parsed_batch.n_proc)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+        futures = []
         for i, arpa_order in enumerate(arpa_order_list, start=1):
             for top_k in top_k_list:
                 for arpa_prune in arpa_prune_list:
@@ -318,8 +320,9 @@ def main():
                         i,
                         total_runs,
                     )
-                    # print(f"{future.result()}")
+                    futures.append(future)
                     i += 1
+        wait(futures)
 
     try:
         task.upload_artifact(
@@ -332,7 +335,7 @@ def main():
     # Delete intermediate files
     os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
 
-    print(
+    logging.info(
         f"Took {time.perf_counter() - start_time} to generate {total_runs} language {'models' if total_runs > 1 else 'model'}."
     )
 
