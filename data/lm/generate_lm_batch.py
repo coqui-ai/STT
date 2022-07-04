@@ -160,7 +160,7 @@ def generate_batch_lm(
     )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
     # logging.info("-" * 3 * 10)
     results.append(
-        f"{_start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
+        f"{datetime.datetime.now():%Y-%m-%d %H:%M} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
     # logging.info("-" * 3 * 10)
     # call with these arguments
