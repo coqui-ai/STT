@@ -23,6 +23,7 @@ wxh = os.get_terminal_size()
 
 LINE = "-" * wxh.lines
 
+
 def available_cpu_count():
     """Number of available virtual or physical CPUs on this system, i.e.
     user/real as output by time(1) when called with an optimally scaling
@@ -139,7 +140,9 @@ def available_cpu_count():
     raise Exception("Can not determine number of CPUs on this system")
 
 
-def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs, output_dir):
+def generate_batch_lm(
+    parser_batch, arpa_order, top_k, arpa_prune, i, total_runs, output_dir
+):
     results = []
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     # Create a child parser and add single elements
@@ -155,11 +158,11 @@ def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs
     _start_time = (
         time.perf_counter()
     )  # We use time.perf_counter() to acurately mesure delta of t; not datetime obj nor standard time.time()
-    #logging.info("-" * 3 * 10)
+    # logging.info("-" * 3 * 10)
     results.append(
         f"{_start_time} RUNNING {i}/{total_runs} FOR {arpa_order=} {top_k=} {arpa_prune=}"
     )
-    #logging.info("-" * 3 * 10)
+    # logging.info("-" * 3 * 10)
     # call with these arguments
     data_lower, vocab_str = convert_and_filter_topk(args_single)
     build_lm(args_single, data_lower, vocab_str)
@@ -167,7 +170,9 @@ def generate_batch_lm(parser_batch, arpa_order, top_k, arpa_prune, i, total_runs
     os.remove(os.path.join(output_dir, "lm.arpa"))
     os.remove(os.path.join(output_dir, "lm_filtered.arpa"))
     os.remove(os.path.join(output_dir, "lower.txt.gz"))
-    results.append(f"LM generation {i} took: {time.perf_counter() - _start_time}")
+    results.append(
+        f"LM generation {i} took: {time.perf_counter() - _start_time} seconds"
+    )
     return results
 
 
@@ -321,7 +326,10 @@ def main():
             for i, arpa_order in enumerate(arpa_order_list, start=1):
                 for top_k in top_k_list:
                     for arpa_prune in arpa_prune_list:
-                        output_dir = os.path.join(args_parsed_batch.output_dir, f'{arpa_order}-{top_k}-{arpa_prune}')
+                        output_dir = os.path.join(
+                            args_parsed_batch.output_dir,
+                            f"{arpa_order}-{top_k}-{arpa_prune}",
+                        )
                         future = executor.submit(
                             generate_batch_lm,
                             args_batch,
@@ -330,7 +338,7 @@ def main():
                             arpa_prune,
                             i,
                             total_runs,
-                            output_dir
+                            output_dir,
                         )
                         futures.append(future)
                         i += 1
@@ -354,10 +362,10 @@ def main():
         pass
 
     # Delete intermediate files
-    #os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
+    # os.remove(os.path.join(args_batch.output_dir, "lower.txt.gz"))
 
     logging.info(
-        f"Took {time.perf_counter() - start_time} to generate {total_runs} language {'models' if total_runs > 1 else 'model'}."
+        f"Took {time.perf_counter() - start_time} seconds to generate {total_runs} language {'models' if total_runs > 1 else 'model'}."
     )
 
 
