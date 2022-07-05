@@ -10,7 +10,7 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.9.1-9-g433eaf9f93b"
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.9.1-11-gf8242ebc005"
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
   BAZEL_CACHE: ${{ secrets.BAZEL_CACHE }}
 
