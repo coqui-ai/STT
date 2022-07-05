@@ -4,10 +4,10 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import sys
-import psutil
 
 import progressbar
 import tensorflow.compat.v1 as tfv1
+from coqui_stt_training.util.cpu import available_count as available_cpu_count
 from coqui_stt_ctcdecoder import (
     Scorer,
     flashlight_beam_search_decoder_batch,
@@ -95,8 +95,8 @@ def evaluate(test_csvs, create_model):
 
     # Get number of accessible CPU cores for this process
     try:
-        num_processes = len(psutil.Process().cpu_affinity())
-    except NotImplementedError:
+        num_processes = available_cpu_count()
+    except Exception:
         num_processes = 1
 
     with open(Config.vocab_file) as fin:

@@ -6,6 +6,8 @@ import sys
 import time
 from collections import namedtuple
 from multiprocessing import Pool
+from coqui_stt_training.util.cpu import available_count as available_cpu_count
+
 
 import semver
 
@@ -136,12 +138,10 @@ class LimitingPool:
         sleeping_for=0.1,
     ):
         if processes is None:
-            processes = len(psutil.Process().cpu_affinity())
+            processes = available_cpu_count()
 
         self.process_ahead = (
-            len(psutil.Process().cpu_affinity())
-            if process_ahead is None
-            else process_ahead
+            available_cpu_count() if process_ahead is None else process_ahead
         )
         self.sleeping_for = sleeping_for
         self.processed = 0

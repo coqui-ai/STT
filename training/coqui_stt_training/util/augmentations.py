@@ -2,7 +2,8 @@ import math
 import random
 import re
 from multiprocessing import Process, Queue
-import psutil
+from coqui_stt_training.util.cpu import available_count as available_cpu_count
+
 
 import numpy as np
 import resampy
@@ -310,15 +311,17 @@ class Overlay(SampleAugmentation):
     def __repr__(self):
         return f"Overlay(source={self.source!r}, p={self.probability!r}, snr={self.snr!r}, layers={self.layers!r})"
 
+    def cpu_count(self):
+        try:
+            return available_cpu_count()
+        except Exception:
+            return 1
+
     def start(self, buffering=BUFFER_SIZE):
         self.queue = Queue(
             max(
                 1,
-                math.floor(
-                    self.probability
-                    * self.layers[1]
-                    * len(psutil.Process().cpu_affinity())
-                ),
+                math.floor(self.probability * self.layers[1] * self.cpu_count()),
             )
         )
         self.enqueue_process = Process(

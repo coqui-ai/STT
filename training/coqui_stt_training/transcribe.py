@@ -9,7 +9,6 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, List, Tuple
-import psutil
 
 LOG_LEVEL_INDEX = sys.argv.index("--log_level") + 1 if "--log_level" in sys.argv else 0
 DESIRED_LOG_LEVEL = (
@@ -31,11 +30,15 @@ from coqui_stt_training.util.config import (
 from coqui_stt_training.util.feeding import split_audio_file
 from coqui_stt_training.util.helpers import check_ctcdecoder_version
 from coqui_stt_training.util.multiprocessing import PoolBase
+from coqui_stt_training.util.cpu import available_count as available_cpu_count
 from tqdm import tqdm
 
 
 def cpu_count():
-    return len(psutil.Process().cpu_affinity()) or 1
+    try:
+        return available_cpu_count()
+    except Exception:
+        return 1
 
 
 class TranscriptionPool(PoolBase):
