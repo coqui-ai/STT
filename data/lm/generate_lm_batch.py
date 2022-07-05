@@ -2,7 +2,6 @@ import argparse
 import gzip
 import io
 import os
-import re
 import subprocess
 import logging
 from collections import Counter

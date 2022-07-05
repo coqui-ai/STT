@@ -1,6 +1,5 @@
 import heapq
 import os
-import psutil
 import random
 import sys
 import time
