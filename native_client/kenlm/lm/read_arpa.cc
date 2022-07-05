@@ -1,7 +1,7 @@
-#include "lm/read_arpa.hh"
+#include "read_arpa.hh"
 
-#include "lm/blank.hh"
-#include "util/file.hh"
+#include "blank.hh"
+#include "../util/file.hh"
 
 #include <cmath>
 #include <cstdlib>
@@ -160,7 +160,7 @@ void ReadEnd(util::FilePiece &in) {
       line = in.ReadLine();
       if (!IsEntirelyWhiteSpace(line)) UTIL_THROW(FormatLoadException, "Trailing line " << line);
     }
-  } catch (const util::EndOfFileException &e) {}
+  } catch (const util::EndOfFileException &) {}
 }
 
 void PositiveProbWarn::Warn(float prob) {

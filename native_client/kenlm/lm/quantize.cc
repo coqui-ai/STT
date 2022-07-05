@@ -6,11 +6,11 @@
  * tional Linguistics.
  */
 
-#include "lm/quantize.hh"
+#include "quantize.hh"
 
-#include "lm/binary_format.hh"
-#include "lm/lm_exception.hh"
-#include "util/file.hh"
+#include "binary_format.hh"
+#include "lm_exception.hh"
+#include "../util/file.hh"
 
 #include <algorithm>
 #include <numeric>
@@ -46,7 +46,6 @@ void SeparatelyQuantize::UpdateConfigFromBinary(const BinaryFormat &file, uint64
     file.ReadForConfig(buffer, 3, offset);
   }
   std::string strBuffer((char*)buffer,3);
-
   char version = buffer[0];
   config.prob_bits = buffer[1];
   config.backoff_bits = buffer[2];

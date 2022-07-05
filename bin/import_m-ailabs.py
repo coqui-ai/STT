@@ -27,6 +27,8 @@ ARCHIVE_DIR_NAME = "{language}"
 ARCHIVE_NAME = "{language}.tgz"
 ARCHIVE_URL = "http://www.caito.de/data/Training/stt_tts/" + ARCHIVE_NAME
 
+_excluded_sentences = []
+
 
 def _download_and_preprocess_data(target_dir):
     # Making path absolute

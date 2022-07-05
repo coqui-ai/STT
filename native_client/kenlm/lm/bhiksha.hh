@@ -13,10 +13,10 @@
 #ifndef LM_BHIKSHA_H
 #define LM_BHIKSHA_H
 
-#include "lm/model_type.hh"
-#include "lm/trie.hh"
-#include "util/bit_packing.hh"
-#include "util/sorted_uniform.hh"
+#include "model_type.hh"
+#include "trie.hh"
+#include "../util/bit_packing.hh"
+#include "../util/sorted_uniform.hh"
 
 #include <algorithm>
 #include <stdint.h>
@@ -33,7 +33,6 @@ class DontBhiksha {
   public:
     static const ModelType kModelTypeAdd = static_cast<ModelType>(0);
 
-    static void UpdateConfigFromBinary(const BinaryFormat &, uint64_t, Config &/*config*/) {}
     static void UpdateConfigFromBinary(const BinaryFormat &, uint64_t, Config &, bool) {}
 
     static uint64_t Size(uint64_t /*max_offset*/, uint64_t /*max_next*/, const Config &/*config*/) { return 0; }
