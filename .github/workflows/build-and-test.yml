@@ -10,7 +10,7 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.8.0-8-g06c8fea58fd"
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.9.1-9-g433eaf9f93b"
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
   BAZEL_CACHE: ${{ secrets.BAZEL_CACHE }}
 
@@ -822,6 +822,9 @@ jobs:
 
           # Test FLAC input
           time ./bin/run-ci-ldc93s1-flac.sh --epochs 1
+
+          # Test LM gen
+          time ./bin/run-ci-lm-gen-batch.sh
 
           # Test LM opt
           time ./bin/run-ci-lm-opt.sh
@@ -3494,6 +3497,12 @@ jobs:
           cache: "gradle"
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
+      - name: Install Android NDK r19c
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r19c
+          add-to-path: false
       # This particular version of CMake confuses Gradle by not being semver.
       # We're fine with 3.10.2 which is also installed. Keep an eye on the
       # virtual environments though:
@@ -3503,8 +3512,12 @@ jobs:
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --uninstall 'cmake;3.18.1'
       - run: |
           make GRADLE="./gradlew " -C native_client/java
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
       - run: |
           make GRADLE="./gradlew " -C native_client/java maven-bundle
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
       - uses: actions/upload-artifact@v2
         with:
           name: "app.apk"

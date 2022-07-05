@@ -132,7 +132,9 @@ def export():
                 log_error(
                     "Couldn't access TFLite API in TensorFlow package. "
                     "The NVIDIA TF1 docker image removes the TFLite API, so you'll need "
-                    "to save the checkpoint outside of Docker and then export it using "
+                    "to use the separate virtual environment to call the export module: \n"
+                    "    /tflite-venv/bin/python -m coqui_stt_training.export --checkpoint_dir ... --export_dir ...\n"
+                    "You can also save the checkpoint outside of Docker and then export it using "
                     "the training package directly: \n"
                     "    pip install coqui_stt_training\n"
                     "    python -m coqui_stt_training.export --checkpoint_dir ... --export_dir ...\n"

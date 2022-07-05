@@ -22,6 +22,7 @@ def main():
         "opuslib == 2.0.0",
         "pandas",
         "progressbar2",
+        "protobuf <= 3.20.1",
         "pyogg >= 0.6.14a1",
         "resampy >= 0.2.2",
         "requests",

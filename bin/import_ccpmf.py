@@ -15,7 +15,6 @@ import subprocess
 import sys
 import unicodedata
 import xml.etree.ElementTree as ET
-import zipfile38 as zipfile
 from glob import glob
 from multiprocessing import Pool
 
@@ -43,6 +42,24 @@ from coqui_stt_training.util.importers import (
     get_validate_label,
     print_import_report,
 )
+
+try:
+    ffmpeg_path = (
+        subprocess.check_output(["which", "ffmpeg"], stderr=subprocess.STDOUT)
+        .decode()
+        .replace("\n", "")
+    )
+    if not ffmpeg_path:
+        raise subprocess.CalledProcessError
+    else:
+        print(f"Using FFMPEG from {str(ffmpeg_path)}.")
+except subprocess.CalledProcessError:
+    print("ERROR: This importer needs FFMPEG.")
+    print()
+    print("Type:")
+    print("$   apt-get update && apt-get install -y --no-install-recommends ffmpeg")
+    exit(1)
+
 
 FIELDNAMES = ["wav_filename", "wav_filesize", "transcript"]
 SAMPLE_RATE = 16000
@@ -782,7 +799,7 @@ if __name__ == "__main__":
         action="store_true",
         help="Converts diacritic characters to their base ones",
     )
-    parser.add_argument(
+    PARSER.add_argument(
         "--save_excluded_max_sec_to_disk",
         type=str,
         help="Text file path to save excluded (max length) sentences to add them to the language model",
@@ -837,4 +854,4 @@ if __name__ == "__main__":
     write_general_csv(sources_root_dir, _counter=all_counter, _rows=all_rows)
 
     if SAVE_EXCLUDED_MAX_SEC_TO_DISK:
-        save_sentences_to_txt(excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)
+        save_sentences_to_txt(_excluded_sentences, SAVE_EXCLUDED_MAX_SEC_TO_DISK)

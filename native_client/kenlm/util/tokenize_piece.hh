@@ -1,9 +1,9 @@
 #ifndef UTIL_TOKENIZE_PIECE_H
 #define UTIL_TOKENIZE_PIECE_H
 
-#include "util/exception.hh"
-#include "util/spaces.hh"
-#include "util/string_piece.hh"
+#include "exception.hh"
+#include "spaces.hh"
+#include "string_piece.hh"
 
 #include <algorithm>
 #include <cstring>
@@ -162,7 +162,7 @@ inline StringPiece Trim(StringPiece str, const bool *spaces = kSpaces) {
   while (!str.empty() && spaces[static_cast<unsigned char>(*str.data())]) {
     str = StringPiece(str.data() + 1, str.size() - 1);
   }
-  while (!str.empty() && spaces[static_cast<unsigned char>(str[str.size() - 1])]) {
+  while (!str.empty() && spaces[static_cast<unsigned char>(str.data()[str.size() - 1])]) {
     str = StringPiece(str.data(), str.size() - 1);
   }
   return str;

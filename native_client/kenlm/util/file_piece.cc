@@ -1,9 +1,9 @@
-#include "util/file_piece.hh"
+#include "file_piece.hh"
 
-#include "util/double-conversion/double-conversion.h"
-#include "util/exception.hh"
-#include "util/file.hh"
-#include "util/mmap.hh"
+#include "double-conversion/double-conversion.h"
+#include "exception.hh"
+#include "file.hh"
+#include "mmap.hh"
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <io.h>
@@ -61,7 +61,7 @@ FilePiece::FilePiece(int fd, const char *name, std::ostream *show_progress, std:
   Initialize(NamePossiblyFind(fd, name).c_str(), show_progress, min_buffer);
 }
 
-FilePiece::FilePiece(std::istream &stream, const char *name, std::size_t min_buffer) :
+FilePiece::FilePiece(std::istream &stream, const char * /*name*/, std::size_t min_buffer) :
   total_size_(kBadSize) {
   InitializeNoRead("istream", min_buffer);
 
@@ -292,7 +292,7 @@ void FilePiece::MMapShift(uint64_t desired_begin) {
   data_.reset();
   try {
     MapRead(POPULATE_OR_LAZY, *file_, mapped_offset, mapped_size, data_);
-  } catch (const util::ErrnoException &e) {
+  } catch (const util::ErrnoException &) {
     if (desired_begin) {
       SeekOrThrow(*file_, desired_begin);
     }

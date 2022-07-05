@@ -62,7 +62,10 @@ class scoped_mmap {
 class scoped_memory {
   public:
     typedef enum {
-      MMAP_ROUND_UP_ALLOCATED, // The size was rounded up to a multiple of page size.  Do the same before munmap.
+      // TODO: store rounded up size instead?
+      MMAP_ROUND_1G_ALLOCATED, // The size was rounded up for a 1GB page.  Do the same before munmap.
+      MMAP_ROUND_2M_ALLOCATED, // The size was rounded up for a 2MB page.  Do the same before munmap.
+      MMAP_ROUND_PAGE_ALLOCATED, // The size was rounded up to a multiple of the default page size.  Do the same before munmap.
       MMAP_ALLOCATED, // munmap
       MALLOC_ALLOCATED, // free
       NONE_ALLOCATED // nothing to free (though there can be something here if it's owned by somebody else).
@@ -71,10 +74,7 @@ class scoped_memory {
     scoped_memory(void *data, std::size_t size, Alloc source, bool load_from_memory=false)
       : data_(data), size_(size), source_(source), load_from_memory_(load_from_memory) {}
 
-
-    scoped_memory(bool load_from_memory_=false) : data_(NULL), size_(0), 
-      source_(NONE_ALLOCATED), load_from_memory_(load_from_memory_) {}
-
+    scoped_memory(bool load_from_memory_=false) : data_(NULL), size_(0), source_(NONE_ALLOCATED), load_from_memory_(load_from_memory_) {}
 
     // Calls HugeMalloc
     scoped_memory(std::size_t to, bool zero_new, bool load_from_memory_=false);
@@ -97,7 +97,6 @@ class scoped_memory {
     std::size_t size() const { return size_; }
 
     bool load_from_memory_;
-
 
     Alloc source() const { return source_; }
 
