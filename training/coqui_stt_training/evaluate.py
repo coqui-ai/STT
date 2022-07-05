@@ -26,7 +26,7 @@ from .util.config import (
 from .util.evaluate_tools import calculate_and_print_report, save_samples_json
 from .util.feeding import create_dataset
 from .util.helpers import check_ctcdecoder_version
-from .util.cpu import available_count as available_cpu_count
+from .util import cpu
 
 
 def sparse_tensor_value_to_texts(value, alphabet):
@@ -92,7 +92,7 @@ def evaluate(test_csvs, create_model):
 
     # Get number of accessible CPU cores for this process
     try:
-        num_processes = available_cpu_count()
+        num_processes = cpu.available_count()
     except Exception:
         num_processes = 1
 

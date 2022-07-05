@@ -1,4 +1,7 @@
-def available_cpu_count():
+import re
+
+
+def available_count():
     """Number of available virtual or physical CPUs on this system, i.e.
     user/real as output by time(1) when called with an optimally scaling
     userspace-only program

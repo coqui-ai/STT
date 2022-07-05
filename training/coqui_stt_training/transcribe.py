@@ -31,13 +31,13 @@ from coqui_stt_training.util.config import (
 from coqui_stt_training.util.feeding import split_audio_file
 from coqui_stt_training.util.helpers import check_ctcdecoder_version
 from coqui_stt_training.util.multiprocessing import PoolBase
-from coqui_stt_training.util.cpu import available_count as available_cpu_count
+from coqui_stt_training.util import cpu
 from tqdm import tqdm
 
 
 def cpu_count():
     try:
-        return available_cpu_count()
+        return cpu.available_count()
     except Exception:
         return 1
 

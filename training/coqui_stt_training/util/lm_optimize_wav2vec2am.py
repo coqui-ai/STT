@@ -15,7 +15,7 @@ from coqui_stt_training.util.config import (
     initialize_globals_from_instance,
     log_error,
 )
-from coqui_stt_training.util.cpu import available_count as available_cpu_count
+from coqui_stt_training.util import cpu
 from coqui_stt_training.util.evaluate_tools import wer_cer_batch
 from coqui_stt_training.evaluate_wav2vec2am import (
     compute_emissions,
@@ -104,7 +104,7 @@ class LmOptimizeWav2vec2amConfig(BaseSttConfig):
         ),
     )
     num_processes: int = field(
-        default=available_cpu_count(),
+        default=cpu.available_count(),
         metadata=dict(help="Number of worker processes for evaluation."),
     )
     clearml_project: str = field(

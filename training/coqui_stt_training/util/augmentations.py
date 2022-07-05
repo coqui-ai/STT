@@ -2,7 +2,7 @@ import math
 import random
 import re
 from multiprocessing import Process, Queue
-from coqui_stt_training.util.cpu import available_count as available_cpu_count
+from coqui_stt_training.util import cpu
 
 import numpy as np
 import resampy
@@ -312,7 +312,7 @@ class Overlay(SampleAugmentation):
 
     def cpu_count(self):
         try:
-            return available_cpu_count()
+            return cpu.available_count()
         except Exception:
             return 1
 

@@ -18,7 +18,7 @@ import soundfile as sf
 from clearml import Task
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report
 from coqui_stt_training.util.multiprocessing import PoolBase
-from coqui_stt_training.util.cpu import available_count as available_cpu_count
+from coqui_stt_training.util import cpu
 from coqui_stt_ctcdecoder import (
     Alphabet,
     Scorer,
@@ -276,7 +276,7 @@ def parse_args():
     parser.add_argument(
         "--proc",
         required=False,
-        default=available_cpu_count(),
+        default=cpu.available_count(),
         type=int,
         help="Number of processes to spawn, defaulting to number of CPUs",
     )

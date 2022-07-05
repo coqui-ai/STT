@@ -4,7 +4,7 @@ import multiprocessing.pool
 import os
 import sys
 from contextlib import contextmanager
-from coqui_stt_training.util.cpu import available_count as available_cpu_count
+from coqui_stt_training.util import cpu
 
 
 def target_fn(*args, **kwargs):
@@ -71,7 +71,7 @@ class PoolBase:
     @classmethod
     def create_impl(cls, processes=None, context=None, initargs=(), *args, **kwargs):
         if processes is None:
-            processes = available_cpu_count()
+            processes = cpu.available_count()
 
         if context is None:
             context = multiprocessing
