@@ -4,7 +4,6 @@ from __future__ import absolute_import, print_function
 
 import sys
 from dataclasses import dataclass, field
-import psutil
 
 import optuna
 from clearml import Task

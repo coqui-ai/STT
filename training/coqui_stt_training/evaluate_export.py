@@ -9,7 +9,6 @@ import wave
 import io
 from functools import partial
 from multiprocessing import JoinableQueue, Manager, Process
-import psutil
 
 import numpy as np
 from coqui_stt_training.util.evaluate_tools import calculate_and_print_report

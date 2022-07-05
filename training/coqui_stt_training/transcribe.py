@@ -9,7 +9,6 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, List, Tuple
-import psutil
 
 LOG_LEVEL_INDEX = sys.argv.index("--log_level") + 1 if "--log_level" in sys.argv else 0
 DESIRED_LOG_LEVEL = (

@@ -10,7 +10,6 @@ import sys
 from functools import partial
 from multiprocessing import JoinableQueue, Manager, Process
 from pathlib import Path
-import psutil
 
 import numpy as np
 import onnxruntime

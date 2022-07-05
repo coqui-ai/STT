@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import sys
-import psutil
 
 import progressbar
 import tensorflow.compat.v1 as tfv1
