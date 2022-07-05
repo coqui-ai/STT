@@ -4,7 +4,7 @@ import multiprocessing.pool
 import os
 import sys
 from contextlib import contextmanager
-import psutil
+from coqui_stt_training.util.cpu import available_count as available_cpu_count
 
 
 def target_fn(*args, **kwargs):
@@ -40,7 +40,7 @@ class PoolBase:
     all child processes in order to synchronize work between all processes. You
     can also use `self.process_id`, which is an integer, unique per process,
     increasing in value from 0 to processes-1 (if not specified, processes
-    defaults to len(psutil.Process().cpu_affinity()) ).
+    defaults to util.cpu.availible_count() ).
 
     `run` will be called, in the child processes, potentially multiple times, in
     order to process data.
@@ -71,7 +71,7 @@ class PoolBase:
     @classmethod
     def create_impl(cls, processes=None, context=None, initargs=(), *args, **kwargs):
         if processes is None:
-            processes = len(psutil.Process().cpu_affinity())
+            processes = available_cpu_count()
 
         if context is None:
             context = multiprocessing
