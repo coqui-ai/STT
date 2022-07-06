@@ -27,7 +27,6 @@ typedef struct CandidateTranscriptStub {
     double confidence;
 
     static CandidateTranscriptStub fromCandidateTranscript(CandidateTranscript candidateTranscript) {
-        std::cout << "Converting from CandidateTranscript" << std::endl;
         std::vector<TokenMetadataStub> tokens = std::vector<TokenMetadataStub>(candidateTranscript.num_tokens);
 
         for (int i = 0; i < candidateTranscript.num_tokens; i++) {
@@ -48,16 +47,10 @@ typedef struct MetadataStub {
     std::vector<CandidateTranscriptStub> transcripts;
 
     static MetadataStub fromMetadata(Metadata* metadata) {
-        std::cout << "Converting from Metadata" << std::endl;
-        std::cout << "Number of transcripts: " << metadata->num_transcripts << std::endl;
-
         std::vector<CandidateTranscriptStub> transcripts = std::vector<CandidateTranscriptStub>(metadata->num_transcripts);
         for (int i = 0; i < metadata->num_transcripts; i++) {
-            std::cout << "Converting transcript " << i << std::endl;
             const CandidateTranscript candidateTranscript = metadata->transcripts[i];
-            std::cout << "Transcript confidence " << candidateTranscript.confidence << std::endl;
             CandidateTranscriptStub transcript = CandidateTranscriptStub::fromCandidateTranscript(candidateTranscript);
-            std::cout << "Converted transcript confidence " << transcript.confidence << std::endl;
             transcripts[i] = transcript;
         }
 
@@ -265,9 +258,7 @@ class Model {
     Metadata* tempResult = STT_SpeechToTextWithMetadata(
         this->state, audioBuffer.data(), audioBuffer.size(), aNumResults);
 
-    std::cout << "Metadata num_transcripts: " << tempResult->num_transcripts << std::endl;
     MetadataStub metadata = MetadataStub::fromMetadata(tempResult);
-    std::cout << "MetadataStub num_transcripts: " << metadata.transcripts.size() << std::endl;
     STT_FreeMetadata(tempResult);
 
     return metadata;
@@ -291,7 +282,6 @@ class Model {
   std::string buffer;
 
   void loadModelFromBuffer() {
-    std::cout << "Loading model from buffer" << std::endl;
     int ret = STT_CreateModelFromBuffer(this->buffer.c_str(),
                                         this->buffer.size(), &this->state);
     if (ret != STT_ERR_OK) {

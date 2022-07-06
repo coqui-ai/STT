@@ -476,7 +476,7 @@ jobs:
           echo "/tmp/venv/bin" >> $GITHUB_PATH
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/wasm-build.sh
-      - run: ./ci_scripts/package.sh
+      - run: ./ci_scripts/wasm-package.sh
       - uses: actions/upload-artifact@v2
         with:
           name: "libstt.tflite.wasm.zip"

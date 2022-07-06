@@ -9,11 +9,6 @@ mkdir -p ${CI_ARTIFACTS_DIR} || true
 
 cp ${DS_DSDIR}/tensorflow/bazel*.log ${CI_ARTIFACTS_DIR}/
 
-if [ -d ${DS_TFDIR}/bazel-bin/native_client/stt_wasm_bindings ]; then
-    package_libstt_wasm "libstt.zip"
-    exit 0
-fi;
-
 package_native_client "native_client.tar.xz"
 
 package_libstt_as_zip "libstt.zip"
