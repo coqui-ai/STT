@@ -10,7 +10,7 @@ env:
   # Shared variables
   CI_TASK_DIR: ${{ github.workspace }}
   CI_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.9.1-9-g433eaf9f93b"
+  EXPECTED_TENSORFLOW_VERSION: "TensorFlow: v2.9.1-11-gf8242ebc005"
   STT_PROD_MODEL: https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/output_graph.tflite
   BAZEL_CACHE: ${{ secrets.BAZEL_CACHE }}
 
@@ -454,6 +454,33 @@ jobs:
         with:
           name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
+  build-wasm:
+    name: "Wasm|Build libstt"
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends xz-utils zip liblzma-dev libbz2-dev
+      - name: Setup venv
+        run: |
+          /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
+          echo "/tmp/venv/bin" >> $GITHUB_PATH
+      - run: ./ci_scripts/tf-setup.sh
+      - run: ./ci_scripts/wasm-build.sh
+      - run: ./ci_scripts/wasm-package.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.wasm.zip"
+          path: ${{ github.workspace }}/artifacts/libstt.zip
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04
