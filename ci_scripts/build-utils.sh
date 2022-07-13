@@ -7,8 +7,10 @@ do_bazel_build()
   local _opt_or_dbg=${1:-"opt"}
 
   cd ${DS_TFDIR}
+  
+  bazel --version
 
-  bazel build ${BAZEL_CACHE} \
+  bazel build \
     -s --explain bazel_explain.log --verbose_explanations \
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
