@@ -7,21 +7,16 @@ do_bazel_build()
   local _opt_or_dbg=${1:-"opt"}
 
   cd ${DS_TFDIR}
-  
-  bazel --version
+
+  unset EMSDK_PYTHON
   
   echo "**** DEBUG trying to understand which python"
   which -a python
   which -a python3
   echo "**** DEBUG Should have shown pythons on path"
-  
-  # Try to mess with "python/python3" on the path. The idea:
-  # Create a symbolic link to 'ls', name it python, make it the first thing in the path.
-  ln -s /bin/ls "${DS_DSDIR}/python"
-  ln -s /bin/ls "${DS_DSDIR}/python3"
-  export PATH=${DS_DSDIR}:$PATH
 
   bazel build ${BAZEL_CACHE} \
+    --action_env=EMSDK_PYTHON=/tmp/venv/bin/python3 \
     -s --explain bazel_explain.log --verbose_explanations \
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
