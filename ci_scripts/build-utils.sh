@@ -16,7 +16,7 @@ do_bazel_build()
   echo "**** DEBUG Should have shown pythons on path"
 
   bazel build ${BAZEL_CACHE} \
-    --action_env=EMSDK_PYTHON=/tmp/venv/bin/python3 \
+    --action_env=PATH=/tmp/venv/bin:$PATH \
     -s --explain bazel_explain.log --verbose_explanations \
     --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" \
     -c ${_opt_or_dbg} ${BAZEL_BUILD_FLAGS} ${BAZEL_TARGETS}
