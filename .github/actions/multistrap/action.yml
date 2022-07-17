@@ -61,7 +61,7 @@ runs:
           sudo --preserve-env chroot ${{ env.SYSTEM_RASPBIAN }}/ apt-get install -y --no-install-recommends ${{ inputs.packages }}
 
           # Cleanup apt info to save space
-          sudo --preserve-env chroot ${{ env.SYSTEM_RASPBIAN }}/ rm -fr /var/cache/apt/* /var/lib/apt/lists/*
+          sudo --allow-unauthenticated --preserve-env chroot ${{ env.SYSTEM_RASPBIAN }}/ rm -fr /var/cache/apt/* /var/lib/apt/lists/*
 
           # Unmount what has been mounted
           for dev in ${TO_MOUNT};
