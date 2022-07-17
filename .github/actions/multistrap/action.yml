@@ -27,8 +27,6 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
-          sudo gpg --recv-keys 0E98404D386FA1D9
-          sudo gpg --export 0E98404D386FA1D9 | apt-key add -
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
