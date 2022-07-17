@@ -2818,7 +2818,7 @@ jobs:
           submodules: 'recursive'
       - uses: actions/setup-python@v2
         with:
-          python-version: "3.7"
+          python-version: "3.10"
       - name: Install chroot
         uses: ./.github/actions/multistrap
         with:
@@ -2969,7 +2969,7 @@ jobs:
     needs: [build-lib-LinuxAarch64, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.10]
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3-armv8
