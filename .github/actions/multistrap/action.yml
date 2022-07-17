@@ -27,6 +27,8 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
+          sudo gpg --recv-keys 0E98404D386FA1D9
+          sudo gpg --export 0E98404D386FA1D9 | apt-key add -
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
@@ -61,7 +63,7 @@ runs:
           sudo --preserve-env chroot ${{ env.SYSTEM_RASPBIAN }}/ apt-get install -y --no-install-recommends ${{ inputs.packages }}
 
           # Cleanup apt info to save space
-          sudo --allow-unauthenticated --preserve-env chroot ${{ env.SYSTEM_RASPBIAN }}/ rm -fr /var/cache/apt/* /var/lib/apt/lists/*
+          sudo --preserve-env chroot ${{ env.SYSTEM_RASPBIAN }}/ rm -fr /var/cache/apt/* /var/lib/apt/lists/*
 
           # Unmount what has been mounted
           for dev in ${TO_MOUNT};
