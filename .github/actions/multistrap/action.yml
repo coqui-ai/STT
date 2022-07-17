@@ -27,6 +27,7 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
