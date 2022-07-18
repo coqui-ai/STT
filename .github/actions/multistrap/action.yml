@@ -30,7 +30,7 @@ runs:
           # Manually set trusted sources
           curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
           tar -xvf trusted.gpg.d.tar.xz
-          sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/
+          sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/ || echo "No trusted.gpg.d"
           sudo mv -f trusted.gpg.d ${{ env.SYSTEM_RASPBIAN }}/etc/apt/
         fi
 
