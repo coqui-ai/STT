@@ -28,11 +28,8 @@ runs:
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
           # Manually set trusted sources
-          curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
-          tar -xvf trusted.gpg.d.tar.xz
-          sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/ || echo "No trusted.gpg.d"
-          sudo mkdir -p ${{ env.SYSTEM_RASPBIAN }}/etc/apt/ || echo "Could not create /etc/apt"
-          sudo mv -f trusted.gpg.d ${{ env.SYSTEM_RASPBIAN }}/etc/apt/
+          curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/armbian.tar.xz
+          tar -xvf armbian.tar.xz -C ${{ env.SYSTEM_RASPBIAN }} --strip-components=1
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
