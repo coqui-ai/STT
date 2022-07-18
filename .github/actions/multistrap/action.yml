@@ -14,7 +14,7 @@ runs:
     - id: install_multistrap
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends multistrap qemu-user-static xz-utils
+        sudo apt-get install -y --no-install-recommends multistrap qemu-user-static
       shell: bash
     - id: create_chroot
       run: |
@@ -27,6 +27,11 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
+          # Manually set trusted sources
+          curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
+          tar -xvf trusted.gpg.d.tar.xz
+          sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/
+          sudo mv -f trusted.gpg.d ${{ env.SYSTEM_RASPBIAN }}/etc/apt/
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
@@ -54,14 +59,6 @@ runs:
           do
             sudo cp /etc/${ff} ${{ env.SYSTEM_RASPBIAN }}/etc/
           done;
-
-          # Manually set trusted sources
-          if [ "${{ inputs.arch }}" = "aarch64" ]; then
-            curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
-            tar -xvf trusted.gpg.d.tar.xz
-            sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/
-            sudo mv -f trusted.gpg.d ${{ env.SYSTEM_RASPBIAN }}/etc/apt/
-          fi
 
           # Perform apt steps.
           # Preserving the env is required
