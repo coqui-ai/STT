@@ -29,6 +29,7 @@ runs:
           multistrap_conf=multistrap_armbian64_buster.conf
           # Manually set trusted sources
           curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/armbian.tar.xz
+          mkdir -p ${{ env.SYSTEM_RASPBIAN }}
           tar -xvf armbian.tar.xz -C ${{ env.SYSTEM_RASPBIAN }} --strip-components=1
         fi
 
