@@ -30,8 +30,8 @@ runs:
           # Manually set trusted soutces
           curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
           tar -xvf trusted.gpg.d.tar.xz
-          rm -r /etc/apt/trusted.gpg.d/
-          mv -f trusted.gpg.d /etc/apt/
+          sudo rm -r /etc/apt/trusted.gpg.d/
+          sudo mv -f trusted.gpg.d /etc/apt/
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
