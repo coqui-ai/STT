@@ -14,7 +14,7 @@ runs:
     - id: install_multistrap
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends multistrap qemu-user-static
+        sudo apt-get install -y --no-install-recommends multistrap qemu-user-static xz-utils
       shell: bash
     - id: create_chroot
       run: |
@@ -27,6 +27,11 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
+          # Manually set trusted soutces
+          curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
+          tar -xvf trusted.gpg.d.tar.xz
+          rm -r /etc/apt/trusted.gpg.d/
+          mv -f trusted.gpg.d /etc/apt/
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
