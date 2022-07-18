@@ -27,11 +27,6 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
-          # Manually set trusted soutces
-          curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
-          tar -xvf trusted.gpg.d.tar.xz
-          sudo rm -r /etc/apt/trusted.gpg.d/
-          sudo mv -f trusted.gpg.d /etc/apt/
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
@@ -59,6 +54,14 @@ runs:
           do
             sudo cp /etc/${ff} ${{ env.SYSTEM_RASPBIAN }}/etc/
           done;
+
+          # Manually set trusted sources
+          if [ "${{ inputs.arch }}" = "aarch64" ]; then
+            curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
+            tar -xvf trusted.gpg.d.tar.xz
+            sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/
+            sudo mv -f trusted.gpg.d ${{ env.SYSTEM_RASPBIAN }}/etc/apt/
+          fi
 
           # Perform apt steps.
           # Preserving the env is required
