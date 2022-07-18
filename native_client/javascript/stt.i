@@ -26,6 +26,18 @@ using namespace node;
   $2 = ($2_ltype)(bufferLength / 2);
 }
 
+// Map Uint8Array to char* for STT_CreateModelFromBuffer 
+%typemap(in) (const char *aModelBuffer, unsigned int aBufferSize) {
+    if (args[0]->IsUint8Array()) {
+        v8::Local<v8::Uint8Array> myarr = args[0].As<v8::Uint8Array>();
+        unsigned int offset = myarr->ByteOffset();
+        arg1 = (char*)((char*)myarr->Buffer()->GetBackingStore()->Data() + offset);
+        arg2 = myarr->Length();
+    } else {
+      SWIG_exception_fail(SWIG_ERROR, "Model buffer must be of type Uint8Array.");
+    }
+}
+
 // apply to STT_FeedAudioContent and STT_SpeechToText
 %apply (short* IN_ARRAY1, int DIM1) {(const short* aBuffer, unsigned int aBufferSize)};
 
