@@ -31,6 +31,7 @@ runs:
           curl -L -O https://github.com/wasertech/apt-trusted-keys-debian-bookworm/releases/download/bookworm/trusted.gpg.d.tar.xz
           tar -xvf trusted.gpg.d.tar.xz
           sudo rm -r ${{ env.SYSTEM_RASPBIAN }}/etc/apt/trusted.gpg.d/ || echo "No trusted.gpg.d"
+          sudo mkdir -p ${{ env.SYSTEM_RASPBIAN }}/etc/apt/ || echo "Could not create /etc/apt"
           sudo mv -f trusted.gpg.d ${{ env.SYSTEM_RASPBIAN }}/etc/apt/
         fi
 
