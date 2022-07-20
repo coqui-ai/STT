@@ -26,7 +26,7 @@ runs:
           wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb && sudo dpkg -i raspbian-archive-keyring_20120528.2_all.deb
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
-          multistrap_conf=multistrap_armbian64_buster.conf
+          multistrap_conf=multistrap_armbian64_bullseye.conf
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
