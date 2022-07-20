@@ -88,9 +88,9 @@ ifeq ($(TARGET),rpi3-armv8)
 TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/aarch64_linux_toolchain
 TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/aarch64-linux-gnu-
 RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian64-buster)
-CFLAGS      := -march=armv8-a -mtune=cortex-a53 -D_GLIBCXX_USE_CXX11_ABI=0 -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include/ -no-canonical-prefixes -fno-canonical-system-headers -lm -ldl -pthread
+CFLAGS      := -march=armv8-a -mtune=cortex-a53 -D_GLIBCXX_USE_CXX11_ABI=0 -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include/ -no-canonical-prefixes -fno-canonical-system-headers
 CXXFLAGS    := $(CFLAGS)
-LDFLAGS     := -Wl,-rpath-link,$(RASPBIAN)/lib/aarch64-linux-gnu -Wl,-rpath-link,$(RASPBIAN)/usr/lib/aarch64-linux-gnu
+LDFLAGS     := -lm -ldl -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/aarch64-linux-gnu -Wl,-rpath-link,$(RASPBIAN)/usr/lib/aarch64-linux-gnu
 
 SOX_CFLAGS  :=
 SOX_LDFLAGS := $(RASPBIAN)/usr/lib/aarch64-linux-gnu/libsox.so
