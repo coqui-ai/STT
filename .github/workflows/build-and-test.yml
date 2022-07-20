@@ -2965,7 +2965,7 @@ jobs:
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   build-python-LinuxAarch64:
     name: "LinAarch64|Build Python bindings"
-    runs-on: ubuntu-21.10
+    runs-on: ubuntu-20.04
     needs: [build-lib-LinuxAarch64, swig_Linux]
     strategy:
       matrix:
@@ -3096,7 +3096,7 @@ jobs:
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   build-test-chroot:
     name: "Lin|Build test chroot"
-    runs-on: ubuntu-21.10
+    runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
@@ -3123,7 +3123,7 @@ jobs:
           path: ${{ github.workspace }}/chroot.tar.xz
   test-cpp-LinuxArm:
     name: "LinArm*|Test C++ binary"
-    runs-on: ubuntu-21.10
+    runs-on: ubuntu-20.04
     needs: [ build-lib-LinuxArmv7, build-lib-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
@@ -3181,7 +3181,7 @@ jobs:
           model-kind: ${{ matrix.models }}
   test-py-LinuxArm:
     name: "LinArm*|Test Python bindings"
-    runs-on: ubuntu-21.10
+    runs-on: ubuntu-20.04
     needs: [ build-python-LinuxArmv7, build-python-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
@@ -3405,7 +3405,7 @@ jobs:
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
   build-lib-AndroidArm64:
     name: "AndroidArm64|Build libstt+client"
-    runs-on: ubuntu-21.10
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
