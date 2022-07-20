@@ -99,7 +99,7 @@ PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_versi
 PYTHON_PACKAGES      :=
 PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
 PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata_m_linux_aarch64-linux-gnu
-NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python3.7/
+NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python3.9/
 PYTHON_PLATFORM_NAME := --plat-name linux_aarch64
 NODE_PLATFORM_TARGET := --target_arch=arm64 --target_platform=linux
 TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
