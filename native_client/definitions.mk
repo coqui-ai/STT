@@ -93,7 +93,7 @@ CXXFLAGS    := $(CFLAGS)
 LDFLAGS     := -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/aarch64-linux-gnu -Wl,-rpath-link,$(RASPBIAN)/usr/lib/aarch64-linux-gnu
 
 SOX_CFLAGS  :=
-SOX_LDFLAGS := $(RASPBIAN)/lib/aarch64-linux-gnu/libm.so $(RASPBIAN)/usr/lib/aarch64-linux-gnu/libsox.so
+SOX_LDFLAGS := $(RASPBIAN)/lib/aarch64-linux-gnu/libm.so.6 $(RASPBIAN)/usr/lib/aarch64-linux-gnu/libsox.so
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=

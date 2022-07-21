@@ -2810,7 +2810,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       SYSTEM_TARGET: rpi3-armv8
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-bullseye
     steps:
       - uses: actions/checkout@v2
         with:
