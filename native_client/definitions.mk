@@ -67,7 +67,7 @@ ARCH_NAME := armhf
 GNU_LINUX_NAME := arm-linux-gnueabihf
 MULTISTRAP_CONFIG := multistrap-raspbian-bullseye
 
-TOOLCHAIN_RELPATH ?= bin/$(GNU_LINUX_NAME)-
+TOOLCHAIN_RELPATH ?= bin/$(GNU_LINUX_NAME)
 
 CFLAG_ARCH := armv7-a
 CFLAGS_MTUNE = -mtune=cortex-a53
