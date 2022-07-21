@@ -1,11 +1,11 @@
 #ifndef LM_QUANTIZE_H
 #define LM_QUANTIZE_H
 
-#include "lm/blank.hh"
-#include "lm/config.hh"
-#include "lm/max_order.hh"
-#include "lm/model_type.hh"
-#include "util/bit_packing.hh"
+#include "blank.hh"
+#include "config.hh"
+#include "max_order.hh"
+#include "model_type.hh"
+#include "../util/bit_packing.hh"
 
 #include <algorithm>
 #include <vector>
@@ -168,8 +168,15 @@ class SeparatelyQuantize {
         float Rest() const { return Prob(); }
 
         void Write(float prob, float backoff) const {
+          uint64_t prob_encoded = ProbBins().EncodeProb(prob);
+          uint64_t backoff_encoded = BackoffBins().EncodeBackoff(backoff);
+#if BYTE_ORDER == LITTLE_ENDIAN
+          prob_encoded <<= BackoffBins().Bits();
+#elif BYTE_ORDER == BIG_ENDIAN
+          backoff_encoded <<= ProbBins().Bits();
+#endif
           util::WriteInt57(address_.base, address_.offset, ProbBins().Bits() + BackoffBins().Bits(),
-              (ProbBins().EncodeProb(prob) << BackoffBins().Bits()) | BackoffBins().EncodeBackoff(backoff));
+                           prob_encoded | backoff_encoded);
         }
 
       private:

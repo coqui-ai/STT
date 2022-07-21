@@ -330,9 +330,13 @@ def train():
             "If the following process crashes, you likely have batch sizes "
             "that are too big for your available system memory (or GPU memory)."
         )
-        train_impl(epochs=1, reverse=True, limit=Config.train_batch_size * 3, write=False)
+        train_impl(
+            epochs=1, reverse=True, limit=Config.train_batch_size * 3, write=False
+        )
 
-        log_info("Dummy run finished without problems, now starting real training process.")
+        log_info(
+            "Dummy run finished without problems, now starting real training process."
+        )
     train_impl(epochs=Config.epochs, silent_load=True)
 
 

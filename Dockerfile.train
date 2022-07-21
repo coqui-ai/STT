@@ -7,10 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential cmake libboost-system-dev \
-    libboost-thread-dev libboost-program-options-dev \
-    libboost-test-dev libeigen3-dev zlib1g-dev \
-    libbz2-dev liblzma-dev && \
+        build-essential cmake libboost-system-dev \
+        libboost-thread-dev libboost-program-options-dev \
+        libboost-test-dev libeigen3-dev zlib1g-dev \
+        libbz2-dev liblzma-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Build KenLM to generate new scorers
@@ -21,11 +21,12 @@ RUN cd /code/kenlm && \
     cd build && \
     cmake .. && \
     make -j $(nproc) || \
-    ( echo "ERROR: Failed to build KenLM."; \
-    echo "ERROR: Make sure you update the kenlm submodule on host before building this Dockerfile."; \
-    echo "ERROR: $ cd STT; git submodule update --init kenlm"; \
-    exit 1; )
-
+    ( \
+        echo "ERROR: Failed to build KenLM." \
+        echo "ERROR: Make sure you update the kenlm submodule on host before building this Dockerfile." \
+        echo "ERROR: $ cd STT; git submodule update --init kenlm" \
+        exit 1 \
+    )
 
 FROM nvcr.io/nvidia/tensorflow:22.02-tf1-py3
 ENV DEBIAN_FRONTEND=noninteractive
@@ -35,16 +36,29 @@ RUN apt-get update && \
         git \
         wget \
         libopus0 \
+        libvorbisfile3 \
         libopusfile0 \
         libsndfile1 \
         sox \
         libsox-fmt-mp3 \
-        python3-venv && \
+        python3-venv \
+        software-properties-common && \
     rm -rf /var/lib/apt/lists/*
+
+# For exporting using TFLite
+RUN add-apt-repository ppa:deadsnakes/ppa -y
+
+RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends \
+    python3.7 \
+    python3.7-venv
 
 RUN python3 -m venv --system-site-packages /venv
 ENV VIRTUAL_ENV=/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Venv for upstream tensorflow with tflite api
+RUN python3.7 -m venv /tflite-venv
+
+ENV PATH="$VIRTUAL_ENV/bin:/tflite-venv/bin:$PATH"
 
 # Make sure pip and its dependencies are up-to-date
 RUN pip install --upgrade pip wheel setuptools
@@ -69,13 +83,16 @@ COPY --from=kenlm-build /code/kenlm/build/bin /code/kenlm/build/bin
 
 # Pre-built native client tools
 RUN LATEST_STABLE_RELEASE=$(curl "https://api.github.com/repos/coqui-ai/STT/releases/latest" | python -c 'import sys; import json; print(json.load(sys.stdin)["tag_name"])') \
- bash -c 'curl -L https://github.com/coqui-ai/STT/releases/download/${LATEST_STABLE_RELEASE}/native_client.tflite.Linux.tar.xz | tar -xJvf -'
+    bash -c 'curl -L https://github.com/coqui-ai/STT/releases/download/${LATEST_STABLE_RELEASE}/native_client.tflite.Linux.tar.xz | tar -xJvf -'
 
 # Install STT
 # No need for the decoder since we did it earlier
 # TensorFlow GPU should already be installed on the base image,
 # and we don't want to break that
 RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip install --upgrade -e .
+
+# Install coqui_stt_training (inside tf-venv) for exporting models using tflite
+RUN /tflite-venv/bin/pip install -e .
 
 # Copy rest of the code and test training
 COPY . /code

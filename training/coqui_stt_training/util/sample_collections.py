@@ -18,8 +18,6 @@ from .audio import (
 from .helpers import GIGABYTE, KILOBYTE, MEGABYTE, Interleaved, LenMap
 from .io import is_remote_path, open_remote
 
-import webdataset as wds
-
 
 BIG_ENDIAN = "big"
 INT_SIZE = 4
@@ -591,6 +589,8 @@ class WebDatasetSource:
         reverse : bool
             If the order of the samples should be reversed
         """
+        import webdataset as wds
+
         ds = wds.WebDataset(url)
         self._dataset = ds
         self.labeled = labeled
