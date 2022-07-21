@@ -2973,7 +2973,7 @@ jobs:
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3-armv8
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-bullseye
     steps:
       - run: |
           sudo apt-get install -y --no-install-recommends
@@ -3034,7 +3034,7 @@ jobs:
     needs: [build-lib-LinuxAarch64, swig_Linux]
     env:
       SYSTEM_TARGET: rpi3-armv8
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-bullseye
     steps:
       - uses: actions/checkout@v2
         with:
