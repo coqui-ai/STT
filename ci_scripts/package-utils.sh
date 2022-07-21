@@ -133,5 +133,7 @@ package_libstt_wasm()
 
   ${ZIP} -r9 --junk-paths "${artifacts_dir}/${artifact_name}" \
     ${stt_dir}/native_client/kenlm/COPYING \
-    ${tensorflow_dir}/bazel-bin/native_client/stt_wasm_bindings/*
+    ${tensorflow_dir}/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.js \
+    ${tensorflow_dir}/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.worker.js \
+    ${tensorflow_dir}/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.wasm
 }

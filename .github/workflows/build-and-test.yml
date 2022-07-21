@@ -466,6 +466,9 @@ jobs:
         with:
           fetch-depth: 0
           submodules: 'recursive'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12
       - name: Install dependencies
         run: |
           apt-get update
@@ -477,10 +480,17 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/wasm-build.sh
       - run: ./ci_scripts/wasm-package.sh
+      - run: BAZEL_WASM_EXTRA_FLAGS="--//native_client:wasm_emit=es6" ./ci_scripts/wasm-build.sh
+      - run: make -C native_client/wasm clean pack
+        shell: bash
       - uses: actions/upload-artifact@v2
         with:
           name: "libstt.tflite.wasm.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "libstt.tflite.wasm.es6.tgz"
+          path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04

@@ -9,6 +9,7 @@
 /runs
 /logs
 /exports
+/artifacts
 /data/ldc93s1
 /native_client/setup.cfg
 /native_client/build
@@ -29,6 +30,8 @@
 /native_client/python/dist
 /native_client/python/impl.py
 /native_client/python/impl_wrap.cpp
+/native_client/wasm/dist
+/native_client/wasm/package.json
 /doc/.build/
 /doc/xml-c/
 /doc/xml-java/
