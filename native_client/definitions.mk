@@ -63,22 +63,22 @@ PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 endif
 
 ifeq ($(TARGET),rpi3)
-ARCH_NAME := ARCH_NAME=armhf
-GNU_LINUX_NAME = arm-linux-gnueabihf
-MULTISTRAP_CONFIG = multistrap-raspbian-bullseye
+ARCH_NAME := armhf
+GNU_LINUX_NAME := arm-linux-gnueabihf
+MULTISTRAP_CONFIG := multistrap-raspbian-bullseye
 
 TOOLCHAIN_RELPATH ?= bin/$(GNU_LINUX_NAME)-
 
-CFLAG_ARCH = armv7-a
+CFLAG_ARCH := armv7-a
 CFLAGS_MTUNE = -mtune=cortex-a53
-CFLAGS_MF := CFLAGS_MF=-mfpu=neon-fp-armv8 -mfloat-abi=hard
+CFLAGS_MF := -mfpu=neon-fp-armv8 -mfloat-abi=hard
 # -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
-CFLAGS_ENV := CFLAGS_ENV=-D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64
-CFLAG_ISYS_GCC_INCLUDE_RELPATH := CFLAG_ISYS_GCC_INCLUDE_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
-CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
-CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH=$(GNU_LINUX_NAME)/include/c++/8.3.0
-CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH=$(GNU_LINUX_NAME)/libc/usr/include
-CFLAG_ISYS_EXTRA := CFLAG_ISYS_EXTRA=-isystem $(RASPBIAN)/usr/include -isystem /usr/include
+CFLAGS_ENV := -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAG_ISYS_GCC_INCLUDE_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
+CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
+CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := $(GNU_LINUX_NAME)/include/c++/8.3.0
+CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := $(GNU_LINUX_NAME)/libc/usr/include
+CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem /usr/include
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
@@ -91,20 +91,20 @@ NODE_PLATFORM_TARGET := --target_arch=arm --target_platform=linux
 endif # ($(TARGET),rpi3)
 
 ifeq ($(TARGET),rpi3-armv8)
-ARCH_NAME := ARCH_NAME=aarch64
-GNU_LINUX_NAME := GNU_LINUX_NAME=$(ARCH_NAME)-linux-gnu
-MULTISTRAP_CONFIG := MULTISTRAP_CONFIG=multistrap-raspbian64-bullseye
+ARCH_NAME := aarch64
+GNU_LINUX_NAME := $(ARCH_NAME)-linux-gnu
+MULTISTRAP_CONFIG := multistrap-raspbian64-bullseye
 
-TOOLCHAIN_RELPATH   ?= bin/$(GNU_LINUX_NAME)
+TOOLCHAIN_RELPATH ?= bin/$(GNU_LINUX_NAME)
 
-CFLAG_ARCH := CFLAG_ARCH=armv8-a
-CFLAGS_MTUNE := CFLAGS_MTUNE=-mtune=cortex-a53
-CFLAGS_ENV := CFLAGS_ENV=-D_GLIBCXX_USE_CXX11_ABI=0
-CFLAG_ISYS_GCC_INCLUDE_RELPATH := CFLAG_ISYS_GCC_INCLUDE_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
-CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
-CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH=$(GNU_LINUX_NAME)/include/c++/8.3.0
-CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH=$(GNU_LINUX_NAME)/libc/usr/include
-CFLAG_ISYS_EXTRA := CFLAG_ISYS_EXTRA=-isystem $(RASPBIAN)/usr/include -isystem /usr/include
+CFLAG_ARCH := armv8-a
+CFLAGS_MTUNE := -mtune=cortex-a53
+CFLAGS_ENV := -D_GLIBCXX_USE_CXX11_ABI=0
+CFLAG_ISYS_GCC_INCLUDE_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
+CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
+CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := $(GNU_LINUX_NAME)/include/c++/8.3.0
+CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := $(GNU_LINUX_NAME)/libc/usr/include
+CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem /usr/include
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
