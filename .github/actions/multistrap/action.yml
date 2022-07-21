@@ -22,7 +22,7 @@ runs:
 
         multistrap_conf=""
         if [ "${{ inputs.arch }}" = "armv7" ]; then
-          multistrap_conf=multistrap_raspbian_buster.conf
+          multistrap_conf=multistrap_raspbian_bullseye.conf
           wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb && sudo dpkg -i raspbian-archive-keyring_20120528.2_all.deb
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then

@@ -1,6 +1,6 @@
 ###
 ### From topdir, first use multistrap to prepare a raspbian buster armhf root
-### $ multistrap -d multistrap-raspbian-buster -f native_client/multistrap_raspbian_buster.conf
+### $ multistrap -d multistrap-raspbian-buster -f native_client/multistrap_raspbian_bullseye.conf
 ###
 ### You can make a tarball after:
 ### $ touch multistrap-raspbian-buster.tar && sudo tar cf multistrap-raspbian-buster.tar multistrap-raspbian-buster/ && xz multistrap-raspbian-buster.tar
