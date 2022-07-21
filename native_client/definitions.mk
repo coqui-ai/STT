@@ -98,7 +98,9 @@ SOX_LDFLAGS := $(RASPBIAN)/lib/aarch64-linux-gnu/libm.so.6 $(RASPBIAN)/usr/lib/a
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
 PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
-PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata_m_linux_aarch64-linux-gnu
+# To locate sysconfigdata for your platform use: $ `find /usr/lib/python3.10/ | grep sysconfigdata_`
+# Use the full name of the module : i.e. /usr/lib/python3.10/_sysconfigdata__linux_aarch64-linux-gnu.py -> _sysconfigdata__linux_aarch64-linux-gnu
+PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__linux_aarch64-linux-gnu
 NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python3.9/
 PYTHON_PLATFORM_NAME := --plat-name linux_aarch64
 NODE_PLATFORM_TARGET := --target_arch=arm64 --target_platform=linux
