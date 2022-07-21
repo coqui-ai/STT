@@ -63,49 +63,78 @@ PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 endif
 
 ifeq ($(TARGET),rpi3)
-TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/armhf_linux_toolchain
-TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/arm-linux-gnueabihf-
-RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian-buster)
-# -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
-CFLAGS      := -march=armv7-a -mtune=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard -D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 -isystem $(TOOLCHAIN_DIR)/lib/gcc/arm-linux-gnueabihf/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/arm-linux-gnueabihf/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/arm-linux-gnueabihf/include/c++/8.3.0/ -isystem $(TOOLCHAIN_DIR)/arm-linux-gnueabihf/libc/usr/include/ -isystem $(RASPBIAN)/usr/include -isystem /usr/include -no-canonical-prefixes -fno-canonical-system-headers
-CXXFLAGS    := $(CFLAGS)
-LDFLAGS     := -Wl,-rpath-link,$(RASPBIAN)/lib/arm-linux-gnueabihf/ -Wl,-rpath-link,$(RASPBIAN)/usr/lib/arm-linux-gnueabihf/
+ARCH_NAME := ARCH_NAME=armhf
+GNU_LINUX_NAME = arm-linux-gnueabihf
+MULTISTRAP_CONFIG = multistrap-raspbian-bullseye
 
-SOX_CFLAGS  :=
-SOX_LDFLAGS := $(RASPBIAN)/usr/lib/arm-linux-gnueabihf/libsox.so
+TOOLCHAIN_RELPATH ?= bin/$(GNU_LINUX_NAME)-
+
+CFLAG_ARCH = armv7-a
+CFLAGS_MTUNE = -mtune=cortex-a53
+CFLAGS_MF := CFLAGS_MF=-mfpu=neon-fp-armv8 -mfloat-abi=hard
+# -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64 => to avoid EOVERFLOW on readdir() with 64-bits inode
+CFLAGS_ENV := CFLAGS_ENV=-D_GLIBCXX_USE_CXX11_ABI=0 -D_XOPEN_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAG_ISYS_GCC_INCLUDE_RELPATH := CFLAG_ISYS_GCC_INCLUDE_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
+CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
+CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH=$(GNU_LINUX_NAME)/include/c++/8.3.0
+CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH=$(GNU_LINUX_NAME)/libc/usr/include
+CFLAG_ISYS_EXTRA := CFLAG_ISYS_EXTRA=-isystem $(RASPBIAN)/usr/include -isystem /usr/include
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
-PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
-NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python3.7m/
-PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata_m_linux_arm-linux-gnueabihf
+
+# To locate sysconfigdata for your platform use: $ `find /usr/lib/python3.10/ | grep sysconfigdata_`
+# Use the full name of the module : i.e. /usr/lib/python3.10/_sysconfigdata__linux_arm-linux-gnueabihf.py -> _sysconfigdata__linux_arm-linux-gnueabihf
+PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__linux_arm-linux-gnueabihf
 PYTHON_PLATFORM_NAME := --plat-name linux_armv7l
 NODE_PLATFORM_TARGET := --target_arch=arm --target_platform=linux
-TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
 endif # ($(TARGET),rpi3)
 
 ifeq ($(TARGET),rpi3-armv8)
-TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/aarch64_linux_toolchain
-TOOLCHAIN   ?= $(TOOLCHAIN_DIR)/bin/aarch64-linux-gnu-
-RASPBIAN    ?= $(abspath $(NC_DIR)/../multistrap-raspbian64-buster)
-CFLAGS      := -march=armv8-a -mtune=cortex-a53 -D_GLIBCXX_USE_CXX11_ABI=0 -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include -isystem $(TOOLCHAIN_DIR)/lib/gcc/aarch64-linux-gnu/8.3.0/include-fixed -isystem $(TOOLCHAIN_DIR)/aarch64-linux-gnu/include/c++/8.3.0/ -isystem $(RASPBIAN)/usr/include -isystem $(RASPBIAN)/usr/include/aarch64-linux-gnu -isystem /usr/include/ -no-canonical-prefixes -fno-canonical-system-headers
-CXXFLAGS    := $(CFLAGS)
-LDFLAGS     := -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/aarch64-linux-gnu -Wl,-rpath-link,$(RASPBIAN)/usr/lib/aarch64-linux-gnu
+ARCH_NAME := ARCH_NAME=aarch64
+GNU_LINUX_NAME := GNU_LINUX_NAME=$(ARCH_NAME)-linux-gnu
+MULTISTRAP_CONFIG := MULTISTRAP_CONFIG=multistrap-raspbian64-bullseye
 
-SOX_CFLAGS  :=
-SOX_LDFLAGS := $(RASPBIAN)/lib/aarch64-linux-gnu/libm.so.6 $(RASPBIAN)/usr/lib/aarch64-linux-gnu/libsox.so
+TOOLCHAIN_RELPATH   ?= bin/$(GNU_LINUX_NAME)
+
+CFLAG_ARCH := CFLAG_ARCH=armv8-a
+CFLAGS_MTUNE := CFLAGS_MTUNE=-mtune=cortex-a53
+CFLAGS_ENV := CFLAGS_ENV=-D_GLIBCXX_USE_CXX11_ABI=0
+CFLAG_ISYS_GCC_INCLUDE_RELPATH := CFLAG_ISYS_GCC_INCLUDE_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
+CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH=lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
+CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH=$(GNU_LINUX_NAME)/include/c++/8.3.0
+CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH=$(GNU_LINUX_NAME)/libc/usr/include
+CFLAG_ISYS_EXTRA := CFLAG_ISYS_EXTRA=-isystem $(RASPBIAN)/usr/include -isystem /usr/include
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
-PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
+
 # To locate sysconfigdata for your platform use: $ `find /usr/lib/python3.10/ | grep sysconfigdata_`
 # Use the full name of the module : i.e. /usr/lib/python3.10/_sysconfigdata__linux_aarch64-linux-gnu.py -> _sysconfigdata__linux_aarch64-linux-gnu
 PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__linux_aarch64-linux-gnu
-NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python3.9/
 PYTHON_PLATFORM_NAME := --plat-name linux_aarch64
 NODE_PLATFORM_TARGET := --target_arch=arm64 --target_platform=linux
-TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
 endif # ($(TARGET),rpi3-armv8)
+
+ifdef ARCH_NAME
+TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/$(ARCH_NAME)_linux_toolchain
+TOOLCHAIN ?= $(TOOLCHAIN_DIR)/$(TOOLCHAIN_RELPATH)
+endif # ARCH_NAME
+
+ifdef MULTISTRAP_CONFIG
+RASPBIAN    ?= $(abspath $(NC_DIR)/../$(MULTISTRAP_CONFIG))
+
+CFLAGS_CANONNICAL = -no-canonical-prefixes -fno-canonical-system-headers
+
+CFLAGS      := -march=$(CFLAG_ARCH) $(CFLAG_MTUNE) $(CFLAGS_MF) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH) $(CFLAG_ISYS_EXTRA) $(CFLAGS_CANONNICAL)
+CXXFLAGS    := $(CFLAGS)
+LDFLAGS     := -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/$(GNU_LINUX_NAME) -Wl,-rpath-link,$(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)
+
+SOX_LDFLAGS := $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/libm.so.6 $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libsox.so
+PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
+NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python$(PYVER)/
+TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
+endif # MULTISTRAP_CONFIG
 
 ifeq ($(TARGET),ios-simulator)
 CFLAGS          := -isysroot $(shell xcrun -sdk iphonesimulator13.5 -show-sdk-path)
