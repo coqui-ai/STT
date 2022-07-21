@@ -118,7 +118,7 @@ endif # ($(TARGET),rpi3-armv8)
 
 ifdef ARCH_NAME
 TOOLCHAIN_DIR ?= ${TFDIR}/bazel-$(shell basename "${TFDIR}")/external/$(ARCH_NAME)_linux_toolchain
-TOOLCHAIN ?= $(TOOLCHAIN_DIR)/$(TOOLCHAIN_RELPATH)/
+TOOLCHAIN ?= $(TOOLCHAIN_DIR)/$(TOOLCHAIN_RELPATH)-
 endif # ARCH_NAME
 
 ifdef MULTISTRAP_CONFIG
