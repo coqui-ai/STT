@@ -61,7 +61,13 @@ def generate_batch_lm(
 
 
 def parse_args():
-    n = int(cpu.available_count())
+    try:
+        n = int(cpu.available_count())
+    except Exception as e:
+        logging.warning(e)
+        n = 1
+        logging.warning(f"Using {n}")
+
     parser_batch = argparse.ArgumentParser(
         description="Generate lm.binary and top-k vocab for Coqui STT in batch for multiple arpa_order, top_k and arpa_prune values."
     )
