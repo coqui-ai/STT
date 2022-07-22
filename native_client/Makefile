@@ -19,7 +19,7 @@ clean:
 	rm -f stt
 
 $(STT_BIN): client.cc Makefile
-	$(CXX) $(CFLAGS) $(CFLAGS_STT) $(SOX_CFLAGS) client.cc $(LDFLAGS) $(SOX_LDFLAGS)
+	$(CXX) $(CFLAGS) $(CFLAGS_STT) $(SOX_CFLAGS) client.cc $(LDFLAGS) $(ADD_LDFLAGS)
 ifeq ($(OS),Darwin)
 	install_name_tool -change bazel-out/local-opt/bin/native_client/libstt.so @rpath/libstt.so stt
 endif

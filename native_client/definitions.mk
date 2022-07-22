@@ -32,15 +32,15 @@ LDFLAGS         :=
 SOX_CFLAGS      := -I$(ROOT_DIR)/sox-build/include
 ifeq ($(OS),Linux)
 LINK_STT := $(LINK_STT) -llzma -lbz2
-SOX_LDFLAGS     := -L$(ROOT_DIR)/sox-build/lib -lsox
+ADD_LDFLAGS     := -L$(ROOT_DIR)/sox-build/lib -lsox
 else ifeq ($(OS),Darwin)
 CFLAGS                  := -mmacosx-version-min=10.10 -target x86_64-apple-macos10.10
 LDFLAGS                 := -mmacosx-version-min=10.10 -target x86_64-apple-macos10.10
 
 SOX_CFLAGS              := $(shell pkg-config --cflags sox)
-SOX_LDFLAGS             := $(shell pkg-config --libs sox) -framework CoreAudio -lz
+ADD_LDFLAGS             := $(shell pkg-config --libs sox) -framework CoreAudio -lz
 else
-SOX_LDFLAGS     := `pkg-config --libs sox`
+ADD_LDFLAGS     := `pkg-config --libs sox`
 endif # OS others
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 ifeq ($(OS),Linux)
@@ -58,7 +58,7 @@ LINK_STT      := $(shell cygpath "$(TFDIR)/bazel-bin/native_client/libstt.so.if.
 LINK_PATH_STT :=
 CFLAGS_STT    := -nologo -Fe$(STT_BIN)
 SOX_CFLAGS      :=
-SOX_LDFLAGS     :=
+ADD_LDFLAGS     :=
 PYTHON_PACKAGES := numpy${NUMPY_BUILD_VERSION}
 endif
 
@@ -127,9 +127,9 @@ CFLAGS_CANONNICAL = -no-canonical-prefixes -fno-canonical-system-headers
 
 CFLAGS      := -march=$(CFLAG_ARCH) $(CFLAG_MTUNE) $(CFLAGS_MF) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH) $(CFLAG_ISYS_EXTRA) $(CFLAGS_CANONNICAL)
 CXXFLAGS    := $(CFLAGS)
-LDFLAGS     := -L$(RASPBIAN)/lib/$(GNU_LINUX_NAME)/librt.so.1 -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/$(GNU_LINUX_NAME) -Wl,-rpath-link,$(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)
+LDFLAGS     := -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/$(GNU_LINUX_NAME) -Wl,-rpath-link,$(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)
 
-SOX_LDFLAGS := $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/libm.so.6 $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libsox.so
+ADD_LDFLAGS := $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/librt.so.1 $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/libm.so.6 $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libsox.so
 PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
 NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python$(PYVER)/
 TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
@@ -138,14 +138,14 @@ endif # MULTISTRAP_CONFIG
 ifeq ($(TARGET),ios-simulator)
 CFLAGS          := -isysroot $(shell xcrun -sdk iphonesimulator13.5 -show-sdk-path)
 SOX_CFLAGS      :=
-SOX_LDFLAGS     :=
+ADD_LDFLAGS     :=
 LDFLAGS         :=
 endif
 
 ifeq ($(TARGET),ios-arm64)
 CFLAGS          := -target arm64-apple-ios -isysroot $(shell xcrun -sdk iphoneos13.5 -show-sdk-path)
 SOX_CFLAGS      :=
-SOX_LDFLAGS     :=
+ADD_LDFLAGS     :=
 LDFLAGS         :=
 endif
 
@@ -154,7 +154,7 @@ CFLAGS                  := -mmacosx-version-min=11.0 -target arm64-apple-macos11
 LDFLAGS                 := -mmacosx-version-min=11.0 -target arm64-apple-macos11
 
 SOX_CFLAGS              := $(shell arm-pkg-config --cflags sox)
-SOX_LDFLAGS             := $(shell arm-pkg-config --libs sox) -framework CoreAudio -lz
+ADD_LDFLAGS             := $(shell arm-pkg-config --libs sox) -framework CoreAudio -lz
 endif
 
 # -Wl,--no-as-needed is required to force linker not to evict libs it thinks we
