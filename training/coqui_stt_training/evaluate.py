@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import sys
-from multiprocessing import cpu_count
 
 import progressbar
 import tensorflow.compat.v1 as tfv1
@@ -26,6 +25,7 @@ from .util.config import (
 from .util.evaluate_tools import calculate_and_print_report, save_samples_json
 from .util.feeding import create_dataset
 from .util.helpers import check_ctcdecoder_version
+from .util import cpu
 
 
 def sparse_tensor_value_to_texts(value, alphabet):
@@ -91,8 +91,8 @@ def evaluate(test_csvs, create_model):
 
     # Get number of accessible CPU cores for this process
     try:
-        num_processes = cpu_count()
-    except NotImplementedError:
+        num_processes = cpu.available_count()
+    except Exception:
         num_processes = 1
 
     with tfv1.Session(config=Config.session_config) as session:
