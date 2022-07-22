@@ -127,7 +127,7 @@ CFLAGS_CANONNICAL = -no-canonical-prefixes -fno-canonical-system-headers
 
 CFLAGS      := -march=$(CFLAG_ARCH) $(CFLAG_MTUNE) $(CFLAGS_MF) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH) $(CFLAG_ISYS_EXTRA) $(CFLAGS_CANONNICAL)
 CXXFLAGS    := $(CFLAGS)
-LDFLAGS     := $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/librt.so.1 -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/$(GNU_LINUX_NAME) -Wl,-rpath-link,$(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)
+LDFLAGS     := -L$(RASPBIAN)/lib/$(GNU_LINUX_NAME)/librt.so.1 -pthread -Wl,-rpath-link,$(RASPBIAN)/lib/$(GNU_LINUX_NAME) -Wl,-rpath-link,$(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)
 
 SOX_LDFLAGS := $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/libm.so.6 $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libsox.so
 PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/

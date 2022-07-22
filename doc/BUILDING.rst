@@ -203,7 +203,7 @@ And your command line for ``LePotato`` and ``ARM64`` should look like:
 
    bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=rpi3-armv8_opt //native_client:libstt.so
 
-While we test only on RPi3 Raspbian Buster and LePotato ARMBian Buster, anything compatible with ``armv7-a cortex-a53`` or ``armv8-a cortex-a53`` should be fine.
+While we test only on RPi3 Raspbian Bullseye and LePotato ARMBian Bullseye, anything compatible with ``armv7-a cortex-a53`` or ``armv8-a cortex-a53`` should be fine.
 
 The ``stt`` binary can also be cross-built, with ``TARGET=rpi3`` or ``TARGET=rpi3-armv8``. This might require you to setup a system tree using the tool ``multistrap`` and the multitrap configuration files: ``native_client/multistrap_armbian64_bullseye.conf`` and ``native_client/multistrap_raspbian_bullseye.conf``.
 The path of the system tree can be overridden from the default values defined in ``definitions.mk`` through the ``RASPBIAN`` ``make`` variable.

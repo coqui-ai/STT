@@ -14,13 +14,13 @@ Linux / AMD64
 Linux / ARMv7
 ^^^^^^^^^^^^^
 * Cortex-A53 compatible ARMv7 SoC with Neon support
-* Raspbian Buster-compatible distribution
+* Raspbian Bullseye-compatible distribution
 * TensorFlow Lite runtime
 
 Linux / Aarch64
 ^^^^^^^^^^^^^^^
 * Cortex-A72 compatible Aarch64 SoC
-* ARMbian Buster-compatible distribution
+* ARMbian Bullseye-compatible distribution
 * TensorFlow Lite runtime
 
 Android / ARMv7
