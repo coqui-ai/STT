@@ -59,28 +59,28 @@ pushd ${DS_ROOT_TASK}/DeepSpeech/ds/
 
         --linux-rpi3)
             wget -q -O - https://releases.linaro.org/components/toolchain/binaries/7.2-2017.11/arm-linux-gnueabihf/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabihf.tar.xz | pixz -d | tar -xf -
-            multistrap -d multistrap-raspbian-buster/ -f taskcluster/kenlm_multistrap_rpi3_buster.conf
+            multistrap -d multistrap-raspbian-bullseye/ -f taskcluster/kenlm_multistrap_rpi3_buster.conf
 
             # fix all symlink
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libpthread.so
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libz.so
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libbz2.so
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libm.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libpthread.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libz.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libbz2.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libm.so
 
-            rm multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libpthread.so
-            rm multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libz.so
-            rm multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libbz2.so
-            rm multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libm.so
+            rm multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libpthread.so
+            rm multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libz.so
+            rm multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libbz2.so
+            rm multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libm.so
 
-            ln -s ../../../lib/arm-linux-gnueabihf/libpthread.so.0 multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libpthread.so
-            ln -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.11 multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libz.so
-            ln -s ../../../lib/arm-linux-gnueabihf/libbz2.so.1.0 multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libbz2.so
-            ln -s ../../../lib/arm-linux-gnueabihf/libm.so.6 multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libm.so
+            ln -s ../../../lib/arm-linux-gnueabihf/libpthread.so.0 multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libpthread.so
+            ln -s ../../../lib/arm-linux-gnueabihf/libz.so.1.2.11 multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libz.so
+            ln -s ../../../lib/arm-linux-gnueabihf/libbz2.so.1.0 multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libbz2.so
+            ln -s ../../../lib/arm-linux-gnueabihf/libm.so.6 multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libm.so
 
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libpthread.so
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libz.so
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libbz2.so
-            ls -hal multistrap-raspbian-buster/usr/lib/arm-linux-gnueabihf/libm.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libpthread.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libz.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libbz2.so
+            ls -hal multistrap-raspbian-bullseye/usr/lib/arm-linux-gnueabihf/libm.so
         ;;
 
         --windows-amd64)

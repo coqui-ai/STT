@@ -78,7 +78,6 @@ CFLAG_ISYS_GCC_INCLUDE_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
 CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
 CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := $(GNU_LINUX_NAME)/include/c++/8.3.0
 CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := $(GNU_LINUX_NAME)/libc/usr/include
-CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem /usr/include
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
@@ -104,7 +103,6 @@ CFLAG_ISYS_GCC_INCLUDE_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include
 CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH := lib/gcc/$(GNU_LINUX_NAME)/8.3.0/include-fixed
 CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH := $(GNU_LINUX_NAME)/include/c++/8.3.0
 CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH := $(GNU_LINUX_NAME)/libc/usr/include
-CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem /usr/include
 
 PYVER := $(shell python -c "import platform; maj, min, _ = platform.python_version_tuple(); print(maj+'.'+min);")
 PYTHON_PACKAGES      :=
@@ -124,6 +122,7 @@ endif # ARCH_NAME
 ifdef MULTISTRAP_CONFIG
 RASPBIAN    ?= $(abspath $(NC_DIR)/../$(MULTISTRAP_CONFIG))
 
+CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem /usr/include
 CFLAGS_CANONNICAL = -no-canonical-prefixes -fno-canonical-system-headers
 
 CFLAGS      := -march=$(CFLAG_ARCH) $(CFLAG_MTUNE) $(CFLAGS_MF) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH) $(CFLAG_ISYS_EXTRA) $(CFLAGS_CANONNICAL)

@@ -2808,7 +2808,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       SYSTEM_TARGET: rpi3
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-bullseye
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2871,7 +2871,7 @@ jobs:
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-bullseye
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2930,7 +2930,7 @@ jobs:
     needs: [build-lib-LinuxArmv7, swig_Linux]
     env:
       SYSTEM_TARGET: rpi3
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-bullseye
     steps:
       - uses: actions/checkout@v2
         with:

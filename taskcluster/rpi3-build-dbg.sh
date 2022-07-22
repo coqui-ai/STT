@@ -13,7 +13,7 @@ BAZEL_TARGETS="
 BAZEL_BUILD_FLAGS="${BAZEL_ARM_FLAGS} ${BAZEL_EXTRA_FLAGS}"
 BAZEL_ENV_FLAGS="TF_NEED_CUDA=0"
 SYSTEM_TARGET=rpi3
-SYSTEM_RASPBIAN=/tmp/multistrap-raspbian-buster
+SYSTEM_RASPBIAN=/tmp/multistrap-raspbian-bullseye
 
 maybe_install_xldd
 

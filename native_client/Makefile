@@ -1,9 +1,9 @@
 ###
 ### From topdir, first use multistrap to prepare a raspbian buster armhf root
-### $ multistrap -d multistrap-raspbian-buster -f native_client/multistrap_raspbian_bullseye.conf
+### $ multistrap -d multistrap-raspbian-bullseye -f native_client/multistrap_raspbian_bullseye.conf
 ###
 ### You can make a tarball after:
-### $ touch multistrap-raspbian-buster.tar && sudo tar cf multistrap-raspbian-buster.tar multistrap-raspbian-buster/ && xz multistrap-raspbian-buster.tar
+### $ touch multistrap-raspbian-bullseye.tar && sudo tar cf multistrap-raspbian-bullseye.tar multistrap-raspbian-bullseye/ && xz multistrap-raspbian-bullseye.tar
 ###
 ### Then cross-build:
 ### $ make -C native_client/ TARGET=rpi3 TFDIR=../../tensorflow/tensorflow/

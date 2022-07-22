@@ -17,7 +17,7 @@ build:
       echo "y" | gdebi /tmp/multistrap_2.2.0ubuntu2_all.deb
   system_config:
     >
-      multistrap -d /tmp/multistrap-raspbian-buster/ -f ${system.homedir.linux}/DeepSpeech/ds/native_client/multistrap_raspbian_bullseye.conf
+      multistrap -d /tmp/multistrap-raspbian-bullseye/ -f ${system.homedir.linux}/DeepSpeech/ds/native_client/multistrap_raspbian_bullseye.conf
   tensorflow: ${system.tensorflow.linux_armv7.url}
   scripts:
     setup: "taskcluster/tc-true.sh"
