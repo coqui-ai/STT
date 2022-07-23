@@ -490,7 +490,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: "libstt.tflite.wasm.es6.tgz"
-          path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
+          path: ${{ github.workspace }}/native_client/wasm/stt-wasm-*.tgz
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04

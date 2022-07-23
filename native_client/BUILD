@@ -396,7 +396,6 @@ cc_binary(
     linkopts = select({
         ":wasm_es6": DECODER_LINKOPTS_WASM + [
             "-sEXPORT_ES6=1",
-            "-sSINGLE_FILE=1",
             ],
         "//conditions:default": DECODER_LINKOPTS_WASM,
     }),

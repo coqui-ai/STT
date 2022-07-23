@@ -9,6 +9,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Coqui GmbH",
+  "author": "Coqui.ai",
   "license": "LGPL-2.1-only"
 }
