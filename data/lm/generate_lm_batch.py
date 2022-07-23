@@ -19,9 +19,11 @@ from coqui_stt_training.util import cpu
 
 logging.basicConfig(level=logging.INFO)
 
-wxh = os.get_terminal_size()
-
-LINE = "-" * wxh.lines
+try:
+    wxh = os.get_terminal_size()
+    LINE = "-" * wxh.lines
+except OSError:
+    LINE = "-" * 30
 
 
 def generate_batch_lm(
