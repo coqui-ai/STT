@@ -122,14 +122,14 @@ endif # ARCH_NAME
 ifdef MULTISTRAP_CONFIG
 RASPBIAN    ?= $(abspath $(NC_DIR)/../$(MULTISTRAP_CONFIG))
 
-CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem /usr/include
+CFLAG_ISYS_EXTRA := -isystem $(RASPBIAN)/usr/include -isystem $(RASPBIAN)/usr/include/$(GNU_LINUX_NAME) -isystem /usr/include/
 CFLAGS_CANONNICAL = -no-canonical-prefixes -fno-canonical-system-headers
 
 CFLAGS      := -march=$(CFLAG_ARCH) $(CFLAG_MTUNE) $(CFLAGS_MF) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_FIX_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_CPP_RELPATH) -isystem $(TOOLCHAIN_DIR)/$(CFLAG_ISYS_GCC_INCLUDE_LIBC_RELPATH) $(CFLAG_ISYS_EXTRA) $(CFLAGS_CANONNICAL)
 CXXFLAGS    := $(CFLAGS)
 LDFLAGS     := -Wl,-rpath-link,$(RASPBIAN)/lib/$(GNU_LINUX_NAME) -Wl,-rpath-link,$(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)
 
-ADD_LDFLAGS := -lrt $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libcpuinfo.so -lpthread $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/libm.so.6 $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libsox.so
+ADD_LDFLAGS := -lrt -lcpuinfo -lpthread $(RASPBIAN)/lib/$(GNU_LINUX_NAME)/libm.so.6 $(RASPBIAN)/usr/lib/$(GNU_LINUX_NAME)/libsox.so
 PYTHON_PATH          := PYTHONPATH=$(RASPBIAN)/usr/lib/python$(PYVER)/:$(RASPBIAN)/usr/lib/python3/dist-packages/
 NUMPY_INCLUDE        := NUMPY_INCLUDE=$(RASPBIAN)/usr/include/python$(PYVER)/
 TOOLCHAIN_LDD_OPTS   := --root $(RASPBIAN)/
