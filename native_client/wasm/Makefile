@@ -18,10 +18,13 @@ dist:
 dist/stt_wasm.js: dist ../../tensorflow/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.js
 	cp ../../tensorflow/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.js dist
 
+dist/stt_wasm.wasm: dist ../../tensorflow/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.wasm
+	cp ../../tensorflow/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.wasm dist
+
 dist/stt_wasm.worker.js: dist ../../tensorflow/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.worker.js
 	cp ../../tensorflow/bazel-bin/native_client/stt_wasm_bindings/stt_wasm.worker.js dist
 
-build: package.json dist/stt_wasm.js dist/stt_wasm.worker.js
+build: package.json dist/stt_wasm.js dist/stt_wasm.wasm dist/stt_wasm.worker.js
 
 pack: build
 	${NPM_TOOL} pack

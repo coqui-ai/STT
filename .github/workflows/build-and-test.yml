@@ -468,7 +468,7 @@ jobs:
           submodules: 'recursive'
       - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 16
       - name: Install dependencies
         run: |
           apt-get update
@@ -491,6 +491,30 @@ jobs:
         with:
           name: "libstt.tflite.wasm.es6.tgz"
           path: ${{ github.workspace }}/native_client/wasm/stt-wasm-*.tgz
+  test-wasm:
+    name: "Wasm|Test libstt"
+    runs-on: ubuntu-20.04
+    needs: [ build-wasm ]
+    container:
+      image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
+    env:
+      CI_TMP_DIR: ${{ github.workspace }}/tmp/
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - uses: actions/download-artifact@v2
+        with:
+          name: "stt-wasm-*.tgz"
+          path: ${{ env.CI_TMP_DIR }}
+      - run: make -C native_client/wasm/test clean test
+        shell: bash
   test-cpp-Linux:
     name: "Lin|Test C++ binary"
     runs-on: ubuntu-20.04
