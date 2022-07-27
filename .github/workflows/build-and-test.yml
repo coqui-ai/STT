@@ -1137,7 +1137,13 @@ jobs:
           name: stt-tflite-3.7-armv7.whl
       - uses: actions/download-artifact@v2
         with:
+          name: stt-tflite-3.8-armv7.whl
+      - uses: actions/download-artifact@v2
+        with:
           name: stt-tflite-3.7-aarch64.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.8-aarch64.whl
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -2867,7 +2873,7 @@ jobs:
     needs: [build-lib-LinuxArmv7, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.7, 3.8]
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3
@@ -2996,7 +3002,7 @@ jobs:
     needs: [build-lib-LinuxAarch64, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.7, 3.8]
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3-armv8
@@ -3214,7 +3220,7 @@ jobs:
     strategy:
       matrix:
         arch: [ "armv7", "aarch64" ]
-        python-version: [3.7]
+        python-version: [3.7, 3.8]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
     env:
