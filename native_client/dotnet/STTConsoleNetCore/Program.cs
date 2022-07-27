@@ -10,7 +10,7 @@ using STTClient.Models;
 namespace STTConsoleNetCore
 {
     internal class Program
-    {       
+    {
         /// <summary>
         /// Get the value of an argurment.
         /// </summary>
