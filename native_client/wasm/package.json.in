@@ -1,0 +1,14 @@
+{
+  "name" : "$(PROJECT_NAME)",
+  "version" : "$(PROJECT_VERSION)",
+  "description": "A Webassembly build for doing speech recognition using a Coqui STT model",
+  "main": "./dist/stt_wasm.js",
+  "files": [
+      "dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Coqui.ai",
+  "license": "LGPL-2.1-only"
+}
