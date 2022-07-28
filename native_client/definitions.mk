@@ -210,11 +210,11 @@ endef
 SWIG_DIST_URL ?=
 ifeq ($(SWIG_DIST_URL),)
 ifeq ($(findstring Linux,$(OS)),Linux)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.linux.amd64.tar.gz"
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.linux.amd64.tar.gz"
 else ifeq ($(findstring Darwin,$(OS)),Darwin)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.darwin.amd64.tar.gz"
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.darwin.amd64.tar.gz"
 else ifeq ($(findstring _NT,$(OS)),_NT)
-SWIG_DIST_URL := "https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/ds-swig.win.amd64.tar.gz"
+SWIG_DIST_URL := "https://github.com/coqui-ai/STT/releases/download/v1.3.0/ds-swig.win.amd64.tar.gz"
 else
 $(error There is no prebuilt SWIG available for your platform. Please produce one and set SWIG_DIST_URL.)
 endif # findstring()
