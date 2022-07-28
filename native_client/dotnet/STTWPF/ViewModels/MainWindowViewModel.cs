@@ -62,7 +62,7 @@ namespace STT.WPF.ViewModels
         /// <summary>
         /// Stream used to feed data into the acoustic model.
         /// </summary>
-        private Stream _sttStream;
+        private STTStream _sttStream;
 
         /// <summary>
         /// Records the audio of the selected device.
