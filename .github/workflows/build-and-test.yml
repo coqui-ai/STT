@@ -494,7 +494,7 @@ jobs:
   test-wasm:
     name: "Wasm|Test libstt"
     runs-on: ubuntu-20.04
-    needs: [ build-wasm ]
+    needs: [build-wasm]
     container:
       image: quay.io/pypa/manylinux_2_24_x86_64:2021-12-05-142ef77
       volumes:
@@ -503,15 +503,12 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
       - uses: actions/setup-node@v2
         with:
           node-version: 16
       - uses: actions/download-artifact@v2
         with:
-          name: "stt-wasm-*.tgz"
+          name: "libstt.tflite.wasm.es6.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - run: make -C native_client/wasm/test clean test
         shell: bash
