@@ -202,7 +202,7 @@ def main():
             top_k_list.append(int(float(x)))
     arpa_prune_list = args_parsed_batch.arpa_prune_list.split("-")
 
-    i = 1
+    # i = 1
     total_runs = len(arpa_order_list) * len(top_k_list) * len(arpa_prune_list)
     start_time = time.perf_counter()
 
@@ -215,7 +215,7 @@ def main():
     with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
         futures = []
         try:
-            for i, arpa_order in enumerate(arpa_order_list, start=1):
+            for i, arpa_order in enumerate(arpa_order_list):
                 for top_k in top_k_list:
                     for arpa_prune in arpa_prune_list:
                         output_dir = os.path.join(
@@ -233,7 +233,7 @@ def main():
                             output_dir,
                         )
                         futures.append(future)
-                        i += 1
+                        # i += 1
             f = wait(futures)
             print(LINE)
             for d in f.done:
