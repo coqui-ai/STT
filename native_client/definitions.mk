@@ -84,7 +84,7 @@ PYTHON_PACKAGES      :=
 
 # To locate sysconfigdata for your platform use: $ `find /usr/lib/python3.10/ | grep sysconfigdata_`
 # Use the full name of the module : i.e. /usr/lib/python3.10/_sysconfigdata__linux_arm-linux-gnueabihf.py -> _sysconfigdata__linux_arm-linux-gnueabihf
-PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata_m_linux_arm-linux-gnueabihf
+PYTHON_SYSCONFIGDATA := _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__linux_arm-linux-gnueabihf
 PYTHON_PLATFORM_NAME := --plat-name linux_armv7l
 NODE_PLATFORM_TARGET := --target_arch=arm --target_platform=linux
 endif # ($(TARGET),rpi3)
