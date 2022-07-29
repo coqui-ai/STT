@@ -8,26 +8,13 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_c_module", "swift_libra
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
 
-config_setting(
-    name = "rpi3",
-    define_values = {
-        "target_system": "rpi3"
-    },
-)
-
-config_setting(
-    name = "rpi3-armv8",
-    define_values = {
-        "target_system": "rpi3-armv8"
-    },
-)
-
 # Only required until https://github.com/emscripten-core/emsdk/pull/1060
 # gets merged. Once that's done, we could use "@platform//cpu:wasm32".
 config_setting(
     name = "wasm_cpu",
     values = {"cpu": "wasm"},
 )
+
 
 genrule(
     name = "workspace_status",

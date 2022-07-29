@@ -637,12 +637,12 @@ jobs:
     needs: [ build-nodejs-Linux, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -689,11 +689,11 @@ jobs:
     needs: [ build-nodejs-Linux, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -1169,12 +1169,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.7-aarch64.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.8-armv7.whl
-      - uses: actions/download-artifact@v2
-        with:
-          name: stt-tflite-3.8-aarch64.whl
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.9-armv7.whl
@@ -1926,12 +1920,12 @@ jobs:
     needs: [build-nodejs-macOS, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -2342,11 +2336,11 @@ jobs:
     needs: [ build-nodejs-Windows, train-test-model-Linux ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         nodejs-version: [12, 14, 16]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2510,12 +2504,12 @@ jobs:
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 17]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -2562,11 +2556,11 @@ jobs:
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         electronjs-version: [12.0.0, 16.0.0]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -2614,12 +2608,12 @@ jobs:
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 17]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -2664,11 +2658,11 @@ jobs:
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         electronjs-version: [12.0.0, 16.0.0]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
@@ -2717,12 +2711,12 @@ jobs:
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 16]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2780,11 +2774,11 @@ jobs:
     needs: [repackage-nodejs-allplatforms, train-test-model-Linux]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         electronjs-version: [12.0.0, 16.0.0]
         models: ["test", "prod"]
         samplerate: ["8000", "16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: tmp/
       STT_TEST_MODEL: tmp/output_graph.tflite
@@ -2854,7 +2848,7 @@ jobs:
       - name: Install chroot
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: multistrap_raspbian_buster.conf
+          arch: armv7
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/armv7-build.sh
       - run: ./ci_scripts/package.sh
@@ -2883,7 +2877,7 @@ jobs:
       - name: Install chroot
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: multistrap_armbian64_buster.conf
+          arch: aarch64
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/aarch64-build.sh
       - run: ./ci_scripts/package.sh
@@ -2900,19 +2894,19 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-lib-LinuxArmv7, swig_Linux]
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - python-version: "3.7"
+          - python-version: 3.7
             system-raspbian: multistrap-raspbian-buster
-            multistrap-config: multistrap_raspbian_buster.conf
-          - python-version: "3.9"
+            arch: armv7
+          - python-version: 3.9
             system-raspbian: multistrap-raspbian-bullseye
-            multistrap-config: multistrap_raspbian_bullseye.conf
+            arch: armv7
+      fail-fast: false
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3
-      SYSTEM_RASPBIAN: "${{ github.workspace }}/${{ matrix.system-raspbian }}"
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/${{ matrix.system-raspbian }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2940,7 +2934,8 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: ${{ matrix.multistrap-config }}
+          arch: ${{ matrix.arch }}
+          pyver: ${{ matrix.python-version }}
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
@@ -2996,7 +2991,7 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: multistrap_raspbian_buster.conf
+          arch: armv7
       - uses: actions/setup-node@v2
         with:
           node-version: 12
@@ -3037,11 +3032,18 @@ jobs:
     needs: [build-lib-LinuxAarch64, swig_Linux]
     strategy:
       matrix:
-        python-version: ["3.7"]
+        include:
+          - python-version: 3.7
+            system-raspbian: multistrap-armbian64-buster
+            arch: aarch64
+          - python-version: 3.9
+            system-raspbian: multistrap-armbian64-bullseye
+            arch: aarch64
+      fail-fast: false
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3-armv8
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/${{ matrix.system-raspbian }}
     steps:
       - run: |
           sudo apt-get install -y --no-install-recommends
@@ -3071,7 +3073,8 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: multistrap_armbian64_buster.conf
+          arch: ${{ matrix.arch }}
+          pyver: ${{ matrix.python-version }}
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
@@ -3127,7 +3130,7 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: multistrap_armbian64_buster.conf
+          arch: aarch64
       - uses: actions/setup-node@v2
         with:
           node-version: 12
@@ -3167,18 +3170,21 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - arch: "armv7"
-            system: "buster"
-            multistrap-config: "multistrap_raspbian_buster.conf"
-          - arch: "armv7"
-            system: "bullseye"
-            multistrap-config: "multistrap_raspbian_bullseye.conf"
-          - arch: "aarch64"
-            system: "buster"
-            multistrap-config: "multistrap_armbian64_buster.conf"
+          - arch: armv7
+            python-version: 3.7
+            system: buster
+          - arch: armv7
+            python-version: 3.9
+            system: bullseye
+          - arch: aarch64
+            python-version: 3.7
+            system: buster
+          - arch: aarch64
+            python-version: 3.9
+            system: bullseye
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3190,7 +3196,8 @@ jobs:
       - name: "Install and setup chroot"
         uses: ./.github/actions/multistrap
         with:
-          multistrap-config: ${{ matrix.multistrap-config }}
+          arch: ${{ matrix.arch }}
+          pyver: ${{ matrix.python-version }}
           packages: "bash wget curl sox xxd libatlas3-base libopenblas-base ca-certificates python3 python3-pip gnupg libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 libdbus-1-3 libgdk-pixbuf2.0-0 libgtk-3-0 libgbm1 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libx11-xcb1 libxcb-dri3-0 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 xauth"
       - name: "Create a chroot tarball"
         run: |
@@ -3205,7 +3212,6 @@ jobs:
     needs: [ build-lib-LinuxArmv7, build-lib-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         include:
           - arch: "armv7"
@@ -3256,6 +3262,7 @@ jobs:
             system: "buster"
             models: "prod"
             samplerate: "16000"
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3310,69 +3317,69 @@ jobs:
     needs: [ build-python-LinuxArmv7, build-python-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - arch: "armv7"
+          - arch: armv7
             system: "buster"
             python-version: "3.7"
             models: "test"
             samplerate: "8000"
-          - arch: "armv7"
+          - arch: armv7
             system: "buster"
             python-version: "3.7"
-            models: "test"
+            models: test
             samplerate: "16000"
-          - arch: "armv7"
+          - arch: armv7
             system: "buster"
             python-version: "3.7"
             models: "prod"
             samplerate: "8000"
-          - arch: "armv7"
+          - arch: armv7
             system: "buster"
             python-version: "3.7"
             models: "prod"
             samplerate: "16000"
-          - arch: "armv7"
+          - arch: armv7
             system: "bullseye"
             python-version: "3.9"
             models: "test"
             samplerate: "8000"
-          - arch: "armv7"
+          - arch: armv7
             system: "bullseye"
             python-version: "3.9"
             models: "test"
             samplerate: "16000"
-          - arch: "armv7"
+          - arch: armv7
             system: "bullseye"
             python-version: "3.9"
             models: "prod"
             samplerate: "8000"
-          - arch: "armv7"
+          - arch: armv7
             system: "bullseye"
             python-version: "3.9"
             models: "prod"
             samplerate: "16000"
-          - arch: "aarch64"
+          - arch: aarch64
             system: "buster"
             python-version: "3.7"
             models: "test"
             samplerate: "8000"
-          - arch: "aarch64"
+          - arch: aarch64
             system: "buster"
             python-version: "3.7"
             models: "test"
             samplerate: "16000"
-          - arch: "aarch64"
+          - arch: aarch64
             system: "buster"
             python-version: "3.7"
             models: "prod"
             samplerate: "8000"
-          - arch: "aarch64"
+          - arch: aarch64
             system: "buster"
             python-version: "3.7"
             models: "prod"
             samplerate: "16000"
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3427,13 +3434,13 @@ jobs:
     needs: [ build-nodejs-LinuxArmv7, build-nodejs-LinuxAarch64, train-test-model-Linux, build-test-chroot ]
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
-      fail-fast: false
       matrix:
         arch: ["armv7", "aarch64"]
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
@@ -3490,12 +3497,12 @@ jobs:
     # Disable this task because it seems qemu does not work super-well with ElectronJS
     if: ${{ github.event_name == 'disabled' }}
     strategy:
-      fail-fast: false
       matrix:
         arch: ["armv7", "aarch64"]
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"

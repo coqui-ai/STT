@@ -6,7 +6,7 @@ FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 # >> START Install base software
 
 # Get basic packages
-RUN apt-get update && apt-get install -y --no-install-recommends --fix-broken \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         apt-utils \
         bash-completion \
         build-essential \

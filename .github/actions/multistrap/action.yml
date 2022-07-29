@@ -1,9 +1,14 @@
 name: "multistrap install"
 description: "Install a system root using multistrap"
 inputs:
-  multistrap-config:
-    description: "Multistrap config file to use"
+  arch:
+    description: "Target arch"
     required: true
+    default: ""
+  pyver:
+    description: "Python version"
+    required: false
+    default: ""
   packages:
     description: "Extra packages to install"
     required: false
@@ -19,12 +24,33 @@ runs:
     - id: create_chroot
       run: |
         set -xe
+        
+        echo "arch input parameter: "${{ inputs.arch }}""
+        echo "pyver input parameter: "${{ inputs.pyver }}""
 
-        multistrap_conf="${{ inputs.multistrap-config }}"
-        if [ "$multistrap_conf" = "multistrap_raspbian_buster.conf" ]; then
+        multistrap_conf=""
+        if [ "${{ inputs.arch }}" = "armv7" ]; then
+          multistrap_conf=multistrap_raspbian_buster.conf
           wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb && sudo dpkg -i raspbian-archive-keyring_20120528.2_all.deb
-        elif [ "$multistrap_conf" = "multistrap_raspbian_bullseye.conf" ]; then
-          wget http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb && sudo dpkg -i raspbian-archive-keyring_20120528.2_all.deb
+        fi
+        if [ "${{ inputs.arch }}" = "aarch64" ]; then
+          multistrap_conf=multistrap_armbian64_buster.conf
+        fi
+        if [ "${{ inputs.arch }}" = "armv7" ] && [ "${{ inputs.pyver }}" = "3.7" ]; then
+          multistrap_conf=multistrap_raspbian_buster.conf
+        fi
+        if [ "${{ inputs.arch }}" = "armv7" ] && [ "${{ inputs.pyver }}" = "3.9" ]; then
+          multistrap_conf=multistrap_raspbian_bullseye.conf
+        fi
+        if [ "${{ inputs.arch }}" = "aarch64" ] && [ "${{ inputs.pyver }}" = "3.7" ]; then
+          multistrap_conf=multistrap_armbian64_buster.conf
+        fi
+        if [ "${{ inputs.arch }}" = "aarch64" ] && [ "${{ inputs.pyver }}" = "3.9" ]; then
+          multistrap_conf=multistrap_armbian64_bullseye.conf
+        fi
+        if [ "${{ inputs.arch }}" = "" ] && [ "${{ inputs.pyver }}" = "" ]; then
+          echo "Either arch or pyver input parameters needs to be provided"
+          exit 1
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
