@@ -11,6 +11,26 @@ using namespace v8;
 using namespace node;
 %}
 
+%{
+template <typename T, typename = void>
+struct has_GetBackingStore : std::false_type {};
+
+template <typename T>
+struct has_GetBackingStore<T, std::void_t<decltype(std::declval<T>().GetBackingStore())> > : std::true_type {};
+
+template <typename T>
+typename std::enable_if_t<has_GetBackingStore<T>::value, void*>
+GetBufferData(T* t) {
+  return t->GetBackingStore()->Data();
+}
+
+template <typename T>
+typename std::enable_if_t<!has_GetBackingStore<T>::value, void*>
+GetBufferData(T* t) {
+  return t->GetContents().Data();
+}
+%}
+
 // convert Node Buffer into a C ptr + length
 %typemap(in) (short* IN_ARRAY1, int DIM1)
 {
@@ -29,10 +49,12 @@ using namespace node;
 // Map Uint8Array to char* for STT_CreateModelFromBuffer
 %typemap(in) (const char *aModelBuffer, unsigned int aBufferSize) {
   if (args[0]->IsUint8Array()) {
-    v8::Local<v8::Uint8Array> myarr = args[0].As<v8::Uint8Array>();
-    unsigned int offset = myarr->ByteOffset();
-    arg1 = (char*)((char*)myarr->Buffer()->GetBackingStore()->Data() + offset);
-    arg2 = myarr->Length();
+    v8::Local<v8::Uint8Array> modelArr = args[0].As<v8::Uint8Array>();
+    v8::Local<v8::ArrayBuffer> modelBuffer = modelArr->Buffer();
+    unsigned int offset = modelArr->ByteOffset();
+
+    arg1 = (char*)((char*) GetBufferData(*modelBuffer) + offset);
+    arg2 = modelArr->Length();
   } else {
     SWIG_exception_fail(SWIG_ERROR, "Model buffer must be of type Uint8Array.");
   }
