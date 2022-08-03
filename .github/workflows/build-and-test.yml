@@ -1588,13 +1588,7 @@ jobs:
           brew install coreutils
       - name: Select Xcode version
         run: |
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
-            # Force set 11.0 SDK for `stt` binary build, xcrun always uses CLT SDK
-            export SDKROOT=/Applications/Xcode_12.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
-          else
-            sudo xcode-select --switch /Applications/Xcode_12.1.1.app/Contents/Developer
-          fi
+          sudo xcode-select --switch /Applications/Xcode_13.1.app/Contents/Developer
       - uses: actions/cache@v2
         id: cache
         if: matrix.arch == 'arm64'
@@ -1632,9 +1626,6 @@ jobs:
         run: |
           sudo rm -r /Library/Developer/CommandLineTools
       - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
       - run: ./ci_scripts/package.sh
       - uses: actions/upload-artifact@v2
         with:
@@ -1660,7 +1651,7 @@ jobs:
           brew install coreutils
       - name: Select Xcode version
         run: |
-          sudo xcode-select --switch /Applications/Xcode_12.2.app/Contents/Developer
+          sudo xcode-select --switch /Applications/Xcode_13.1.app/Contents/Developer
       - run: ./ci_scripts/tf-setup.sh
       - name: Workaround problems with mixing headers from Xcode and CommandLineTools by removing the latter
         run: |
@@ -2060,9 +2051,6 @@ jobs:
           make -C native_client/ctcdecode/ \
             NUM_PROCESSES=$(nproc) \
             bindings
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
       - uses: actions/upload-artifact@v2
         with:
           name: "coqui_stt_ctcdecoder-windows-test.whl"
@@ -2166,9 +2154,6 @@ jobs:
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: failure()
       - uses: actions/upload-artifact@v2
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
