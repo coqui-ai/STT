@@ -13,8 +13,13 @@ export OS=$(uname)
 if [ "${OS}" = "Linux" ]; then
     export DS_ROOT_TASK=${CI_TASK_DIR}
 
-    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64
-    BAZEL_SHA256=4cb534c52cdd47a6223d4596d530e7c9c785438ab3b0a49ff347e991c210b2cd
+    if [[ "$(uname -m)" == "aarch64" ]]; then
+        BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-linux-arm64
+        BAZEL_SHA256=f9119deb1eeb6d730ee8b2e1a14d09cb45638f0447df23144229c5b3b3bc2408
+    else
+        BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-linux-amd64
+        BAZEL_SHA256=231ec5ca8115e94c75a1f4fbada1a062b48822ca04f21f26e4cb1cd8973cd458
+    fi
 
     ANDROID_NDK_URL=https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip
     ANDROID_NDK_SHA256=4c62514ec9c2309315fd84da6d52465651cdb68605058f231f1e480fcf2692e1
@@ -62,8 +67,13 @@ elif [ "${OS}" = "Darwin" ]; then
 
     export DS_ROOT_TASK=${CI_TASK_DIR}
 
-    BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-darwin-amd64
-    BAZEL_SHA256=e485bbf84532d02a60b0eb23c702610b5408df3a199087a4f2b5e0995bbf2d5a
+    if [[ "$(uname -m)" == "arm64" ]]; then
+        BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-darwin-arm64
+        BAZEL_SHA256=1e18c98312d1a03525f704214304be2445478392c8687888d5d37e6a680f31e6
+    else
+        BAZEL_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-darwin-amd64
+        BAZEL_SHA256=c725fd574ea723ab25187d63ca31a5c9176d40433af92cd2449d718ee97e76a2
+    fi
 
     SHA_SUM="shasum -a 256 -c"
     TAR=gtar
@@ -140,7 +150,11 @@ else
     #
     # Build for generic amd64 platforms, no device-specific optimization
     # See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html for targetting specific CPUs
-    BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
+    if [[ "$(uname -m)" == "aarch64" ]]; then
+        BAZEL_OPT_FLAGS=""
+    else
+        BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
+    fi
 fi
 
 if [ "$CI" != "true" ]; then

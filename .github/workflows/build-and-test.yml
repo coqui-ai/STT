@@ -1225,44 +1225,19 @@ jobs:
           name: '' # use filename
           path: "*.zip"
           release-tag: ${{ needs.create-release.outputs.release-tag }}
-  docker-build:
-    name: "Build Dockerfile.build image"
+  docker-train-build:
+    name: "Build Docker training images"
     runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: 'recursive'
-      - name: Check VERSION matches Git tag and compute Docker tag
-        id: compute-tag
-        run: |
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
-            # PR build
-            echo "::set-output name=tag::dev"
-          else
-            VERSION="v$(cat VERSION)"
-            if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
-              echo "Pushed tag does not match VERSION file. Aborting push."
-              exit 1
-            fi
-            echo "::set-output name=tag::${VERSION}"
-          fi
-      - name: Build
-        run: |
-          DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
-          docker build -f Dockerfile.build . -t ghcr.io/coqui-ai/stt-build:latest -t "ghcr.io/coqui-ai/stt-build:${DOCKER_TAG}"
-  docker-publish:
-    name: "Build and publish Docker training image to GHCR"
-    runs-on: ubuntu-20.04
-    needs: [upload-nc-release-assets]
-    if: always()
+    strategy:
+      matrix:
+        arch: ["amd64"]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: 'recursive'
       - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -1271,36 +1246,83 @@ jobs:
         id: compute-tag
         run: |
           set -ex
+          base="ghcr.io/coqui-ai/stt-train"
           if [[ "${{ github.ref }}" = "refs/heads/main" ]]; then
             # Push to main
-            tags="main ${{ github.sha }}"
+            tags="${base}:main_${{ matrix.arch }},${base}:${{ github.sha }}_${{ matrix.arch }}"
           elif [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
             # PR build
-            tags="dev"
+            tags="${base}:dev_${{ matrix.arch }}"
           else
             VERSION="v$(cat VERSION)"
             if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
               echo "Pushed tag does not match VERSION file. Aborting push."
               exit 1
             fi
-            tags="${VERSION} latest ${{ github.sha }}"
+            tags="${base}:${VERSION}_${{ matrix.arch }},${base}:latest_${{ matrix.arch }},${base}:${{ github.sha }}_${{ matrix.arch }}"
           fi
           echo "::set-output name=tags::${tags}"
-      - name: Build
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Generate version info for build
+        run: |
+          make -C native_client/ctcdecode workspace_status.cc
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile.train
+          platforms: linux/${{ matrix.arch }}
+          push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+          tags: ${{ steps.compute-tag.outputs.tags }}
+  docker-train-manifest:
+    name: "Publish Docker training manifest to GHCR"
+    runs-on: ubuntu-20.04
+    needs: [docker-train-build]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - uses: actions/checkout@v2
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check VERSION matches Git tag and compute Docker tag
+        id: compute-tag
         run: |
           set -ex
-          declare -a tag_args=()
-          for tag in ${{ steps.compute-tag.outputs.tags }}; do
-            tag_args+=("-t" "ghcr.io/coqui-ai/stt-train:${tag}")
-          done
-          docker build -f Dockerfile.train . ${tag_args[@]}
-      - name: Push
+          base="ghcr.io/coqui-ai/stt-train"
+          if [[ "${{ github.ref }}" = "refs/heads/main" ]]; then
+            # Push to main
+            tags="${base}:main,${base}:${{ github.sha }}"
+          elif [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
+            # PR build
+            tags="${base}:dev"
+          else
+            VERSION="v$(cat VERSION)"
+            if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
+              echo "Pushed tag does not match VERSION file. Aborting push."
+              exit 1
+            fi
+            tags="${base}:${VERSION},${base}:latest,${base}:${{ github.sha }}"
+          fi
+          echo "::set-output name=tags::${tags}"
+      - name: Create and push manifest
         run: |
-          set -ex
-          for tag in ${{ steps.compute-tag.outputs.tags }}; do
-            docker push ghcr.io/coqui-ai/stt-train:${tag}
+          docker manifest create ghcr.io/coqui-ai/stt-train
+          base=${{ steps.compute-tag.outputs.tags }}
+          should_push=${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+          for tag in $(echo $base | sed 's/,/ /g'); do
+            docker manifest create $tag \
+              --amend ${tag}_amd64
+            if [[ "$should_push" == "true" ]]; then
+              docker manifest push $tag
+            fi
           done
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
   twine-upload-decoder:
     name: "Upload coqui_stt_ctcdecoder packages to PyPI"
     runs-on: ubuntu-20.04

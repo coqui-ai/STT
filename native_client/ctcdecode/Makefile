@@ -1,4 +1,4 @@
-.PHONY: bindings clean workspace_status.cc
+.PHONY: bindings clean
 
 include ../definitions.mk
 
