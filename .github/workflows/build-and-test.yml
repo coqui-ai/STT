@@ -1390,7 +1390,7 @@ jobs:
     name: "Upload STT packages to npmjs.com"
     runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: [create-release, repackage-nodejs-allplatforms]
+    needs: [create-release, repackage-nodejs-allplatforms, build-wasm]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -1411,6 +1411,10 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite.tgz
+          path: ${{ github.workspace }}/
+      - uses: actions/download-artifact@v2
+        with:
+          name: libstt.tflite.wasm.es6.tgz
           path: ${{ github.workspace }}/
       - run: |
           npm publish --access=public --verbose ${{ github.workspace }}/stt-*.tgz --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
