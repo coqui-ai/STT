@@ -1417,7 +1417,9 @@ jobs:
           name: libstt.tflite.wasm.es6.tgz
           path: ${{ github.workspace }}/
       - run: |
-          npm publish --access=public --verbose ${{ github.workspace }}/stt-*.tgz --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
+          for pkg in ${{ github.workspace }}/stt-*.tgz; do
+            npm publish --access=public --verbose $pkg --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
+          done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Upload artifacts to GitHub release
