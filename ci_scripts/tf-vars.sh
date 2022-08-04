@@ -118,12 +118,12 @@ elif [ "${OS}" = "Darwin" ]; then
     if [ "$FROM" = "darwin-x86_64" -a "$TO" = "darwin-x86_64" ]; then
         BAZEL_OPT_FLAGS="--copt=-mtune=generic --copt=-march=x86-64 --copt=-msse --copt=-msse2 --copt=-msse3 --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx"
         if [ "${CI}" = true ]; then
-            BAZEL_EXTRA_FLAGS="${BAZEL_EXTRA_FLAGS} --macos_minimum_os 10.10 --macos_sdk_version 10.15"
+            BAZEL_EXTRA_FLAGS="${BAZEL_EXTRA_FLAGS} --macos_minimum_os 10.10 --macos_sdk_version 12.0"
         fi
     elif [ "$FROM" = "darwin-x86_64" -a "$TO" = "darwin-arm64" ]; then
         BAZEL_OPT_FLAGS=""
         if [ "${CI}" = true ]; then
-            BAZEL_EXTRA_FLAGS="--config=macos_arm64 --xcode_version 12.2 --macos_minimum_os 11.0 --macos_sdk_version 11.0"
+            BAZEL_EXTRA_FLAGS="--config=macos_arm64 --xcode_version 13.1 --macos_minimum_os 11.0 --macos_sdk_version 12.0"
         fi
     elif [ "$FROM" = "darwin-arm64" -a "$TO" = "darwin-arm64" ]; then
         BAZEL_OPT_FLAGS=""
