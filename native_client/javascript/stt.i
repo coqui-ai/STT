@@ -11,26 +11,6 @@ using namespace v8;
 using namespace node;
 %}
 
-%{
-template <typename T, typename = void>
-struct has_GetBackingStore : std::false_type {};
-
-template <typename T>
-struct has_GetBackingStore<T, std::void_t<decltype(std::declval<T>().GetBackingStore())> > : std::true_type {};
-
-template <typename T>
-typename std::enable_if_t<has_GetBackingStore<T>::value, void*>
-GetBufferData(T* t) {
-  return t->GetBackingStore()->Data();
-}
-
-template <typename T>
-typename std::enable_if_t<!has_GetBackingStore<T>::value, void*>
-GetBufferData(T* t) {
-  return t->GetContents().Data();
-}
-%}
-
 // convert Node Buffer into a C ptr + length
 %typemap(in) (short* IN_ARRAY1, int DIM1)
 {
@@ -46,23 +26,10 @@ GetBufferData(T* t) {
   $2 = ($2_ltype)(bufferLength / 2);
 }
 
-// Map Uint8Array to char* for STT_CreateModelFromBuffer
-%typemap(in) (const char *aModelBuffer, unsigned int aBufferSize) {
-  if (args[0]->IsUint8Array()) {
-    v8::Local<v8::Uint8Array> modelArr = args[0].As<v8::Uint8Array>();
-    v8::Local<v8::ArrayBuffer> modelBuffer = modelArr->Buffer();
-    unsigned int offset = modelArr->ByteOffset();
-
-    arg1 = (char*)((char*) GetBufferData(*modelBuffer) + offset);
-    arg2 = modelArr->Length();
-  } else {
-    SWIG_exception_fail(SWIG_ERROR, "Model buffer must be of type Uint8Array.");
-  }
-}
-
 // apply to STT_FeedAudioContent and STT_SpeechToText
 %apply (short* IN_ARRAY1, int DIM1) {(const short* aBuffer, unsigned int aBufferSize)};
-
+// apply the buffer typemap to STT_CreateModelFromBuffer
+%apply (short* IN_ARRAY1, int DIM1) {(const char *aModelBuffer, unsigned int aBufferSize)};
 
 // make sure the string returned by SpeechToText is freed
 %typemap(newfree) char* "STT_FreeString($1);";
