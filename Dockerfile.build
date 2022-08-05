@@ -159,6 +159,7 @@ RUN make NUM_PROCESSES=$(nproc) stt
 
 WORKDIR /STT
 RUN cd native_client/python && make NUM_PROCESSES=$(nproc) bindings
+RUN pip3 install --upgrade pip
 RUN pip3 install -U pip setuptools wheel
 RUN pip3 install --upgrade native_client/python/dist/*.whl
 

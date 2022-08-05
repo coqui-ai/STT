@@ -1169,6 +1169,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: stt-tflite-3.7-aarch64.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9-armv7.whl
+      - uses: actions/download-artifact@v2
+        with:
+          name: stt-tflite-3.9-aarch64.whl
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -2889,11 +2895,18 @@ jobs:
     needs: [build-lib-LinuxArmv7, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.7]
+        include:
+          - python-version: 3.7
+            system-raspbian: multistrap-raspbian-buster
+            arch: armv7
+          - python-version: 3.9
+            system-raspbian: multistrap-raspbian-bullseye
+            arch: armv7
+      fail-fast: false
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/${{ matrix.system-raspbian }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -2921,7 +2934,8 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: armv7
+          arch: ${{ matrix.arch }}
+          pyver: ${{ matrix.python-version }}
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
@@ -3018,11 +3032,18 @@ jobs:
     needs: [build-lib-LinuxAarch64, swig_Linux]
     strategy:
       matrix:
-        python-version: [3.7]
+        include:
+          - python-version: 3.7
+            system-raspbian: multistrap-armbian64-buster
+            arch: aarch64
+          - python-version: 3.9
+            system-raspbian: multistrap-armbian64-bullseye
+            arch: aarch64
+      fail-fast: false
     env:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_TARGET: rpi3-armv8
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/${{ matrix.system-raspbian }}
     steps:
       - run: |
           sudo apt-get install -y --no-install-recommends
@@ -3052,7 +3073,8 @@ jobs:
       - name: "Install chroot"
         uses: ./.github/actions/multistrap
         with:
-          arch: aarch64
+          arch: ${{ matrix.arch }}
+          pyver: ${{ matrix.python-version }}
       - id: get_numpy
         uses: ./.github/actions/numpy_vers
         with:
@@ -3149,11 +3171,24 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        arch: [ "armv7", "aarch64" ]
+        include:
+          - arch: armv7
+            python-version: 3.7
+            system: buster
+          - arch: armv7
+            python-version: 3.9
+            system: bullseye
+          - arch: aarch64
+            python-version: 3.7
+            system: buster
+          - arch: aarch64
+            python-version: 3.9
+            system: bullseye
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}-${{ matrix.system }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -3162,13 +3197,14 @@ jobs:
         uses: ./.github/actions/multistrap
         with:
           arch: ${{ matrix.arch }}
+          pyver: ${{ matrix.python-version }}
           packages: "bash wget curl sox xxd libatlas3-base libopenblas-base ca-certificates python3 python3-pip gnupg libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 libdbus-1-3 libgdk-pixbuf2.0-0 libgtk-3-0 libgbm1 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libx11-xcb1 libxcb-dri3-0 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 xauth"
       - name: "Create a chroot tarball"
         run: |
           sudo tar -cf - -C ${{ env.SYSTEM_RASPBIAN }}/ --one-file-system . | xz -9 -T0 > ${{ github.workspace }}/chroot.tar.xz
       - uses: actions/upload-artifact@v2
         with:
-          name: chroot-${{ matrix.arch }}
+          name: chroot-${{ matrix.arch }}-${{ matrix.system }}
           path: ${{ github.workspace }}/chroot.tar.xz
   test-cpp-LinuxArm:
     name: "LinArm*|Test C++ binary"
@@ -3177,14 +3213,61 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        arch: [ "armv7", "aarch64" ]
-        models: ["test", "prod"]
-        samplerate: ["8000", "16000"]
+        include:
+          - arch: "armv7"
+            system: "buster"
+            models: "test"
+            samplerate: "8000"
+          - arch: "armv7"
+            system: "buster"
+            models: "test"
+            samplerate: "16000"
+          - arch: "armv7"
+            system: "buster"
+            models: "prod"
+            samplerate: "8000"
+          - arch: "armv7"
+            system: "buster"
+            models: "prod"
+            samplerate: "16000"
+          - arch: "armv7"
+            system: "bullseye"
+            models: "test"
+            samplerate: "8000"
+          - arch: "armv7"
+            system: "bullseye"
+            models: "test"
+            samplerate: "16000"
+          - arch: "armv7"
+            system: "bullseye"
+            models: "prod"
+            samplerate: "8000"
+          - arch: "armv7"
+            system: "bullseye"
+            models: "prod"
+            samplerate: "16000"
+          - arch: "aarch64"
+            system: "buster"
+            models: "test"
+            samplerate: "8000"
+          - arch: "aarch64"
+            system: "buster"
+            models: "test"
+            samplerate: "16000"
+          - arch: "aarch64"
+            system: "buster"
+            models: "prod"
+            samplerate: "8000"
+          - arch: "aarch64"
+            system: "buster"
+            models: "prod"
+            samplerate: "16000"
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}-${{ matrix.system }}
     steps:
       - name: "Install QEMU"
         run: |
@@ -3195,7 +3278,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "chroot-${{ matrix.arch }}"
+          name: "chroot-${{ matrix.arch }}-${{ matrix.system }}"
           path: ${{ env.CI_TMP_DIR }}/
       - run: |
           mkdir ${{ env.SYSTEM_RASPBIAN }}/
@@ -3235,15 +3318,73 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        arch: [ "armv7", "aarch64" ]
-        python-version: [3.7]
-        models: ["test", "prod"]
-        samplerate: ["8000", "16000"]
+        include:
+          - arch: armv7
+            system: "buster"
+            python-version: "3.7"
+            models: "test"
+            samplerate: "8000"
+          - arch: armv7
+            system: "buster"
+            python-version: "3.7"
+            models: test
+            samplerate: "16000"
+          - arch: armv7
+            system: "buster"
+            python-version: "3.7"
+            models: "prod"
+            samplerate: "8000"
+          - arch: armv7
+            system: "buster"
+            python-version: "3.7"
+            models: "prod"
+            samplerate: "16000"
+          - arch: armv7
+            system: "bullseye"
+            python-version: "3.9"
+            models: "test"
+            samplerate: "8000"
+          - arch: armv7
+            system: "bullseye"
+            python-version: "3.9"
+            models: "test"
+            samplerate: "16000"
+          - arch: armv7
+            system: "bullseye"
+            python-version: "3.9"
+            models: "prod"
+            samplerate: "8000"
+          - arch: armv7
+            system: "bullseye"
+            python-version: "3.9"
+            models: "prod"
+            samplerate: "16000"
+          - arch: aarch64
+            system: "buster"
+            python-version: "3.7"
+            models: "test"
+            samplerate: "8000"
+          - arch: aarch64
+            system: "buster"
+            python-version: "3.7"
+            models: "test"
+            samplerate: "16000"
+          - arch: aarch64
+            system: "buster"
+            python-version: "3.7"
+            models: "prod"
+            samplerate: "8000"
+          - arch: aarch64
+            system: "buster"
+            python-version: "3.7"
+            models: "prod"
+            samplerate: "16000"
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}-${{ matrix.system }}
       PIP_EXTRA_INDEX_URL: "https://www.piwheels.org/simple https://lissyx.github.io/deepspeech-python-wheels/"
     steps:
       - name: "Install QEMU"
@@ -3255,7 +3396,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "chroot-${{ matrix.arch }}"
+          name: "chroot-${{ matrix.arch }}-${{ matrix.system }}"
           path: ${{ env.CI_TMP_DIR }}/
       - run: |
           mkdir ${{ env.SYSTEM_RASPBIAN }}/
@@ -3294,7 +3435,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     strategy:
       matrix:
-        arch: [ "armv7", "aarch64" ]
+        arch: ["armv7", "aarch64"]
         # https://nodejs.org/en/about/releases/
         nodejs-version: [12, 14, 16, 17]
         models: ["test"]
@@ -3304,7 +3445,7 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}-buster
     steps:
       - name: "Install QEMU"
         run: |
@@ -3315,7 +3456,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "chroot-${{ matrix.arch }}"
+          name: "chroot-${{ matrix.arch }}-buster"
           path: ${{ env.CI_TMP_DIR }}/
       - run: |
           mkdir ${{ env.SYSTEM_RASPBIAN }}/
@@ -3357,15 +3498,16 @@ jobs:
     if: ${{ github.event_name == 'disabled' }}
     strategy:
       matrix:
-        arch: [ "armv7", "aarch64" ]
+        arch: ["armv7", "aarch64"]
         electronjs-version: [12.0.0, 13.0.0, 14.0.0, 15.0.0, 16.0.0]
         models: ["test"]
         samplerate: ["16000"]
+      fail-fast: false
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp
       DEBIAN_FRONTEND: "noninteractive"
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
-      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}
+      SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}-buster
       DISPLAY: ":99.0"
     steps:
       - name: "Install QEMU"
@@ -3377,7 +3519,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v2
         with:
-          name: "chroot-${{ matrix.arch }}"
+          name: "chroot-${{ matrix.arch }}-buster"
           path: ${{ env.CI_TMP_DIR }}/
       - run: |
           mkdir ${{ env.SYSTEM_RASPBIAN }}/

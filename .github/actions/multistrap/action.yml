@@ -4,6 +4,11 @@ inputs:
   arch:
     description: "Target arch"
     required: true
+    default: ""
+  pyver:
+    description: "Python version"
+    required: false
+    default: ""
   packages:
     description: "Extra packages to install"
     required: false
@@ -19,6 +24,9 @@ runs:
     - id: create_chroot
       run: |
         set -xe
+        
+        echo "arch input parameter: "${{ inputs.arch }}""
+        echo "pyver input parameter: "${{ inputs.pyver }}""
 
         multistrap_conf=""
         if [ "${{ inputs.arch }}" = "armv7" ]; then
@@ -27,6 +35,22 @@ runs:
         fi
         if [ "${{ inputs.arch }}" = "aarch64" ]; then
           multistrap_conf=multistrap_armbian64_buster.conf
+        fi
+        if [ "${{ inputs.arch }}" = "armv7" ] && [ "${{ inputs.pyver }}" = "3.7" ]; then
+          multistrap_conf=multistrap_raspbian_buster.conf
+        fi
+        if [ "${{ inputs.arch }}" = "armv7" ] && [ "${{ inputs.pyver }}" = "3.9" ]; then
+          multistrap_conf=multistrap_raspbian_bullseye.conf
+        fi
+        if [ "${{ inputs.arch }}" = "aarch64" ] && [ "${{ inputs.pyver }}" = "3.7" ]; then
+          multistrap_conf=multistrap_armbian64_buster.conf
+        fi
+        if [ "${{ inputs.arch }}" = "aarch64" ] && [ "${{ inputs.pyver }}" = "3.9" ]; then
+          multistrap_conf=multistrap_armbian64_bullseye.conf
+        fi
+        if [ "${{ inputs.arch }}" = "" ] && [ "${{ inputs.pyver }}" = "" ]; then
+          echo "Either arch or pyver input parameters needs to be provided"
+          exit 1
         fi
 
         # Retry 2 times because Rasbian mirrors are often failing
