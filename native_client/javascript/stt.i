@@ -28,7 +28,8 @@ using namespace node;
 
 // apply to STT_FeedAudioContent and STT_SpeechToText
 %apply (short* IN_ARRAY1, int DIM1) {(const short* aBuffer, unsigned int aBufferSize)};
-
+// apply the buffer typemap to STT_CreateModelFromBuffer
+%apply (short* IN_ARRAY1, int DIM1) {(const char *aModelBuffer, unsigned int aBufferSize)};
 
 // make sure the string returned by SpeechToText is freed
 %typemap(newfree) char* "STT_FreeString($1);";

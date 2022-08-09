@@ -169,14 +169,18 @@ export class Model {
     _impl: any;
 
     /**
-     * @param aModelPath The path to the frozen model graph.
+     * @param aModelData Either the path to the frozen model graph or the frozen model's bytes.
+     * @param loadFromBytes Wheter to load the model from bytes or from a file.
      *
      * @throws on error
      */
-    constructor(aModelPath: string) {
+    constructor(aModelData: string | Uint8Array, loadFromBytes: boolean = false) {
         this._impl = null;
 
-        const [status, impl] = binding.CreateModel(aModelPath);
+        let status, impl;
+        if (loadFromBytes) [status, impl] = binding.CreateModelFromBuffer(aModelData);
+        else [status, impl] = binding.CreateModel(aModelData);
+
         if (status !== 0) {
             throw `CreateModel failed: ${binding.ErrorCodeToErrorMessage(status)} (0x${status.toString(16)})`;
         }
