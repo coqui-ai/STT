@@ -1,4 +1,4 @@
-JavaScript (NodeJS / ElectronJS)
+JavaScript (NodeJS / ElectronJS / WASM)
 ================================
 
 Model
