@@ -24,7 +24,7 @@ def main():
         "progressbar2",
         "protobuf <= 3.20.1",
         "pyogg >= 0.6.14a1",
-        "resampy >= 0.2.2",
+        "resampy >= 0.4.0",
         "requests",
         "semver",
         "six",
