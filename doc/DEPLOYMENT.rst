@@ -17,6 +17,7 @@ You can deploy 🐸STT models either via a command-line client or a language bin
 * :ref:`The Android libstt AAR package <android-usage>`
 * :ref:`The command-line client <cli-usage>`
 * :ref:`The C API <c-usage>`
+* :ref:`Using the WebAssembly package <wasm-usage>`
 
 In some use cases, you might want to use the inference facilities built into the training code, for example for faster prototyping of new features. They are not production-ready, but because it's all Python code you won't need to recompile in order to test code changes, which can be much faster. See :ref:`checkpoint-inference` for more details.
 
@@ -176,6 +177,23 @@ Using the C API
 Alongside the pre-built binaries for the ``stt`` command-line client described :ref:`above <cli-usage>`, in the same ``native_client.*.tar.xz`` platform-specific archive, you'll find the ``coqui-stt.h`` header file as well as the pre-built shared libraries needed to use the 🐸STT C API. You can download the archive from our `releases page <https://github.com/coqui-ai/STT/releases>`_.
 
 Then, simply include the header file and link against the shared libraries in your project, and you should be able to use the C API. Reference documentation is available in :ref:`c-api`.
+
+.. _wasm-usage:
+
+Using the WebAssembly package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A pre-built ES5 libstt WebAssembly package can be `downloaded from GitHub Releases <https://github.com/coqui-ai/STT/releases/latest/download/libstt.tflite.wasm.zip>`_ .
+See the `wasm` directory in `STT-examples <https://github.com/coqui-ai/STT-examples/>_` for an example of how to use the package programmatically in a web page.
+
+A pre-built ES6 libstt WebAssembly package can be downloaded using `npm`:
+
+
+.. code-block:: bash
+
+   npm install stt-wasm
+
+The ES6 package can be used in projects using bundlers.
 
 Installing bindings from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
