@@ -9,7 +9,7 @@ It is strongly recommended that you always use our pre-built 🐸STT binaries (a
 
 If you would still like to build the 🐸STT binaries yourself, you'll need the following pre-requisites downloaded and installed:
 
-* `Bazel 4.2.1 <https://bazel.build/install/bazelisk>`_
+* `Bazel <https://bazel.build/install/bazelisk>`_ (or `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_)
 * `General TensorFlow r2.3 requirements <https://www.tensorflow.org/install/source#tested_build_configurations>`_
 * `libsox <https://sourceforge.net/projects/sox/>`_
 
@@ -47,7 +47,7 @@ Clone 🐸STT source code (TensorFlow will come as a submdule):
 Bazel: Download & Install
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, install Bazel 3.1.0 following the `Bazel installation documentation <https://docs.bazel.build/versions/3.1.0/install.html>`_.
+First, install `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_ or the correct version of `Bazel <https://docs.bazel.build/versions/main/install.html>`_ manually (look inside `STT/tensorflow/.bazelversion <https://github.com/coqui-ai/tensorflow/blob/f8242ebc005f6195b67d58349724e608d4fe45da/.bazelversion>`_). Follow the `Bazelisk installation documentation <https://docs.bazel.build/versions/main/install-bazelisk.html>`_.
 
 TensorFlow: Configure with Bazel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -158,7 +158,7 @@ To build the ``coqui_stt_ctcdecoder`` package, you'll need the general requireme
 Building CTC Decoder for training on unsupported platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
+We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`_.
 
 Feedback on improving this section or usage on other architectures is welcome.
 
@@ -188,8 +188,10 @@ RPi3 ARMv7 and LePotato ARM64
 
 We support cross-compilation from Linux hosts. The following ``--config`` flags can be specified when building with bazel:
 
-* ``--config=rpi3_opt`` for Raspbian / ARMv7
-* ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
+* ``--config=elinux_armhf`` for Raspbian / ARMv7
+* ``--config=elinux_aarch64`` for ARMBian / ARM64
+
+Checkout `Tensorflow's guide on cross-compilation for ARM with Bbazel<https://www.tensorflow.org/lite/guide/build_arm#cross-compilation_for_arm_with_bazel>`_
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
