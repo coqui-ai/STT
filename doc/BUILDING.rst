@@ -9,7 +9,7 @@ It is strongly recommended that you always use our pre-built 🐸STT binaries (a
 
 If you would still like to build the 🐸STT binaries yourself, you'll need the following pre-requisites downloaded and installed:
 
-* `Bazel <https://bazel.build/install/bazelisk>`_ (or `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_)
+* `Bazel 5.0.0 <https://bazel.build/install/bazelisk>`_ (or `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_)
 * `General TensorFlow r2.3 requirements <https://www.tensorflow.org/install/source#tested_build_configurations>`_
 * `libsox <https://sourceforge.net/projects/sox/>`_
 
@@ -47,7 +47,7 @@ Clone 🐸STT source code (TensorFlow will come as a submdule):
 Bazel: Download & Install
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, install `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_ or the correct version of `Bazel <https://docs.bazel.build/versions/main/install.html>`_ manually (look inside `STT/tensorflow/.bazelversion <https://github.com/coqui-ai/tensorflow/blob/f8242ebc005f6195b67d58349724e608d4fe45da/.bazelversion>`_). Follow the `Bazelisk installation documentation <https://docs.bazel.build/versions/main/install-bazelisk.html>`_.
+First, install `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_ or `Bazel 5.0.0 <https://docs.bazel.build/versions/5.0.0/install.html>`_ manually.
 
 TensorFlow: Configure with Bazel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -190,8 +190,6 @@ We support cross-compilation from Linux hosts. The following ``--config`` flags 
 
 * ``--config=elinux_armhf`` for Raspbian / ARMv7
 * ``--config=elinux_aarch64`` for ARMBian / ARM64
-
-Checkout `Tensorflow's guide on cross-compilation for ARM with Bazel <https://www.tensorflow.org/lite/guide/build_arm#cross-compilation_for_arm_with_bazel>`_
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
