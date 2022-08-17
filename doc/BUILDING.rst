@@ -9,7 +9,7 @@ It is strongly recommended that you always use our pre-built 🐸STT binaries (a
 
 If you would still like to build the 🐸STT binaries yourself, you'll need the following pre-requisites downloaded and installed:
 
-* `Bazel 5.0.0 <https://bazel.build/install/bazelisk>`_
+* `Bazel 5.0.0 <https://bazel.build/install/bazelisk>`_ (or `Bazelisk <https://github.com/bazelbuild/bazelisk>`__)
 * `General TensorFlow r2.3 requirements <https://www.tensorflow.org/install/source#tested_build_configurations>`_
 * `libsox <https://sourceforge.net/projects/sox/>`_
 
@@ -47,7 +47,7 @@ Clone 🐸STT source code (TensorFlow will come as a submdule):
 Bazel: Download & Install
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, install Bazel 5.0.0 following the `Bazel installation docdumentation <https://docs.bazel.build/versions/5.0.0/install.html>`_.
+First, install Bazel 5.0.0 following the `Bazel installation docdumentation <https://docs.bazel.build/versions/5.0.0/install.html>`_ or alternatively using `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`.
 
 TensorFlow: Configure with Bazel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
