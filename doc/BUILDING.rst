@@ -47,7 +47,7 @@ Clone 🐸STT source code (TensorFlow will come as a submdule):
 Bazel: Download & Install
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, install Bazel 5.0.0 following the `Bazel installation docdumentation <https://docs.bazel.build/versions/5.0.0/install.html>`_ or alternatively using `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`.
+First, install Bazel 5.0.0 following the `Bazel installation docdumentation <https://docs.bazel.build/versions/5.0.0/install.html>`_ or alternatively using `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_.
 
 TensorFlow: Configure with Bazel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
