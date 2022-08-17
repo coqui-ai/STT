@@ -191,7 +191,7 @@ We support cross-compilation from Linux hosts. The following ``--config`` flags 
 * ``--config=elinux_armhf`` for Raspbian / ARMv7
 * ``--config=elinux_aarch64`` for ARMBian / ARM64
 
-Checkout `Tensorflow's guide on cross-compilation for ARM with Bbazel<https://www.tensorflow.org/lite/guide/build_arm#cross-compilation_for_arm_with_bazel>`_
+Checkout `Tensorflow's guide on cross-compilation for ARM with Bazel <https://www.tensorflow.org/lite/guide/build_arm#cross-compilation_for_arm_with_bazel>`_
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
