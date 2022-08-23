@@ -9,7 +9,7 @@ It is strongly recommended that you always use our pre-built 🐸STT binaries (a
 
 If you would still like to build the 🐸STT binaries yourself, you'll need the following pre-requisites downloaded and installed:
 
-* `Bazel 4.2.1 <https://bazel.build/install/bazelisk>`_
+* `Bazel 5.0.0 <https://bazel.build/install/bazelisk>`_ (or `Bazelisk <https://github.com/bazelbuild/bazelisk>`__)
 * `General TensorFlow r2.3 requirements <https://www.tensorflow.org/install/source#tested_build_configurations>`_
 * `libsox <https://sourceforge.net/projects/sox/>`_
 
@@ -47,7 +47,7 @@ Clone 🐸STT source code (TensorFlow will come as a submdule):
 Bazel: Download & Install
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, install Bazel 3.1.0 following the `Bazel installation documentation <https://docs.bazel.build/versions/3.1.0/install.html>`_.
+First, install Bazel 5.0.0 following the `Bazel installation documentation <https://docs.bazel.build/versions/5.0.0/install.html>`_ or alternatively using `Bazelisk <https://docs.bazel.build/versions/main/install-bazelisk.html>`_.
 
 TensorFlow: Configure with Bazel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -158,7 +158,7 @@ To build the ``coqui_stt_ctcdecoder`` package, you'll need the general requireme
 Building CTC Decoder for training on unsupported platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`.
+We only support building CTC Decoder on x86-64 architectures. However, we offer some hints on building the CTC decoder on other architectures, and you might find some help in our `GitHub Discussions <https://github.com/coqui-ai/STT/discussions>`_.
 
 Feedback on improving this section or usage on other architectures is welcome.
 
@@ -188,22 +188,22 @@ RPi3 ARMv7 and LePotato ARM64
 
 We support cross-compilation from Linux hosts. The following ``--config`` flags can be specified when building with bazel:
 
-* ``--config=rpi3_opt`` for Raspbian / ARMv7
-* ``--config=rpi3-armv8_opt`` for ARMBian / ARM64
+* ``--config=elinux_armhf`` for Raspbian / ARMv7
+* ``--config=elinux_aarch64`` for ARMBian / ARM64
 
 So your command line for ``RPi3`` and ``ARMv7`` should look like:
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=rpi3_opt //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=elinux_armhf //native_client:libstt.so
 
 And your command line for ``LePotato`` and ``ARM64`` should look like:
 
 .. code-block::
 
-   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=rpi3-armv8_opt //native_client:libstt.so
+   bazel build --workspace_status_command="bash native_client/bazel_workspace_status_cmd.sh" -c opt --config=elinux_aarch64 //native_client:libstt.so
 
-While we test only on RPi3 Raspbian Buster and LePotato ARMBian Buster, anything compatible with ``armv7-a cortex-a53`` or ``armv8-a cortex-a53`` should be fine.
+While we test only on RPi3 Raspbian Buster and LePotato ARMBian Bullseye, anything compatible with ``armv7-a cortex-a53`` or ``armv8-a cortex-a53`` should be fine.
 
 The ``stt`` binary can also be cross-built, with ``TARGET=rpi3`` or ``TARGET=rpi3-armv8``. This might require you to setup a system tree using the tool ``multistrap`` and the multitrap configuration files: ``native_client/multistrap_armbian64_buster.conf`` and ``native_client/multistrap_raspbian_buster.conf``.
 The path of the system tree can be overridden from the default values defined in ``definitions.mk`` through the ``RASPBIAN`` ``make`` variable.
