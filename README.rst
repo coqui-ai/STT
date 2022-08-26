@@ -34,6 +34,9 @@
 * Small-footprint acoustic model.
 * Bindings for various programming languages.
 
+`Quickstart <https://stt.readthedocs.io/en/latest/#quickstart>`_
+================================================================
+
 Where to Ask Questions
 ----------------------
 
