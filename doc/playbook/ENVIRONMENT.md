@@ -159,11 +159,11 @@ As you become more proficient with using 🐸STT, you can use the pre-built Dock
 **Running this command will download several gigabytes of data. Do not perform this command if you are on a limited or metered internet connection**
 
 ```
-$ docker pull ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.4
-v0.10.0-alpha.4: Pulling from coqui-ai/stt-train
+$ docker pull ghcr.io/coqui-ai/stt-train:latest
+latest: Pulling from coqui-ai/stt-train
 Digest: sha256:0f8ee9208874a925618e527f1d06ea9065dd09c700972cba740884e7e7e4cd17
-Status: Image is up to date for ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.4
-ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.4
+Status: Image is up to date for ghcr.io/coqui-ai/stt-train:latest
+ghcr.io/coqui-ai/stt-train:latest
 ```
 
 <!-- FIXME uncomment once we have CI publishing of these images:
@@ -175,17 +175,17 @@ You will now see the `ghcr.io/coqui-ai/stt-train` image when you run the command
 ```
 $ docker image ls
 REPOSITORY                               TAG                  IMAGE ID       CREATED          SIZE
-ghcr.io/coqui-ai/stt-train               v0.10.0-alpha.4      d145cb0930ea   37 minutes ago   5.12GB
+ghcr.io/coqui-ai/stt-train               latest      d145cb0930ea   37 minutes ago   5.12GB
 ``` -->
 
 ### Testing the image by creating a container and running a script
 
 Now that you have your Docker image pulled down, you can create a _container_ from the image. Here, we're going to create a container and run a simple test to make sure that the image is working correctly.
 
-_Note that you can refer to Docker images by `id` - such as `7cdc0bb1fe2a` in the example above, or by the image's name and `tag`. Here, we will be using the image name and `tag` - ie `ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.4`._
+_Note that you can refer to Docker images by `id` - such as `7cdc0bb1fe2a` in the example above, or by the image's name and `tag`. Here, we will be using the image name and `tag` - ie `ghcr.io/coqui-ai/stt-train:latest`._
 
 ```
-$ docker run  -it --name stt-test --entrypoint /bin/bash ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.4
+$ docker run  -it --name stt-test --entrypoint /bin/bash ghcr.io/coqui-ai/stt-train:latest
 ```
 
 The `entrypoint` instruction following `docker run` tells Docker to run the `/bin/bash` (ie shell) after creating the container.
@@ -195,20 +195,6 @@ This command assumes that `/bin/bash` will be invoked as the `root` user. This i
 When you run the above command, you should see the following prompt:
 
 ```
-________                               _______________
-___  __/__________________________________  ____/__  /________      __
-__  /  _  _ \_  __ \_  ___/  __ \_  ___/_  /_   __  /_  __ \_ | /| / /
-_  /   /  __/  / / /(__  )/ /_/ /  /   _  __/   _  / / /_/ /_ |/ |/ /
-/_/    \___//_/ /_//____/ \____//_/    /_/      /_/  \____/____/|__/
-
-
-WARNING: You are running this container as root, which can cause new files in
-mounted volumes to be created as the root user on your host machine.
-
-To avoid this, run the container by specifying your user's userid:
-
-$ docker run -u $(id -u):$(id -g) args...
-
 root@d14b2d062526:/STT#
 ```
 
@@ -217,7 +203,7 @@ In a separate terminal, you can see that you now have a Docker image running:
 ```
 $ docker ps
 CONTAINER ID   IMAGE          COMMAND       CREATED              STATUS              PORTS     NAMES
-d14b2d062526   7cdc0bb1fe2a   "/bin/bash"   About a minute ago   Up About a minute             compassionate_rhodes
+d14b2d062526   7cdc0bb1fe2a   "/bin/bash"   About a minute ago   Up About a minute             stt-test
 ```
 
 🐸STT includes a number of convenience scripts in the `bin` directory. They are named for the corpus they are configured for. To ensure that your Docker environment is functioning correctly, run one of these scripts (in the terminal session where your container is running).
@@ -282,7 +268,7 @@ As you become more comfortable training speech recognition models with 🐸STT, 
 # Custom Dockerfile for training models using 🐸STT
 
 # Get the latest 🐸STT image
-FROM ghcr.io/coqui-ai/stt-train:v0.10.0-alpha.4
+FROM ghcr.io/coqui-ai/stt-train:latest
 
 # Install nano editor
 RUN apt-get -y update && apt-get install -y nano
