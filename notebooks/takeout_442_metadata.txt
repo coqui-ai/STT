@@ -1,0 +1,106 @@
+original_sentence_id	sentence	locale
+c6efc1e62f7080264f4a7e597798c11ea04af9c80646eb3a7530120fcc1c9eca	This was the only issue of the cent denominations.	en
+c6f2607a423bd2ba1b46d5d26dd96e608437965c6d958b505c705f3f930fd3a8	Time in physics is unambiguously operationally defined as "what a clock reads".	en
+c6f9410fc11dd5b093d9eda9e956c71e463f9b2252aa275654e962de8796e57c	There he helped set up a website for a militant Islamic group.	en
+c6fff814aa77887d973d42df3d0db6bb11e9b48756138433b8953b67481a4e24	He has also written columns on national security issues for "Just Security".	en
+c7022e0b14a6b1333e205ca9a7ddb9b5fc9b6c1b61b3dfa3fd2b48b2a001eaed	It is used effectively to protect aircraft from guided missiles.	en
+c70eb2890aab3099b4470d71384d931fcca950883bd63de098b752f2d43e14a5	It is currently operated by Indonesian army and navy.	en
+c7116d5cbe659c4fd372cf02f9f4303f958c19ec76765e0f41bbaa0182b62c98	She put her fingers through the tear.	en
+c71441a72ebe29450a382197a0500d5b91cd42ed5db96a9a6a9788b78e0a4be0	However, the airport does not currently operate public transport services.	en
+c71683a3f3662b9809cf2a37eac98e7cc95ab88054a99eb571ef788428cc2462	Banister was married three times.	en
+c716e75fc313d283567658c8ad1e883c0458f0a7d1049a251b0d0a2b173efe08	He has consulted on pizza projects in several countries.	en
+c7180542b289a83dbc978c8916c192d0691d620a0e1332e5cde54d26965b932f	Its predecessor was the Orange River Colony.	en
+c71812f3671e917499af48cb68459965cd5a46cd8dc35c40246724d05072718a	Common team sports include ice hockey, curling and bandy.	en
+c718dc182420fc54eca78b184a36e7b37eed5a265db71ab4c30295a3ac36c0c6	He then was crippled by a stroke and died shortly afterwards.	en
+c7197e5f4d2a4aa72163b79c7709cd1581ea9a2ec68efd112a17f9d49e803dc3	A thought came into my head.	en
+c71b7a25923d164d13caa61d398d1639ec7b4ebf286ef2c1812c42176ce4a5d5	It is also used in milk to make yogurt.	en
+c71bd1c7f0b66b5837778f166b21bf5fd18ebaf0869cee4516b7643569c3f127	The restaurants are well known for their "Tuesdays Were Made for Tacos"promotion.	en
+c71bfd4fdebc2229658ccb8a8ec3c765f6cbf610cf25eafde36dbf24fe2dec59	The two officers would not be charged in response to this incident.	en
+c71c3ee61135348d5de194c89123743039bf6be64f4c2e5b894bbb82d07ddf69	Often, this is not desirable.	en
+c71ded3cb0dd06548ef90a9a51eacab63012403f0aa90a362478e447bb985171	He stood, uncertain in balance, gazing upon her.	en
+c71ee74f5e110120866667f11a0cc6638f00d3f70ebe0fe2f33dc986a5d3b2bf	He followed this with three singles.	en
+c71ffc93c13abe8f6dac0e3e84b067ce4b9115191e6c363a969442b7a55bbde1	She survived and now educates youths about her experiences.	en
+c720c0c13e3690a10e8ae149221e05d02d71ef1a1e0ff5d69784086ca922227c	Fusion cuisine offered a new twist on many traditional food items.	en
+c721c15ba8f91d65b674b0c78a0857a8db9447aa6eedbba08ce170f8feb17526	They also built a small recording studio in their mother's home on Anza Avenue.	en
+c721d6300f8d820816263ccb78eb967932bb382141e04fd12decdd18ae09d9ce	Iran entered one athlete into the table tennis competition at the Games.	en
+c72222c3c27d9b40c795e0440998aa0e728fbfabfb69fec75dfb48d431ecf745	It is the only Whitewater Township statewide.	en
+c7222ea8db04c681e2ae064a23607639665f0103a40b69040b740c698dd8789b	Wrongs are also of two kinds and they are either public or private.	en
+c7225716e6984e0b932efe931920e25b4c1cd83d858da4ec096a7727ae2c5f8f	He later studied Theater and Film at Hanyang University.	en
+c722a30385b12c698884a637a065b04bc04a0a04c9475931083b2088142dc3db	After Coach Flanagan left the school, Ted Garber became head coach.	en
+c7233471c2c0c94a39854237a0a28dda99bcc7a456ea2d73db23cad5cdb228cc	He decided to stay on with Ford Performance Racing, renewing his partnership with Winterbottom.	en
+c72386a1c563b9abd73d3fa2b38b16ab37db6febe302929701dc877f05e4f367	She is the older sister of child actor Jacob Tremblay and Erica Tremblay.	en
+c723912753806cee2ca1675aeff1d95460db8d66d037e7f9a0d802a8c07dd35e	In its history, two doctors in Franklin have been named "Doctor Death".	en
+c724c761718fbf2c6c485f2a1059902a0aea27df256f0c6049d174a08bc1e413	But the Democrats made gains in five sections.	en
+c725614a244ef65aed9753e9db2a2e51c776f933ed06c7b098d7676f7c3bbbea	Access is from a footbridge, so wheelchair access is impossible.	en
+c726372b95f54cf6f064876161a1dc68ec991aba2048475bcfb36e82496ac45a	An unspecified amount of time later, Fred married Wilma.	en
+c726a01c7f6f479c957b98ce6876da2363ba41ab3afdef87dc1ab0a06fd107ba	The project was ultimately canceled following financial issues.	en
+c726c3f70ef75f5997dbd2fde05cfe40f5c37ad1a7fdac9c659763033def843d	He was featured in the documentary Bomb It.	en
+c72724c3cf99cacc3dc1b9660c178490fa40d638f283a5992f46d2bbd203f78a	Ongoing research aims to speed up similar reactions involving alkali carbonates.	en
+c72792466643006849547a95e02f40a0889a44fe0d4eab28a3f39bbd4c29d819	It is the largest state-owned training site in the nation.	en
+c727c3597d8d5af3f40a26a14f6ad27b1cec469da899c7c13145b48c4db17bec	Its motto was "Where Hollywood goes to the movies".	en
+c727d0f31265ed7c8afa3451eb1c72859b350e545290335175024f3e3a1596db	He worked during the week as an apprentice painter and decorator.	en
+c78cd705a513492b999b6648e96fd6d9b88195a6ea775c5a2bebc40ded45a4f3	She is shocked and insists that he not tell his father.	en
+c7a8b4a25080962baa663aeab40f66bf71903e3770da8c311741d0afb61bb362	She may have refused to work on some photo shoots because of these principles.	en
+c7c4cc6e838ef737f718e5609cc035a9b3440a5776caf97544bcc4a275550ff5	The player chooses either a boy or girl avatar, along with a monster companion.	en
+c7c6a99a0f40aeab845d3e8282185c0b897dbf2d4e965dcb0d8441fa3aad0418	Today only one survives and is not as productive as it used to be.	en
+c7c8e52137ce06f7d889cdd0484ca707d94b79f49cacf63c473fe4e4b3612cff	Based in Paris, it is the company's management consultancy arm.	en
+c7ca5c9a6d1fbf192a84d9eda496a5fd5ed18f821d6ed23dc696a760130e004c	He is President of the World Confederation of Cognitive and Behavioral Therapies.	en
+c7cbe4ae9ab00eb0e477da6e1274f7351e471024188bedcfb9b0bd1f13ae741d	His nephew and successor was Shimazu Tadatsune.	en
+c7cf485c81d9308a21a54fa2e1b62a1b24795057e3e02576d68e648a0b16b626	Functional limitations should be taken into consideration.	en
+c7d3dc7a97e8de6302a45a5c4dbeb0ef04a8d80b068867c044ee8c10c6cf042c	It is currently represented by Republicans Eric Tarr and Amy Nichole Grady.	en
+c7d69090282282422e66f070bcecbdedb3fbaf4c1236bc287c55a2568ee862df	Some examples of EuroWordNet are available for free.	en
+c7dc42c6935ec1f08ca525af56cac3fd13c6e281404be0d389b9f96c310a7bcd	His nickname of 'The Postman' sums him up well, he always delivers!	en
+c7dcb11e84749feb80281430acec1e51a194c58cad8e6a79e24c324ae468dbab	The team has qualified for a tournament twice.	en
+c7dd2fd9e62980fcb545ca30d378165a015ba0b09d35d03918180d2c6968d53d	For such problems, a necessary condition for optimality is that the gradient be zero.	en
+c7de2f3bfabf9965e063bdf0091a320d13e33765d06e71c38690b9f7ab527493	The next day, Stella turns up dead.	en
+c7e43907806e9113e57deaacd1c573c76c5e4ba571b8142a26ee0362dc6d8785	The British had lost significant French support on their right during the offensive.	en
+c7e528d461a7a5b3de6b787c77178fd8323974a967800de5754487ff3e65111c	Later, his interests turned to Motor Cars.	en
+c7e5907b4f813cac1aff13b350d8a9bcc86d94f60dca2d1eaafb112b310fd730	However, the employees tend to stick at the default contribution rates and investment allocations.	en
+c7e5bc0241eb2e7732fa854d9499166b4255fd06e4dc98439d04fb32e997dcda	Most agents and the major publishing houses do not accept unsolicited manuscripts.	en
+c7e5de3c29d014627b191fea8958a36b0b15236884d6555f1eb8bc48a07dbc12	The nurses used to call him ""The darling boy of the Nurses"".	en
+c7e5f096902d5e86faee29e367c2008417e2f7faabeeddaf2784e3efc5b1b934	The International server, as the beta version, is completely free to play.	en
+c7e6e9c350552521d010af4fdbba58f004dae83e1e60088d6b71cdc18c935eec	It has never been shared by two authors.	en
+c7e76bc9d37e0b4b8a7b9aa38884856804a1f8920bbae77f22f9f8ddf64428e5	If it was, I gladly would have played for a team in Kiev.	en
+c7e83ea8aac7494da6605a3fc250b63af6a0aeb052b62bcd8c6450eab93e382a	Jordan has trained to meet the needs of Arab and non-Arab countries.	en
+c7e84cb517c6fb8e8b47a50390eeebd22078e9c7b56d4c9535dd4e858cd9e985	Both are programming tools.	en
+c7e89fdbaf473dad9684dd54c457d7a48db5a49e1a9d67d4515c98e26eb11d81	During this time he worked on the theory of radio transmission.	en
+c7e9a217b76c427258433250bdf12b46743b8124d1307096adf525ffb0d7e288	The Jewish calendar is lunisolar.	en
+c7eb20fa81cac096bd5a7359ecc37334554aa10b915d7983dfcc5e929d6e8539	Thirty units were produced for the civilian market.	en
+c7ec85022fc073c297fc00d9bd7567edaf8d77d10feda9f43a03c15be096190c	The series was most popular among teenaged girls.	en
+c7ecf4141cc290f898db850504067107a20cd826ef020760d0e74618e4e64f4f	There she became immersed in the internet during its early years.	en
+c7ed0c1a998dde3aba7a1e15d19ed6735bdadea60d4352e17f66ee3e96db5a76	Web maps like Google Maps give a visual representation of a specific place.	en
+c7ed571710ebd3a7dd245e01aad35bcd9f4af8c3aa1b43c0f35e3a3c513d8c2a	However, historically Florence has been the main cultural center of the northwest.	en
+c7ee5e03a562b2f22d9433145e3a97398705ab13d6eebbdd4aaf2aa53332c605	The city's name is a misspelling of John Lawson's name, a local settler.	en
+c7ef3f157ccc6ab249725cca3da60cc3969e3784750c8d05f8a00d8e36294471	His other works are as below.	en
+c7ef4d40c8fee15c6e10f2c85da7992ecc01fe02d1580db3a0d62e236db1d739	The Famous Flames were a vocal group.	en
+c7ef55630c753f2846a46d186b7c71e2dae823f7e7245bde9cead2191bcabc42	She retained the image of an angel in this work.	en
+c7ef99b6d6cee0555458a112e50772b3d7c873dddf9b41a2f86d9bacbb341c5b	The educational content and difficulty of gameplay is age appropriate.	en
+c7f1b75194615aa25c67138911ad94f3180dc92cdd9e25c55d2c185a7d4cc8ab	The following is the list of competitors in the Games.	en
+c7f1e056022f3c0e183bf92f39c6c7c1e9388237d6d72188de0419325d474cc1	“No,” I said.	en
+c7f1ebebafdcf2d2708a7fe233f5d21b3c9fe41cebd8c87089eab0b943cba4c0	Fishing, walking, canoeing and boat trips are popular attractions.	en
+c7f22cfde101a16d3e059f815f8d17f75a5b511bd588322879fe382cf6e0f83a	While he was still travelling, the First World War broke out.	en
+c7f255cf98533d74e38975d9df65faf31b99173ac59fccd2b255a4b450a885d9	Each province and territory in Canada has its own access to information legislation.	en
+c7f256fa0aa41746091db92239fa49c251d2f90f972bbc97c433b1d1ee5d0447	Brenda fails to turn it off.	en
+c7f2bf0fcfe03ea840c9cbe6106e3efd6f454d643944ee8bcb8f9c983bc42ccb	I mean it is so vile.	en
+c7f2c20fa9bc4f8b5169e2a352c659d71b16e104393806333d52b0dfa34ec91e	You should remove this.	en
+c7f2ccc060e0265fe8e74f15d3b4e2b7437835de089ada6198b6925e6667a2f9	Nevertheless, Mustafa continued to have secret dealings with Persia.	en
+c7f2ea457f1cc73ed9eb25d454853465ac92faff8eb3c8d58f08dc86a5e0165f	At the graduate level, these differential rates of education are even higher.	en
+c7f413fc8bae92a48cd3dbd5b3af7adf9b5c4e8580e2b5df8f6cab7a61466655	It was also certified Silver.	en
+c7f470dc959e9a58ee94170280fb1677004009e71fee63a9618849ee85c79549	He was kind.	en
+c7f47e0d5059c95bcad973d0405fa75bbf8aa3247fcdcdd00ad580042824cdcb	His footsteps were dragging.	en
+c7f486f7315ca1380e7928df21367289560b7d9870feccf06c4242ac724f94fa	No team will need to wait too long to receive a question.	en
+c7f5293a936c2c2e10b7e6d299b01378a2d20957f822e818f4e858c971c99ac6	Polish and Czech linguists differ in their views on the classification of the dialect.	en
+c7f5481fd4437531028c102850380de4d933e02aa41f5173459a3a80b9c56fd4	He is a right-handed batsman and a slow left-arm bowler.	en
+c7f63e8a06b0991bc146341d0e6be8bab3ef0012859c4b6f2823d928983faee5	The facility has also been used by local high school baseball teams.	en
+c7f6a894cbe9f3ac4c4c15d3dd251bbaac47aa8754c7bd4b375e24a61beaefff	His hobbies are languages, travel, hiking and fly fishing.	en
+c7f6c092cc75356eb9975f53c365244455ce2900f12946a7d644c295177e9329	He's a very supportive father.	en
+c7f6e5d1e0fba59641466f57a81328ecd5a136d78b26856a836afb6df7448999	Many of their characters have appeared in film, books, toys, and other media.	en
+c7f6f9439c62b330b5ddbccdb88757cc45d6a2893cd0f1393c78935ea0805db5	The Health Check program was criticized for giving misleading endorsements to unhealthy products.	en
+c7f788137f4545087aeaba127a1ec7b70dc56b114d465b3d87fb5ff89fa58227	See also Discussion Page for additional poets not listed here.	en
+c7f78c414c4d31b15f6c7b1e80e909f4d26fb4b207fc04a7a5d999339e7b2621	A camp site and picnic area are also situated around the waterfall.	en
+c7f79110ea141ac600b163b2a6dc1a6b523322e5e71fbdddc3c659e97f546c36	She finished in fourth place, behind Monaco, Spain and Germany.	en
+c7f8176e262817d65edc05e0e222dcf03f400a983b0fb2a069acd5ffde3698d2	As a result, disease is often advanced at diagnosis.	en
+c7f81d70fd4bf27cbbd60630f3c9566a864f7fd3555572d4a0f0fca199664744	The Organ is complete.	en
+c7f924107db8e61b17cd97f4baaffaadc5848f2a6680fe041ebb0223ed9e5dd4	He introduced the use of the thumbscrew in Scotland.	en
+c7fa5230fffc97876fc96282070e01e6aa21b4c8dca1ce806fb89cba3370adfd	Erik and his wife Andrea have three children.	en
+c7fcf4744318ac81adc598990964b5e117fda9249a36ee02bf5e54b68ea5eab0	She lives with her father and mother, both Italian immigrants, and with her grandmother.	en
