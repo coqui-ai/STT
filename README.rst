@@ -2,8 +2,7 @@
 ---------------
  
 
-🐸Download trained Coqui STT models
-
+🐸Download trained Coqui STT models and run the inference on it. Though the old README file has told us how to do it, but I still get some errors in the process. And I find the guidance lack of picture example and error-fixed solution, so I create the new README file just to guide people facing the same error as me.
 
 
 * You can use the 🐸STT Model Manager by following these steps.
@@ -26,43 +25,45 @@
       # Problem occurs when I use this method:
       
          *When using the provided way to create virtual environment, it can not find the bin file. So I change to use the mkvirtualenv
+         *After creating the enviroment, error still occurs when I want to download STT manager
 
-         .. image:: images/virtual environment.png
-            :alt: virtual environment created
+.. |doc-img| image:: https://github.com/ZhengkunMei/STT/blob/main/images/virtual%20environment.png
+   :target: https://github.com/ZhengkunMei/STT/blob/main/images/virtual%20environment.png
+   :alt: Documentation
 
-`Quickstart <https://stt.readthedocs.io/en/latest/#quickstart>`_
-================================================================
-
-Where to Ask Questions
-----------------------
-
-.. list-table::
-   :widths: 25 25
-   :header-rows: 1
-
-   * - Type
-     - Link
-   * - 🚨 **Bug Reports**
-     - `Github Issue Tracker <https://github.com/coqui-ai/STT/issues/>`_
-   * - 🎁 **Feature Requests & Ideas**
-     - `Github Issue Tracker <https://github.com/coqui-ai/STT/issues/>`_
-   * - ❔ **Questions**
-     - `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_
-   * - 💬 **General Discussion**
-     - `Github Discussions <https://github.com/coqui-ai/stt/discussions/>`_ or `Gitter Room <https://gitter.im/coqui-ai/STT?utm_source=share-link&utm_medium=link&utm_campaign=share-link>`_
+         
+.. |covenant-img| image:: https://github.com/ZhengkunMei/STT/blob/main/images/STT%20manager%20(2).png
+   :target: https://github.com/ZhengkunMei/STT/blob/main/images/STT%20manager%20(2).png
+   :alt: Contributor Covenant
 
 
-Links & Resources
------------------
-.. list-table::
-   :widths: 25 25
-   :header-rows: 1
+        
+|doc-img| |covenant-img| 
 
-   * - Type
-     - Link
-   * - 📰 **Documentation**
-     - `stt.readthedocs.io <https://stt.readthedocs.io/>`_
-   * - 🚀 **Latest release with pre-trained models**
-     - `see the latest release on GitHub <https://github.com/coqui-ai/STT/releases/latest>`_
-   * - 🤝 **Contribution Guidelines**
-     - `CONTRIBUTING.rst <CONTRIBUTING.rst>`_
+
+
+
+* If you face the same error as me, you can choose the second way to get the model
+
+         *Using `STT model <https://coqui.ai/models/>`_ to download your model
+
+
+
+* Then installing the stt to virtual environment
+
+         *(coqui-stt-venv)$ python -m pip install -U pip && python -m pip install stt
+         
+* Use the command below to test your inference
+
+         *(coqui-stt-venv)$ stt --model model.tflite --scorer huge-vocabulary.scorer --audio my_audio_file.wav
+
+
+* SoX lacking error and its solution
+
+         *When we use the last command to run the model, there is an error showing we did not install the SoX
+         *Solution and result: the audio file need to be 16000Hz instead of 44100Hz, so I record my own voice "Hello world" and test it.
+         *The result is a little bit different than I expected but still close to it
+.. |doc-img| image:: https://github.com/ZhengkunMei/STT/blob/main/images/output.png
+   :target: https://github.com/ZhengkunMei/STT/blob/main/images/output.png
+   :alt: Documentation        
+|doc-img|
