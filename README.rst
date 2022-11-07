@@ -1,38 +1,32 @@
+🐸How to use the pre-trained model to simply run inference
+---------------
+ 
+
+🐸Download trained Coqui STT models
+
+
+
+* You can use the 🐸STT Model Manager by following these steps.
+      # Create a virtual environment
+
+         $ python3 -m venv venv-stt
+         
+         $ source venv-stt/bin/activate
+
+      # Install 🐸STT model manager
+
+         $ python -m pip install -U pip
+          
+         $ python -m pip install coqui-stt-model-manager
+
+      # Run the model manager. A browser tab will open and you can then download and test models from the Model Zoo.
+
+         $ stt-model-manager
+
+       # Problem occurs when I use this method:
+
 .. image:: images/coqui-STT-logo-green.png
    :alt: Coqui STT logo
-
-
-.. |doc-img| image:: https://readthedocs.org/projects/stt/badge/?version=latest
-   :target: https://stt.readthedocs.io/?badge=latest
-   :alt: Documentation
-
-.. |covenant-img| image:: https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg
-   :target: CODE_OF_CONDUCT.md
-   :alt: Contributor Covenant
-
-.. |gitter-img| image:: https://badges.gitter.im/coqui-ai/STT.svg
-   :target: https://gitter.im/coqui-ai/STT?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
-   :alt: Gitter Room
-
-.. |doi| image:: https://zenodo.org/badge/344354127.svg
-   :target: https://zenodo.org/badge/latestdoi/344354127
-
-|doc-img| |covenant-img| |gitter-img| |doi|
-
-`👉 Subscribe to 🐸Coqui's Newsletter <https://coqui.ai/?subscription=true>`_
-
-**Coqui STT** (🐸STT) is a fast, open-source, multi-platform, deep-learning toolkit for training and deploying speech-to-text models. 🐸STT is battle tested in both production and research 🚀
-
-🐸STT features
----------------
-
-* High-quality pre-trained STT model.
-* Efficient training pipeline with Multi-GPU support.
-* Streaming inference.
-* Multiple possible transcripts, each with an associated confidence score.
-* Real-time inference.
-* Small-footprint acoustic model.
-* Bindings for various programming languages.
 
 `Quickstart <https://stt.readthedocs.io/en/latest/#quickstart>`_
 ================================================================
