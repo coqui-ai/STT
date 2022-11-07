@@ -23,10 +23,12 @@
 
          $ stt-model-manager
 
-       # Problem occurs when I use this method:
+      # Problem occurs when I use this method:
+      
+         *When using the provided way to create virtual environment, it can not find the bin file. So I change to use the mkvirtualenv
 
-.. image:: images/coqui-STT-logo-green.png
-   :alt: Coqui STT logo
+         .. image:: images/virtual environment.png
+            :alt: virtual environment created
 
 `Quickstart <https://stt.readthedocs.io/en/latest/#quickstart>`_
 ================================================================
