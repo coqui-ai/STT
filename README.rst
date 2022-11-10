@@ -3,6 +3,11 @@ For Fabiennes model:
 To run the model, click on Fabs_version_train_your_first_coqui_STT_model.ipynb
 To run the original model, go to the folder "Notebooks" and choose the following: Train your first 🐸 STT model
 In both cases the model can be opened by clicking "Open in Colab"
+
+The dataset used is data from Mozilla Common Voice, but retrieved from HuggingFace.
+It consists of English spoken audio and the transcribed sentences, but only for validated output.
+
+The model used only made use of a single file. To make it useful for multiple files many iteration processes where added for the downloading stage.
 ---------------
 
 .. image:: images/coqui-STT-logo-green.png
