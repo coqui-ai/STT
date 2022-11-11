@@ -37,7 +37,7 @@ This is probably due to the fact that the model was fine-tuned with only 230 aud
 As can be seen in the results, this model also appears to struggle the most with names, which is understandable:
 - **original:** "as bill bryson says not all repetition is bad"
 - **prediction:** "he still brissensis not all repetition is bad"
-
+And another example:
 - **original:** "the film stars kapoor pran and padmini in lead roles"
 - **prediction:** "the film stars caper pen and pudmini and lead rolls"
 
