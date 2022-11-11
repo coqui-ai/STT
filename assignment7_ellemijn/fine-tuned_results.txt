@@ -1,0 +1,84 @@
+Test on /content/takeout_452_pt_0/test.csv - WER: 0.145058, CER: 0.056005, loss: 10.723945
+--------------------------------------------------------------------------------
+Best WER: 
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 11.857828
+ - wav: /content/takeout_452_pt_0/c8827f8be9192352d13e5b898eab10fcbbd83290a4bd3e17240795080a034a36.wav
+ - src: "the adult males have red fins with black tips"
+ - res: "the adult males have red fins with black tips"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 11.800825
+ - wav: /content/takeout_452_pt_0/c88b5b876598f0c44c7dff6511bc9c6b8ebb7023b5c0db81a9522da49f9cfe30.wav
+ - src: "it is structurally related to azobenzene"
+ - res: "it is structurally related to azobenzene"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 10.674590
+ - wav: /content/takeout_452_pt_0/c882f9e8c28a22637ec39f6ea3ecbbd98a7ac299213ace16b307da0364657def.wav
+ - src: "many of its contributors used pseudonyms or initials"
+ - res: "many of its contributors used pseudonyms or initials"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 7.663357
+ - wav: /content/takeout_452_pt_0/c878d741006e5ae01a75ef684d9dd301475e6f0f53dbd74bf7fa25513dbe3399.wav
+ - src: "using resources skill ingenuity and experience service providers benefit service consumers"
+ - res: "using resources skill ingenuity and experience service providers benefit service consumers"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 7.567042
+ - wav: /content/takeout_452_pt_0/c878e002e8a4101bcf9db694a2dc7617a0370bd2eb649999b184a3188abe0ca7.wav
+ - src: "no single test has adequate sensitivity and specificity to diagnose pelvic inflammatory disease"
+ - res: "no single test has adequate sensitivity and specificity to diagnose pelvic inflammatory disease"
+--------------------------------------------------------------------------------
+Median WER: 
+--------------------------------------------------------------------------------
+WER: 0.100000, CER: 0.056604, loss: 12.774961
+ - wav: /content/takeout_452_pt_0/c82e4972998c7fd867adb542110f8d4c5859e1ea6625fdb82d3b5e1d10574191.wav
+ - src: "the base also includes a tri service multi user depot"
+ - res: "the base also includes a tri surface multi user depot"
+--------------------------------------------------------------------------------
+WER: 0.100000, CER: 0.053571, loss: 6.422313
+ - wav: /content/takeout_452_pt_0/c855129cdcdabe43381649e4c522475a39f99738bfac6822c1ccc2e53fdb1194.wav
+ - src: "rival characters can also be unlocked and used in battle"
+ - res: "rifle characters can also be unlocked and used in battle"
+--------------------------------------------------------------------------------
+WER: 0.111111, CER: 0.072727, loss: 13.403275
+ - wav: /content/takeout_452_pt_0/c886e58cf37c9bdc2265e2a2f726d2922ac3b4a6de24b457cfd8df945d35caf8.wav
+ - src: "it contains at least a hardware random number generator"
+ - res: "it contains at least a hardware render number generator "
+--------------------------------------------------------------------------------
+WER: 0.111111, CER: 0.061224, loss: 3.310539
+ - wav: /content/takeout_452_pt_0/c8917fdd1d177171012c4c0f29e98e046cf3fa2afea4075d5abd8ed53b5b9c95.wav
+ - src: "however these stores are not owned by the company"
+ - res: "however these sources are not owned by the company"
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.039216, loss: 16.390837
+ - wav: /content/takeout_452_pt_0/c88c8de13fb4e3804df1acde019b6a3a1fa19ee6c1ee845a1621bcff8cb7d5ef.wav
+ - src: "augustus caesar preferred raetian wine to any other"
+ - res: "augustus caesar preferred ration wine to any other"
+--------------------------------------------------------------------------------
+Worst WER: 
+--------------------------------------------------------------------------------
+WER: 0.444444, CER: 0.222222, loss: 14.007643
+ - wav: /content/takeout_452_pt_0/c8875c1a4cb3d2a9a56d1d068feb5a713e1944bd4cd368f4ff346c3a2c8677e1.wav
+ - src: "as bill bryson says not all repetition is bad"
+ - res: "he still brissensis not all repetition is bad"
+--------------------------------------------------------------------------------
+WER: 0.444444, CER: 0.204545, loss: 13.726273
+ - wav: /content/takeout_452_pt_0/c875b0359cff34c6ae6bb44cf6b1615d3a976fd8284bc7e4d0f8e38aab033f7b.wav
+ - src: "there was a loran c station at williams lake"
+ - res: "there was a lorenzetti at william's lake"
+--------------------------------------------------------------------------------
+WER: 0.500000, CER: 0.173077, loss: 17.991379
+ - wav: /content/takeout_452_pt_0/c859d1a5b03fa078464efe10c7298a0ce44a0c1d2f1fe0d8d03bfc46b5349325.wav
+ - src: "the film stars kapoor pran and padmini in lead roles"
+ - res: "the film stars caper pen and pudmini and lead rolls"
+--------------------------------------------------------------------------------
+WER: 0.500000, CER: 0.113636, loss: 8.132307
+ - wav: /content/takeout_452_pt_0/c87c8ab8c9ad60811f1dca63a7ad2890b88e9355861a828d810fcfb2cb24a60f.wav
+ - src: "another advertisement said one stop shopping"
+ - res: "another advertisement said once stopped chopping"
+--------------------------------------------------------------------------------
+WER: 0.666667, CER: 0.114286, loss: 16.722971
+ - wav: /content/takeout_452_pt_0/c879ffcc89839a98023b49100a04c50742fa0edfcbdcc183179c3322b5ce18c2.wav
+ - src: "shortly thereafter john's sister michelle darosa joined straylight run"
+ - res: "shortly thereafter joan sister michel de rosa joined stray light run"
+--------------------------------------------------------------------------------
+

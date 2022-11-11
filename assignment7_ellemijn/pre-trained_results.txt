@@ -1,0 +1,84 @@
+Test on /content/takeout_452_pt_0/test.csv - WER: 0.157895, CER: 0.060690, loss: 11.496986
+--------------------------------------------------------------------------------
+Best WER: 
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 13.098600
+ - wav: /content/takeout_452_pt_0/c88b5b876598f0c44c7dff6511bc9c6b8ebb7023b5c0db81a9522da49f9cfe30.wav
+ - src: "it is structurally related to azobenzene"
+ - res: "it is structurally related to azobenzene"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 9.253637
+ - wav: /content/takeout_452_pt_0/c882f9e8c28a22637ec39f6ea3ecbbd98a7ac299213ace16b307da0364657def.wav
+ - src: "many of its contributors used pseudonyms or initials"
+ - res: "many of its contributors used pseudonyms or initials"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 9.026503
+ - wav: /content/takeout_452_pt_0/c878d741006e5ae01a75ef684d9dd301475e6f0f53dbd74bf7fa25513dbe3399.wav
+ - src: "using resources skill ingenuity and experience service providers benefit service consumers"
+ - res: "using resources skill ingenuity and experience service providers benefit service consumers"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 8.697770
+ - wav: /content/takeout_452_pt_0/c878e002e8a4101bcf9db694a2dc7617a0370bd2eb649999b184a3188abe0ca7.wav
+ - src: "no single test has adequate sensitivity and specificity to diagnose pelvic inflammatory disease"
+ - res: "no single test has adequate sensitivity and specificity to diagnose pelvic inflammatory disease"
+--------------------------------------------------------------------------------
+WER: 0.000000, CER: 0.000000, loss: 8.678138
+ - wav: /content/takeout_452_pt_0/c87d45e02d39ba482f34ecf5c1cb0e086111d556acf37f5f5934a830962a4073.wav
+ - src: "he returned for an autumn campaign but made no impact in three races"
+ - res: "he returned for an autumn campaign but made no impact in three races"
+--------------------------------------------------------------------------------
+Median WER: 
+--------------------------------------------------------------------------------
+WER: 0.111111, CER: 0.072727, loss: 14.626641
+ - wav: /content/takeout_452_pt_0/c886e58cf37c9bdc2265e2a2f726d2922ac3b4a6de24b457cfd8df945d35caf8.wav
+ - src: "it contains at least a hardware random number generator"
+ - res: "it contains at least a hardware render number generator "
+--------------------------------------------------------------------------------
+WER: 0.111111, CER: 0.061224, loss: 3.613644
+ - wav: /content/takeout_452_pt_0/c8917fdd1d177171012c4c0f29e98e046cf3fa2afea4075d5abd8ed53b5b9c95.wav
+ - src: "however these stores are not owned by the company"
+ - res: "however these sources are not owned by the company"
+--------------------------------------------------------------------------------
+WER: 0.125000, CER: 0.039216, loss: 16.293535
+ - wav: /content/takeout_452_pt_0/c88c8de13fb4e3804df1acde019b6a3a1fa19ee6c1ee845a1621bcff8cb7d5ef.wav
+ - src: "augustus caesar preferred raetian wine to any other"
+ - res: "augustus caesar preferred ration wine to any other"
+--------------------------------------------------------------------------------
+WER: 0.142857, CER: 0.021277, loss: 20.184484
+ - wav: /content/takeout_452_pt_0/c87a1d7858c420f9d43920f86ac2e26545c6c7620d7a801477b1a26d6174a6ca.wav
+ - src: "luoyang was defended by three chinese divisions"
+ - res: "loyang was defended by three chinese divisions"
+--------------------------------------------------------------------------------
+WER: 0.142857, CER: 0.012048, loss: 3.269628
+ - wav: /content/takeout_452_pt_0/c888585a83a0695fb74fde296215f0acad2e01fb04f72e18ca8fcdefae98d595.wav
+ - src: "those two leaves then continue to grow longer from their base much like fingernails"
+ - res: "those two leaves then continue to grow longer from their base much like finger nails"
+--------------------------------------------------------------------------------
+Worst WER: 
+--------------------------------------------------------------------------------
+WER: 0.500000, CER: 0.192308, loss: 18.301054
+ - wav: /content/takeout_452_pt_0/c859d1a5b03fa078464efe10c7298a0ce44a0c1d2f1fe0d8d03bfc46b5349325.wav
+ - src: "the film stars kapoor pran and padmini in lead roles"
+ - res: "the film stars caper pen and papinian lead rolls"
+--------------------------------------------------------------------------------
+WER: 0.500000, CER: 0.113636, loss: 8.176886
+ - wav: /content/takeout_452_pt_0/c87c8ab8c9ad60811f1dca63a7ad2890b88e9355861a828d810fcfb2cb24a60f.wav
+ - src: "another advertisement said one stop shopping"
+ - res: "another advertisement said once stopped chopping"
+--------------------------------------------------------------------------------
+WER: 0.538462, CER: 0.250000, loss: 32.548622
+ - wav: /content/takeout_452_pt_0/c884e5f7d9feaffc723366affdd447bfd81e6bff39a7e8f7f673b899f1878152.wav
+ - src: "miedema and evans then set each other up for the goals that followed"
+ - res: "my demand than stand sadeah other up for the girls that followed"
+--------------------------------------------------------------------------------
+WER: 0.555556, CER: 0.259259, loss: 38.980614
+ - wav: /content/takeout_452_pt_0/c875e99afa0f1aebc3f6863989905ae431a973837270e0c31026142af3d251e5.wav
+ - src: "taylor married an israeli woman and moved to jerusalem"
+ - res: "say there married israelan and moved to jerusalem"
+--------------------------------------------------------------------------------
+WER: 0.666667, CER: 0.114286, loss: 18.168751
+ - wav: /content/takeout_452_pt_0/c879ffcc89839a98023b49100a04c50742fa0edfcbdcc183179c3322b5ce18c2.wav
+ - src: "shortly thereafter john's sister michelle darosa joined straylight run"
+ - res: "shortly thereafter joan sister michel de rosa joined stray light run"
+--------------------------------------------------------------------------------
+
