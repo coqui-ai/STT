@@ -7,7 +7,7 @@ You can view the original README of the COQUI SST model under ``README.rst``.
 
 About this Project
 ------------
-- The project is located under the directory ``assignment7_ellemijn``. It runs a [COQUI STT model](https://github.com/coqui-ai/STT/blob/main/notebooks/train_personal_model_with_common_voice.ipynb) and fine-tunes it on a self-recorded open-source [CommonVoice](https://commonvoice.mozilla.org/) dataset containing 230 .mp3 files. 
+- The notebook is located under the directory ``assignment7_ellemijn``. It runs a [COQUI STT model](https://github.com/coqui-ai/STT/blob/main/notebooks/train_personal_model_with_common_voice.ipynb) and fine-tunes it on a self-recorded open-source [CommonVoice](https://commonvoice.mozilla.org/) dataset containing 230 .mp3 files. 
 
 - **To run this project**, download or clone this github repository, and execute the notebook ``assignment7_ellemijn/fine-tune_model.ipynb``.  
 This directory also contains two .txt files with results from an earlier run of the pre-trained model and fine-tuned model on the self-recorded CommonVoice test set.
