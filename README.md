@@ -2,8 +2,8 @@ ASSIGNMENT 7
 -----------
 *by Ellemijn Galjaard*
 
-This project is forked from the [Coqui SST GitHub model](https://github.com/coqui-ai/STT).  
-You can view the original documentation under ``README.rst``.
+This project a fork of the [Coqui SST GitHub model](https://github.com/coqui-ai/STT), with an added notebook that fine-tunes this model.  
+You can view the original README of the COQUI SST model under ``README.rst``.
 
 About this Project
 ------------
