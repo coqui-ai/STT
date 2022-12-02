@@ -175,14 +175,14 @@ You will now see the `ghcr.io/coqui-ai/stt-train` image when you run the command
 ```
 $ docker image ls
 REPOSITORY                               TAG                  IMAGE ID       CREATED          SIZE
-ghcr.io/coqui-ai/stt-train               latest      d145cb0930ea   37 minutes ago   5.12GB
+ghcr.io/coqui-ai/stt-train               latest      e1ab9313051d   37 minutes ago   5.12GB
 ``` -->
 
 ### Testing the image by creating a container and running a script
 
 Now that you have your Docker image pulled down, you can create a _container_ from the image. Here, we're going to create a container and run a simple test to make sure that the image is working correctly.
 
-_Note that you can refer to Docker images by `id` - such as `7cdc0bb1fe2a` in the example above, or by the image's name and `tag`. Here, we will be using the image name and `tag` - ie `ghcr.io/coqui-ai/stt-train:latest`._
+_Note that you can refer to Docker images by `id` - such as `e1ab9313051d` in the example above, or by the image's name and `tag`. Here, we will be using the image name and `tag` - ie `ghcr.io/coqui-ai/stt-train:latest`._
 
 ```
 $ docker run  -it --name stt-test --entrypoint /bin/bash ghcr.io/coqui-ai/stt-train:latest
