@@ -125,7 +125,7 @@ def _maybe_convert_set(
         # Get audiofile path and transcript for each sentence in tsv
         samples = []
         with open(input_tsv, encoding="utf-8") as input_tsv_file:
-            reader = csv.DictReader(input_tsv_file, delimiter="\t")
+            reader = csv.DictReader(input_tsv_file, delimiter="\t", quoting=csv.QUOTE_NONE)
             for row in reader:
                 samples.append(
                     (
