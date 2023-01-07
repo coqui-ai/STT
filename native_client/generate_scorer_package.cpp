@@ -51,7 +51,7 @@ create_package(absl::optional<string> checkpoint_path,
     }
 
     if (!force_bytes_output_mode.value() && !checkpoint_path.has_value()) {
-        cerr << "No --alphabet file specified, not using bytes output mode, can't continue.\n";
+        cerr << "No --checkpoint file specified, not using bytes output mode, can't continue.\nCheckpoint path must contains an alphabet.\nStart by creating an alphabet for your models using coqui_stt_training.util.check_characters if needed.\n\n    python -m coqui_stt_training.util.check_characters \\\n				--csv-files ... \\\n				--alphabet-format | grep -v '^#' | sort -n > models/alphabet.txt\n\nThis will create an alphabet models/alphabet.txt.\nNow rerun this script by giving models/ as the checkpoint path.\n\n    generate_scorer_package  \\\n		--checkpoint models/ \\\n		...\n";
         return 1;
     }
 
