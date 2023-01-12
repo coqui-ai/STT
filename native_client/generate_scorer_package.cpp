@@ -51,8 +51,8 @@ create_package(absl::optional<string> checkpoint_path,
     }
 
     if (!force_bytes_output_mode.value() && !checkpoint_path.has_value()) {
-        cerr << "No --checkpoint file specified, not using bytes output mode, can't continue."
-             << "\nCheckpoint path must contains an alphabet."
+        cerr << "No --checkpoint path specified, not using bytes output mode, can't continue."
+             << "\nCheckpoint path must contain an alphabet."
              << "\nStart by creating an alphabet for your models using coqui_stt_training.util.check_characters if needed.\n"
              << "\n    python -m coqui_stt_training.util.check_characters \\"
              << "\n				--csv-files ... \\"
