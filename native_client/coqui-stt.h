@@ -52,6 +52,24 @@ typedef struct CandidateTranscript {
    */
   const double confidence;
 } CandidateTranscript;
+/**
+ * @brief  An structure to contain emissions (the softmax output of individual
+ *         timesteps) from the acoustic model.
+ *
+ * @member The layout of the emissions member is time major, thus to access the 
+ *         probability of symbol j at timestep i you would use 
+ *         emissions[i * num_symbols + j]
+ */
+typedef struct AcousticModelEmissions {
+  /** number of symbols in the alphabet, including CTC blank */
+  int num_symbols;
+  /** num_symbols long array of NUL-terminated strings */
+  const char **symbols;
+  /** total number of timesteps */
+  int num_timesteps;
+  /** num_timesteps long array, each pointer is a num_symbols long array */
+  const double *emissions;
+} AcousticModelEmissions;
 
 /**
  * @brief An array of CandidateTranscript objects computed by the model.
@@ -61,6 +79,8 @@ typedef struct Metadata {
   const CandidateTranscript* const transcripts;
   /** Size of the transcripts array */
   const unsigned int num_transcripts;
+  /** Logits and information to decode them **/
+  const AcousticModelEmissions* const emissions;
 } Metadata;
 
 #endif /* SWIG_ERRORS_ONLY */
@@ -306,6 +326,13 @@ Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
  *
  * @return Zero for success, non-zero on failure.
  */
+
+STT_EXPORT
+Metadata* STT_SpeechToTextWithEmissions(ModelState* aCtx,
+                                       const short* aBuffer,
+                                       unsigned int aBufferSize,
+                                       unsigned int aNumResults);
+                                       
 STT_EXPORT
 int STT_CreateStream(ModelState* aCtx,
                     StreamingState** retval);

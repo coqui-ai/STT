@@ -10,6 +10,7 @@ struct Output {
     double confidence;
     std::vector<unsigned int> tokens;
     std::vector<unsigned int> timesteps;
+    std::vector<std::vector<std::pair<int, double>>> probs;
 };
 
 struct FlashlightOutput {
