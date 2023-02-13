@@ -12,8 +12,8 @@ jobs:
       matrix:
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
       - name: Run training unittests
@@ -25,8 +25,8 @@ jobs:
     name: "Lin|Pre-commit checks"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.8"
       - name: Run pre-comit checks
