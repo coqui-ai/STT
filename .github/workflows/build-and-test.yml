@@ -1250,11 +1250,7 @@ jobs:
         run: |
           if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
             # PR build
-<<<<<<< Updated upstream
-            echo "::ccccccccccccccccccccccccccccccccccccccccccccccccccccccc name=tag::dev"
-=======
             echo "tag=dev" >> $GITHUB_OUTPUT
->>>>>>> Stashed changes
           else
             VERSION="v$(cat VERSION)"
             if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
@@ -2382,11 +2378,7 @@ jobs:
         id: npm-cache-dir
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-<<<<<<< Updated upstream
-      - uses: actions/cache@v2
-=======
       - uses: actions/cache@v3
->>>>>>> Stashed changes
         id: node-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2450,11 +2442,7 @@ jobs:
         id: npm-cache-dir
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-<<<<<<< Updated upstream
-      - uses: actions/cache@v2
-=======
       - uses: actions/cache@v3
->>>>>>> Stashed changes
         id: electron-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2766,11 +2754,7 @@ jobs:
         id: npm-cache-dir
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-<<<<<<< Updated upstream
-      - uses: actions/cache@v2
-=======
       - uses: actions/cache@v3
->>>>>>> Stashed changes
         id: node-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2835,11 +2819,7 @@ jobs:
         id: npm-cache-dir
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-<<<<<<< Updated upstream
-      - uses: actions/cache@v2
-=======
       - uses: actions/cache@v3
->>>>>>> Stashed changes
         id: electron-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
