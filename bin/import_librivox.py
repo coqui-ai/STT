@@ -141,7 +141,7 @@ def _convert_audio_and_split_sentences(
                 if relative_to:
                     wav_file = wav_file.relative_to(relative_to)
 
-                files.append(str(wav_file))
+                files.append(wav_file.as_posix())
                 transcripts.append(transcript)
 
     if conversions:
