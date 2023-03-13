@@ -8,8 +8,6 @@
 
 #include "decoder_utils.h"
 
-
-
 PathTrie::PathTrie() {
   log_prob_b_prev = -NUM_FLT_INF;
   log_prob_nb_prev = -NUM_FLT_INF;
