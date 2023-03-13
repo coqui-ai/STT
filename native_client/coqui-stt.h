@@ -51,7 +51,9 @@ typedef struct CandidateTranscript {
    * contributed to the creation of this transcript.
    */
   const double confidence;
+    
 } CandidateTranscript;
+    
 /**
  * @brief  An structure to contain emissions (the softmax output of individual
  *         timesteps) from the acoustic model.
@@ -316,23 +318,33 @@ Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
                                        unsigned int aNumResults);
 
 /**
- * @brief Create a new streaming inference state. The streaming state returned
- *        by this function can then be passed to {@link STT_FeedAudioContent()}
+ * @brief Use the Coqui STT model to generate emissions (the softmax output of individual
+ *        timesteps).
+ *        by this function can then be passed to {@link STT_CreateStream()}
  *        and {@link STT_FinishStream()}.
  *
  * @param aCtx The ModelState pointer for the model to use.
  * @param[out] retval an opaque pointer that represents the streaming state. Can
  *                    be NULL if an error occurs.
  *
- * @return Zero for success, non-zero on failure.
+ * @return probability of symbol j at timestep i you would use 
+ *         emissions[i * num_symbols + j]
  */
-
 STT_EXPORT
 Metadata* STT_SpeechToTextWithEmissions(ModelState* aCtx,
                                        const short* aBuffer,
                                        unsigned int aBufferSize,
-                                       unsigned int aNumResults);
-                                       
+                                       unsigned int aNumResults);  
+    
+/**
+ * @brief Create a new streaming inference state. The streaming state returned
+ *        by this function can then be passed to {@link STT_FeedAudioContent()}
+ *        and {@link STT_FinishStream()}.
+ *
+ * @param aCtx The ModelState pointer for the model to use. 
+ *
+ * @return Zero for success, non-zero on failure.
+ */
 STT_EXPORT
 int STT_CreateStream(ModelState* aCtx,
                     StreamingState** retval);
