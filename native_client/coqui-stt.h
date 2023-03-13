@@ -51,15 +51,15 @@ typedef struct CandidateTranscript {
    * contributed to the creation of this transcript.
    */
   const double confidence;
-    
+
 } CandidateTranscript;
-    
+
 /**
  * @brief  An structure to contain emissions (the softmax output of individual
  *         timesteps) from the acoustic model.
  *
- * @member The layout of the emissions member is time major, thus to access the 
- *         probability of symbol j at timestep i you would use 
+ * @member The layout of the emissions member is time major, thus to access the
+ *         probability of symbol j at timestep i you would use
  *         emissions[i * num_symbols + j]
  */
 typedef struct AcousticModelEmissions {
@@ -327,21 +327,21 @@ Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
  * @param[out] retval an opaque pointer that represents the streaming state. Can
  *                    be NULL if an error occurs.
  *
- * @return probability of symbol j at timestep i you would use 
+ * @return probability of symbol j at timestep i you would use
  *         emissions[i * num_symbols + j]
  */
 STT_EXPORT
 Metadata* STT_SpeechToTextWithEmissions(ModelState* aCtx,
                                        const short* aBuffer,
                                        unsigned int aBufferSize,
-                                       unsigned int aNumResults);  
-    
+                                       unsigned int aNumResults);
+
 /**
  * @brief Create a new streaming inference state. The streaming state returned
  *        by this function can then be passed to {@link STT_FeedAudioContent()}
  *        and {@link STT_FinishStream()}.
  *
- * @param aCtx The ModelState pointer for the model to use. 
+ * @param aCtx The ModelState pointer for the model to use.
  *
  * @return Zero for success, non-zero on failure.
  */

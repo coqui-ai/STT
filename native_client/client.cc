@@ -183,7 +183,7 @@ MetadataToJSON(Metadata* result)
       out_string << "\n";
     }
     out_string << "\n]";
-  } 
+  }
 
   out_string << "\n}\n";
 

@@ -141,7 +141,7 @@ bool ProcessArgs(int argc, char** argv)
         case 'e':
             extended_metadata = true;
             break;
-            
+
         case 'L':
             keep_emissions = true;
             break;
