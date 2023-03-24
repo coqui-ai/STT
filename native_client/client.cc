@@ -155,6 +155,36 @@ MetadataToJSON(Metadata* result)
     }
   }
 
+  if (keep_emissions && result->emissions != NULL) {
+    int num_timesteps = result->emissions->num_timesteps;
+    int num_symbols = result->emissions->num_symbols;
+    int class_dim = num_symbols + 1;
+    const char **symbol_table = result->emissions->symbols;
+    out_string << ",\n" << R"("alphabet")" << ":[";
+    for(int i = 0; i < class_dim; i++) {
+      out_string << "\"" << symbol_table[i] << "\"";
+      if(i < class_dim - 1) {
+        out_string << ", ";
+      }
+    }
+    out_string << "],\n" << R"("emissions")" << ":[\n";
+    for(int i = 0; i < num_timesteps; i++) {
+      out_string << "[";
+      for(int j = 0; j < num_symbols; j++) {
+        out_string << result->emissions->emissions[i * num_symbols + j];
+        if(j < num_symbols - 1) {
+          out_string << ", ";
+        }
+      }
+      out_string << "]";
+      if(i < num_timesteps - 1) {
+        out_string << ",";
+      }
+      out_string << "\n";
+    }
+    out_string << "\n]";
+  }
+
   out_string << "\n}\n";
 
   return strdup(out_string.str().c_str());
@@ -169,12 +199,16 @@ LocalDsSTT(ModelState* aCtx, const short* aBuffer, size_t aBufferSize,
   clock_t stt_start_time = clock();
 
   // sphinx-doc: c_ref_inference_start
-  if (extended_output) {
+  if (extended_output && !keep_emissions) {
     Metadata *result = STT_SpeechToTextWithMetadata(aCtx, aBuffer, aBufferSize, 1);
     res.string = CandidateTranscriptToString(&result->transcripts[0]);
     STT_FreeMetadata(result);
-  } else if (json_output) {
+  } else if (json_output && !keep_emissions) {
     Metadata *result = STT_SpeechToTextWithMetadata(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
+    res.string = MetadataToJSON(result);
+    STT_FreeMetadata(result);
+  } else if (keep_emissions) {
+    Metadata *result = STT_SpeechToTextWithEmissions(aCtx, aBuffer, aBufferSize, json_candidate_transcripts);
     res.string = MetadataToJSON(result);
     STT_FreeMetadata(result);
   } else if (stream_size > 0) {

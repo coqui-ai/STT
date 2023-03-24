@@ -39,7 +39,7 @@ bool init_from_array_of_bytes = false;
 int json_candidate_transcripts = 3;
 
 int stream_size = 0;
-
+bool keep_emissions = false;
 int extended_stream_size = 0;
 
 char* hot_words = NULL;
@@ -59,6 +59,7 @@ void PrintHelp(const char* bin)
     "\t--lm_beta LM_BETA\t\tValue for language model beta param (float)\n"
     "\t-t\t\t\t\tRun in benchmark mode, output mfcc & inference time\n"
     "\t--extended\t\t\tOutput string from extended metadata\n"
+    "\t--keep_emissions\t\t\tSave the output of the acoustic model\n"
     "\t--json\t\t\t\tExtended output, shows word timings as JSON\n"
     "\t--candidate_transcripts NUMBER\tNumber of candidate transcripts to include in JSON output\n"
     "\t--stream size\t\t\tRun in stream mode, output intermediate results\n"
@@ -85,6 +86,7 @@ bool ProcessArgs(int argc, char** argv)
             {"lm_beta", required_argument, nullptr, 'd'},
             {"t", no_argument, nullptr, 't'},
             {"extended", no_argument, nullptr, 'e'},
+            {"keep_emissions", no_argument, nullptr, 'L'},
             {"json", no_argument, nullptr, 'j'},
             {"init_from_bytes", no_argument, nullptr, 'B'},
             {"candidate_transcripts", required_argument, nullptr, 150},
@@ -138,6 +140,10 @@ bool ProcessArgs(int argc, char** argv)
 
         case 'e':
             extended_metadata = true;
+            break;
+
+        case 'L':
+            keep_emissions = true;
             break;
 
         case 'j':

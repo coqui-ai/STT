@@ -51,7 +51,27 @@ typedef struct CandidateTranscript {
    * contributed to the creation of this transcript.
    */
   const double confidence;
+
 } CandidateTranscript;
+
+/**
+ * @brief  An structure to contain emissions (the softmax output of individual
+ *         timesteps) from the acoustic model.
+ *
+ * @member The layout of the emissions member is time major, thus to access the
+ *         probability of symbol j at timestep i you would use
+ *         emissions[i * num_symbols + j]
+ */
+typedef struct AcousticModelEmissions {
+  /** number of symbols in the alphabet, including CTC blank */
+  int num_symbols;
+  /** num_symbols long array of NUL-terminated strings */
+  const char **symbols;
+  /** total number of timesteps */
+  int num_timesteps;
+  /** num_timesteps long array, each pointer is a num_symbols long array */
+  const double *emissions;
+} AcousticModelEmissions;
 
 /**
  * @brief An array of CandidateTranscript objects computed by the model.
@@ -61,6 +81,8 @@ typedef struct Metadata {
   const CandidateTranscript* const transcripts;
   /** Size of the transcripts array */
   const unsigned int num_transcripts;
+  /** Logits and information to decode them **/
+  const AcousticModelEmissions* const emissions;
 } Metadata;
 
 #endif /* SWIG_ERRORS_ONLY */
@@ -296,13 +318,30 @@ Metadata* STT_SpeechToTextWithMetadata(ModelState* aCtx,
                                        unsigned int aNumResults);
 
 /**
- * @brief Create a new streaming inference state. The streaming state returned
- *        by this function can then be passed to {@link STT_FeedAudioContent()}
+ * @brief Use the Coqui STT model to generate emissions (the softmax output of individual
+ *        timesteps).
+ *        by this function can then be passed to {@link STT_CreateStream()}
  *        and {@link STT_FinishStream()}.
  *
  * @param aCtx The ModelState pointer for the model to use.
  * @param[out] retval an opaque pointer that represents the streaming state. Can
  *                    be NULL if an error occurs.
+ *
+ * @return probability of symbol j at timestep i you would use
+ *         emissions[i * num_symbols + j]
+ */
+STT_EXPORT
+Metadata* STT_SpeechToTextWithEmissions(ModelState* aCtx,
+                                       const short* aBuffer,
+                                       unsigned int aBufferSize,
+                                       unsigned int aNumResults);
+
+/**
+ * @brief Create a new streaming inference state. The streaming state returned
+ *        by this function can then be passed to {@link STT_FeedAudioContent()}
+ *        and {@link STT_FinishStream()}.
+ *
+ * @param aCtx The ModelState pointer for the model to use.
  *
  * @return Zero for success, non-zero on failure.
  */
