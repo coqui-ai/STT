@@ -69,6 +69,11 @@ Model compatibility
 
 🐸STT models are versioned to mitigate incompatibilities with clients and language bindings. If you get an error saying your model file version is too old for the client, you should either (1) upgrade to a newer model, (2) re-export your model from the checkpoint using a newer version of the code, or (3) downgrade your client if you need to use the old model and can't re-export it.
 
+Data compatibility
+^^^^^^^^^^^^^^^^^^
+
+Currently, 🐸STT can is only compatable with audio that is saved in the .WAV format. Files in other formats will need to be converted using other software before they can be transcribed using 🐸STT.
+
 .. _py-usage:
 
 Using the Python package
