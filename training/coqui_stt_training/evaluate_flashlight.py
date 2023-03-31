@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import sys
-from multiprocessing import cpu_count
 
 import progressbar
 import tensorflow.compat.v1 as tfv1
@@ -13,6 +12,7 @@ from coqui_stt_ctcdecoder import (
     flashlight_beam_search_decoder_batch,
     FlashlightDecoderState,
 )
+from coqui_stt_training.util import cpu
 from six.moves import zip
 
 import tensorflow as tf
@@ -95,8 +95,8 @@ def evaluate(test_csvs, create_model):
 
     # Get number of accessible CPU cores for this process
     try:
-        num_processes = cpu_count()
-    except NotImplementedError:
+        num_processes = cpu.available_count()
+    except Exception:
         num_processes = 1
 
     with open(Config.vocab_file) as fin:

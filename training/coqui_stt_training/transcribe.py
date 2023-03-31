@@ -30,11 +30,15 @@ from coqui_stt_training.util.config import (
 from coqui_stt_training.util.feeding import split_audio_file
 from coqui_stt_training.util.helpers import check_ctcdecoder_version
 from coqui_stt_training.util.multiprocessing import PoolBase
+from coqui_stt_training.util import cpu
 from tqdm import tqdm
 
 
 def cpu_count():
-    return os.cpu_count() or 1
+    try:
+        return cpu.available_count()
+    except Exception:
+        return 1
 
 
 class TranscriptionPool(PoolBase):
