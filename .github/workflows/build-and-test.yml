@@ -2011,7 +2011,7 @@ jobs:
           node-version: 12
       - uses: actions/download-artifact@v3
         with:
-          name: "stt_intermediate-tflite-macOS.tgz"
+          name: "stt_intermediate-tflite-macOS_x64.tgz"
           path: ${{ env.CI_TMP_DIR }}
       - uses: actions/download-artifact@v3
         with:
