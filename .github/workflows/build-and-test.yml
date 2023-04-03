@@ -1804,7 +1804,11 @@ jobs:
     needs: [build-universal-lib-macOS, swig_macOS]
     strategy:
       matrix:
-        arch: [arm64, x86_64]
+        include:
+          - arch: x86_64
+            node-arch: x64
+          - arch: arm64
+            node-arch: arm64
     steps:
       - uses: actions/checkout@v3
         with:
@@ -1828,7 +1832,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          architecture: ${{ matrix.arch }}
+          architecture: ${{ matrix.node-arch }}
       - uses: actions/cache@v3
         id: node-headers-cache
         with:
