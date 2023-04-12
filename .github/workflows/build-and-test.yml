@@ -32,10 +32,10 @@ jobs:
       is-prerelease: ${{ steps.check-version.outputs.is-prerelease }}
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Check VERSION file matches pushed Git tag and check if prerelease
@@ -55,23 +55,25 @@ jobs:
 
           # Tag for this release (version with leading v)
           tag=$(echo "${{ github.ref }}" | sed -e 's|^refs/tags/||')
-          echo ::set-output name=release-tag::${tag}
+          echo "release-tag=${tag}" >> $GITHUB_OUTPUT
 
           # Version without leading v
           version=$(cat VERSION)
-          echo ::set-output name=version::${version}
+          echo "version=${version}" >> $GITHUB_OUTPUT
 
           # Is this a prerelease or not?
           pip install semver
           cat <<EOF | python - "${{ github.ref }}"
           import sys
+          import os
           import semver
           ref = sys.argv[1]
           prefix = "refs/tags/v"
           assert ref.startswith(prefix)
           parsed = semver.parse_version_info(ref[len(prefix):])
-          print("::set-output name=is-prerelease::{}".format("true" if parsed.prerelease else "false"))
-          print("::set-output name=release-notes-file::{}".format("" if parsed.prerelease else "RELEASE_NOTES.md"))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              print("is-prerelease={}".format("true" if parsed.prerelease else "false"), file=fh)
+              print("release-notes-file={}".format("" if parsed.prerelease else "RELEASE_NOTES.md"), file=fh)
           EOF
       - uses: softprops/action-gh-release@v1
         with:
@@ -85,18 +87,19 @@ jobs:
     env:
       swig_hash: "90cdbee6a69d13b39d734083b9f91069533b0d7b"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: "swig/swig"
           ref: ${{ env.swig_hash }}
       - run: |
           mkdir -p build-static/
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: swig-build-cache
         with:
           path: build-static/
           key: swig-win-3-${{ env.swig_hash }}
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends autoconf automake bison build-essential mingw-w64
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
       - run: |
@@ -120,7 +123,7 @@ jobs:
       - run: |
           make install
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/build-static/
@@ -134,13 +137,13 @@ jobs:
     env:
       swig_hash: "90cdbee6a69d13b39d734083b9f91069533b0d7b"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: "swig/swig"
           ref: ${{ env.swig_hash }}
       - run: |
           mkdir -p build-static/
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: swig-build-cache
         with:
           path: build-static/
@@ -163,7 +166,7 @@ jobs:
       - run: |
           make install
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/build-static/
@@ -179,7 +182,7 @@ jobs:
           curl -sSL https://github.com/coqui-ai/STT/releases/download/v0.10.0-alpha.7/sox-14.4.2.tar.bz2 | tar xjf -
       - run: |
           mkdir -p sox-build/
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: sox-build-cache
         with:
           path: sox-build/
@@ -205,7 +208,7 @@ jobs:
           cd sox-14.4.2
           make install
         if: steps.sox-build-cache.outputs.cache-hit != 'true'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/sox-build/
@@ -221,10 +224,10 @@ jobs:
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -256,7 +259,7 @@ jobs:
       - name: Auditwheel repair
         run: |
           auditwheel repair native_client/ctcdecode/dist/*.whl
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.python-version }}.whl"
           path: ${{ github.workspace }}/wheelhouse/*.whl
@@ -269,13 +272,13 @@ jobs:
       matrix:
         samplerate: ["8000", "16000"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-3.7.whl"
       - run: |
@@ -309,11 +312,11 @@ jobs:
           cp /tmp/train*/output_graph.* /tmp/checkpoint.tar.xz ${{ github.workspace }}/tmp/
       - run: |
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "test-checkpoint.${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
@@ -326,30 +329,30 @@ jobs:
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
       - name: Install dependencies
         run: |
-          apt-get update
+          apt-get update -y
           apt-get install -y --no-install-recommends xz-utils zip liblzma-dev libbz2-dev
       - name: Setup venv
         run: |
           /opt/python/cp37-cp37m/bin/python -m venv /tmp/venv
           echo "/tmp/venv/bin" >> $GITHUB_PATH
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "libsox3_Linux"
           path: ${{ github.workspace }}/sox-build/
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.Linux.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
@@ -365,22 +368,22 @@ jobs:
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - name: Install dependencies
         run: |
-          apt-get update
+          apt-get update -y
           apt-get install -y --no-install-recommends xz-utils liblzma-dev libbz2-dev
       - name: Extract native_client.tar.xz
         run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -401,7 +404,7 @@ jobs:
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
           path: ${{ github.workspace }}/native_client/python/dist/*.whl
@@ -410,17 +413,17 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [ build-lib-Linux, swig_Linux ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.Linux.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -429,15 +432,15 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
           key: node-headers-12.7.0_17.0.1
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
@@ -446,11 +449,11 @@ jobs:
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
           electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0 19.0.0"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "nodewrapper-tflite-Linux_amd64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
@@ -462,16 +465,16 @@ jobs:
       volumes:
         - ${{ github.workspace }}:${{ github.workspace }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
       - name: Install dependencies
         run: |
-          apt-get update
+          apt-get update -y
           apt-get install -y --no-install-recommends xz-utils zip liblzma-dev libbz2-dev
       - name: Setup venv
         run: |
@@ -483,11 +486,11 @@ jobs:
       - run: BAZEL_WASM_EXTRA_FLAGS="--//native_client:wasm_emit=es6" ./ci_scripts/wasm-build.sh
       - run: make -C native_client/wasm clean pack
         shell: bash
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.wasm.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.wasm.es6.tgz"
           path: ${{ github.workspace }}/native_client/wasm/stt-wasm-*.tgz
@@ -502,11 +505,11 @@ jobs:
     env:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "libstt.tflite.wasm.es6.tgz"
           path: ${{ env.CI_TMP_DIR }}
@@ -525,10 +528,10 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.Linux.tar.xz"
           path: ${{ env.CI_TMP_DIR }}
@@ -536,7 +539,7 @@ jobs:
           cd ${{ env.CI_TMP_DIR }}
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
           ls -lh
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -563,19 +566,20 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -604,20 +608,20 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Linux.whl"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.python-version }}.whl"
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -628,6 +632,7 @@ jobs:
       - run: |
           python -m pip install coqui_stt_ctcdecoder-*.whl
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopus0 libopusfile0
       - run: |
           ./ci_scripts/evaluate-export-test.sh ${{ matrix.samplerate }}
@@ -647,19 +652,20 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs-version }}
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -667,7 +673,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ~/.npm/
@@ -698,19 +704,20 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt_intermediate-tflite-Linux.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -718,7 +725,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-modules-cache
         with:
           path: ~/.npm/
@@ -741,16 +748,17 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'pull_request' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-3.7.whl"
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
       - run: |
           python --version
@@ -773,11 +781,11 @@ jobs:
         samplerate: ["8000", "16000"]
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
       - run: |
@@ -813,19 +821,19 @@ jobs:
           cp /tmp/train/output_graph.pbmm ${CI_ARTIFACTS_DIR}
 
           time ./bin/run-ci-ldc93s1_checkpoint.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}-output_graph.pb
           path: ${{ github.workspace }}/artifacts/output_graph.pb
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}-output_graph.pbmm
           path: ${{ github.workspace }}/artifacts/output_graph.pbmm
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}-output_graph.tflite
           path: ${{ github.workspace }}/artifacts/output_graph.tflite
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}-checkpoint.tar.xz
           path: ${{ github.workspace }}/artifacts/checkpoint.tar.xz
@@ -839,11 +847,11 @@ jobs:
         samplerate: ["8000", "16000"]
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
       - run: |
@@ -855,6 +863,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopus0 libopusfile0 libvorbis-dev sox
       - name: Run tests
         run: |
@@ -893,11 +902,11 @@ jobs:
         samplerate: ["8000", "16000"]
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
       - run: |
@@ -909,6 +918,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopus0 sox
       - name: Run tests
         run: |
@@ -937,11 +947,11 @@ jobs:
         samplerate: ["8000", "16000"]
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
       - run: |
@@ -953,6 +963,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopus0 sox
       - name: Run tests
         run: |
@@ -977,11 +988,11 @@ jobs:
         samplerate: ["8000", "16000"]
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
       - run: |
@@ -993,6 +1004,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopus0 sox
       - name: Run tests
         run: |
@@ -1013,14 +1025,14 @@ jobs:
         samplerate: ["8000", "16000"]
         pyver: ["3.7"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyver }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-Linux-${{ matrix.pyver }}.whl"
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "training-basic-tests-checkpoint.tar.xz"
       - name: Extract training checkpoint
@@ -1038,6 +1050,7 @@ jobs:
       - run: |
           mkdir -p ${CI_ARTIFACTS_DIR} || true
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopus0 sox
       - name: Run tests
         run: |
@@ -1068,8 +1081,8 @@ jobs:
     needs: [create-release]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Update pip and install deps
@@ -1098,57 +1111,57 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [create-release, build-python-Linux, build-python-macOS, build-python-Windows, build-python-LinuxArmv7, build-python-LinuxAarch64]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Update pip and install twine
         run: |
           python -m pip install -U pip
           python -m pip install -U twine
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.6.8-macOS.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.7.9-macOS.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.8.9-macOS.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.9.4-macOS.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.10.1-macOS.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.6.8-Windows.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.7.9-Windows.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.8.8-Windows.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.9.4-Windows.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.10.0-Windows.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.6-Linux.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.7-Linux.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.8-Linux.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.9-Linux.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.10-Linux.whl
       - name: Setup PyPI config
@@ -1163,16 +1176,16 @@ jobs:
       # PyPI only supports ARM wheels built on manylinux images, but those aren't
       # ready for use yet, so we upload our wheels to the corresponding release
       # for this tag.
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.7-armv7.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.7-aarch64.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.9-armv7.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite-3.9-aarch64.whl
       - name: Upload artifacts to GitHub release
@@ -1187,40 +1200,40 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [create-release, build-lib-Windows, build-lib-Linux, build-universal-lib-macOS, build-lib-LinuxAarch64, build-lib-LinuxArmv7]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: libstt.tflite.Linux.zip
       - run: mv libstt.zip libstt.tflite.Linux.zip
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.Linux.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.Linux.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: libstt.tflite.macOS.zip
       - run: mv libstt.zip libstt.tflite.macOS.zip
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: libstt.tflite.wasm.zip
       - run: mv libstt.zip libstt.tflite.wasm.zip
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.macOS.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.macOS.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: libstt.tflite.Windows.zip
       - run: mv libstt.zip libstt.tflite.Windows.zip
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.Windows.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.Windows.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.linux.armv7.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.linux.armv7.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.linux.aarch64.tar.xz
       - run: mv native_client.tar.xz native_client.tflite.linux.aarch64.tar.xz
@@ -1239,7 +1252,7 @@ jobs:
     name: "Build Dockerfile.build image"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
@@ -1248,31 +1261,31 @@ jobs:
         run: |
           if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" != "true" ]]; then
             # PR build
-            echo "::set-output name=tag::dev"
+            echo "tag=dev" >> $GITHUB_OUTPUT
           else
             VERSION="v$(cat VERSION)"
             if [[ "${{ github.ref }}" != "refs/tags/${VERSION}" ]]; then
               echo "Pushed tag does not match VERSION file. Aborting push."
               exit 1
             fi
-            echo "::set-output name=tag::${VERSION}"
+            echo "tag=${VERSION}" >> $GITHUB_OUTPUT
           fi
       - name: Build
         run: |
           DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
-          docker build -f Dockerfile.build . -t ghcr.io/coqui-ai/stt-build:latest -t "ghcr.io/coqui-ai/stt-build:${DOCKER_TAG}"
+          docker build -f Dockerfile.build . -t ghcr.io/iarahealth/stt-build:latest -t "ghcr.io/iarahealth/stt-build:${DOCKER_TAG}"
   docker-publish:
     name: "Build and publish Docker training image to GHCR"
     runs-on: ubuntu-20.04
     needs: [upload-nc-release-assets]
     if: always()
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
       - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -1295,20 +1308,20 @@ jobs:
             fi
             tags="${VERSION} latest ${{ github.sha }}"
           fi
-          echo "::set-output name=tags::${tags}"
+          echo "tags=${tags}" >> $GITHUB_OUTPUT
       - name: Build
         run: |
           set -ex
           declare -a tag_args=()
           for tag in ${{ steps.compute-tag.outputs.tags }}; do
-            tag_args+=("-t" "ghcr.io/coqui-ai/stt-train:${tag}")
+            tag_args+=("-t" "ghcr.io/iarahealth/stt-train:${tag}")
           done
           docker build -f Dockerfile.train . ${tag_args[@]}
       - name: Push
         run: |
           set -ex
           for tag in ${{ steps.compute-tag.outputs.tags }}; do
-            docker push ghcr.io/coqui-ai/stt-train:${tag}
+            docker push ghcr.io/iarahealth/stt-train:${tag}
           done
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
   twine-upload-decoder:
@@ -1317,45 +1330,45 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [create-release, build-ctc-decoder-Linux, build-ctc-decoder-macos, build-ctc-decoder-windows]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Update pip and install twine
         run: |
           python -m pip install -U pip
           python -m pip install -U twine
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-Linux-3.6.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-Linux-3.7.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-Linux-3.8.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-Linux-3.9.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-Linux-3.10.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-macOS-3.6.8.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-macOS-3.7.9.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-macOS-3.8.9.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-macOS-3.9.4.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-macOS-3.10.1.whl
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: coqui_stt_ctcdecoder-windows-test.whl
       - name: Setup PyPI config
@@ -1382,13 +1395,14 @@ jobs:
       - name: Wait for PyPI index to refresh
         run: |
           sleep 60
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends libopusfile0 libopus-dev libopusfile-dev
       - run: |
           python -m pip install -U pip setuptools wheel jupyter
@@ -1402,27 +1416,27 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [create-release, repackage-nodejs-allplatforms, build-wasm]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-          registry-url: 'https://registry.npmjs.org'
-      - uses: actions/setup-python@v2
+          registry-url: https://npm.pkg.github.com/
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
       - name: Compute tag for npm from git tag
         id: compute-npm-tag
         run: |
           if [ "${{ needs.create-release.outputs.is-prerelease }}" = "true" ]; then
-            echo ::set-output name=npm-tag::prerelease
+            echo "npm-tag=prerelease" >> $GITHUB_OUTPUT
           else
-            echo ::set-output name=npm-tag::latest
+            echo "npm-tag=latest" >> $GITHUB_OUTPUT
           fi
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: stt-tflite.tgz
           path: ${{ github.workspace }}/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: libstt.tflite.wasm.es6.tgz
           path: ${{ github.workspace }}/
@@ -1431,7 +1445,7 @@ jobs:
             npm publish --access=public --verbose $pkg --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
           done
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
@@ -1445,13 +1459,13 @@ jobs:
     env:
       swig_hash: "90cdbee6a69d13b39d734083b9f91069533b0d7b"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: "swig/swig"
           ref: ${{ env.swig_hash }}
       - run: |
           mkdir -p build-static/
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: swig-build-cache
         with:
           path: build-static/
@@ -1477,7 +1491,7 @@ jobs:
       - run: |
           make install
         if: steps.swig-build-cache.outputs.cache-hit != 'true'
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/build-static/
@@ -1489,7 +1503,7 @@ jobs:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: ./.github/actions/install-python-upstream
@@ -1498,7 +1512,7 @@ jobs:
       - run: |
           python --version
           pip --version
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_macOS"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -1518,7 +1532,7 @@ jobs:
           make -C native_client/ctcdecode/ \
             NUM_PROCESSES=$(sysctl hw.ncpu |cut -d' ' -f2) \
             bindings
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-macOS-${{ matrix.python-version }}.whl"
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
@@ -1533,13 +1547,13 @@ jobs:
       matrix:
         samplerate: ["8000", "16000"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-macOS-3.7.9.whl"
       - run: |
@@ -1573,11 +1587,11 @@ jobs:
           cp /tmp/train*/output_graph.* /tmp/checkpoint.tar.xz ${{ github.workspace }}/tmp/
       - run: |
           ls -hal /tmp/ ${{ github.workspace }}/tmp/
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "test-model.mac.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/output_graph.tflite
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "test-checkpoint.${{ matrix.samplerate }}.zip"
           path: ${{ github.workspace }}/tmp/checkpoint.tar.xz
@@ -1588,11 +1602,11 @@ jobs:
       matrix:
         arch: ["x86_64", "arm64"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install system deps
@@ -1601,7 +1615,7 @@ jobs:
       - name: Select Xcode version
         run: |
           sudo xcode-select --switch /Applications/Xcode_13.1.app/Contents/Developer
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: cache
         if: matrix.arch == 'arm64'
         with:
@@ -1616,7 +1630,7 @@ jobs:
           export PATH="$HOME/arm-target/bin:$PATH"
 
           cd ~/arm-target
-          mkdir arm-brew && curl -L https://github.com/Homebrew/brew/tarball/3748bed378401ed75abdf32bcb3d2674d854a6f9 | tar xz --strip 1 -C arm-brew
+          mkdir arm-brew && curl -L https://github.com/Homebrew/brew/tarball/932d2cf3b77c9439a57b6a43577fc8d3b6399a62 | tar xz --strip 1 -C arm-brew
 
           export HOMEBREW_NO_AUTO_UPDATE=1
           export HOMEBREW_CACHE=~/arm-target/brew-cache
@@ -1639,11 +1653,11 @@ jobs:
           sudo rm -r /Library/Developer/CommandLineTools
       - run: ./ci_scripts/host-build.sh ${{ matrix.arch }}
       - run: ./ci_scripts/package.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.macOS.${{ matrix.arch }}.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.macOS.${{ matrix.arch }}.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
@@ -1651,11 +1665,11 @@ jobs:
     name: "iOS|Build libstt+client"
     runs-on: macos-12
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install system deps
@@ -1679,7 +1693,7 @@ jobs:
             tensorflow/bazel-bin/native_client/libstt.so \
             tensorflow/bazel-out/applebin_ios*/bin/native_client/stt_ios.zip \
             tensorflow/bazel-out/applebin_ios*/bin/native_client/kenlm_ios.zip
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "ios_artifacts.zip"
           path: ${{ github.workspace }}/artifacts/ios_artifacts.zip
@@ -1689,7 +1703,7 @@ jobs:
     needs: [build-lib-macOS]
     steps:
       # Download and extract individual arch packages and create universal binaries
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.macOS.x86_64.tar.xz"
       - run: |
@@ -1697,7 +1711,7 @@ jobs:
           cd nc.x86_64
           tar xvf ../native_client.tar.xz
           rm ../native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.macOS.arm64.tar.xz"
       - run: |
@@ -1714,12 +1728,12 @@ jobs:
       - run: |
           cd nc.x86_64
           tar cvJf native_client.tar.xz .
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.macOS.tar.xz"
           path: nc.x86_64/native_client.tar.xz
       # Now do the same, but for libstt.zip
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "libstt.tflite.macOS.x86_64.zip"
       - run: |
@@ -1727,7 +1741,7 @@ jobs:
           cd libstt.x86_64
           tar xvf ../libstt.zip
           rm ../libstt.zip
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "libstt.tflite.macOS.arm64.zip"
       - run: |
@@ -1743,7 +1757,7 @@ jobs:
           done
       - run: |
           zip -r9 --junk-paths libstt.zip libstt.x86_64/*
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.macOS.zip"
           path: libstt.zip
@@ -1755,17 +1769,17 @@ jobs:
       matrix:
         python-version: [3.6.8, 3.7.9, 3.8.9, 3.9.4, 3.10.1]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.macOS.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_macOS"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -1778,7 +1792,7 @@ jobs:
         with:
           version: ${{ matrix.python-version }}
       # GitHub packaged version are limited to macOS deployment target 10.14
-      #- uses: actions/setup-python@v2
+      #- uses: actions/setup-python@v4
       #  with:
       #    python-version: ${{ matrix.python-version }}
       - id: get_numpy
@@ -1789,7 +1803,7 @@ jobs:
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-macOS.whl"
           path: ${{ github.workspace }}/native_client/python/dist/*.whl
@@ -1798,17 +1812,17 @@ jobs:
     runs-on: macos-12
     needs: [build-universal-lib-macOS, swig_macOS]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.macOS.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_macOS"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -1817,15 +1831,15 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
           key: node-headers-12.7.0_17.0.1
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
@@ -1834,11 +1848,11 @@ jobs:
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0 17.0.1"
           electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0 19.0.0"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "nodewrapper-tflite-macOS_amd64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt_intermediate-tflite-macOS.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
@@ -1855,17 +1869,17 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.macOS.tar.xz"
           path: ${{ env.CI_TMP_DIR }}
       - run: |
           cd ${{ env.CI_TMP_DIR }}
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -1892,17 +1906,17 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-macOS.whl"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -1934,17 +1948,17 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs-version }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt_intermediate-tflite-macOS.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -1952,7 +1966,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ~/.npm/
@@ -1982,17 +1996,17 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt_intermediate-tflite-macOS.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2000,7 +2014,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-modules-cache
         with:
           path: ~/.npm/
@@ -2035,16 +2049,16 @@ jobs:
           install: >-
             git
             make
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7.9
       - run: |
           python --version
           python -m pip --version
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Windows_crosscompiled"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -2063,7 +2077,7 @@ jobs:
           make -C native_client/ctcdecode/ \
             NUM_PROCESSES=$(nproc) \
             bindings
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "coqui_stt_ctcdecoder-windows-test.whl"
           path: ${{ github.workspace }}/native_client/ctcdecode/dist/*.whl
@@ -2089,11 +2103,11 @@ jobs:
             unzip
             zip
             make
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.7.9
       - name: Workaround bazel bug when LLVM is installed https://github.com/bazelbuild/bazel/issues/12144
@@ -2103,11 +2117,11 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/host-build.sh
       - run: ./ci_scripts/package.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.Windows.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
@@ -2132,17 +2146,17 @@ jobs:
           update: true
           install: >-
             make
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Windows_crosscompiled"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -2152,7 +2166,7 @@ jobs:
           ls -hal native_client/ds-swig/bin
           ln -s ds-swig.exe native_client/ds-swig/bin/swig.exe
           chmod +x native_client/ds-swig/bin/ds-swig.exe native_client/ds-swig/bin/swig.exe
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Remove /usr/bin/link conflicting with MSVC link.exe
@@ -2166,7 +2180,7 @@ jobs:
         with:
           numpy_build: "${{ steps.get_numpy.outputs.build_version }}"
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
           path: ${{ github.workspace }}/native_client/python/dist/*.whl
@@ -2187,17 +2201,17 @@ jobs:
           install: >-
             make
             tar
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd tensorflow/bazel-bin/native_client/
           "C:/Program Files/7-Zip/7z.exe" x native_client.tar.xz -so | "C:/Program Files/7-Zip/7z.exe" x -aoa -si -snld -ttar -o`pwd`
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Windows_crosscompiled"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -2207,15 +2221,15 @@ jobs:
           ls -hal native_client/ds-swig/bin
           ln -s ds-swig.exe native_client/ds-swig/bin/swig.exe
           chmod +x native_client/ds-swig/bin/ds-swig.exe native_client/ds-swig/bin/swig.exe
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
           key: node-headers-win-12.7.0_16.0.0
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
@@ -2224,11 +2238,11 @@ jobs:
         with:
           nodejs_versions: "12.7.0 13.0.0 14.0.0 15.0.0 16.0.0"
           electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0 19.0.0"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "nodewrapper-tflite-Windows_amd64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "STT_intermediate-tflite-Windows.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
@@ -2251,11 +2265,11 @@ jobs:
           update: true
           install: >-
             vim
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Download native_client.tar.xz
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.Windows.tar.xz"
           path: ${{ env.CI_TMP_DIR }}
@@ -2267,7 +2281,7 @@ jobs:
           ls -hal
           popd
       - name: Download trained test model
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-16000.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2304,18 +2318,18 @@ jobs:
           update: true
           install: >-
             vim
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: ./.github/actions/win-install-sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-Windows.whl"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2356,18 +2370,18 @@ jobs:
           update: true
           install: >-
             vim
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs-version }}
       - uses: ./.github/actions/win-install-sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "STT_intermediate-tflite-Windows.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2375,8 +2389,8 @@ jobs:
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - uses: actions/cache@v2
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2417,18 +2431,18 @@ jobs:
           update: true
           install: >-
             vim
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
       - uses: ./.github/actions/win-install-sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "STT_intermediate-tflite-Windows.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2439,8 +2453,8 @@ jobs:
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - uses: actions/cache@v2
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
         id: electron-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2463,29 +2477,29 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-nodejs-macOS, build-nodejs-Windows, build-nodejs-Linux, build-nodejs-LinuxArmv7, build-nodejs-LinuxAarch64]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - run: |
           mkdir -p /tmp/nodewrapper-tflite-macOS_amd64/
           mkdir -p /tmp/nodewrapper-tflite-Windows_amd64/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "nodewrapper-tflite-macOS_amd64.tar.gz"
           path: /tmp/nodewrapper-macOS_amd64/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "nodewrapper-tflite-Windows_amd64.tar.gz"
           path: /tmp/nodewrapper-Windows_amd64/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "nodewrapper-tflite-Linux_amd64.tar.gz"
           path: /tmp/nodewrapper-Linux_amd64/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "nodewrapper-tflite-Linux_armv7.tar.gz"
           path: /tmp/nodewrapper-Linux_armv7/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "nodewrapper-tflite-Linux_aarch64.tar.gz"
           path: /tmp/nodewrapper-Linux_aarch64/
@@ -2498,7 +2512,7 @@ jobs:
           tar -C ${{ github.workspace }}/native_client/javascript -xzvf /tmp/nodewrapper-Linux_aarch64/wrapper.tar.gz
       - run: |
           make -C native_client/javascript clean npm-pack PROJECT_NAME=stt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
@@ -2518,24 +2532,25 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs-version }}
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ~/.npm/
@@ -2569,19 +2584,20 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2589,7 +2605,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-modules-cache
         with:
           path: ~/.npm/
@@ -2622,22 +2638,22 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs-version }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ~/.npm/
@@ -2671,17 +2687,17 @@ jobs:
       CI_TMP_DIR: ${{ github.workspace }}/tmp/
       STT_TEST_MODEL: ${{ github.workspace }}/tmp/output_graph.tflite
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2689,7 +2705,7 @@ jobs:
       - run: |
           ls -hal ${{ env.CI_TMP_DIR }}/
         if: matrix.models == 'test'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-modules-cache
         with:
           path: ~/.npm/
@@ -2732,18 +2748,18 @@ jobs:
           update: true
           install: >-
             vim
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.nodejs-version }}
       - uses: ./.github/actions/win-install-sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2751,8 +2767,8 @@ jobs:
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - uses: actions/cache@v2
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2794,18 +2810,18 @@ jobs:
           update: true
           install: >-
             vim
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
       - uses: ./.github/actions/win-install-sox
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite.tgz"
           path: ${{ env.CI_TMP_DIR }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}
@@ -2816,8 +2832,8 @@ jobs:
       - name: Get npm cache directory
         id: npm-cache-dir
         run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - uses: actions/cache@v2
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
         id: electron-modules-cache
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
@@ -2842,11 +2858,11 @@ jobs:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install chroot
@@ -2856,11 +2872,11 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/armv7-build.sh
       - run: ./ci_scripts/package.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.linux.armv7.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
@@ -2871,11 +2887,11 @@ jobs:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install chroot
@@ -2885,11 +2901,11 @@ jobs:
       - run: ./ci_scripts/tf-setup.sh
       - run: ./ci_scripts/aarch64-build.sh
       - run: ./ci_scripts/package.sh
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.tflite.linux.aarch64.zip"
           path: ${{ github.workspace }}/artifacts/libstt.zip
@@ -2912,18 +2928,18 @@ jobs:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/${{ matrix.system-raspbian }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -2932,7 +2948,7 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: "Install chroot"
@@ -2960,7 +2976,7 @@ jobs:
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-armv7.whl"
           path: ${{ github.workspace }}/native_client/python/dist/*.whl
@@ -2972,18 +2988,18 @@ jobs:
       SYSTEM_TARGET: rpi3
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-raspbian-buster
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.linux.armv7.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -2996,15 +3012,15 @@ jobs:
         uses: ./.github/actions/multistrap
         with:
           arch: armv7
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
           key: node-headers-12.7.0_17.0.1
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
@@ -3022,11 +3038,11 @@ jobs:
           electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0 19.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "nodewrapper-tflite-Linux_armv7.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt_intermediate-tflite-armv7.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
@@ -3050,19 +3066,20 @@ jobs:
       SYSTEM_RASPBIAN: ${{ github.workspace }}/${{ matrix.system-raspbian }}
     steps:
       - run: |
+          sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -3071,7 +3088,7 @@ jobs:
           ls -hal ${{ github.workspace }}/native_client/ds-swig/bin
           ln -s ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
           chmod +x ${{ github.workspace }}/native_client/ds-swig/bin/ds-swig ${{ github.workspace }}/native_client/ds-swig/bin/swig
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: "Install chroot"
@@ -3099,7 +3116,7 @@ jobs:
           numpy_dep: "${{ steps.get_numpy.outputs.dep_version }}"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-aarch64.whl"
           path: ${{ github.workspace }}/native_client/python/dist/*.whl
@@ -3111,18 +3128,18 @@ jobs:
       SYSTEM_TARGET: rpi3-armv8
       SYSTEM_RASPBIAN: ${{ github.workspace }}/multistrap-armbian64-buster
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.linux.aarch64.tar.xz"
           path: ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
       - run: |
           cd ${{ github.workspace }}/tensorflow/bazel-bin/native_client/
           tar xf native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "swig_Linux"
           path: ${{ github.workspace }}/native_client/ds-swig/
@@ -3135,15 +3152,15 @@ jobs:
         uses: ./.github/actions/multistrap
         with:
           arch: aarch64
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 12
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: node-headers-cache
         with:
           path: native_client/javascript/headers/nodejs/
           key: node-headers-12.7.0_17.0.1
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: electron-headers-cache
         with:
           path: native_client/javascript/headers/electronjs/
@@ -3161,11 +3178,11 @@ jobs:
           electronjs_versions: "12.0.0 13.0.0 14.0.0 15.0.0 16.0.0 19.0.0"
           target: ${{ env.SYSTEM_TARGET }}
           chroot: ${{ env.SYSTEM_RASPBIAN }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "nodewrapper-tflite-Linux_aarch64.tar.gz"
           path: ${{ github.workspace }}/native_client/javascript/wrapper.tar.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "stt_intermediate-tflite-aarch64.tgz"
           path: ${{ github.workspace }}/native_client/javascript/stt-*.tgz
@@ -3194,7 +3211,7 @@ jobs:
       DEBIAN_FRONTEND: "noninteractive"
       SYSTEM_RASPBIAN: ${{ github.workspace }}/chroot-${{ matrix.arch }}-${{ matrix.system }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: "Install and setup chroot"
@@ -3206,7 +3223,7 @@ jobs:
       - name: "Create a chroot tarball"
         run: |
           sudo tar -cf - -C ${{ env.SYSTEM_RASPBIAN }}/ --one-file-system . | xz -9 -T0 > ${{ github.workspace }}/chroot.tar.xz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: chroot-${{ matrix.arch }}-${{ matrix.system }}
           path: ${{ github.workspace }}/chroot.tar.xz
@@ -3277,10 +3294,10 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends qemu-user-static
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "chroot-${{ matrix.arch }}-${{ matrix.system }}"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3288,14 +3305,14 @@ jobs:
           mkdir ${{ env.SYSTEM_RASPBIAN }}/
           sudo tar -xf ${{ env.CI_TMP_DIR }}/chroot.tar.xz -C ${{ env.SYSTEM_RASPBIAN }}/
           rm ${{ env.CI_TMP_DIR }}/chroot.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "native_client.tflite.linux.${{ matrix.arch }}.tar.xz"
           path: ${{ env.CI_TMP_DIR }}/
       - run: |
           cd ${{ env.CI_TMP_DIR }}/
           mkdir ds && cd ds && tar xf ../native_client.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3395,10 +3412,10 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends qemu-user-static
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "chroot-${{ matrix.arch }}-${{ matrix.system }}"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3406,11 +3423,11 @@ jobs:
           mkdir ${{ env.SYSTEM_RASPBIAN }}/
           sudo tar -xf ${{ env.CI_TMP_DIR }}/chroot.tar.xz -C ${{ env.SYSTEM_RASPBIAN }}/
           rm ${{ env.CI_TMP_DIR }}/chroot.tar.xz
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt-tflite-${{ matrix.python-version }}-${{ matrix.arch }}.whl"
           path: ${{ env.CI_TMP_DIR }}/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3455,10 +3472,10 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends qemu-user-static
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "chroot-${{ matrix.arch }}-buster"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3470,11 +3487,11 @@ jobs:
         uses: ./.github/actions/node-install
         with:
           node: ${{ matrix.nodejs-version }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt_intermediate-tflite-${{ matrix.arch }}.tgz"
           path: ${{ env.CI_TMP_DIR }}/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3518,10 +3535,10 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends qemu-user-static xvfb xauth
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "chroot-${{ matrix.arch }}-buster"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3533,11 +3550,11 @@ jobs:
         uses: ./.github/actions/node-install
         with:
           node: 12
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "stt_intermediate-tflite-${{ matrix.arch }}.tgz"
           path: ${{ env.CI_TMP_DIR }}/
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "test-model.tflite-${{ matrix.samplerate }}.zip"
           path: ${{ env.CI_TMP_DIR }}/
@@ -3579,14 +3596,14 @@ jobs:
     name: "AndroidArmv7|Build libstt+client"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "8"
@@ -3594,7 +3611,7 @@ jobs:
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-armv7-build.sh
       - run: ./ci_scripts/android-package.sh armeabi-v7a
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.android.armv7.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
@@ -3602,14 +3619,14 @@ jobs:
     name: "AndroidArm64|Build libstt+client"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "8"
@@ -3617,7 +3634,7 @@ jobs:
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-arm64-build.sh
       - run: ./ci_scripts/android-package.sh arm64-v8a
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.android.arm64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
@@ -3625,14 +3642,14 @@ jobs:
     name: "Androidx86_64|Build libstt+client"
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: 'recursive'
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.7"
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "8"
@@ -3640,7 +3657,7 @@ jobs:
       - run: ./ci_scripts/tf-configure.sh --android
       - run: ./ci_scripts/android-x86_64-build.sh
       - run: ./ci_scripts/android-package.sh x86_64
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "native_client.tflite.android.x86_64.tar.xz"
           path: ${{ github.workspace }}/artifacts/native_client.tar.xz
@@ -3649,10 +3666,10 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build-lib-AndroidArmv7, build-lib-AndroidArm64, build-lib-Androidx86_64]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.android.armv7.tar.xz
           path: /tmp/nc
@@ -3662,7 +3679,7 @@ jobs:
           tar xvf native_client.tar.xz
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/armeabi-v7a/
           rm -f *
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.android.arm64.tar.xz
           path: /tmp/nc
@@ -3672,7 +3689,7 @@ jobs:
           tar xvf native_client.tar.xz
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/arm64-v8a/
           rm -f *
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: native_client.tflite.android.x86_64.tar.xz
           path: /tmp/nc
@@ -3682,10 +3699,10 @@ jobs:
           tar xvf native_client.tar.xz
           mv libstt.so libkenlm.so ${CI_TASK_DIR}/native_client/java/libstt/libs/x86_64/
           rm -f *
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
-          java-version: "8"
+          java-version: "11"
           cache: "gradle"
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -3710,15 +3727,15 @@ jobs:
           make GRADLE="./gradlew " -C native_client/java maven-bundle
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "app.apk"
           path: ${{ github.workspace }}/native_client/java/app/build/outputs/apk/release/app*.apk
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.aar"
           path: ${{ github.workspace }}/native_client/java/libstt/build/outputs/aar/libstt*.aar
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: "libstt.maven.zip"
           path: ${{ github.workspace }}/native_client/java/libstt/build/libstt-*.maven.zip
@@ -3728,10 +3745,10 @@ jobs:
     needs: [create-release, build-android-apk-aar]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: "libstt.aar"
           path: ${{ github.workspace }}/

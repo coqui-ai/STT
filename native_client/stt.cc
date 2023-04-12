@@ -63,7 +63,9 @@ struct StreamingState {
   vector<float> batch_buffer_;
   vector<float> previous_state_c_;
   vector<float> previous_state_h_;
+  bool keep_emissions_ = false;
 
+  vector<double> probs_;
   ModelState* model_;
   DecoderState decoder_state_;
 
@@ -134,7 +136,42 @@ StreamingState::intermediateDecode() const
 Metadata*
 StreamingState::intermediateDecodeWithMetadata(unsigned int num_results) const
 {
-  return model_->decode_metadata(decoder_state_, num_results);
+  Metadata *m = model_->decode_metadata(decoder_state_, num_results);
+
+  if (keep_emissions_) {
+
+    const size_t alphabet_size = model_->alphabet_.GetSize();
+    const int num_timesteps = probs_.size() / (ModelState::BATCH_SIZE * (alphabet_size + 1));
+
+    AcousticModelEmissions* emissions = (AcousticModelEmissions*)malloc(sizeof(AcousticModelEmissions));
+
+    emissions->num_symbols = alphabet_size;
+    emissions->num_timesteps = num_timesteps;
+    emissions->symbols = (const char**)malloc(sizeof(char*)*alphabet_size + 1);
+    for (int i = 0; i < alphabet_size; i++) {
+        emissions->symbols[i] = strdup(model_->alphabet_.DecodeSingle(i).c_str());
+    }
+    emissions->symbols[alphabet_size] = strdup("\t");
+
+    double* probs = (double*)malloc(sizeof(double)*(alphabet_size + 1)*num_timesteps);
+    memcpy(probs, probs_.data(), sizeof(double)*(alphabet_size + 1)*num_timesteps);
+
+    emissions->emissions = probs;
+
+    Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
+
+    Metadata metadata {
+      m->transcripts,  // transcripts
+      m->num_transcripts, // num_transcripts
+      emissions,
+    };
+
+    memcpy(ret, &metadata, sizeof(Metadata));
+
+    return ret;
+  }
+
+  return m;
 }
 
 char*
@@ -148,7 +185,42 @@ Metadata*
 StreamingState::finishStreamWithMetadata(unsigned int num_results)
 {
   flushBuffers(true);
-  return model_->decode_metadata(decoder_state_, num_results);
+  Metadata *m = model_->decode_metadata(decoder_state_, num_results);
+
+  if (keep_emissions_) {
+
+    const size_t alphabet_size = model_->alphabet_.GetSize();
+    const int num_timesteps = probs_.size() / (ModelState::BATCH_SIZE * (alphabet_size + 1));
+
+    AcousticModelEmissions* emissions = (AcousticModelEmissions*)malloc(sizeof(AcousticModelEmissions));
+
+    emissions->num_symbols = alphabet_size;
+    emissions->num_timesteps = num_timesteps;
+    emissions->symbols = (const char**)malloc(sizeof(char*)*alphabet_size + 1);
+    for (int i = 0; i < alphabet_size; i++) {
+        emissions->symbols[i] = strdup(model_->alphabet_.DecodeSingle(i).c_str());
+    }
+    emissions->symbols[alphabet_size] = strdup("\t");
+
+    double* probs = (double*)malloc(sizeof(double)*(alphabet_size + 1)*num_timesteps);
+    memcpy(probs, probs_.data(), sizeof(double)*(alphabet_size + 1)*num_timesteps);
+
+    emissions->emissions = probs;
+
+    Metadata* ret = (Metadata*)malloc(sizeof(Metadata));
+
+    Metadata metadata {
+      m->transcripts,  // transcripts
+      m->num_transcripts, // num_transcripts
+      emissions,
+    };
+
+    memcpy(ret, &metadata, sizeof(Metadata));
+
+    return ret;
+  }
+
+  return m;
 }
 
 void
@@ -253,7 +325,9 @@ StreamingState::processBatch(const vector<float>& buf, unsigned int n_steps)
 
   // Convert logits to double
   vector<double> inputs(logits.begin(), logits.end());
-
+  if (keep_emissions_) {
+    probs_ = inputs;
+  }
   decoder_state_.next(inputs.data(),
                       n_frames,
                       num_classes);
@@ -476,6 +550,41 @@ STT_CreateStream(ModelState* aCtx,
   return STT_ERR_OK;
 }
 
+int
+CreateStreamWithEmissions(ModelState* aCtx,
+                StreamingState** retval)
+{
+  *retval = nullptr;
+
+  std::unique_ptr<StreamingState> ctx(new StreamingState());
+  if (!ctx) {
+    std::cerr << "Could not allocate streaming state." << std::endl;
+    return STT_ERR_FAIL_CREATE_STREAM;
+  }
+
+  ctx->audio_buffer_.reserve(aCtx->audio_win_len_);
+  ctx->mfcc_buffer_.reserve(aCtx->mfcc_feats_per_timestep_);
+  ctx->mfcc_buffer_.resize(aCtx->n_features_*aCtx->n_context_, 0.f);
+  ctx->batch_buffer_.reserve(aCtx->n_steps_ * aCtx->mfcc_feats_per_timestep_);
+  ctx->previous_state_c_.resize(aCtx->state_size_, 0.f);
+  ctx->previous_state_h_.resize(aCtx->state_size_, 0.f);
+  ctx->model_ = aCtx;
+  ctx->keep_emissions_ = true;
+
+  const int cutoff_top_n = 40;
+  const double cutoff_prob = 1.0;
+
+  ctx->decoder_state_.init(aCtx->alphabet_,
+                           aCtx->beam_width_,
+                           cutoff_prob,
+                           cutoff_top_n,
+                           aCtx->scorer_,
+                           aCtx->hot_words_);
+
+  *retval = ctx.release();
+  return STT_ERR_OK;
+}
+
 void
 STT_FeedAudioContent(StreamingState* aSctx,
                     const short* aBuffer,
@@ -562,6 +671,22 @@ STT_SpeechToTextWithMetadata(ModelState* aCtx,
   return STT_FinishStreamWithMetadata(ctx, aNumResults);
 }
 
+Metadata*
+STT_SpeechToTextWithEmissions(ModelState* aCtx,
+                            const short* aBuffer,
+                            unsigned int aBufferSize,
+                            unsigned int aNumResults)
+{
+  StreamingState* ctx;
+  int status = CreateStreamWithEmissions(aCtx, &ctx);
+  if (status != STT_ERR_OK) {
+    return nullptr;
+  }
+  STT_FeedAudioContent(ctx, aBuffer, aBufferSize);
+
+  return STT_FinishStreamWithMetadata(ctx, aNumResults);
+}
+
 void
 STT_FreeStream(StreamingState* aSctx)
 {
@@ -581,10 +706,24 @@ STT_FreeMetadata(Metadata* m)
     }
 
     free((void*)m->transcripts);
+
+    // Clean up logits if they are not NULL
+    if (m->emissions) {
+
+      if (m->emissions->symbols) {
+        for (int i = 0; i < m->emissions->num_symbols + 1; i++) {
+          free((void*)m->emissions->symbols[i]);
+        }
+        free((void*)m->emissions->symbols);
+      }
+      if (m->emissions->emissions) {
+        free((void*)m->emissions->emissions);
+      }
+      free((void*)m->emissions);
+    }
     free(m);
   }
 }
-
 void
 STT_FreeString(char* str)
 {

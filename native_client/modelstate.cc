@@ -69,6 +69,7 @@ ModelState::decode_metadata(const DecoderState& state,
   Metadata metadata {
     transcripts,  // transcripts
     num_returned, // num_transcripts
+    NULL,
   };
   memcpy(ret, &metadata, sizeof(Metadata));
   return ret;
