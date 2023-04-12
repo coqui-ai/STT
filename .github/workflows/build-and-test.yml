@@ -1262,7 +1262,7 @@ jobs:
       - name: Build
         run: |
           DOCKER_TAG="${{ steps.compute-tag.outputs.tag }}"
-          docker build -f Dockerfile.build . -t ghcr.io/coqui-ai/stt-build:latest -t "ghcr.io/coqui-ai/stt-build:${DOCKER_TAG}"
+          docker build -f Dockerfile.build . -t ghcr.io/iarahealth/stt-build:latest -t "ghcr.io/iarahealth/stt-build:${DOCKER_TAG}"
   docker-publish:
     name: "Build and publish Docker training image to GHCR"
     runs-on: ubuntu-20.04
@@ -1303,14 +1303,14 @@ jobs:
           set -ex
           declare -a tag_args=()
           for tag in ${{ steps.compute-tag.outputs.tags }}; do
-            tag_args+=("-t" "ghcr.io/coqui-ai/stt-train:${tag}")
+            tag_args+=("-t" "ghcr.io/iarahealth/stt-train:${tag}")
           done
           docker build -f Dockerfile.train . ${tag_args[@]}
       - name: Push
         run: |
           set -ex
           for tag in ${{ steps.compute-tag.outputs.tags }}; do
-            docker push ghcr.io/coqui-ai/stt-train:${tag}
+            docker push ghcr.io/iarahealth/stt-train:${tag}
           done
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
   twine-upload-decoder:
@@ -1408,7 +1408,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 12
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: https://npm.pkg.github.com/
       - uses: actions/setup-python@v4
         with:
           python-version: 3.8
@@ -1433,7 +1433,7 @@ jobs:
             npm publish --access=public --verbose $pkg --tag ${{ steps.compute-npm-tag.outputs.npm-tag }}
           done
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload artifacts to GitHub release
         uses: ./.github/actions/upload-release-asset
         with:
