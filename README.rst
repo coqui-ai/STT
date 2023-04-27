@@ -1,7 +1,7 @@
 .. note::
-   **This project is no longer actively maintained**, and we have stopped hosting the online Model Zoo. We've seen focus shift towards newer STT models such as [Whisper](https://github.com/openai/whisper), and have ourselves focused on [Coqui TTS](https://github.com/coqui-ai/TTS) and [Coqui Studio](https://coqui.ai/).
+   **This project is no longer actively maintained**, and we have stopped hosting the online Model Zoo. We've seen focus shift towards newer STT models such as `Whisper <https://github.com/openai/whisper>`_, and have ourselves focused on `Coqui TTS <https://github.com/coqui-ai/TTS>`_ and `Coqui Studio <https://coqui.ai>`_.
    
-   The models will remain available in [the releases of the coqui-ai/STT-models repo](https://github.com/coqui-ai/STT-models/releases).
+   The models will remain available in `the releases of the coqui-ai/STT-models repo <https://github.com/coqui-ai/STT-models/releases>`_.
 
 .. image:: images/coqui-STT-logo-green.png
    :alt: Coqui STT logo
