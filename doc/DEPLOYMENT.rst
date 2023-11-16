@@ -26,7 +26,7 @@ In some use cases, you might want to use the inference facilities built into the
 Download trained Coqui STT models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can find pre-trained models ready for deployment on the `Coqui Model Zoo <https://coqui.ai/models>`_. You can also use the 🐸STT Model Manager to download and try out the latest models:
+You can use the 🐸STT Model Manager to download and try out the latest models:
 
 .. code-block:: bash
 
@@ -37,9 +37,6 @@ You can find pre-trained models ready for deployment on the `Coqui Model Zoo <ht
    # Install 🐸STT model manager
    $ python -m pip install -U pip
    $ python -m pip install coqui-stt-model-manager
-
-   # Run the model manager. A browser tab will open and you can then download and test models from the Model Zoo.
-   $ stt-model-manager
 
 In every 🐸STT official release, there are different model files provided. The acoustic model uses the ``.tflite`` extension. Language models use the extension ``.scorer``. You can read more about language models with regard to :ref:`the decoding process <decoder-docs>` and :ref:`how scorers are generated <language-model>`.
 
