@@ -6,6 +6,8 @@
 .. image:: https://raw.githubusercontent.com/coqui-ai/STT/main/images/coqui-STT-logo-green.png
   :alt: Coqui STT logo and wordmark
 
+**This project is no longer actively maintained, and we have stopped hosting the online Model Zoo. We've seen focus shift towards newer STT models such as [Whisper]<https://github.com/openai/whisper>,
+
 **Coqui STT** (🐸STT) is an open-source deep-learning toolkit for training and deploying speech-to-text models.
 
 🐸STT is battle tested in both production and research 🚀
